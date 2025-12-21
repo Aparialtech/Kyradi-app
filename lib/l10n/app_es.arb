@@ -1,0 +1,611 @@
+{
+  "@@locale": "es",
+  "appTitle": "KYRADI",
+  "dashboard": "Inicio",
+  "profile": "Perfil",
+  "settings": "Configuración",
+  "findLocation": "Encontrar mi ubicación",
+  "destination": "Destino",
+  "transitRoute": "Ruta de transporte público",
+  "myLuggages": "Mis maletas",
+  "total": "Total",
+  "addLuggageQr": "Agregar equipaje (QR)",
+  "newLuggageAdded": "Nuevo equipaje agregado ✅",
+  "save": "Guardar",
+  "saveProfile": "Perfil guardado ✅",
+  "saveProfileError": "Error al guardar",
+  "userInfo": "Información del usuario",
+  "map": "Mapa",
+  "mapIntro": "Consulta los puntos BavulGO en el mapa y planifica la mejor ruta.",
+  "walkingRoute": "Ruta a pie",
+  "drivingRoute": "Ruta en coche",
+  "openInMaps": "Abrir en Google Maps",
+  "routeOptions": "Opciones de ruta",
+  "firstName": "Nombre",
+  "lastName": "Apellido",
+  "fullNameLabel": "Nombre completo",
+  "phone": "Teléfono",
+  "email": "Correo electrónico",
+  "address": "Dirección",
+  "birthDate": "Fecha de nacimiento",
+  "gender": "Género",
+  "emergencyContact": "Contacto de emergencia",
+  "note": "Nota / Descripción",
+  "cameraPermission": "Permiso de cámara",
+  "cameraPermissionDesc": "Requerido para escanear QR",
+  "locationPermission": "Permiso de ubicación",
+  "locationPermissionDesc": "Requerido para transporte público y funciones de ubicación",
+  "notificationPermission": "Permiso de notificación",
+  "notificationPermissionDesc": "Para recordatorios y actualizaciones",
+  "inAppNotifications": "Notificaciones en la aplicación",
+  "notificationSound": "Sonido de notificación",
+  "notificationVibrate": "Vibración",
+  "account": "Cuenta",
+  "changePassword": "Cambiar contraseña",
+  "logout": "Cerrar sesión",
+  "about": "Acerca de",
+  "aboutApp": "Esta aplicación fue desarrollada por KYRADI.",
+  "qrCode": "Código QR",
+  "weight": "Peso (kg)",
+  "size": "Tamaño",
+  "color": "Color",
+  "small": "Pequeño",
+  "medium": "Mediano",
+  "large": "Grande",
+  "black": "Negro",
+  "red": "Rojo",
+  "blue": "Azul",
+  "grey": "Gris",
+  "other": "Otro",
+  "saveLuggage": "Guardar equipaje",
+  "qrEmptyError": "El código QR no puede estar vacío ❌",
+  "oldPassword": "Contraseña anterior",
+  "newPassword": "Nueva contraseña",
+  "confirmNewPassword": "Confirmar nueva contraseña",
+  "passwordChanged": "Contraseña cambiada ✅",
+  "passwordMismatch": "Las nuevas contraseñas no coinciden ❌",
+  "languageChanged": "Idioma cambiado ✅",
+  "permissionGranted": "Permiso de {permission} concedido ✅",
+  "permissionDenied": "Permiso de {permission} denegado ❌",
+  "permissionDeniedForever": "Permiso de {permission} denegado permanentemente, actívalo en la configuración ⚙️",
+  "locationReceived": "Ubicación recibida 📍 {lat}, {lng}",
+  "locationFailed": "No se pudo obtener la ubicación ❌",
+  "profileSaved": "Perfil guardado ✅",
+  "profileSaveError": "No se pudo guardar el perfil ❌",
+  "logoutSuccess": "Cierre de sesión exitoso 👋",
+  "copyrightNotice": "© 2025 KYRADI. Todos los derechos reservados.",
+  "demoMapComingSoon": "El módulo de mapas se abrirá pronto.",
+  "demoLuggageButton": "Equipaje {number}",
+  "@demoLuggageButton": {
+    "placeholders": {
+      "number": {}
+    }
+  },
+  "demoLuggageSelected": "Se seleccionó {label}.",
+  "@demoLuggageSelected": {
+    "placeholders": {
+      "label": {}
+    }
+  },
+  "demoFirstNameValue": "Deniz",
+  "demoLastNameValue": "Gezensoy",
+  "demoNationalIdValue": "12345678901",
+  "demoAddressValue": "Estambul, Turquía",
+  "demoEmergencyNameValue": "Merve Sönmez",
+  "demoEmergencyAddressValue": "Kadıköy, Estambul",
+  "demoEmergencyEmailValue": "merve@example.com",
+  "demoEmergencyRelationValue": "Hermano/a o familiar cercano",
+  "emergencyContactNote": "Esta persona será contactada en emergencias.",
+  "introTagline": "Sistema global de equipaje",
+  "introTrackButton": "Rastrear",
+  "serverButtonLabel": "Servidor",
+  "serverStatus": "Servidor: {host}",
+  "@serverStatus": {
+    "placeholders": {
+      "host": {}
+    }
+  },
+  "loginHeroSubtitle": "Administra tu equipaje después de iniciar sesión.",
+  "loginFormTitle": "Datos de inicio de sesión",
+  "loginFormSubtitle": "Conéctate al servidor más actualizado para iniciar sesión.",
+  "emailHint": "ejemplo@mail.com",
+  "passwordLabel": "Contraseña",
+  "passwordHint": "••••••",
+  "validationEmailRequired": "El correo es obligatorio",
+  "validationEmailInvalid": "Introduce un correo válido",
+  "validationPasswordRequired": "La contraseña es obligatoria",
+  "validationMinChars": "Escribe al menos {count} caracteres",
+  "@validationMinChars": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "loginForgotPassword": "Olvidé mi contraseña",
+  "clearButton": "Limpiar",
+  "loginButtonLabel": "Iniciar sesión",
+  "loginNoAccount": "¿No tienes cuenta?",
+  "registerButtonLabel": "Registrarse",
+  "loginSuccess": "Inicio de sesión exitoso ✅",
+  "loginInvalidCredentials": "Correo o contraseña incorrectos ❌",
+  "loginTooManyAttempts": "Demasiados intentos, inténtalo de nuevo en unos minutos ⚠️",
+  "loginFailed": "El inicio de sesión falló, inténtalo de nuevo ❌",
+  "genericErrorWithDetails": "Ocurrió un error: {details}",
+  "@genericErrorWithDetails": {
+    "placeholders": {
+      "details": {}
+    }
+  },
+  "loginVerificationRequired": "Verifica tu cuenta 📨",
+  "verificationSendFailedWithDetails": "No se pudo enviar el código de verificación: {details}",
+  "@verificationSendFailedWithDetails": {
+    "placeholders": {
+      "details": {}
+    }
+  },
+  "registerTitle": "Crear cuenta",
+  "registerPersonalSectionTitle": "Información personal",
+  "registerPersonalSectionSubtitle": "Comparte tu identidad y fecha de nacimiento.",
+  "genderMale": "Hombre",
+  "genderFemale": "Mujer",
+  "genderUndisclosed": "Prefiero no decir",
+  "registerContactSectionTitle": "Información de contacto",
+  "registerContactSectionSubtitle": "Tu correo y datos de verificación",
+  "nationalIdLabel": "Número de identificación",
+  "phoneHint": "+90 5xx xxx xx xx",
+  "registerSecuritySectionTitle": "Seguridad",
+  "registerSecuritySectionSubtitle": "Define y confirma tu contraseña",
+  "registerPasswordRepeatLabel": "Repite la contraseña",
+  "registerCaptchaLabel": "No soy un robot",
+  "registerCaptchaWarning": "Marca \"No soy un robot\"",
+  "registerKvkkAgreementLabel": "He leído y acepto el aviso de privacidad KVKK de KYRADI.",
+  "registerKvkkAgreementWarning": "Acepta el aviso de privacidad KVKK.",
+  "registerRestrictedAgreementLabel": "He leído y acepto la lista de artículos rechazados por Aparial y las empresas de transporte.",
+  "registerRestrictedAgreementWarning": "Confirma el documento de artículos restringidos.",
+  "registerAgreementView": "Ver documento",
+  "registerKvkkDialogTitle": "KYRADI – Aviso de Privacidad KVKK",
+  "registerRestrictedDialogTitle": "Artículos rechazados por Aparial y las empresas de transporte",
+  "registerSuccessMessage": "Registro exitoso ✅ Se envió el correo de verificación.",
+  "registerEmailExistsMessage": "Este correo ya está registrado ❌",
+  "registerGenericErrorMessage": "El registro falló ❌",
+  "validationRequired": "Obligatorio",
+  "validationPasswordNeedsLetter": "Incluye al menos una letra",
+  "validationPasswordNeedsNumber": "Incluye al menos un número",
+  "validationPasswordRepeatRequired": "Repite tu contraseña",
+  "validationNationalIdRequired": "El número de identificación es obligatorio",
+  "validationNationalIdLength": "El ID debe tener 11 dígitos",
+  "validationNationalIdChecksumTen": "ID no válido (10.º dígito)",
+  "validationNationalIdChecksumEleven": "ID no válido (11.º dígito)",
+  "validationNationalIdInvalid": "ID no válido",
+  "validationPhoneRequired": "El teléfono es obligatorio",
+  "validationPhoneFormat": "Formato: +90 5xx xxx xx xx",
+  "validationBirthDateRequired": "Selecciona una fecha de nacimiento",
+  "validationAgeRequirement": "Debes tener más de 18 años",
+  "formNotSelected": "Sin seleccionar",
+  "forgotTitle": "Olvidé mi contraseña",
+  "forgotIntro": "Enviemos un código a tu correo registrado para restablecer tu contraseña.",
+  "forgotEmailSectionTitle": "Verificación de correo",
+  "forgotEmailSectionSubtitle": "Se enviará un código de un solo uso a tu dirección registrada.",
+  "emailAddressLabel": "Dirección de correo",
+  "forgotSendButton": "Enviar código",
+  "forgotResendCountdown": "Enviar de nuevo ({seconds}s)",
+  "@forgotResendCountdown": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "forgotAlreadyHaveCode": "Ya tengo un código",
+  "forgotNeedValidEmail": "Ingresa primero un correo válido 💌",
+  "forgotCodeSent": "Código enviado 📩",
+  "forgotEmailNotFound": "Este correo no está registrado ❌",
+  "forgotTooManyAttempts": "Demasiados intentos, inténtalo de nuevo en 1 minuto ⚠️",
+  "forgotCodeFailed": "No se pudo enviar el código ❌",
+  "resetTitle": "Restablecer contraseña",
+  "resetSubtitle": "Introduce el código enviado a este correo y crea una nueva contraseña.",
+  "verificationCodeLabel": "Código de verificación",
+  "resetNewPasswordLabel": "Nueva contraseña",
+  "resetConfirmPasswordLabel": "Nueva contraseña (repite)",
+  "resetSubmitButton": "Restablecer contraseña",
+  "unknownError": "Error desconocido",
+  "verificationTitle": "Verificación de correo",
+  "verificationInstructions": "Ingresa el código de 6 dígitos enviado a {email}.",
+  "@verificationInstructions": {
+    "placeholders": {
+      "email": {}
+    }
+  },
+  "verifyButtonLabel": "Verificar código",
+  "verificationResendButton": "Enviar código otra vez",
+  "verificationCountdownLabel": "Enviar de nuevo en {seconds}s",
+  "@verificationCountdownLabel": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "verificationResentMessage": "Código enviado de nuevo",
+  "verificationSendErrorMessage": "Error al enviar",
+  "verificationMissingEmailMessage": "No se pudo obtener el correo",
+  "verificationSuccessMessage": "Cuenta verificada ✅",
+  "verificationErrorMessage": "Error de verificación",
+  "verificationCodeInvalidMessage": "El código debe tener 6 dígitos",
+  "validationVerificationCodeRequired": "El código es obligatorio",
+  "validationVerificationCodeLength": "Introduce un código de 6 dígitos",
+  "dashboardGreeting": "Hola, {name}",
+  "@dashboardGreeting": {
+    "placeholders": {
+      "name": {}
+    }
+  },
+  "dashboardSubtitle": "Comparte tu ubicación y administra tu equipaje.",
+  "dashboardTotalCount": "Total {count}",
+  "@dashboardTotalCount": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "travelerPlaceholder": "Viajero",
+  "quickAddLuggage": "Agregar equipaje",
+  "quickTransit": "Transporte público",
+  "dashboardMetricAwaiting": "Pendiente de entrega",
+  "dashboardMetricStored": "Almacenado",
+  "dashboardMetricPicked": "Retirado",
+  "dashboardMetricCancelled": "Cancelado",
+  "deliverySectionTitle": "Entrega y ruta",
+  "deliverySectionSubtitle": "Elige un punto de entrega y abre la ruta.",
+  "deliveryPointLabel": "Punto de entrega",
+  "deliveryPointOption": "{name} • Libre {available}/{total}",
+  "@deliveryPointOption": {
+    "placeholders": {
+      "name": {},
+      "available": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "deliveryPointSelected": "Punto de entrega seleccionado: {name} ✅",
+  "@deliveryPointSelected": {
+    "placeholders": {
+      "name": {}
+    }
+  },
+  "routeNeedLocation": "Primero usa «Encontrar mi ubicación».",
+  "routeNeedDestination": "Ingresa un destino.",
+  "mapsOpenFailed": "No se pudo abrir Google Maps.",
+  "reservationSectionTitle": "Estados de reserva",
+  "reservationSectionSubtitle": "Consulta la disponibilidad y los detalles de ocupación.",
+  "luggagesSectionSubtitle": "Muestra códigos QR y completa los pasos de entrega/recogida.",
+  "newLuggageButton": "Nuevo equipaje",
+  "luggageFilterAll": "Todos",
+  "luggageFilterAwaiting": "Pendiente de entrega",
+  "luggageFilterStored": "Almacenado",
+  "luggageFilterPicked": "Retirado",
+  "luggageEmptyStateNoItems": "Aún no hay equipaje. ¡Agrega tu primera maleta!",
+  "luggageEmptyStateFiltered": "No se encontró equipaje para este filtro.",
+  "profileInfoSubtitle": "Mantén actualizada tu información de contacto.",
+  "emergencySectionSubtitle": "Agrega un contacto de confianza para mayor seguridad.",
+  "relationLabel": "Relación",
+  "emergencyRegisteredPerson": "Contacto registrado",
+  "identitySectionTitle": "ID / Pasaporte",
+  "identitySectionSubtitle": "Carga el documento que mostrarás durante las entregas.",
+  "identityPreviewHint": "La vista previa del documento aparecerá aquí",
+  "identityDocIdCard": "Documento de identidad",
+  "identityDocPassport": "Pasaporte",
+  "identityUploaded": "Documento cargado: {file}",
+  "@identityUploaded": {
+    "placeholders": {
+      "file": {}
+    }
+  },
+  "identityMissing": "Aún no se ha cargado un documento. Se requiere foto de ID o pasaporte para las entregas.",
+  "identityTakePhoto": "Tomar con la cámara",
+  "identityPickFromGallery": "Elegir de la galería",
+  "identityDelete": "Eliminar documento",
+  "identityPhotoSaved": "Foto de {docType} guardada ✅",
+  "@identityPhotoSaved": {
+    "placeholders": {
+      "docType": {}
+    }
+  },
+  "identityUploadFailed": "No se pudo subir el documento: {details}",
+  "@identityUploadFailed": {
+    "placeholders": {
+      "details": {}
+    }
+  },
+  "identityRemoved": "Documento eliminado.",
+  "identityProofRequired": "Sube una foto de tu ID o pasaporte antes de continuar.",
+  "profileDataMissing": "No se pudieron cargar los datos del perfil.",
+  "profileLoadFailed": "No se pudo cargar el perfil: {details}",
+  "@profileLoadFailed": {
+    "placeholders": {
+      "details": {}
+    }
+  },
+  "profileUserMissing": "Usuario no encontrado. Inicia sesión nuevamente.",
+  "luggageLocationMissing": "No hay información de ubicación para este equipaje.",
+  "luggageInfoSize": "Tamaño: {value}",
+  "@luggageInfoSize": {
+    "placeholders": {
+      "value": {}
+    }
+  },
+  "luggageInfoWeight": "Peso: {value} kg",
+  "@luggageInfoWeight": {
+    "placeholders": {
+      "value": {}
+    }
+  },
+  "luggageInfoColor": "Color: {value}",
+  "@luggageInfoColor": {
+    "placeholders": {
+      "value": {}
+    }
+  },
+  "noteLabel": "Nota: {note}",
+  "@noteLabel": {
+    "placeholders": {
+      "note": {}
+    }
+  },
+  "scheduledDropLabel": "Entrega planificada: {date}",
+  "@scheduledDropLabel": {
+    "placeholders": {
+      "date": {}
+    }
+  },
+  "scheduledPickupLabel": "Recogida planificada: {date}",
+  "@scheduledPickupLabel": {
+    "placeholders": {
+      "date": {}
+    }
+  },
+  "reservationCancelledLabel": "Esta reserva ha sido cancelada.",
+  "luggageShowQr": "Mostrar código QR",
+  "luggageDropAction": "Dejé el equipaje",
+  "luggagePickupAction": "Recoger equipaje",
+  "luggageCancelAction": "Cancelar reserva",
+  "luggageOpenLocation": "Abrir ubicación",
+  "createdAtLabel": "Creado: {date}",
+  "@createdAtLabel": {
+    "placeholders": {
+      "date": {}
+    }
+  },
+  "dropConfirmedAtLabel": "Entrega confirmada: {date}",
+  "@dropConfirmedAtLabel": {
+    "placeholders": {
+      "date": {}
+    }
+  },
+  "pickupConfirmedAtLabel": "Recogida confirmada: {date}",
+  "@pickupConfirmedAtLabel": {
+    "placeholders": {
+      "date": {}
+    }
+  },
+  "loginRequired": "Inicia sesión primero.",
+  "luggageCreated": "Nuevo equipaje creado ✅",
+  "dropConfirmedMessage": "Entrega confirmada ✅",
+  "pickupConfirmedMessage": "Recogida completada ✅",
+  "operationFailed": "No se pudo completar la operación.",
+  "operationFailedWithDetails": "La operación no se completó: {details}",
+  "@operationFailedWithDetails": {
+    "placeholders": {
+      "details": {}
+    }
+  },
+  "reservationCancelledMessage": "Reserva cancelada.",
+  "cancelFailed": "No se pudo cancelar.",
+  "cancelFailedWithDetails": "La cancelación falló: {details}",
+  "@cancelFailedWithDetails": {
+    "placeholders": {
+      "details": {}
+    }
+  },
+  "cancelReservationTitle": "Cancelar reserva",
+  "cancelReservationMessage": "¿Seguro que deseas cancelar la reserva de “{label}”?",
+  "@cancelReservationMessage": {
+    "placeholders": {
+      "label": {}
+    }
+  },
+  "dialogDismiss": "Cancelar",
+  "dialogConfirmCancel": "Cancelar",
+  "dialogConfirm": "Sí",
+  "reservationTileTitle": "Reserva {code}",
+  "@reservationTileTitle": {
+    "placeholders": {
+      "code": {}
+    }
+  },
+  "reservationTileSubtitle": "{code} • {time}",
+  "@reservationTileSubtitle": {
+    "placeholders": {
+      "code": {},
+      "time": {}
+    }
+  },
+  "reservationSlotSummary": "{count} equipajes • {time}",
+  "@reservationSlotSummary": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "time": {}
+    }
+  },
+  "notificationsTooltip": "Notificaciones",
+  "notificationsClearTooltip": "Limpiar",
+  "notificationsEmptyTitle": "No hay notificaciones aún",
+  "notificationsEmptySubtitle": "Tus notificaciones aparecerán aquí cuando inicies sesión o empieces a usar la app.",
+  "notificationTypeSuccess": "Éxito",
+  "notificationTypeWarning": "Advertencia",
+  "notificationTypeError": "Error",
+  "notificationTypeInfo": "Información",
+  "notificationsRelativeNow": "Justo ahora",
+  "notificationsRelativeSeconds": "Hace {count} s",
+  "@notificationsRelativeSeconds": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "notificationsRelativeMinutes": "Hace {count} min",
+  "@notificationsRelativeMinutes": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "notificationsRelativeHours": "Hace {count} h",
+  "@notificationsRelativeHours": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "notificationsRelativeDays": "Hace {count} d",
+  "@notificationsRelativeDays": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "mapNoLocations": "No se encontraron ubicaciones.",
+  "locationServiceDisabled": "El servicio de ubicación está desactivado.",
+  "locationPermissionPermanentlyDenied": "El permiso de ubicación se denegó permanentemente. Actívalo desde la configuración.",
+  "locationFailedWithDetails": "No se pudo obtener la ubicación: {details}",
+  "locationNotFoundTitle": "Ubicación no encontrada",
+  "locationNotFoundMessage": "La ubicación seleccionada ya no está disponible.",
+  "permissionManageButton": "Gestionar",
+  "settingsPermissionsTitle": "Permisos",
+  "settingsPermissionsSubtitle": "Administra los permisos de cámara, ubicación y notificaciones.",
+  "privacySectionTitle": "Privacidad",
+  "privacySectionSubtitle": "Ajusta las preferencias de notificaciones en la app.",
+  "remindersSectionTitle": "Recordatorios",
+  "remindersSectionSubtitle": "Elige alertas para entrega y recogida.",
+  "pushRemindersLabel": "Notificaciones push",
+  "emailRemindersLabel": "Recordatorios por correo",
+  "languageSectionTitle": "Idioma",
+  "languageSectionSubtitle": "Elige el idioma de la app.",
+  "languageNameTr": "Turco",
+  "languageNameEn": "Inglés",
+  "languageNameDe": "Alemán",
+  "languageNameEs": "Español",
+  "languageNameRu": "Ruso",
+  "languageChangedTo": "Idioma cambiado a {language} ✅",
+  "@languageChangedTo": {
+    "placeholders": {
+      "language": {}
+    }
+  },
+  "upcomingReservationsTitle": "Reservas próximas",
+  "upcomingReservationsSubtitle": "Los nombres se mantienen ocultos; solo se muestran los códigos y la capacidad.",
+  "upcomingReservationsEmpty": "No hay reservas planificadas para esta ubicación.",
+  "continueSectionTitle": "Continuar",
+  "continueSectionSubtitle": "Si ya eres miembro inicia sesión; de lo contrario regístrate rápido.",
+  "accountSectionSubtitle": "Cambia tu contraseña o cierra sesión.",
+  "logoutDialogTitle": "Cerrar sesión",
+  "logoutDialogMessage": "¿Quieres cerrar sesión?",
+  "userIdMissing": "No has iniciado sesión: no se encontró userId.",
+  "userIdReadFailed": "No se pudo leer el userId: {details}",
+  "@userIdReadFailed": {
+    "placeholders": {
+      "details": {}
+    }
+  },
+  "mapsMissingApiKey": "La clave de Google Maps no está configurada.",
+  "routeFetchFailedWithDetails": "No se pudo obtener la ruta: {details}",
+  "@routeFetchFailedWithDetails": {
+    "placeholders": {
+      "details": {}
+    }
+  },
+  "routeNotFound": "No se encontró ruta.",
+  "routeDataMissing": "No se pudieron obtener los datos de la ruta.",
+  "directionsApiError": "La API de Google Directions falló: {status}. Verifica que la clave tenga acceso a Directions.",
+  "@directionsApiError": {
+    "placeholders": {
+      "status": {}
+    }
+  },
+  "reservationEmptyState": "No hay reservas programadas.",
+  "availableSlotsLabel": "Libre {available}/{total}",
+  "@availableSlotsLabel": {
+    "placeholders": {
+      "available": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "qrDropTitle": "Confirmar entrega con QR",
+  "qrPickupTitle": "Confirmar recogida con QR",
+  "qrManualEntryHint": "Si no puedes escanear el QR, introdúcelo manualmente.",
+  "qrVerifyButton": "Verificar",
+  "qrMismatchMessage": "El código QR no coincide. Inténtalo de nuevo.",
+  "qrCopied": "Código QR copiado.",
+  "qrTextCopied": "Texto copiado.",
+  "qrCopyCode": "Copiar código",
+  "qrCopyPrintable": "Copiar texto para imprimir",
+  "qrShareInstructions": "Comparte este código con el personal para imprimir la pegatina. El cliente debe escanearlo al dejar y recoger.",
+  "qrDuplicateWarning": "Este código QR ya está en uso. Generamos uno nuevo, inténtalo otra vez.",
+  "qrScanTip": "Asegúrate de que el código esté nítido dentro del marco.",
+  "locationFetching": "Obteniendo ubicación...",
+  "refreshNearbyButton": "Actualizar ubicaciones cercanas",
+  "nearbyLocationsTitle": "Ubicaciones cercanas",
+  "landingTitle": "BavulGO Track",
+  "landingIntro": "Elige dónde dejar tu equipaje. Toca un punto en el mapa para ver su ocupación y abrir los detalles de la reserva.",
+  "landingLocateSectionTitle": "Encuentra los puntos más cercanos",
+  "landingLocateSectionSubtitle": "Comparte tu ubicación para mostrar recomendaciones.",
+  "landingLocateButton": "Encontrar mi ubicación",
+  "landingLocatingButton": "Obteniendo ubicación...",
+  "landingNearestTitle": "Puntos más cercanos",
+  "landingNearestSubtitle": "3 lugares recomendados según tu ubicación",
+  "landingGoButton": "Ir",
+  "landingDetailsButton": "Detalles",
+  "commonSelect": "Seleccionar",
+  "dropTimePending": "Hora de entrega no seleccionada",
+  "dropTimeLabel": "Hora de entrega: {time}",
+  "@dropTimeLabel": {
+    "placeholders": {
+      "time": {}
+    }
+  },
+  "pickupTimePending": "Hora de recogida no seleccionada",
+  "pickupTimeLabel": "Hora de recogida: {time}",
+  "@pickupTimeLabel": {
+    "placeholders": {
+      "time": {}
+    }
+  },
+  "scheduleTimesRequired": "Debes elegir la hora de entrega y recogida.",
+  "notesHint": "Candado, frágil, instrucciones especiales...",
+  "luggageNameHint": "Ponle un nombre al equipaje (opcional)",
+  "luggageRegistrationNote": "Después de guardar, tu personal puede imprimir la pegatina QR. El cliente debe escanear el código al dejar y recoger.",
+  "luggageCreateFailed": "No se pudo crear el equipaje.",
+  "savingInProgress": "Guardando...",
+  "statusLabel": "Estado",
+  "permissionNameCamera": "Cámara",
+  "permissionNameLocation": "Ubicación",
+  "permissionNameNotifications": "Notificaciones",
+  "footerCopyright": "@2025 aparial.com",
+  "green": "Verde",
+  "qrRegenerate": "Regenerar",
+  "locationPermissionDenied": "Permiso de ubicación no concedido.",
+  "dropDatePickerHelp": "Fecha de entrega",
+  "pickupDatePickerHelp": "Fecha de recogida",
+  "addLuggageTitle": "Crear equipaje"
+}

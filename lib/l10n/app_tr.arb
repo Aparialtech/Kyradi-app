@@ -1,0 +1,627 @@
+{
+  "@@locale": "tr",
+  "appTitle": "KYRADI",
+  "dashboard": "Ana Sayfa",
+  "profile": "Profil",
+  "settings": "Ayarlar",
+  "findLocation": "Konumumu Bul",
+  "destination": "Varış Noktası",
+  "transitRoute": "Toplu Taşıma Rotası",
+  "myLuggages": "Bavullarım",
+  "total": "Toplam",
+  "addLuggageQr": "Bavul Ekle (QR)",
+  "newLuggageAdded": "Yeni bavul eklendi ✅",
+  "save": "Kaydet",
+  "saveProfile": "Profil kaydedildi ✅",
+  "saveProfileError": "Kaydedilemedi",
+  "userInfo": "Kullanıcı Bilgileri",
+  "map": "Harita",
+  "mapIntro": "BavulGO noktalarını haritada gör, en uygun rotayı oluştur.",
+  "walkingRoute": "Yürüme Rotası",
+  "drivingRoute": "Araç Rotası",
+  "openInMaps": "Google Haritalar'da Aç",
+  "routeOptions": "Rota seçenekleri",
+  "firstName": "Ad",
+  "lastName": "Soyad",
+  "fullNameLabel": "Ad Soyad",
+  "phone": "Telefon",
+  "email": "E-posta",
+  "address": "Adres",
+  "birthDate": "Doğum Tarihi",
+  "gender": "Cinsiyet",
+  "emergencyContact": "Acil Durum Kişisi",
+  "note": "Not / Açıklama",
+  "cameraPermission": "Kamera İzni",
+  "cameraPermissionDesc": "QR okutmak için gereklidir",
+  "locationPermission": "Konum İzni",
+  "locationPermissionDesc": "Toplu taşıma ve konum özellikleri için",
+  "notificationPermission": "Bildirim İzni",
+  "notificationPermissionDesc": "Hatırlatmalar ve güncellemeler için",
+  "inAppNotifications": "Uygulama içi bildirimler",
+  "notificationSound": "Bildirim Sesi",
+  "notificationVibrate": "Titreşim",
+  "account": "Hesap",
+  "changePassword": "Şifreyi Değiştir",
+  "logout": "Çıkış Yap",
+  "about": "Hakkında",
+  "aboutApp": "Bu uygulama KYRADI tarafından geliştirilmiştir.",
+  "qrCode": "QR Kodu",
+  "weight": "Ağırlık (kg)",
+  "size": "Boyut",
+  "color": "Renk",
+  "small": "Küçük",
+  "medium": "Orta",
+  "large": "Büyük",
+  "black": "Siyah",
+  "red": "Kırmızı",
+  "blue": "Mavi",
+  "grey": "Gri",
+  "other": "Diğer",
+  "saveLuggage": "Bavulu Kaydet",
+  "qrEmptyError": "QR kod boş olamaz ❌",
+  "oldPassword": "Eski Şifre",
+  "newPassword": "Yeni Şifre",
+  "confirmNewPassword": "Yeni Şifre (Tekrar)",
+  "passwordChanged": "Şifre değiştirildi ✅",
+  "passwordMismatch": "Yeni şifreler eşleşmiyor ❌",
+  "languageChanged": "Dil değiştirildi ✅",
+  "permissionGranted": "{permission} izni verildi ✅",
+  "permissionDenied": "{permission} izni reddedildi ❌",
+  "permissionDeniedForever": "{permission} izni kalıcı olarak reddedildi, ayarlardan aç ⚙️",
+  "locationReceived": "Konum alındı 📍 {lat}, {lng}",
+  "locationFailed": "Konum alınamadı ❌",
+  "profileSaved": "Profil kaydedildi ✅",
+  "profileSaveError": "Profil kaydedilemedi ❌",
+  "logoutSuccess": "Çıkış yapıldı 👋",
+  "copyrightNotice": "© 2025 KYRADI. Tüm hakları saklıdır.",
+  "demoMapComingSoon": "Harita modülü yakında açılacak.",
+  "demoLuggageButton": "Bavul {number}",
+  "@demoLuggageButton": {
+    "placeholders": {
+      "number": {}
+    }
+  },
+  "demoLuggageSelected": "{label} seçildi.",
+  "@demoLuggageSelected": {
+    "placeholders": {
+      "label": {}
+    }
+  },
+  "demoFirstNameValue": "Deniz",
+  "demoLastNameValue": "Gezensoy",
+  "demoNationalIdValue": "12345678901",
+  "demoAddressValue": "İstanbul, Türkiye",
+  "demoEmergencyNameValue": "Merve Sönmez",
+  "demoEmergencyAddressValue": "Kadıköy, İstanbul",
+  "demoEmergencyEmailValue": "merve@example.com",
+  "demoEmergencyRelationValue": "Kardeş / Yakın Akraba",
+  "emergencyContactNote": "Acil durumlarda bu kişi aranacaktır.",
+  "introTagline": "Global bavul sistemi",
+  "introTrackButton": "Takip Et",
+  "serverButtonLabel": "Sunucu",
+  "serverStatus": "Sunucu: {host}",
+  "@serverStatus": {
+    "placeholders": {
+      "host": {}
+    }
+  },
+  "loginHeroSubtitle": "Hesabına giriş yaparak bavullarını yönet.",
+  "loginFormTitle": "Giriş bilgileri",
+  "loginFormSubtitle": "Giriş yapmak için en güncel sunucuya bağlan.",
+  "emailHint": "ornek@mail.com",
+  "passwordLabel": "Şifre",
+  "passwordHint": "••••••",
+  "validationEmailRequired": "E-posta gerekli",
+  "validationEmailInvalid": "Geçerli bir e-posta gir",
+  "validationPasswordRequired": "Şifre gerekli",
+  "validationMinChars": "En az {count} karakter gir",
+  "@validationMinChars": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "loginForgotPassword": "Şifremi unuttum",
+  "clearButton": "Temizle",
+  "loginButtonLabel": "Giriş Yap",
+  "loginNoAccount": "Hesabın yok mu?",
+  "registerButtonLabel": "Kayıt Ol",
+  "loginSuccess": "Giriş başarılı ✅",
+  "loginInvalidCredentials": "E-posta veya şifre hatalı ❌",
+  "loginTooManyAttempts": "Çok fazla deneme yaptınız, lütfen birkaç dakika sonra tekrar deneyin ⚠️",
+  "loginFailed": "Giriş başarısız, tekrar deneyin ❌",
+  "genericErrorWithDetails": "Bir hata oluştu: {details}",
+  "@genericErrorWithDetails": {
+    "placeholders": {
+      "details": {}
+    }
+  },
+  "loginVerificationRequired": "Lütfen hesabını doğrula 📨",
+  "verificationSendFailedWithDetails": "Doğrulama kodu gönderilemedi: {details}",
+  "@verificationSendFailedWithDetails": {
+    "placeholders": {
+      "details": {}
+    }
+  },
+  "registerTitle": "Kayıt Ol",
+  "registerPersonalSectionTitle": "Kişisel Bilgiler",
+  "registerPersonalSectionSubtitle": "Kimlik ve doğum tarihini paylaş.",
+  "genderMale": "Erkek",
+  "genderFemale": "Kadın",
+  "genderUndisclosed": "Belirtmek istemiyorum",
+  "registerContactSectionTitle": "İletişim Bilgileri",
+  "registerContactSectionSubtitle": "E-posta ve doğrulama bilgileriniz",
+  "nationalIdLabel": "TC Kimlik No",
+  "phoneHint": "+90 5xx xxx xx xx",
+  "registerSecuritySectionTitle": "Güvenlik",
+  "registerSecuritySectionSubtitle": "Şifreni belirle ve doğrula",
+  "registerPasswordRepeatLabel": "Şifre Tekrar",
+  "registerCaptchaLabel": "Ben robot değilim",
+  "registerCaptchaWarning": "\"Ben robot değilim\" kutusunu işaretleyin",
+  "registerKvkkAgreementLabel": "KYRADI – KVKK Aydınlatma Metni'ni okudum ve onaylıyorum.",
+  "registerKvkkAgreementWarning": "Lütfen KVKK Aydınlatma Metni'ni kabul edin.",
+  "registerRestrictedAgreementLabel": "Aparial'in ve genel taşıma şirketlerinin reddettiği maddeleri okudum ve kabul ediyorum.",
+  "registerRestrictedAgreementWarning": "Lütfen reddedilen maddeler belgesini onaylayın.",
+  "registerAgreementView": "Metni Görüntüle",
+  "registerKvkkDialogTitle": "KYRADI – KVKK Aydınlatma Metni",
+  "registerRestrictedDialogTitle": "Aparial'in ve Genel Taşıma Şirketlerinin Reddettiği Maddeler",
+  "registerSuccessMessage": "Kayıt başarılı ✅ Doğrulama e-postası gönderildi.",
+  "registerEmailExistsMessage": "Bu e-posta adresi zaten kayıtlı ❌",
+  "registerGenericErrorMessage": "Kayıt başarısız ❌",
+  "validationRequired": "Zorunlu",
+  "validationPasswordNeedsLetter": "En az 1 harf içermeli",
+  "validationPasswordNeedsNumber": "En az 1 rakam içermeli",
+  "validationPasswordRepeatRequired": "Şifre tekrar gerekli",
+  "validationNationalIdRequired": "TC gerekli",
+  "validationNationalIdLength": "TC 11 hane olmalı",
+  "validationNationalIdChecksumTen": "TC geçersiz (10. hane)",
+  "validationNationalIdChecksumEleven": "TC geçersiz (11. hane)",
+  "validationNationalIdInvalid": "TC geçersiz",
+  "validationPhoneRequired": "Telefon gerekli",
+  "validationPhoneFormat": "Format: +90 5xx xxx xx xx",
+  "validationBirthDateRequired": "Doğum tarihi seçin",
+  "validationAgeRequirement": "18 yaşından büyük olmalısınız",
+  "formNotSelected": "Seçilmedi",
+  "forgotTitle": "Şifremi Unuttum",
+  "forgotIntro": "Şifreni sıfırlamak için kayıtlı e-postana kod gönderelim.",
+  "forgotEmailSectionTitle": "E-posta doğrulama",
+  "forgotEmailSectionSubtitle": "Kayıtlı adresine tek kullanımlık kod gönderilecektir.",
+  "emailAddressLabel": "E-posta adresi",
+  "forgotSendButton": "Kod Gönder",
+  "forgotResendCountdown": "Tekrar Gönder ({seconds}s)",
+  "@forgotResendCountdown": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "forgotAlreadyHaveCode": "Kodum zaten var",
+  "forgotNeedValidEmail": "Lütfen önce geçerli bir e-posta gir 💌",
+  "forgotCodeSent": "Kod gönderildi 📩",
+  "forgotEmailNotFound": "Bu e-posta sistemde kayıtlı değil ❌",
+  "forgotTooManyAttempts": "Çok fazla deneme yaptınız, lütfen 1 dakika sonra tekrar deneyin ⚠️",
+  "forgotCodeFailed": "Kod gönderilemedi ❌",
+  "resetTitle": "Şifreyi Sıfırla",
+  "resetSubtitle": "Bu e-posta adresine gönderilen kodu girerek yeni şifreni oluştur.",
+  "verificationCodeLabel": "Doğrulama Kodu",
+  "resetNewPasswordLabel": "Yeni Şifre",
+  "resetConfirmPasswordLabel": "Yeni Şifre (Tekrar)",
+  "resetSubmitButton": "Şifreyi Sıfırla",
+  "unknownError": "Bilinmeyen hata",
+  "verificationTitle": "E-posta Doğrulama",
+  "verificationInstructions": "{email} adresine gönderilen 6 haneli kodu gir.",
+  "@verificationInstructions": {
+    "placeholders": {
+      "email": {}
+    }
+  },
+  "verifyButtonLabel": "Kodu Doğrula",
+  "verificationResendButton": "Kodu Tekrar Gönder",
+  "verificationCountdownLabel": "{seconds} sn sonra tekrar gönder",
+  "@verificationCountdownLabel": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "verificationResentMessage": "Kod tekrar gönderildi",
+  "verificationSendErrorMessage": "Gönderim hatası",
+  "verificationMissingEmailMessage": "E-posta alınamadı",
+  "verificationSuccessMessage": "Kullanıcı doğrulandı ✅",
+  "verificationErrorMessage": "Doğrulama hatası",
+  "verificationCodeInvalidMessage": "Kod 6 haneli olmalı",
+  "validationVerificationCodeRequired": "Kod gerekli",
+  "validationVerificationCodeLength": "6 haneli kod girin",
+  "dashboardGreeting": "Merhaba, {name}",
+  "@dashboardGreeting": {
+    "placeholders": {
+      "name": {}
+    }
+  },
+  "dashboardSubtitle": "Konumunu paylaş, bavullarını yönet.",
+  "dashboardTotalCount": "Toplam {count}",
+  "@dashboardTotalCount": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "travelerPlaceholder": "Gezgin",
+  "quickAddLuggage": "Bavul Ekle",
+  "quickTransit": "Toplu Taşıma",
+  "dashboardMetricAwaiting": "Teslim Bekleyen",
+  "dashboardMetricStored": "Depoda",
+  "dashboardMetricPicked": "Teslim Alınan",
+  "dashboardMetricCancelled": "İptal Edilen",
+  "deliverySectionTitle": "Teslimat & Rota",
+  "deliverySectionSubtitle": "Teslim noktasını seç ve varış rotasını aç.",
+  "deliveryPointLabel": "Teslim Noktası",
+  "deliveryPointOption": "{name} • Boş {available}/{total}",
+  "@deliveryPointOption": {
+    "placeholders": {
+      "name": {},
+      "available": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "deliveryPointSelected": "Teslim noktası seçildi: {name} ✅",
+  "@deliveryPointSelected": {
+    "placeholders": {
+      "name": {}
+    }
+  },
+  "routeNeedLocation": "Önce \"Konumumu Bul\" seçeneğini kullan.",
+  "routeNeedDestination": "Lütfen bir varış noktası gir.",
+  "mapsOpenFailed": "Google Maps açılamadı.",
+  "reservationSectionTitle": "Rezervasyon Durumları",
+  "reservationSectionSubtitle": "Açık noktaların doluluk ve rezervasyon bilgilerini incele.",
+  "luggagesSectionSubtitle": "QR kodlarını göster, bırakma/teslim işlemlerini tamamla.",
+  "newLuggageButton": "Yeni Bavul",
+  "luggageFilterAll": "Tümü",
+  "luggageFilterAwaiting": "Teslim Bekleyen",
+  "luggageFilterStored": "Depoda",
+  "luggageFilterPicked": "Teslim",
+  "luggageEmptyStateNoItems": "Henüz kayıtlı bavul yok. Hemen yeni bir bavul ekleyin.",
+  "luggageEmptyStateFiltered": "Seçilen filtrede bavul bulunamadı.",
+  "profileInfoSubtitle": "İletişim bilgilerini güncel tut.",
+  "emergencySectionSubtitle": "Yakınını ekleyerek güvenliği artır.",
+  "relationLabel": "Yakınlık",
+  "emergencyRegisteredPerson": "Kayıtlı kişi",
+  "identitySectionTitle": "Kimlik / Pasaport",
+  "identitySectionSubtitle": "Teslim süreçlerinde gösterilecek belgeyi güvenle yükleyin.",
+  "identityPreviewHint": "Belge ön izlemesi burada görünecek",
+  "identityDocIdCard": "Kimlik",
+  "identityDocPassport": "Pasaport",
+  "identityUploaded": "Yüklenen belge: {file}",
+  "@identityUploaded": {
+    "placeholders": {
+      "file": {}
+    }
+  },
+  "identityMissing": "Henüz belge yüklenmedi. Teslimat için kimlik veya pasaport fotoğrafı zorunlu.",
+  "identityTakePhoto": "Kameradan çek",
+  "identityPickFromGallery": "Galeriden seç",
+  "identityDelete": "Belgeyi sil",
+  "identityPhotoSaved": "{docType} fotoğrafı kaydedildi ✅",
+  "@identityPhotoSaved": {
+    "placeholders": {
+      "docType": {}
+    }
+  },
+  "identityUploadFailed": "Belge yüklenemedi: {details}",
+  "@identityUploadFailed": {
+    "placeholders": {
+      "details": {}
+    }
+  },
+  "identityRemoved": "Belge kaldırıldı.",
+  "identityProofRequired": "Devam etmeden önce kimlik veya pasaport fotoğrafı yükleyin.",
+  "profileDataMissing": "Profil verisi alınamadı.",
+  "profileLoadFailed": "Profil yüklenemedi: {details}",
+  "@profileLoadFailed": {
+    "placeholders": {
+      "details": {}
+    }
+  },
+  "profileUserMissing": "Kullanıcı bulunamadı. Lütfen tekrar giriş yapın.",
+  "luggageLocationMissing": "Bu bavul için lokasyon bilgisi bulunamadı.",
+  "luggageInfoSize": "Boyut: {value}",
+  "@luggageInfoSize": {
+    "placeholders": {
+      "value": {}
+    }
+  },
+  "luggageInfoWeight": "Ağırlık: {value} kg",
+  "@luggageInfoWeight": {
+    "placeholders": {
+      "value": {}
+    }
+  },
+  "luggageInfoColor": "Renk: {value}",
+  "@luggageInfoColor": {
+    "placeholders": {
+      "value": {}
+    }
+  },
+  "noteLabel": "Not: {note}",
+  "@noteLabel": {
+    "placeholders": {
+      "note": {}
+    }
+  },
+  "scheduledDropLabel": "Planlanan bırakma: {date}",
+  "@scheduledDropLabel": {
+    "placeholders": {
+      "date": {}
+    }
+  },
+  "scheduledPickupLabel": "Planlanan teslim alma: {date}",
+  "@scheduledPickupLabel": {
+    "placeholders": {
+      "date": {}
+    }
+  },
+  "reservationCancelledLabel": "Bu rezervasyon iptal edildi.",
+  "luggageShowQr": "QR Kodunu Göster",
+  "luggageDropAction": "Bavulu bıraktım",
+  "luggagePickupAction": "Bavulumu Teslim Al",
+  "luggageCancelAction": "Rezervasyonu İptal Et",
+  "luggageOpenLocation": "Lokasyonu Aç",
+  "createdAtLabel": "Oluşturuldu: {date}",
+  "@createdAtLabel": {
+    "placeholders": {
+      "date": {}
+    }
+  },
+  "dropConfirmedAtLabel": "Bırakma onayı: {date}",
+  "@dropConfirmedAtLabel": {
+    "placeholders": {
+      "date": {}
+    }
+  },
+  "pickupConfirmedAtLabel": "Teslim alındı: {date}",
+  "@pickupConfirmedAtLabel": {
+    "placeholders": {
+      "date": {}
+    }
+  },
+  "loginRequired": "Lütfen önce giriş yapın.",
+  "luggageCreated": "Yeni bavul oluşturuldu ✅",
+  "dropConfirmedMessage": "Bavul bırakma doğrulandı ✅",
+  "pickupConfirmedMessage": "Teslim alma tamamlandı ✅",
+  "operationFailed": "İşlem tamamlanamadı.",
+  "operationFailedWithDetails": "İşlem tamamlanamadı: {details}",
+  "@operationFailedWithDetails": {
+    "placeholders": {
+      "details": {}
+    }
+  },
+  "reservationCancelledMessage": "Rezervasyon iptal edildi.",
+  "cancelFailed": "İptal edilemedi.",
+  "cancelFailedWithDetails": "İptal tamamlanamadı: {details}",
+  "@cancelFailedWithDetails": {
+    "placeholders": {
+      "details": {}
+    }
+  },
+  "cancelReservationTitle": "Rezervasyonu iptal et",
+  "cancelReservationMessage": "\"{label}\" için oluşturulan rezervasyonu iptal etmek istediğinizden emin misiniz?",
+  "@cancelReservationMessage": {
+    "placeholders": {
+      "label": {}
+    }
+  },
+  "dialogDismiss": "Vazgeç",
+  "dialogConfirmCancel": "İptal Et",
+  "dialogConfirm": "Evet",
+  "reservationTileTitle": "Rezervasyon {code}",
+  "@reservationTileTitle": {
+    "placeholders": {
+      "code": {}
+    }
+  },
+  "reservationTileSubtitle": "{code} • {time}",
+  "@reservationTileSubtitle": {
+    "placeholders": {
+      "code": {},
+      "time": {}
+    }
+  },
+  "reservationSlotSummary": "{count} bavul • {time}",
+  "@reservationSlotSummary": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "time": {}
+    }
+  },
+  "notificationsTooltip": "Bildirimler",
+  "notificationsClearTooltip": "Temizle",
+  "notificationsEmptyTitle": "Henüz bildirim yok",
+  "notificationsEmptySubtitle": "Bildirimler burada görünecek. Giriş yapınca veya işlemler yaptıkça güncellenecek.",
+  "notificationTypeSuccess": "Başarılı",
+  "notificationTypeWarning": "Uyarı",
+  "notificationTypeError": "Hata",
+  "notificationTypeInfo": "Bilgi",
+  "notificationsRelativeNow": "Şimdi",
+  "notificationsRelativeSeconds": "{count} sn önce",
+  "@notificationsRelativeSeconds": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "notificationsRelativeMinutes": "{count} dk önce",
+  "@notificationsRelativeMinutes": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "notificationsRelativeHours": "{count} sa önce",
+  "@notificationsRelativeHours": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "notificationsRelativeDays": "{count} gün önce",
+  "@notificationsRelativeDays": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "mapNoLocations": "Lokasyon bulunamadı.",
+  "locationServiceDisabled": "Konum servisi kapalı.",
+  "locationPermissionPermanentlyDenied": "Konum izni kalıcı reddedildi. Ayarlardan açmalısın.",
+  "locationFailedWithDetails": "Konum alınamadı: {details}",
+  "locationNotFoundTitle": "Lokasyon bulunamadı",
+  "locationNotFoundMessage": "Seçilen lokasyon artık mevcut değil.",
+  "permissionManageButton": "Yönet",
+  "settingsPermissionsTitle": "İzinler",
+  "settingsPermissionsSubtitle": "Kamera, konum ve bildirim izinlerini yönet.",
+  "privacySectionTitle": "Gizlilik",
+  "privacySectionSubtitle": "Uygulama içi bildirim tercihlerini düzenle.",
+  "remindersSectionTitle": "Hatırlatıcılar",
+  "remindersSectionSubtitle": "Teslim ve bırakma uyarıları için tercihlerini seç.",
+  "pushRemindersLabel": "Push Bildirimleri",
+  "emailRemindersLabel": "E-posta Hatırlatıcısı",
+  "languageSectionTitle": "Dil Seçimi",
+  "languageSectionSubtitle": "Uygulamanın dilini değiştirmek için seçim yap.",
+  "languageNameTr": "Türkçe",
+  "languageNameEn": "İngilizce",
+  "languageNameDe": "Almanca",
+  "languageNameEs": "İspanyolca",
+  "languageNameRu": "Rusça",
+  "languageChangedTo": "Dil {language} olarak değiştirildi ✅",
+  "@languageChangedTo": {
+    "placeholders": {
+      "language": {}
+    }
+  },
+  "upcomingReservationsTitle": "Yaklaşan Rezervasyonlar",
+  "upcomingReservationsSubtitle": "İsimler gizlidir; yalnızca kod ve doluluk bilgisi gösterilir.",
+  "upcomingReservationsEmpty": "Bu lokasyonda planlanmış rezervasyon yok.",
+  "continueSectionTitle": "Devam Et",
+  "continueSectionSubtitle": "Üyeysen giriş yap, değilsen hızlıca kayıt ol.",
+  "accountSectionSubtitle": "Şifreni değiştir veya oturumu kapat.",
+  "logoutDialogTitle": "Oturumu kapat",
+  "logoutDialogMessage": "Hesaptan çıkış yapmak istiyor musun?",
+  "changePasswordIntro": "Güvenliğin için yeni şifreni belirle.",
+  "changePasswordRequirementHint": "En az 8 karakter, harf ve rakam içermeli.",
+  "userIdMissing": "Giriş yapılmamış: userId bulunamadı.",
+  "userIdReadFailed": "userId okunamadı: {details}",
+  "@userIdReadFailed": {
+    "placeholders": {
+      "details": {}
+    }
+  },
+  "mapsMissingApiKey": "Google Maps API anahtarı tanımlı değil.",
+  "routeFetchFailedWithDetails": "Rota alınamadı: {details}",
+  "@routeFetchFailedWithDetails": {
+    "placeholders": {
+      "details": {}
+    }
+  },
+  "routeNotFound": "Rota bulunamadı.",
+  "routeDataMissing": "Rota verisi alınamadı.",
+  "directionsApiError": "Google Directions API başarısız: {status}. Anahtarın Directions API yetkisini kontrol edin.",
+  "@directionsApiError": {
+    "placeholders": {
+      "status": {}
+    }
+  },
+  "reservationEmptyState": "Planlanmış rezervasyon yok.",
+  "availableSlotsLabel": "Boş {available}/{total}",
+  "@availableSlotsLabel": {
+    "placeholders": {
+      "available": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "qrDropTitle": "QR ile bırakma doğrulaması",
+  "qrPickupTitle": "QR ile teslim alma",
+  "qrManualEntryHint": "QR kodunu okutamıyorsan manuel gir.",
+  "qrVerifyButton": "Doğrula",
+  "qrMismatchMessage": "QR kodu eşleşmedi. Tekrar dene.",
+  "qrCopied": "QR kodu kopyalandı.",
+  "qrTextCopied": "Metin kopyalandı.",
+  "qrCopyCode": "Kodu kopyala",
+  "qrCopyPrintable": "Yazdırılabilir metni kopyala",
+  "qrShareInstructions": "Bu kodu personelle paylaşarak sticker çıktısı alabilirsiniz. Müşteri bırakma ve teslim sırasında aynı kodu okutmalıdır.",
+  "qrDuplicateWarning": "Bu QR kodu zaten kullanılıyor. Yeni bir kod ürettik, lütfen tekrar dene.",
+  "qrScanTip": "Kodun çerçeve içinde net görünmesine dikkat et.",
+  "locationFetching": "Konum alınıyor...",
+  "refreshNearbyButton": "Yakındaki noktaları güncelle",
+  "nearbyLocationsTitle": "Yakındaki lokasyonlar",
+  "commonSelect": "Seç",
+  "landingTitle": "BavulGO Track",
+  "landingIntro": "Bavullarını bırakmak istediğin noktayı seç. Haritadan dilediğin noktaya dokun, doluluk oranını gör ve rezervasyon detayını aç.",
+  "landingLocateSectionTitle": "Sana en yakın noktaları bul",
+  "landingLocateSectionSubtitle": "Konumunu paylaşırsan öneriler liste halinde çıkar.",
+  "landingLocateButton": "Konumumu Bul",
+  "landingLocatingButton": "Konum alınıyor...",
+  "landingNearestTitle": "Sana en yakın noktalar",
+  "landingNearestSubtitle": "Konumuna göre önerilen 3 nokta",
+  "landingGoButton": "Git",
+  "landingDetailsButton": "Detay",
+  "dropTimePending": "Bırakma zamanı seçilmedi",
+  "dropTimeLabel": "Bırakma zamanı: {time}",
+  "@dropTimeLabel": {
+    "placeholders": {
+      "time": {}
+    }
+  },
+  "pickupTimePending": "Teslim alma zamanı seçilmedi",
+  "pickupTimeLabel": "Teslim alma zamanı: {time}",
+  "@pickupTimeLabel": {
+    "placeholders": {
+      "time": {}
+    }
+  },
+  "scheduleTimesRequired": "Bırakma ve teslim alma zamanları zorunludur.",
+  "notesHint": "Kilidi, kırılganlık, özel talimatlar...",
+  "luggageNameHint": "Bavula bir ad ver (isteğe bağlı)",
+  "luggageRegistrationNote": "Kaydın ardından personeliniz QR sticker çıktısını alabilir. Müşteri bırakma ve teslimde kodu okutmalıdır.",
+  "luggageCreateFailed": "Bavul oluşturulamadı.",
+  "savingInProgress": "Kaydediliyor...",
+  "statusLabel": "Durum",
+  "permissionNameCamera": "Kamera",
+  "permissionNameLocation": "Konum",
+  "permissionNameNotifications": "Bildirim",
+  "footerCopyright": "@2025 aparial.com",
+  "green": "Yeşil",
+  "qrRegenerate": "Yeniden Oluştur",
+  "locationPermissionDenied": "Konum izni verilmedi.",
+  "dropDatePickerHelp": "Bırakma tarihi",
+  "pickupDatePickerHelp": "Teslim tarihi",
+  "addLuggageTitle": "Bavul Oluştur",
+  "apiSettingsTitle": "Sunucu Ayarları",
+  "apiSettingsBaseUrlLabel": "Taban URL",
+  "apiSettingsActiveLabel": "Aktif: {url}",
+  "@apiSettingsActiveLabel": {
+    "placeholders": {
+      "url": {}
+    }
+  },
+  "apiSettingsEnvLockedNote": "Bu değer uygulama derlenirken sabitlenmiş. Değişiklik yapmak için dart-define parametrelerini güncellemelisiniz.",
+  "apiSettingsDeviceNote": "Not: Telefon veya fiziksel cihazdan test ederken bilgisayarınızın yerel IP adresini girin.",
+  "apiSettingsResetButton": "Varsayılan",
+  "apiSettingsInvalidUrl": "Lütfen geçerli bir URL girin",
+  "apiSettingsResetSuccess": "Sunucu adresi varsayılan ayara döndü.",
+  "apiSettingsUpdatedSuccess": "Sunucu adresi güncellendi."
+}

@@ -1,0 +1,571 @@
+{
+  "@@locale": "ru",
+  "appTitle": "KYRADI",
+  "dashboard": "Главная",
+  "profile": "Профиль",
+  "settings": "Настройки",
+  "findLocation": "Найти мое местоположение",
+  "destination": "Пункт назначения",
+  "transitRoute": "Маршрут общественного транспорта",
+  "myLuggages": "Мои чемоданы",
+  "total": "Итого",
+  "addLuggageQr": "Добавить багаж (QR)",
+  "newLuggageAdded": "Новый багаж добавлен ✅",
+  "save": "Сохранить",
+  "saveProfile": "Профиль сохранен ✅",
+  "saveProfileError": "Не удалось сохранить",
+  "userInfo": "Информация о пользователе",
+  "map": "Карта",
+  "mapIntro": "Смотрите точки BavulGO на карте и строите лучший маршрут.",
+  "walkingRoute": "Пеший маршрут",
+  "drivingRoute": "Маршрут на авто",
+  "openInMaps": "Открыть в Google Картах",
+  "routeOptions": "Варианты маршрута",
+  "firstName": "Имя",
+  "lastName": "Фамилия",
+  "fullNameLabel": "Полное имя",
+  "phone": "Телефон",
+  "email": "Эл. почта",
+  "address": "Адрес",
+  "birthDate": "Дата рождения",
+  "gender": "Пол",
+  "emergencyContact": "Экстренный контакт",
+  "note": "Заметка / Описание",
+  "cameraPermission": "Разрешение на камеру",
+  "cameraPermissionDesc": "Требуется для сканирования QR",
+  "locationPermission": "Разрешение на геолокацию",
+  "locationPermissionDesc": "Для транспорта и функций местоположения",
+  "notificationPermission": "Разрешение на уведомления",
+  "notificationPermissionDesc": "Для напоминаний и обновлений",
+  "inAppNotifications": "Уведомления в приложении",
+  "notificationSound": "Звук уведомления",
+  "notificationVibrate": "Вибрация",
+  "account": "Аккаунт",
+  "changePassword": "Сменить пароль",
+  "logout": "Выйти",
+  "about": "О приложении",
+  "aboutApp": "Это приложение разработано KYRADI.",
+  "qrCode": "QR-код",
+  "weight": "Вес (кг)",
+  "size": "Размер",
+  "color": "Цвет",
+  "small": "Маленький",
+  "medium": "Средний",
+  "large": "Большой",
+  "black": "Чёрный",
+  "red": "Красный",
+  "blue": "Синий",
+  "grey": "Серый",
+  "other": "Другой",
+  "saveLuggage": "Сохранить багаж",
+  "qrEmptyError": "QR-код не может быть пустым ❌",
+  "oldPassword": "Старый пароль",
+  "newPassword": "Новый пароль",
+  "confirmNewPassword": "Подтвердите новый пароль",
+  "passwordChanged": "Пароль изменён ✅",
+  "passwordMismatch": "Новые пароли не совпадают ❌",
+  "languageChanged": "Язык изменён ✅",
+  "permissionGranted": "Разрешение {permission} предоставлено ✅",
+  "permissionDenied": "Разрешение {permission} отклонено ❌",
+  "permissionDeniedForever": "Разрешение {permission} отклонено навсегда, включите в настройках ⚙️",
+  "locationReceived": "Местоположение получено 📍 {lat}, {lng}",
+  "locationFailed": "Не удалось получить местоположение ❌",
+  "profileSaved": "Профиль сохранён ✅",
+  "profileSaveError": "Не удалось сохранить профиль ❌",
+  "logoutSuccess": "Вы успешно вышли 👋",
+  "copyrightNotice": "© 2025 KYRADI. Все права защищены.",
+  "demoMapComingSoon": "Модуль карты скоро откроется.",
+  "demoLuggageButton": "Багаж {number}",
+  "@demoLuggageButton": {
+    "placeholders": {
+      "number": {}
+    }
+  },
+  "demoLuggageSelected": "Выбран {label}.",
+  "@demoLuggageSelected": {
+    "placeholders": {
+      "label": {}
+    }
+  },
+  "demoFirstNameValue": "Deniz",
+  "demoLastNameValue": "Gezensoy",
+  "demoNationalIdValue": "12345678901",
+  "demoAddressValue": "Стамбул, Турция",
+  "demoEmergencyNameValue": "Merve Sönmez",
+  "demoEmergencyAddressValue": "Кадыкёй, Стамбул",
+  "demoEmergencyEmailValue": "merve@example.com",
+  "demoEmergencyRelationValue": "Брат / сестра или близкий родственник",
+  "emergencyContactNote": "С этим человеком свяжутся в экстренных ситуациях.",
+  "introTagline": "Глобальная система чемоданов",
+  "introTrackButton": "Отслеживать",
+  "serverButtonLabel": "Сервер",
+  "serverStatus": "Сервер: {host}",
+  "@serverStatus": {
+    "placeholders": {
+      "host": {}
+    }
+  },
+  "loginHeroSubtitle": "Управляйте багажом после входа.",
+  "loginFormTitle": "Данные для входа",
+  "loginFormSubtitle": "Подключитесь к актуальному серверу, чтобы войти.",
+  "emailHint": "example@mail.com",
+  "passwordLabel": "Пароль",
+  "passwordHint": "••••••",
+  "validationEmailRequired": "E-mail обязателен",
+  "validationEmailInvalid": "Введите корректный e-mail",
+  "validationPasswordRequired": "Пароль обязателен",
+  "validationMinChars": "Введите минимум {count} символов",
+  "@validationMinChars": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "loginForgotPassword": "Забыл пароль",
+  "clearButton": "Очистить",
+  "loginButtonLabel": "Войти",
+  "loginNoAccount": "Нет аккаунта?",
+  "registerButtonLabel": "Зарегистрироваться",
+  "loginSuccess": "Вход выполнен ✅",
+  "loginInvalidCredentials": "Неверный e-mail или пароль ❌",
+  "loginTooManyAttempts": "Слишком много попыток, повторите через несколько минут ⚠️",
+  "loginFailed": "Не удалось войти, попробуйте снова ❌",
+  "genericErrorWithDetails": "Произошла ошибка: {details}",
+  "@genericErrorWithDetails": {
+    "placeholders": {
+      "details": {}
+    }
+  },
+  "loginVerificationRequired": "Пожалуйста, подтвердите аккаунт 📨",
+  "verificationSendFailedWithDetails": "Не удалось отправить код подтверждения: {details}",
+  "@verificationSendFailedWithDetails": {
+    "placeholders": {
+      "details": {}
+    }
+  },
+  "registerTitle": "Создать аккаунт",
+  "registerPersonalSectionTitle": "Личные данные",
+  "registerPersonalSectionSubtitle": "Укажите удостоверение личности и дату рождения.",
+  "genderMale": "Мужской",
+  "genderFemale": "Женский",
+  "genderUndisclosed": "Не указывать",
+  "registerContactSectionTitle": "Контактная информация",
+  "registerContactSectionSubtitle": "E-mail и данные для подтверждения",
+  "nationalIdLabel": "Номер удостоверения личности",
+  "phoneHint": "+90 5xx xxx xx xx",
+  "registerSecuritySectionTitle": "Безопасность",
+  "registerSecuritySectionSubtitle": "Задайте и подтвердите пароль",
+  "registerPasswordRepeatLabel": "Повторите пароль",
+  "registerCaptchaLabel": "Я не робот",
+  "registerCaptchaWarning": "Отметьте «Я не робот»",
+  "registerKvkkAgreementLabel": "Я прочитал и принимаю уведомление KVKK компании KYRADI.",
+  "registerKvkkAgreementWarning": "Пожалуйста, примите уведомление KVKK.",
+  "registerRestrictedAgreementLabel": "Я прочитал и принимаю список предметов, которые Aparial и перевозчики не принимают.",
+  "registerRestrictedAgreementWarning": "Пожалуйста, подтвердите документ с запрещёнными предметами.",
+  "registerAgreementView": "Показать документ",
+  "registerKvkkDialogTitle": "KYRADI – уведомление KVKK",
+  "registerRestrictedDialogTitle": "Предметы, которые отклоняют Aparial и транспортные компании",
+  "registerSuccessMessage": "Регистрация успешна ✅ Письмо подтверждения отправлено.",
+  "registerEmailExistsMessage": "Этот e-mail уже зарегистрирован ❌",
+  "registerGenericErrorMessage": "Регистрация не удалась ❌",
+  "validationRequired": "Обязательно",
+  "validationPasswordNeedsLetter": "Нужна минимум одна буква",
+  "validationPasswordNeedsNumber": "Нужна минимум одна цифра",
+  "validationPasswordRepeatRequired": "Повторите пароль",
+  "validationNationalIdRequired": "Требуется номер удостоверения",
+  "validationNationalIdLength": "Номер должен содержать 11 цифр",
+  "validationNationalIdChecksumTen": "Неверный номер (10-я цифра)",
+  "validationNationalIdChecksumEleven": "Неверный номер (11-я цифра)",
+  "validationNationalIdInvalid": "Неверный номер",
+  "validationPhoneRequired": "Нужен номер телефона",
+  "validationPhoneFormat": "Формат: +90 5xx xxx xx xx",
+  "validationBirthDateRequired": "Выберите дату рождения",
+  "validationAgeRequirement": "Вам должно быть больше 18 лет",
+  "formNotSelected": "Не выбрано",
+  "forgotTitle": "Забыли пароль",
+  "forgotIntro": "Отправим код на вашу почту для сброса пароля.",
+  "forgotEmailSectionTitle": "Подтверждение e-mail",
+  "forgotEmailSectionSubtitle": "На зарегистрированный адрес придёт одноразовый код.",
+  "emailAddressLabel": "Адрес e-mail",
+  "forgotSendButton": "Отправить код",
+  "forgotResendCountdown": "Отправить снова ({seconds} с)",
+  "@forgotResendCountdown": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "forgotAlreadyHaveCode": "У меня уже есть код",
+  "forgotNeedValidEmail": "Сначала введите корректный e-mail 💌",
+  "forgotCodeSent": "Код отправлен 📩",
+  "forgotEmailNotFound": "Этот e-mail не зарегистрирован ❌",
+  "forgotTooManyAttempts": "Слишком много попыток, повторите через минуту ⚠️",
+  "forgotCodeFailed": "Не удалось отправить код ❌",
+  "resetTitle": "Сброс пароля",
+  "resetSubtitle": "Введите код, отправленный на этот e-mail, и создайте новый пароль.",
+  "verificationCodeLabel": "Код подтверждения",
+  "resetNewPasswordLabel": "Новый пароль",
+  "resetConfirmPasswordLabel": "Новый пароль (повтор)",
+  "resetSubmitButton": "Сбросить пароль",
+  "unknownError": "Неизвестная ошибка",
+  "verificationTitle": "Подтверждение e-mail",
+  "verificationInstructions": "Введите 6-значный код, отправленный на {email}.",
+  "@verificationInstructions": {
+    "placeholders": {
+      "email": {}
+    }
+  },
+  "verifyButtonLabel": "Подтвердить код",
+  "verificationResendButton": "Отправить код снова",
+  "verificationCountdownLabel": "Отправить снова через {seconds} с",
+  "@verificationCountdownLabel": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "verificationResentMessage": "Код отправлен повторно",
+  "verificationSendErrorMessage": "Ошибка отправки",
+  "verificationMissingEmailMessage": "Не удалось получить e-mail",
+  "verificationSuccessMessage": "Аккаунт подтверждён ✅",
+  "verificationErrorMessage": "Ошибка подтверждения",
+  "verificationCodeInvalidMessage": "Код должен состоять из 6 цифр",
+  "validationVerificationCodeRequired": "Код обязателен",
+  "validationVerificationCodeLength": "Введите 6-значный код",
+  "dashboardGreeting": "Привет, {name}",
+  "@dashboardGreeting": {
+    "placeholders": {
+      "name": {}
+    }
+  },
+  "dashboardSubtitle": "Поделись местоположением и управляй багажом.",
+  "dashboardTotalCount": "Всего {count}",
+  "@dashboardTotalCount": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "travelerPlaceholder": "Путешественник",
+  "quickAddLuggage": "Добавить багаж",
+  "quickTransit": "Транспорт",
+  "dashboardMetricAwaiting": "Ожидает сдачи",
+  "dashboardMetricStored": "На хранении",
+  "dashboardMetricPicked": "Выдано",
+  "dashboardMetricCancelled": "Отменено",
+  "deliverySectionTitle": "Доставка и маршрут",
+  "deliverySectionSubtitle": "Выбери пункт сдачи и открой маршрут.",
+  "deliveryPointLabel": "Пункт сдачи",
+  "deliveryPointOption": "{name} • Свободно {available}/{total}",
+  "@deliveryPointOption": {
+    "placeholders": {
+      "name": {},
+      "available": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "deliveryPointSelected": "Пункт сдачи выбран: {name} ✅",
+  "@deliveryPointSelected": {
+    "placeholders": {
+      "name": {}
+    }
+  },
+  "routeNeedLocation": "Сначала нажмите «Найти моё местоположение».",
+  "routeNeedDestination": "Укажите пункт назначения.",
+  "mapsOpenFailed": "Не удалось открыть Google Maps.",
+  "reservationSectionTitle": "Статусы бронирований",
+  "reservationSectionSubtitle": "Смотри доступность и занятость точек.",
+  "luggagesSectionSubtitle": "Показывай QR-коды и завершай шаги сдачи/получения.",
+  "newLuggageButton": "Новый багаж",
+  "luggageFilterAll": "Все",
+  "luggageFilterAwaiting": "Ожидает сдачи",
+  "luggageFilterStored": "На хранении",
+  "luggageFilterPicked": "Выдано",
+  "luggageEmptyStateNoItems": "Багаж ещё не добавлен. Создайте первый!",
+  "luggageEmptyStateFiltered": "Для этого фильтра багаж не найден.",
+  "profileInfoSubtitle": "Держите контактные данные в актуальном состоянии.",
+  "emergencySectionSubtitle": "Добавьте доверенное лицо для безопасности.",
+  "relationLabel": "Степень родства",
+  "emergencyRegisteredPerson": "Сохранённый контакт",
+  "identitySectionTitle": "ID / Паспорт",
+  "identitySectionSubtitle": "Загрузите документ, который покажете при доставке.",
+  "identityPreviewHint": "Здесь появится предварительный просмотр документа",
+  "identityDocIdCard": "Удостоверение личности",
+  "identityDocPassport": "Паспорт",
+  "identityUploaded": "Загруженный документ: {file}",
+  "@identityUploaded": {
+    "placeholders": {
+      "file": {}
+    }
+  },
+  "identityMissing": "Документ ещё не загружен. Для доставки требуется фото удостоверения или паспорта.",
+  "identityTakePhoto": "Снять на камеру",
+  "identityPickFromGallery": "Выбрать из галереи",
+  "identityDelete": "Удалить документ",
+  "identityPhotoSaved": "Фото {docType} сохранено ✅",
+  "@identityPhotoSaved": {
+    "placeholders": {
+      "docType": {}
+    }
+  },
+  "identityUploadFailed": "Не удалось загрузить документ: {details}",
+  "@identityUploadFailed": {
+    "placeholders": {
+      "details": {}
+    }
+  },
+  "identityRemoved": "Документ удалён.",
+  "identityProofRequired": "Загрузите фото удостоверения или паспорта перед продолжением.",
+  "profileDataMissing": "Не удалось загрузить данные профиля.",
+  "profileLoadFailed": "Не удалось загрузить профиль: {details}",
+  "@profileLoadFailed": {
+    "placeholders": {
+      "details": {}
+    }
+  },
+  "profileUserMissing": "Пользователь не найден. Пожалуйста, войдите снова.",
+  "luggageLocationMissing": "Для этого багажа нет данных о локации.",
+  "luggageInfoSize": "Размер: {value}",
+  "@luggageInfoSize": {
+    "placeholders": {
+      "value": {}
+    }
+  },
+  "luggageInfoWeight": "Вес: {value} кг",
+  "@luggageInfoWeight": {
+    "placeholders": {
+      "value": {}
+    }
+  },
+  "luggageInfoColor": "Цвет: {value}",
+  "@luggageInfoColor": {
+    "placeholders": {
+      "value": {}
+    }
+  },
+  "noteLabel": "Заметка: {note}",
+  "@noteLabel": {
+    "placeholders": {
+      "note": {}
+    }
+  },
+  "scheduledDropLabel": "Планируемая сдача: {date}",
+  "@scheduledDropLabel": {
+    "placeholders": {
+      "date": {}
+    }
+  },
+  "scheduledPickupLabel": "Планируемое получение: {date}",
+  "@scheduledPickupLabel": {
+    "placeholders": {
+      "date": {}
+    }
+  },
+  "reservationCancelledLabel": "Это бронирование отменено.",
+  "luggageShowQr": "Показать QR-код",
+  "luggageDropAction": "Я оставил багаж",
+  "luggagePickupAction": "Забрать багаж",
+  "luggageCancelAction": "Отменить бронирование",
+  "luggageOpenLocation": "Открыть локацию",
+  "createdAtLabel": "Создано: {date}",
+  "@createdAtLabel": {
+    "placeholders": {
+      "date": {}
+    }
+  },
+  "dropConfirmedAtLabel": "Сдача подтверждена: {date}",
+  "@dropConfirmedAtLabel": {
+    "placeholders": {
+      "date": {}
+    }
+  },
+  "pickupConfirmedAtLabel": "Получение подтверждено: {date}",
+  "@pickupConfirmedAtLabel": {
+    "placeholders": {
+      "date": {}
+    }
+  },
+  "loginRequired": "Сначала войдите в систему.",
+  "luggageCreated": "Создан новый багаж ✅",
+  "dropConfirmedMessage": "Сдача подтверждена ✅",
+  "pickupConfirmedMessage": "Получение завершено ✅",
+  "operationFailed": "Операция не завершена.",
+  "operationFailedWithDetails": "Операция не завершена: {details}",
+  "@operationFailedWithDetails": {
+    "placeholders": {
+      "details": {}
+    }
+  },
+  "reservationCancelledMessage": "Бронирование отменено.",
+  "cancelFailed": "Отмена не выполнена.",
+  "cancelFailedWithDetails": "Не удалось отменить: {details}",
+  "@cancelFailedWithDetails": {
+    "placeholders": {
+      "details": {}
+    }
+  },
+  "cancelReservationTitle": "Отменить бронирование",
+  "cancelReservationMessage": "Вы уверены, что хотите отменить бронирование «{label}»?",
+  "@cancelReservationMessage": {
+    "placeholders": {
+      "label": {}
+    }
+  },
+  "dialogDismiss": "Отмена",
+  "dialogConfirmCancel": "Отменить",
+  "dialogConfirm": "Да",
+  "reservationTileTitle": "Бронирование {code}",
+  "@reservationTileTitle": {
+    "placeholders": {
+      "code": {}
+    }
+  },
+  "reservationTileSubtitle": "{code} • {time}",
+  "@reservationTileSubtitle": {
+    "placeholders": {
+      "code": {},
+      "time": {}
+    }
+  },
+  "reservationSlotSummary": "{count} багаж • {time}",
+  "@reservationSlotSummary": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "time": {}
+    }
+  },
+  "notificationsTooltip": "Уведомления",
+  "mapNoLocations": "Локации не найдены.",
+  "locationServiceDisabled": "Служба геолокации отключена.",
+  "locationPermissionPermanentlyDenied": "Доступ к геолокации навсегда отклонён. Включите в настройках.",
+  "locationFailedWithDetails": "Не удалось получить геолокацию: {details}",
+  "locationNotFoundTitle": "Локация не найдена",
+  "locationNotFoundMessage": "Выбранная локация больше недоступна.",
+  "permissionManageButton": "Настроить",
+  "settingsPermissionsTitle": "Разрешения",
+  "settingsPermissionsSubtitle": "Управляйте доступом к камере, геолокации и уведомлениям.",
+  "privacySectionTitle": "Конфиденциальность",
+  "privacySectionSubtitle": "Настройте параметры уведомлений в приложении.",
+  "remindersSectionTitle": "Напоминания",
+  "remindersSectionSubtitle": "Выберите оповещения о сдаче и получении.",
+  "pushRemindersLabel": "Push-уведомления",
+  "emailRemindersLabel": "Email-напоминания",
+  "languageSectionTitle": "Язык",
+  "languageSectionSubtitle": "Выберите язык приложения.",
+  "languageNameTr": "Турецкий",
+  "languageNameEn": "Английский",
+  "languageNameDe": "Немецкий",
+  "languageNameEs": "Испанский",
+  "languageNameRu": "Русский",
+  "languageChangedTo": "Язык изменён на {language} ✅",
+  "@languageChangedTo": {
+    "placeholders": {
+      "language": {}
+    }
+  },
+  "upcomingReservationsTitle": "Ближайшие бронирования",
+  "upcomingReservationsSubtitle": "Имена скрыты; показаны только коды и заполняемость.",
+  "upcomingReservationsEmpty": "Для этой локации бронирования не запланированы.",
+  "continueSectionTitle": "Продолжить",
+  "continueSectionSubtitle": "Если вы уже зарегистрированы — войдите, иначе быстро создайте аккаунт.",
+  "accountSectionSubtitle": "Смените пароль или выйдите.",
+  "logoutDialogTitle": "Выход из аккаунта",
+  "logoutDialogMessage": "Выйти из аккаунта?",
+  "userIdMissing": "Вход не выполнен: userId не найден.",
+  "userIdReadFailed": "Не удалось прочитать userId: {details}",
+  "@userIdReadFailed": {
+    "placeholders": {
+      "details": {}
+    }
+  },
+  "mapsMissingApiKey": "Ключ Google Maps не настроен.",
+  "routeFetchFailedWithDetails": "Не удалось получить маршрут: {details}",
+  "@routeFetchFailedWithDetails": {
+    "placeholders": {
+      "details": {}
+    }
+  },
+  "routeNotFound": "Маршрут не найден.",
+  "routeDataMissing": "Не удалось получить данные маршрута.",
+  "directionsApiError": "Google Directions вернул ошибку: {status}. Проверьте доступ ключа к Directions.",
+  "@directionsApiError": {
+    "placeholders": {
+      "status": {}
+    }
+  },
+  "reservationEmptyState": "Нет запланированных бронирований.",
+  "availableSlotsLabel": "Свободно {available}/{total}",
+  "@availableSlotsLabel": {
+    "placeholders": {
+      "available": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "qrDropTitle": "Подтвердить сдачу по QR",
+  "qrPickupTitle": "Подтвердить выдачу по QR",
+  "qrManualEntryHint": "Если не удаётся сканировать, введите код вручную.",
+  "qrVerifyButton": "Проверить",
+  "qrMismatchMessage": "QR-код не совпал. Попробуйте снова.",
+  "qrCopied": "QR-код скопирован.",
+  "qrTextCopied": "Текст скопирован.",
+  "qrCopyCode": "Скопировать код",
+  "qrCopyPrintable": "Скопировать текст для печати",
+  "qrShareInstructions": "Поделитесь этим кодом с персоналом, чтобы распечатать стикер. Клиент должен сканировать его при сдаче и выдаче.",
+  "qrDuplicateWarning": "Этот QR-код уже используется. Мы создали новый — попробуйте ещё раз.",
+  "qrScanTip": "Убедитесь, что код хорошо виден в рамке.",
+  "locationFetching": "Получаем местоположение...",
+  "refreshNearbyButton": "Обновить ближайшие точки",
+  "nearbyLocationsTitle": "Ближайшие точки",
+  "landingTitle": "BavulGO Track",
+  "landingIntro": "Выбери, где оставить багаж. Нажми точку на карте, чтобы увидеть заполненность и открыть детали бронирования.",
+  "landingLocateSectionTitle": "Найди ближайшие точки",
+  "landingLocateSectionSubtitle": "Поделись геолокацией, чтобы получить рекомендации.",
+  "landingLocateButton": "Найти мое местоположение",
+  "landingLocatingButton": "Получаем местоположение...",
+  "landingNearestTitle": "Ближайшие точки",
+  "landingNearestSubtitle": "3 рекомендуемые места рядом с вами",
+  "landingGoButton": "Маршрут",
+  "landingDetailsButton": "Подробнее",
+  "commonSelect": "Выбрать",
+  "dropTimePending": "Время сдачи не выбрано",
+  "dropTimeLabel": "Время сдачи: {time}",
+  "@dropTimeLabel": {
+    "placeholders": {
+      "time": {}
+    }
+  },
+  "pickupTimePending": "Время выдачи не выбрано",
+  "pickupTimeLabel": "Время выдачи: {time}",
+  "@pickupTimeLabel": {
+    "placeholders": {
+      "time": {}
+    }
+  },
+  "scheduleTimesRequired": "Нужно выбрать время сдачи и выдачи.",
+  "notesHint": "Замок, хрупкое, особые указания...",
+  "luggageNameHint": "Дайте имя багажу (необязательно)",
+  "luggageRegistrationNote": "После сохранения персонал сможет распечатать QR-стикер. Клиент должен сканировать код при сдаче и выдаче.",
+  "luggageCreateFailed": "Не удалось создать багаж.",
+  "savingInProgress": "Сохранение...",
+  "statusLabel": "Статус",
+  "permissionNameCamera": "Камера",
+  "permissionNameLocation": "Геолокация",
+  "permissionNameNotifications": "Уведомления",
+  "footerCopyright": "@2025 aparial.com",
+  "green": "Зелёный",
+  "qrRegenerate": "Создать заново",
+  "locationPermissionDenied": "Доступ к геолокации не предоставлен.",
+  "dropDatePickerHelp": "Дата сдачи",
+  "pickupDatePickerHelp": "Дата выдачи",
+  "addLuggageTitle": "Создать багаж"
+}

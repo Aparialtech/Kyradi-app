@@ -1,0 +1,72 @@
+name: kyradi_app
+description: "KYRADI mobil uygulaması."
+publish_to: 'none'
+
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.9.0
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_localizations: # ✅ çoklu dil için
+    sdk: flutter
+  cupertino_icons: ^1.0.8
+  http: ^1.5.0
+  qr_code_scanner: ^1.0.1
+  mobile_scanner: ^3.5.5
+  shared_preferences: ^2.2.3
+  vibration: ^1.7.6
+  qr_flutter: ^4.1.0
+
+  # --- Harita / Konum / İzinler ---
+  google_maps_flutter: ^2.9.0
+  google_maps_flutter_web: ^0.5.14+2
+  geolocator: ^10.1.0
+  geolocator_web: ^2.2.1
+  permission_handler: ^11.3.0
+
+  # --- Launcher & Media ---
+  url_launcher: ^6.3.0
+  image_picker: ^1.1.2
+  image_picker_for_web: ^3.0.5
+
+  # --- Uluslararasılaştırma ---
+  intl: ^0.20.2
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
+  package_rename: ^1.10.0
+  flutter_launcher_icons: ^0.13.1
+
+flutter:
+  uses-material-design: true
+  generate: true   # ✅ ARB dosyalarını kullanabilmen için
+  assets:
+    - assets/images/kyradi_logo.png
+
+package_rename_config:
+  android:
+    app_name: "KYRADI"
+    package_name: "com.kyradi.app"
+  ios:
+    app_name: "KYRADI"
+    bundle_name: "KYRADI"
+    package_name: "com.kyradi.app"
+  web:
+    app_name: "KYRADI"
+  macos:
+    app_name: "KYRADI"
+  windows:
+    app_name: "KYRADI"
+  linux:
+    app_name: "KYRADI"
+
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: "assets/icons/kyradi_app_icon.png"
+  remove_alpha_ios: true
