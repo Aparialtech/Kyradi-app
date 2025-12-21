@@ -7,15 +7,33 @@ export class MailService {
   private transporter?: Transporter;
   private readonly logger = new Logger(MailService.name);
 
+  private get useResend() {
+    return !!process.env.RESEND_API_KEY;
+  }
+
   private get transportConfig() {
+    // Resend kullanılıyorsa
+    if (this.useResend) {
+      return {
+        host: 'smtp.resend.com',
+        port: 465,
+        secure: true,
+        auth: {
+          user: 'resend',
+          pass: process.env.RESEND_API_KEY,
+        },
+      } as const;
+    }
+
+    // Normal SMTP
     const host = process.env.MAIL_HOST;
-    const port = Number(process.env.MAIL_PORT ?? 465);
-    const secure = (process.env.MAIL_SECURE ?? 'true').toLowerCase() === 'true';
+    const port = Number(process.env.MAIL_PORT ?? 587);
+    const secure = (process.env.MAIL_SECURE ?? 'false').toLowerCase() === 'true';
     const user = process.env.MAIL_USER;
     const pass = process.env.MAIL_PASS;
 
     if (!host || !user || !pass) {
-      this.logger.warn('Mail configuration missing. Please set MAIL_HOST, MAIL_USER and MAIL_PASS.');
+      this.logger.warn('Mail configuration missing. Please set RESEND_API_KEY or MAIL_HOST, MAIL_USER and MAIL_PASS.');
       return null;
     }
 
@@ -37,6 +55,9 @@ export class MailService {
   }
 
   private fromAddress() {
+    if (this.useResend) {
+      return process.env.MAIL_FROM ?? 'Kyradi <onboarding@resend.dev>';
+    }
     return process.env.MAIL_FROM ?? process.env.MAIL_USER ?? 'no-reply@kyradi.com';
   }
 
