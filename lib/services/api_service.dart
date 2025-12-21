@@ -17,7 +17,7 @@ class ApiService {
   static const String _envPort =
       String.fromEnvironment('API_PORT', defaultValue: '8080');
   static const String _envBase =
-      String.fromEnvironment('API_BASE_URL', defaultValue: '');
+      String.fromEnvironment('API_BASE_URL', defaultValue: 'https://kyradi-app-production.up.railway.app');
 
   static SharedPreferences? _prefs;
   static bool _initialized = false;
