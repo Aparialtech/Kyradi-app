@@ -161,10 +161,15 @@ class _RegisterPageState extends State<RegisterPage> {
           type: AppNotificationType.success,
         );
         if (!mounted) return;
+        // Mail gönderilemezse kod API yanıtında gelir
+        final verificationCode = res['verificationCode']?.toString();
         Navigator.pushReplacementNamed(
           context,
           '/verify',
-          arguments: _emailCtrl.text.trim(),
+          arguments: {
+            'email': _emailCtrl.text.trim(),
+            'code': verificationCode,
+          },
         );
       }
       // 🔹 409 veya “email already” gibi durumlar
