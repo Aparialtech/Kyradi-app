@@ -3222,10 +3222,6 @@ class _AddLuggagePageState extends State<AddLuggagePage> {
   DateTime? _pickupTime;
   bool _scheduleError = false;
 
-  Future<void> _storePickupPin(String luggageId, String pin) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('pickup_pin_$luggageId', pin);
-  }
 
   List<DropLocation> _nearestLocations(LatLng target, {int limit = 3}) {
     final sorted = List<DropLocation>.from(_availableLocations)
@@ -3389,7 +3385,17 @@ class _AddLuggagePageState extends State<AddLuggagePage> {
         final pickupPin = (result['pickupPin'] ?? '').toString().trim();
         final effectivePin = pickupPin.isNotEmpty ? pickupPin : _pickupPin;
         if (effectivePin.isNotEmpty && mounted) {
-          await _storePickupPin(luggage.id, effectivePin);
+          final id = luggage.id?.toString();
+if (id == null || id.isEmpty) {
+  if (mounted) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Valiz ID bulunamadı, PIN kaydedilemedi.')),
+    );
+  }
+  return;
+}
+await _storePickupPin(id, effectivePin);
+
           await showDialog<void>(
             context: context,
             builder: (ctx) => AlertDialog(
