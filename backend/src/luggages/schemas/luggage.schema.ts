@@ -8,6 +8,20 @@ export enum LuggageStatus {
   CANCELLED = 'cancelled',
 }
 
+@Schema({ _id: false })
+export class PickupDelegate {
+  @Prop()
+  fullName?: string;
+
+  @Prop()
+  phone?: string;
+
+  @Prop()
+  email?: string;
+}
+
+export const PickupDelegateSchema = SchemaFactory.createForClass(PickupDelegate);
+
 @Schema({ collection: 'luggages', timestamps: true })
 export class Luggage extends Document {
   @Prop({ type: String, required: true })
@@ -15,6 +29,21 @@ export class Luggage extends Document {
 
   @Prop({ required: true, unique: true })
   qrCode: string;
+
+  @Prop({ required: true })
+  pickupPinHash: string;
+
+  @Prop({ type: PickupDelegateSchema })
+  pickupDelegate?: PickupDelegate;
+
+  @Prop()
+  delegateCodeHash?: string;
+
+  @Prop()
+  delegateExpiresAt?: Date;
+
+  @Prop()
+  delegateUsedAt?: Date;
 
   @Prop()
   label?: string;

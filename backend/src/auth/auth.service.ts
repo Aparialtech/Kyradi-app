@@ -31,24 +31,13 @@ export class AuthService {
   async register(dto: CreateUserDto) {
     const user = await this.usersService.create(dto);
     const token = this.generateToken(user._id?.toString() ?? user['id'], user.email);
-    const { code, delivered } = await this.issueVerificationCode(user.email);
-    
-    const response: Record<string, unknown> = {
+    await this.issueVerificationCode(user.email);
+    return {
       accessToken: token,
       user,
       pendingVerification: true,
-      message: delivered 
-        ? 'Kayıt oluşturuldu. Doğrulama kodu gönderildi.'
-        : 'Kayıt oluşturuldu. Doğrulama kodunuz aşağıda.',
-      delivered,
+      message: 'Kayıt oluşturuldu. Doğrulama kodu gönderildi.',
     };
-
-    // Mail gönderilemezse kodu API yanıtında döndür
-    if (!delivered) {
-      response['verificationCode'] = code;
-    }
-
-    return response;
   }
 
   async login(dto: LoginDto) {

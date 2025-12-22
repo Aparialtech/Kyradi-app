@@ -58,7 +58,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get mapIntro =>
-      'Sieh dir die BavulGO-Standorte auf der Karte an und plane die beste Route.';
+      'Sieh dir die KYRADI-Standorte auf der Karte an und plane die beste Route.';
 
   @override
   String get walkingRoute => 'Fußweg';
@@ -1164,7 +1164,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get commonSelect => 'Auswählen';
 
   @override
-  String get landingTitle => 'BavulGO Track';
+  String get landingTitle => 'KYRADI Track';
 
   @override
   String get landingIntro =>
@@ -1224,6 +1224,77 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get luggageRegistrationNote =>
       'Nach dem Speichern kann dein Team den QR-Sticker drucken. Kund:innen müssen ihn beim Abgeben und Abholen scannen.';
+
+  @override
+  String get luggageDelegateAction => 'Bevollmächtigte Person';
+
+  @override
+  String get pickupPinTitle => 'Abhol-PIN';
+
+  @override
+  String get pickupPinLabel => 'Abhol-PIN';
+
+  @override
+  String get pickupPinHint => '4-stellige PIN';
+
+  @override
+  String pickupPinGenerated(Object pin) {
+    return 'Abhol-PIN: $pin';
+  }
+
+  @override
+  String get pickupPinRequiredMessage => 'Abhol-PIN ist erforderlich.';
+
+  @override
+  String get pickupPinInvalidMessage =>
+      'PIN ist falsch. Bitte erneut versuchen.';
+
+  @override
+  String get delegateSetupTitle => 'Bevollmächtigte Person';
+
+  @override
+  String get delegateNameLabel => 'Vollständiger Name';
+
+  @override
+  String get delegatePhoneLabel => 'Telefon';
+
+  @override
+  String get delegateEmailLabel => 'E-Mail';
+
+  @override
+  String get delegateCodeTitle => 'Bevollmächtigten-Code';
+
+  @override
+  String get delegateCodeLabel => 'Bevollmächtigten-Code';
+
+  @override
+  String get delegateCodeHint => '6-stelliger Code';
+
+  @override
+  String delegateCodeGenerated(Object code) {
+    return 'Bevollmächtigten-Code: $code';
+  }
+
+  @override
+  String get delegateCodeRequiredMessage =>
+      'Bevollmächtigten-Code erforderlich.';
+
+  @override
+  String get delegateCodeInvalidMessage =>
+      'Bevollmächtigten-Code ist ungültig.';
+
+  @override
+  String get delegateSavedMessage => 'Bevollmächtigte Person gespeichert.';
+
+  @override
+  String get pickupPinSafetyWarning =>
+      'Speichere deine PIN und teile sie nicht. Diese PIN wird bei der Abholung benötigt.';
+
+  @override
+  String get pickupPinCopiedMessage => 'PIN kopiert — bewahre sie sicher auf.';
+
+  @override
+  String get copy => 'Kopieren';
 
   @override
   String get luggageCreateFailed => 'Gepäck konnte nicht erstellt werden.';

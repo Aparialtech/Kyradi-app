@@ -58,7 +58,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get mapIntro =>
-      'BavulGO noktalarını haritada gör, en uygun rotayı oluştur.';
+      'KYRADI noktalarını haritada gör, en uygun rotayı oluştur.';
 
   @override
   String get walkingRoute => 'Yürüme Rotası';
@@ -1150,7 +1150,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get commonSelect => 'Seç';
 
   @override
-  String get landingTitle => 'BavulGO Track';
+  String get landingTitle => 'KYRADI Track';
 
   @override
   String get landingIntro =>
@@ -1210,6 +1210,75 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get luggageRegistrationNote =>
       'Kaydın ardından personeliniz QR sticker çıktısını alabilir. Müşteri bırakma ve teslimde kodu okutmalıdır.';
+
+  @override
+  String get luggageDelegateAction => 'Yetkili Kişi';
+
+  @override
+  String get pickupPinTitle => 'Teslim PIN';
+
+  @override
+  String get pickupPinLabel => 'Teslim PIN';
+
+  @override
+  String get pickupPinHint => '4 haneli PIN';
+
+  @override
+  String pickupPinGenerated(Object pin) {
+    return 'Teslim PIN: $pin';
+  }
+
+  @override
+  String get pickupPinRequiredMessage => 'Teslim için PIN gerekli.';
+
+  @override
+  String get pickupPinInvalidMessage => 'PIN hatalı. Tekrar dene.';
+
+  @override
+  String get delegateSetupTitle => 'Yetkili Kişi';
+
+  @override
+  String get delegateNameLabel => 'Ad Soyad';
+
+  @override
+  String get delegatePhoneLabel => 'Telefon';
+
+  @override
+  String get delegateEmailLabel => 'E-posta';
+
+  @override
+  String get delegateCodeTitle => 'Yetkili Kişi Kodu';
+
+  @override
+  String get delegateCodeLabel => 'Yetkili Kodu';
+
+  @override
+  String get delegateCodeHint => '6 haneli kod';
+
+  @override
+  String delegateCodeGenerated(Object code) {
+    return 'Yetkili kodu: $code';
+  }
+
+  @override
+  String get delegateCodeRequiredMessage => 'Yetkili kodu gerekli.';
+
+  @override
+  String get delegateCodeInvalidMessage => 'Yetkili kodu hatalı.';
+
+  @override
+  String get delegateSavedMessage => 'Yetkili kişi kaydedildi.';
+
+  @override
+  String get pickupPinSafetyWarning =>
+      'PIN’inizi kaydedin ve kimseyle paylaşmayın. Teslim alma sırasında bu PIN istenecektir.';
+
+  @override
+  String get pickupPinCopiedMessage =>
+      'PIN kopyalandı — PIN’inizi güvenli bir yerde saklayın.';
+
+  @override
+  String get copy => 'Kopyala';
 
   @override
   String get luggageCreateFailed => 'Bavul oluşturulamadı.';

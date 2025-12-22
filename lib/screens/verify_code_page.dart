@@ -24,7 +24,6 @@ class _VerifyCodePageState extends State<VerifyCodePage> {
 
   int _seconds = 0;
   Timer? _timer;
-  String? _prefilledCode;
 
   @override
   void didChangeDependencies() {
@@ -32,20 +31,6 @@ class _VerifyCodePageState extends State<VerifyCodePage> {
     final args = ModalRoute.of(context)?.settings.arguments;
     if (args is String) {
       _email = args;
-    } else if (args is Map) {
-      _email = args['email']?.toString() ?? '';
-      final code = args['code']?.toString();
-      if (code != null && code.isNotEmpty && _prefilledCode == null) {
-        _prefilledCode = code;
-        _codeCtrl.text = code;
-        // Mail gönderilemediğinde kullanıcıya bilgi ver
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          _notify(
-            'Doğrulama kodu otomatik dolduruldu (mail gönderilemedi)',
-            type: AppNotificationType.info,
-          );
-        });
-      }
     }
   }
 

@@ -8,4 +8,7 @@ export class UpdateLuggageDto {
   dropLocationName?: string;
   scheduledDropTime?: Date | string;
   scheduledPickupTime?: Date | string;
+  pickupDelegateFullName?: string;
+  pickupDelegatePhone?: string;
+  pickupDelegateEmail?: string;
 }

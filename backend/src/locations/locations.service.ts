@@ -25,7 +25,7 @@ export class LocationsService {
     const seedData = [
       {
         _id: 'taksim',
-        name: 'Taksim BavulGO',
+        name: 'Taksim KYRADI',
         address: 'Cumhuriyet Cd. No: 1, Beyoğlu',
         latitude: 41.0369,
         longitude: 28.9856,
@@ -35,7 +35,7 @@ export class LocationsService {
       },
       {
         _id: 'kagithane',
-        name: 'Kağıthane BavulGO',
+        name: 'Kağıthane KYRADI',
         address: 'Merkez Mah. Kağıthane',
         latitude: 41.1085,
         longitude: 28.9722,
@@ -45,7 +45,7 @@ export class LocationsService {
       },
       {
         _id: 'besiktas',
-        name: 'Beşiktaş BavulGO',
+        name: 'Beşiktaş KYRADI',
         address: 'Çırağan Cad., Beşiktaş',
         latitude: 41.041,
         longitude: 29.0078,
@@ -55,7 +55,7 @@ export class LocationsService {
       },
       {
         _id: 'kadikoy',
-        name: 'Kadıköy BavulGO',
+        name: 'Kadıköy KYRADI',
         address: 'Kadıköy Rıhtım Cd.',
         latitude: 40.9929,
         longitude: 29.02799,
@@ -65,7 +65,7 @@ export class LocationsService {
       },
       {
         _id: 'sisli',
-        name: 'Şişli BavulGO',
+        name: 'Şişli KYRADI',
         address: 'Halaskargazi Cd., Şişli',
         latitude: 41.0601,
         longitude: 28.9876,
@@ -75,7 +75,7 @@ export class LocationsService {
       },
       {
         _id: 'bakirkoy',
-        name: 'Bakırköy BavulGO',
+        name: 'Bakırköy KYRADI',
         address: 'İncirli Cd., Bakırköy',
         latitude: 40.978,
         longitude: 28.8724,

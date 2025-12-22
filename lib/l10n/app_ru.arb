@@ -16,7 +16,7 @@
   "saveProfileError": "Не удалось сохранить",
   "userInfo": "Информация о пользователе",
   "map": "Карта",
-  "mapIntro": "Смотрите точки BavulGO на карте и строите лучший маршрут.",
+  "mapIntro": "Смотрите точки KYRADI на карте и строите лучший маршрут.",
   "walkingRoute": "Пеший маршрут",
   "drivingRoute": "Маршрут на авто",
   "openInMaps": "Открыть в Google Картах",
@@ -526,7 +526,7 @@
   "locationFetching": "Получаем местоположение...",
   "refreshNearbyButton": "Обновить ближайшие точки",
   "nearbyLocationsTitle": "Ближайшие точки",
-  "landingTitle": "BavulGO Track",
+  "landingTitle": "KYRADI Track",
   "landingIntro": "Выбери, где оставить багаж. Нажми точку на карте, чтобы увидеть заполненность и открыть детали бронирования.",
   "landingLocateSectionTitle": "Найди ближайшие точки",
   "landingLocateSectionSubtitle": "Поделись геолокацией, чтобы получить рекомендации.",
@@ -555,6 +555,37 @@
   "notesHint": "Замок, хрупкое, особые указания...",
   "luggageNameHint": "Дайте имя багажу (необязательно)",
   "luggageRegistrationNote": "После сохранения персонал сможет распечатать QR-стикер. Клиент должен сканировать код при сдаче и выдаче.",
+  "luggageDelegateAction": "Доверенное лицо",
+  "pickupPinTitle": "PIN выдачи",
+  "pickupPinLabel": "PIN выдачи",
+  "pickupPinHint": "4-значный PIN",
+  "pickupPinGenerated": "PIN выдачи: {pin}",
+  "@pickupPinGenerated": {
+    "placeholders": {
+      "pin": {}
+    }
+  },
+  "pickupPinRequiredMessage": "Нужен PIN выдачи.",
+  "pickupPinInvalidMessage": "PIN неверный. Попробуйте снова.",
+  "delegateSetupTitle": "Доверенное лицо",
+  "delegateNameLabel": "Полное имя",
+  "delegatePhoneLabel": "Телефон",
+  "delegateEmailLabel": "E-mail",
+  "delegateCodeTitle": "Код доверенного лица",
+  "delegateCodeLabel": "Код доверенного лица",
+  "delegateCodeHint": "6-значный код",
+  "delegateCodeGenerated": "Код доверенного лица: {code}",
+  "@delegateCodeGenerated": {
+    "placeholders": {
+      "code": {}
+    }
+  },
+  "delegateCodeRequiredMessage": "Нужен код доверенного лица.",
+  "delegateCodeInvalidMessage": "Код доверенного лица неверный.",
+  "delegateSavedMessage": "Доверенное лицо сохранено.",
+  "pickupPinSafetyWarning": "Сохраните PIN и никому не сообщайте. Он понадобится при выдаче.",
+  "pickupPinCopiedMessage": "PIN скопирован — храните его в безопасном месте.",
+  "copy": "Копировать",
   "luggageCreateFailed": "Не удалось создать багаж.",
   "savingInProgress": "Сохранение...",
   "statusLabel": "Статус",

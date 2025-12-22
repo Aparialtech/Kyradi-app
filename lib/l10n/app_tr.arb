@@ -16,7 +16,7 @@
   "saveProfileError": "Kaydedilemedi",
   "userInfo": "Kullanıcı Bilgileri",
   "map": "Harita",
-  "mapIntro": "BavulGO noktalarını haritada gör, en uygun rotayı oluştur.",
+  "mapIntro": "KYRADI noktalarını haritada gör, en uygun rotayı oluştur.",
   "walkingRoute": "Yürüme Rotası",
   "drivingRoute": "Araç Rotası",
   "openInMaps": "Google Haritalar'da Aç",
@@ -569,7 +569,7 @@
   "refreshNearbyButton": "Yakındaki noktaları güncelle",
   "nearbyLocationsTitle": "Yakındaki lokasyonlar",
   "commonSelect": "Seç",
-  "landingTitle": "BavulGO Track",
+  "landingTitle": "KYRADI Track",
   "landingIntro": "Bavullarını bırakmak istediğin noktayı seç. Haritadan dilediğin noktaya dokun, doluluk oranını gör ve rezervasyon detayını aç.",
   "landingLocateSectionTitle": "Sana en yakın noktaları bul",
   "landingLocateSectionSubtitle": "Konumunu paylaşırsan öneriler liste halinde çıkar.",
@@ -597,6 +597,37 @@
   "notesHint": "Kilidi, kırılganlık, özel talimatlar...",
   "luggageNameHint": "Bavula bir ad ver (isteğe bağlı)",
   "luggageRegistrationNote": "Kaydın ardından personeliniz QR sticker çıktısını alabilir. Müşteri bırakma ve teslimde kodu okutmalıdır.",
+  "luggageDelegateAction": "Yetkili Kişi",
+  "pickupPinTitle": "Teslim PIN",
+  "pickupPinLabel": "Teslim PIN",
+  "pickupPinHint": "4 haneli PIN",
+  "pickupPinGenerated": "Teslim PIN: {pin}",
+  "@pickupPinGenerated": {
+    "placeholders": {
+      "pin": {}
+    }
+  },
+  "pickupPinRequiredMessage": "Teslim için PIN gerekli.",
+  "pickupPinInvalidMessage": "PIN hatalı. Tekrar dene.",
+  "delegateSetupTitle": "Yetkili Kişi",
+  "delegateNameLabel": "Ad Soyad",
+  "delegatePhoneLabel": "Telefon",
+  "delegateEmailLabel": "E-posta",
+  "delegateCodeTitle": "Yetkili Kişi Kodu",
+  "delegateCodeLabel": "Yetkili Kodu",
+  "delegateCodeHint": "6 haneli kod",
+  "delegateCodeGenerated": "Yetkili kodu: {code}",
+  "@delegateCodeGenerated": {
+    "placeholders": {
+      "code": {}
+    }
+  },
+  "delegateCodeRequiredMessage": "Yetkili kodu gerekli.",
+  "delegateCodeInvalidMessage": "Yetkili kodu hatalı.",
+  "delegateSavedMessage": "Yetkili kişi kaydedildi.",
+  "pickupPinSafetyWarning": "PIN’inizi kaydedin ve kimseyle paylaşmayın. Teslim alma sırasında bu PIN istenecektir.",
+  "pickupPinCopiedMessage": "PIN kopyalandı — PIN’inizi güvenli bir yerde saklayın.",
+  "copy": "Kopyala",
   "luggageCreateFailed": "Bavul oluşturulamadı.",
   "savingInProgress": "Kaydediliyor...",
   "statusLabel": "Durum",

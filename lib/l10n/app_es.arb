@@ -16,7 +16,7 @@
   "saveProfileError": "Error al guardar",
   "userInfo": "Información del usuario",
   "map": "Mapa",
-  "mapIntro": "Consulta los puntos BavulGO en el mapa y planifica la mejor ruta.",
+  "mapIntro": "Consulta los puntos KYRADI en el mapa y planifica la mejor ruta.",
   "walkingRoute": "Ruta a pie",
   "drivingRoute": "Ruta en coche",
   "openInMaps": "Abrir en Google Maps",
@@ -566,7 +566,7 @@
   "locationFetching": "Obteniendo ubicación...",
   "refreshNearbyButton": "Actualizar ubicaciones cercanas",
   "nearbyLocationsTitle": "Ubicaciones cercanas",
-  "landingTitle": "BavulGO Track",
+  "landingTitle": "KYRADI Track",
   "landingIntro": "Elige dónde dejar tu equipaje. Toca un punto en el mapa para ver su ocupación y abrir los detalles de la reserva.",
   "landingLocateSectionTitle": "Encuentra los puntos más cercanos",
   "landingLocateSectionSubtitle": "Comparte tu ubicación para mostrar recomendaciones.",
@@ -595,6 +595,37 @@
   "notesHint": "Candado, frágil, instrucciones especiales...",
   "luggageNameHint": "Ponle un nombre al equipaje (opcional)",
   "luggageRegistrationNote": "Después de guardar, tu personal puede imprimir la pegatina QR. El cliente debe escanear el código al dejar y recoger.",
+  "luggageDelegateAction": "Delegado",
+  "pickupPinTitle": "PIN de recogida",
+  "pickupPinLabel": "PIN de recogida",
+  "pickupPinHint": "PIN de 4 dígitos",
+  "pickupPinGenerated": "PIN de recogida: {pin}",
+  "@pickupPinGenerated": {
+    "placeholders": {
+      "pin": {}
+    }
+  },
+  "pickupPinRequiredMessage": "El PIN de recogida es obligatorio.",
+  "pickupPinInvalidMessage": "El PIN es incorrecto. Inténtalo de nuevo.",
+  "delegateSetupTitle": "Delegado",
+  "delegateNameLabel": "Nombre completo",
+  "delegatePhoneLabel": "Teléfono",
+  "delegateEmailLabel": "Correo",
+  "delegateCodeTitle": "Código de delegado",
+  "delegateCodeLabel": "Código de delegado",
+  "delegateCodeHint": "Código de 6 dígitos",
+  "delegateCodeGenerated": "Código de delegado: {code}",
+  "@delegateCodeGenerated": {
+    "placeholders": {
+      "code": {}
+    }
+  },
+  "delegateCodeRequiredMessage": "El código de delegado es obligatorio.",
+  "delegateCodeInvalidMessage": "El código de delegado es inválido.",
+  "delegateSavedMessage": "Delegado guardado.",
+  "pickupPinSafetyWarning": "Guarda tu PIN y no lo compartas. Se solicitará durante la recogida.",
+  "pickupPinCopiedMessage": "PIN copiado — guárdalo en un lugar seguro.",
+  "copy": "Copiar",
   "luggageCreateFailed": "No se pudo crear el equipaje.",
   "savingInProgress": "Guardando...",
   "statusLabel": "Estado",

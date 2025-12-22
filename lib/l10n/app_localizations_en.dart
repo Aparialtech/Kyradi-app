@@ -58,7 +58,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get mapIntro =>
-      'See BavulGO spots on the map and build your best route.';
+      'See KYRADI spots on the map and build your best route.';
 
   @override
   String get walkingRoute => 'Walking Route';
@@ -1149,7 +1149,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get commonSelect => 'Select';
 
   @override
-  String get landingTitle => 'BavulGO Track';
+  String get landingTitle => 'KYRADI Track';
 
   @override
   String get landingIntro =>
@@ -1209,6 +1209,74 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get luggageRegistrationNote =>
       'After saving, your staff can print the QR sticker. Customers must scan the code when dropping off and picking up.';
+
+  @override
+  String get luggageDelegateAction => 'Delegate';
+
+  @override
+  String get pickupPinTitle => 'Pickup PIN';
+
+  @override
+  String get pickupPinLabel => 'Pickup PIN';
+
+  @override
+  String get pickupPinHint => '4-digit PIN';
+
+  @override
+  String pickupPinGenerated(Object pin) {
+    return 'Pickup PIN: $pin';
+  }
+
+  @override
+  String get pickupPinRequiredMessage => 'Pickup PIN is required.';
+
+  @override
+  String get pickupPinInvalidMessage => 'PIN is incorrect. Try again.';
+
+  @override
+  String get delegateSetupTitle => 'Delegate';
+
+  @override
+  String get delegateNameLabel => 'Full name';
+
+  @override
+  String get delegatePhoneLabel => 'Phone';
+
+  @override
+  String get delegateEmailLabel => 'Email';
+
+  @override
+  String get delegateCodeTitle => 'Delegate Code';
+
+  @override
+  String get delegateCodeLabel => 'Delegate code';
+
+  @override
+  String get delegateCodeHint => '6-digit code';
+
+  @override
+  String delegateCodeGenerated(Object code) {
+    return 'Delegate code: $code';
+  }
+
+  @override
+  String get delegateCodeRequiredMessage => 'Delegate code is required.';
+
+  @override
+  String get delegateCodeInvalidMessage => 'Delegate code is invalid.';
+
+  @override
+  String get delegateSavedMessage => 'Delegate saved.';
+
+  @override
+  String get pickupPinSafetyWarning =>
+      'Save your PIN and do not share it. This PIN will be required during pickup.';
+
+  @override
+  String get pickupPinCopiedMessage => 'PIN copied — keep it in a safe place.';
+
+  @override
+  String get copy => 'Copy';
 
   @override
   String get luggageCreateFailed => 'Luggage could not be created.';

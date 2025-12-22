@@ -1,10 +1,11 @@
-import { HttpException, Injectable, NotFoundException } from '@nestjs/common';
+import { HttpException, Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Luggage, LuggageStatus } from './schemas/luggage.schema';
 import { CreateLuggageDto } from './dto/create-luggage.dto';
 import { UpdateLuggageDto } from './dto/update-luggage.dto';
 import { Location } from '../locations/schemas/location.schema';
+import { hashPassword, verifyPassword } from '../common/utils/password.util';
 
 @Injectable()
 export class LuggagesService {
@@ -17,13 +18,20 @@ export class LuggagesService {
 
   async create(userId: string, dto: CreateLuggageDto) {
     const qrCode = await this.ensureUniqueQrCode(dto.qrCode);
-    return this.luggageModel.create({
+    const pickupPin = this.generatePickupPin();
+    const pickupPinHash = hashPassword(pickupPin);
+    const created = await this.luggageModel.create({
       userId,
       ...dto,
       qrCode,
+      pickupPinHash,
       scheduledDropTime: dto.scheduledDropTime ? new Date(dto.scheduledDropTime) : undefined,
       scheduledPickupTime: dto.scheduledPickupTime ? new Date(dto.scheduledPickupTime) : undefined,
     });
+    return {
+      luggage: this._decorateLuggage(created.toObject()),
+      pickupPin,
+    };
   }
 
   findByUser(userId: string) {
@@ -31,10 +39,19 @@ export class LuggagesService {
       .find({ userId })
       .sort({ createdAt: -1 })
       .lean()
-      .exec();
+      .exec()
+      .then((items) => items.map((item) => this._decorateLuggage(item)));
   }
 
   async updateMetadata(userId: string, luggageId: string, dto: UpdateLuggageDto) {
+    let delegateCode: string | undefined;
+    const shouldIssueDelegate =
+      (dto.pickupDelegateFullName ?? '').trim().isNotEmpty ||
+      (dto.pickupDelegatePhone ?? '').trim().isNotEmpty ||
+      (dto.pickupDelegateEmail ?? '').trim().isNotEmpty;
+    if (shouldIssueDelegate) {
+      delegateCode = this.generateDelegateCode();
+    }
     const updated = await this.luggageModel
       .findOneAndUpdate(
         { _id: luggageId, userId },
@@ -49,6 +66,16 @@ export class LuggagesService {
             ...(dto.dropLocationName && { dropLocationName: dto.dropLocationName }),
             ...(dto.scheduledDropTime && { scheduledDropTime: new Date(dto.scheduledDropTime) }),
             ...(dto.scheduledPickupTime && { scheduledPickupTime: new Date(dto.scheduledPickupTime) }),
+            ...(shouldIssueDelegate && {
+              pickupDelegate: {
+                fullName: dto.pickupDelegateFullName?.trim() ?? '',
+                phone: dto.pickupDelegatePhone?.trim() ?? '',
+                email: dto.pickupDelegateEmail?.trim() ?? '',
+              },
+              delegateCodeHash: hashPassword(delegateCode ?? ''),
+              delegateExpiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
+              delegateUsedAt: null,
+            }),
           },
         },
         { new: true },
@@ -57,16 +84,50 @@ export class LuggagesService {
       .exec();
     if (!updated) throw new NotFoundException('Luggage not found');
     await this.refreshLocationOccupancy(updated.dropLocationId);
-    return updated;
+    return {
+      luggage: this._decorateLuggage(updated),
+      ...(delegateCode ? { delegateCode } : {}),
+    };
   }
 
-  async updateStatus(userId: string, luggageId: string, status: LuggageStatus) {
+  async updateStatus(
+    userId: string,
+    luggageId: string,
+    status: LuggageStatus,
+    pickupPin?: string,
+    delegateCode?: string,
+  ) {
     try {
       const luggage = await this.luggageModel.findOne({ _id: luggageId, userId }).exec();
       if (!luggage) {
         throw new NotFoundException('Luggage not found');
       }
       const now = new Date();
+      if (status === LuggageStatus.PICKED) {
+        const validPin =
+          !!pickupPin &&
+          !!luggage.pickupPinHash &&
+          verifyPassword(pickupPin, luggage.pickupPinHash);
+        const validDelegate =
+          !!delegateCode &&
+          !!luggage.delegateCodeHash &&
+          verifyPassword(delegateCode, luggage.delegateCodeHash);
+        if (!validPin && !validDelegate) {
+          if (!pickupPin && !delegateCode) {
+            throw new BadRequestException('PICKUP_CREDENTIAL_REQUIRED');
+          }
+          if (pickupPin && !validPin) {
+            throw new BadRequestException('PICKUP_PIN_INVALID');
+          }
+          if (delegateCode && !validDelegate) {
+            throw new BadRequestException('DELEGATE_CODE_INVALID');
+          }
+          throw new BadRequestException('PICKUP_CREDENTIAL_INVALID');
+        }
+        if (validDelegate && this._isDelegateActive(luggage)) {
+          luggage.delegateUsedAt = now;
+        }
+      }
       luggage.status = status;
       if (status === LuggageStatus.DROPPED) {
         luggage.dropConfirmedAt = now;
@@ -75,7 +136,7 @@ export class LuggagesService {
       }
       const saved = await luggage.save();
       await this.refreshLocationOccupancy(saved.dropLocationId?.toString());
-      return saved.toObject();
+      return this._decorateLuggage(saved.toObject());
     } catch (error) {
       console.error('Luggage status update failed', error);
       if (error instanceof HttpException) {
@@ -89,6 +150,14 @@ export class LuggagesService {
     const stamp = Date.now().toString(36).toUpperCase();
     const random = Math.floor(1000 + Math.random() * 9000);
     return `BGO-${stamp}-${random}`;
+  }
+
+  private generatePickupPin(): string {
+    return Math.floor(1000 + Math.random() * 9000).toString();
+  }
+
+  private generateDelegateCode(): string {
+    return Math.floor(100000 + Math.random() * 900000).toString();
   }
 
   private async ensureUniqueQrCode(initial?: string): Promise<string> {
@@ -129,5 +198,25 @@ export class LuggagesService {
         },
       )
       .exec();
+  }
+
+  private _isDelegateActive(luggage: Luggage) {
+    if (!luggage.delegateCodeHash || !luggage.delegateExpiresAt) return false;
+    if (luggage.delegateUsedAt) return false;
+    const expiresAt =
+      luggage.delegateExpiresAt instanceof Date
+        ? luggage.delegateExpiresAt
+        : new Date(luggage.delegateExpiresAt);
+    return expiresAt.getTime() > Date.now();
+  }
+
+  private _decorateLuggage(luggage: any) {
+    const payload = { ...luggage };
+    delete payload.pickupPinHash;
+    delete payload.delegateCodeHash;
+    return {
+      ...payload,
+      delegateActive: this._isDelegateActive(luggage as Luggage),
+    };
   }
 }

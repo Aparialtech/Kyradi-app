@@ -20,7 +20,15 @@ class LuggageService {
     String userId,
     String luggageId,
     String status,
+    String? pickupPin,
+    String? delegateCode,
   ) {
-    return ApiService.updateLuggageStatus(userId, luggageId, status);
+    return ApiService.updateLuggageStatus(
+      userId,
+      luggageId,
+      status,
+      pickupPin,
+      delegateCode,
+    );
   }
 }

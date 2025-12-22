@@ -84,7 +84,7 @@ class DropLocationsRepository {
   static final List<DropLocation> _locations = [
     DropLocation(
       id: 'taksim',
-      name: 'Taksim BavulGO',
+      name: 'Taksim KYRADI',
       address: 'Cumhuriyet Cd. No: 1, Beyoğlu',
       position: LatLng(41.0369, 28.9856),
       totalSlots: 12,
@@ -105,7 +105,7 @@ class DropLocationsRepository {
     ),
     DropLocation(
       id: 'kagithane',
-      name: 'Kağıthane BavulGO',
+      name: 'Kağıthane KYRADI',
       address: 'Merkez Mah. Kağıthane',
       position: LatLng(41.1085, 28.9722),
       totalSlots: 8,
@@ -121,7 +121,7 @@ class DropLocationsRepository {
     ),
     DropLocation(
       id: 'besiktas',
-      name: 'Beşiktaş BavulGO',
+      name: 'Beşiktaş KYRADI',
       address: 'Çırağan Cad., Beşiktaş',
       position: LatLng(41.041, 29.0078),
       totalSlots: 10,
@@ -137,7 +137,7 @@ class DropLocationsRepository {
     ),
     DropLocation(
       id: 'kadikoy',
-      name: 'Kadıköy BavulGO',
+      name: 'Kadıköy KYRADI',
       address: 'Kadıköy Rıhtım Cd.',
       position: LatLng(40.9929, 29.02799),
       totalSlots: 16,
@@ -158,7 +158,7 @@ class DropLocationsRepository {
     ),
     DropLocation(
       id: 'sisli',
-      name: 'Şişli BavulGO',
+      name: 'Şişli KYRADI',
       address: 'Halaskargazi Cd., Şişli',
       position: LatLng(41.0601, 28.9876),
       totalSlots: 5,
@@ -179,7 +179,7 @@ class DropLocationsRepository {
     ),
     DropLocation(
       id: 'bakirkoy',
-      name: 'Bakırköy BavulGO',
+      name: 'Bakırköy KYRADI',
       address: 'İncirli Cd., Bakırköy',
       position: LatLng(40.978, 28.8724),
       totalSlots: 9,

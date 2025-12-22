@@ -10,42 +10,19 @@ import 'mock_server.dart';
 class ApiService {
   ApiService._();
 
-  static const String _envScheme =
-      String.fromEnvironment('API_SCHEME', defaultValue: 'http');
-  static const String _envHost =
-      String.fromEnvironment('API_HOST', defaultValue: '');
+  static const String _envBase =
+      String.fromEnvironment('API_BASE_URL', defaultValue: '');
   static const String _envPort =
       String.fromEnvironment('API_PORT', defaultValue: '8080');
-  static const String _envBase =
-      String.fromEnvironment('API_BASE_URL', defaultValue: 'https://kyradi-app-production.up.railway.app');
+  static const bool _assumeIosSimulator =
+      bool.fromEnvironment('IOS_SIMULATOR', defaultValue: false);
+  static const String _defaultBaseUrl =
+      'https://kyradi-app-production.up.railway.app';
 
   static SharedPreferences? _prefs;
   static bool _initialized = false;
   static String? _customBaseUrl;
   static String? _authToken;
-
-  /// Host seçimi:
-  /// - Web (Chrome): localhost
-  /// - Android Emülatör: 10.0.2.2
-  /// - iOS Sim / Desktop: localhost
-  static String get _host {
-    if (_envHost.trim().isNotEmpty) return _envHost.trim();
-    // Chrome'da flutter run -d chrome kullanırken localhost yerine 127.0.0.1
-    // kullanmak CORS/ayrı origin problemlerini azaltıyor.
-    if (kIsWeb) return '127.0.0.1';
-    if (defaultTargetPlatform == TargetPlatform.android) return '10.0.2.2';
-    return 'localhost';
-  }
-
-  static String get _scheme {
-    final scheme = _envScheme.trim().toLowerCase();
-    return scheme.isEmpty ? 'http' : scheme;
-  }
-
-  static String get _port {
-    final port = _envPort.trim();
-    return port;
-  }
 
   static Future<void> ensureInitialized() async {
     if (_initialized) return;
@@ -84,27 +61,17 @@ class ApiService {
   static String? get customBaseUrl => _customBaseUrl;
 
   static String get baseUrlSource {
-    if (_normalizeBaseUrl(_envBase) != null ||
-        _envHost.trim().isNotEmpty ||
-        _envScheme.trim().isNotEmpty ||
-        _envPort.trim().isNotEmpty) {
-      return 'environment';
-    }
     if (hasCustomBaseUrl) return 'custom';
-    return 'default';
+    if (_normalizeBaseUrl(_envBase) != null) return 'environment';
+    if (_defaultBaseUrl.isNotEmpty) return 'default';
+    if (_fallbackBaseUrl != null) return 'fallback';
+    return 'unset';
   }
 
-  static String get defaultBaseUrl {
-    final port = _port;
-    final portSection = port.isEmpty ? '' : ':$port';
-    return '$_scheme://$_host$portSection';
-  }
+  static bool get hasResolvedBaseUrl => _resolveBaseUrl() != null;
 
   static String get baseUrl {
-    final envBase = _normalizeBaseUrl(_envBase);
-    if (envBase != null) return envBase;
-    if (hasCustomBaseUrl) return _customBaseUrl!;
-    return defaultBaseUrl;
+    return _resolveBaseUrl() ?? '';
   }
 
   static String get apiBaseUrl => baseUrl;
@@ -134,7 +101,10 @@ class ApiService {
     Map<String, dynamic> body, {
     Duration timeout = const Duration(seconds: 12),
   }) async {
-    final uri = Uri.parse('${ApiService.apiBaseUrl}$path');
+    final uri = _buildUri(path);
+    if (uri == null) {
+      return _missingBaseUrlError();
+    }
     debugPrint('[HTTP POST] $uri  body=${jsonEncode(body)}');
     try {
       final res = await http
@@ -165,7 +135,10 @@ class ApiService {
     Map<String, dynamic> body, {
     Duration timeout = const Duration(seconds: 12),
   }) async {
-    final uri = Uri.parse('${ApiService.apiBaseUrl}$path');
+    final uri = _buildUri(path);
+    if (uri == null) {
+      return _missingBaseUrlError();
+    }
     debugPrint('[HTTP PUT] $uri  body=${jsonEncode(body)}');
     try {
       final res = await http
@@ -195,7 +168,10 @@ class ApiService {
     String path, {
     Duration timeout = const Duration(seconds: 12),
   }) async {
-    final uri = Uri.parse('${ApiService.apiBaseUrl}$path');
+    final uri = _buildUri(path);
+    if (uri == null) {
+      return _missingBaseUrlError();
+    }
     debugPrint('[HTTP GET]  $uri');
     try {
       final res = await http.get(uri, headers: _jsonHeaders()).timeout(timeout);
@@ -459,13 +435,22 @@ class ApiService {
     String userId,
     String luggageId,
     String status,
+    String? pickupPin,
+    String? delegateCode,
   ) async {
     if (_usingMockBackend) {
       return MockServer.updateLuggageStatus(userId, luggageId, status);
     }
+    final body = <String, dynamic>{'status': status};
+    if (pickupPin != null && pickupPin.trim().isNotEmpty) {
+      body['pickupPin'] = pickupPin.trim();
+    }
+    if (delegateCode != null && delegateCode.trim().isNotEmpty) {
+      body['delegateCode'] = delegateCode.trim();
+    }
     final result = await _put(
       '/users/$userId/luggages/$luggageId/status',
-      {'status': status},
+      body,
     );
     result['statusCode'] ??= result['_httpStatus'];
     Map<String, dynamic>? payload;
@@ -530,7 +515,10 @@ class ApiService {
         'filename': filename,
       };
     }
-    final uri = Uri.parse('${ApiService.apiBaseUrl}/uploads/identity');
+    final uri = _buildUri('/uploads/identity');
+    if (uri == null) {
+      return _missingBaseUrlError();
+    }
     final request = http.MultipartRequest('POST', uri)
       ..headers.addAll(_plainHeaders())
       ..files.add(http.MultipartFile.fromBytes('file', bytes, filename: filename));
@@ -560,32 +548,78 @@ class ApiService {
         candidate.toLowerCase() == 'demo://offline') {
       return 'demo://offline';
     }
-    if (!candidate.contains('://')) {
-      candidate = 'http://$candidate';
-    }
-    try {
-      final uri = Uri.parse(candidate);
-      if (!uri.hasScheme || uri.host.isEmpty) return null;
-      final buffer = StringBuffer()
-        ..write(uri.scheme.toLowerCase())
-        ..write('://')
-        ..write(uri.host);
-      if (uri.hasPort) {
-        buffer.write(':${uri.port}');
-      }
-      final cleanedPath = uri.path.isEmpty || uri.path == '/'
-          ? ''
-          : uri.path.replaceFirst(RegExp(r'/+$'), '');
-      if (cleanedPath.isNotEmpty) {
-        buffer.write(cleanedPath.startsWith('/') ? cleanedPath : '/$cleanedPath');
-      }
-      return buffer.toString();
-    } catch (_) {
-      return null;
-    }
+    final uri = Uri.tryParse(candidate);
+    if (uri == null || uri.host.isEmpty) return null;
+    final scheme = uri.scheme.toLowerCase();
+    if (scheme != 'http' && scheme != 'https') return null;
+    final cleanedPath =
+        uri.path.isEmpty || uri.path == '/' ? '' : uri.path.replaceFirst(RegExp(r'/+$'), '');
+    return uri.replace(path: cleanedPath, query: null, fragment: null).toString();
   }
 
   static String? normalizeBaseUrl(String value) => _normalizeBaseUrl(value);
+
+  static String? _resolveBaseUrl() {
+    final env = _normalizeBaseUrl(_envBase);
+    if (env != null) return env;
+    if (hasCustomBaseUrl) return _customBaseUrl!;
+    if (_defaultBaseUrl.isNotEmpty) return _defaultBaseUrl;
+    return _fallbackBaseUrl;
+  }
+
+  static Uri? _buildUri(String path) {
+    final base = _resolveBaseUrl();
+    if (base == null || base.isEmpty) return null;
+    final baseUri = Uri.parse(base);
+    final normalizedPath = _joinPaths(baseUri.path, path);
+    return baseUri.replace(path: normalizedPath);
+  }
+
+  static String _joinPaths(String basePath, String path) {
+    final trimmedBase = basePath.endsWith('/') && basePath.length > 1
+        ? basePath.substring(0, basePath.length - 1)
+        : basePath;
+    final normalizedBase = trimmedBase == '/' ? '' : trimmedBase;
+    final trimmedPath = path.startsWith('/') ? path.substring(1) : path;
+    if (normalizedBase.isEmpty) return '/$trimmedPath';
+    return '$normalizedBase/$trimmedPath';
+  }
+
+  static Map<String, dynamic> _missingBaseUrlError() {
+    return {
+      'ok': false,
+      'error': 'API base URL ayarlı değil. Lütfen API ayarlarından bir adres girin.',
+      'statusCode': 400,
+      '_configurationError': true,
+    };
+  }
+
+  static String? get _fallbackBaseUrl {
+    final port = _envPort.trim().isEmpty ? '8080' : _envPort.trim();
+    if (kIsWeb) {
+      return 'http://127.0.0.1:$port';
+    }
+    if (defaultTargetPlatform == TargetPlatform.android) {
+      return 'http://10.0.2.2:$port';
+    }
+    if (defaultTargetPlatform == TargetPlatform.iOS && _assumeIosSimulator) {
+      return 'http://localhost:$port';
+    }
+    if (_isDesktopPlatform()) {
+      return 'http://localhost:$port';
+    }
+    return null;
+  }
+
+  static bool _isDesktopPlatform() {
+    if (kIsWeb) return false;
+    if (defaultTargetPlatform == TargetPlatform.macOS ||
+        defaultTargetPlatform == TargetPlatform.windows ||
+        defaultTargetPlatform == TargetPlatform.linux) {
+      return true;
+    }
+    return false;
+  }
 }
 
 class _PrefsKeys {

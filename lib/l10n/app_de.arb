@@ -16,7 +16,7 @@
   "saveProfileError": "Speichern fehlgeschlagen",
   "userInfo": "Benutzerinformationen",
   "map": "Karte",
-  "mapIntro": "Sieh dir die BavulGO-Standorte auf der Karte an und plane die beste Route.",
+  "mapIntro": "Sieh dir die KYRADI-Standorte auf der Karte an und plane die beste Route.",
   "walkingRoute": "Fußweg",
   "drivingRoute": "Fahrtroute",
   "openInMaps": "In Google Maps öffnen",
@@ -526,7 +526,7 @@
   "locationFetching": "Standort wird ermittelt...",
   "refreshNearbyButton": "Nahe Standorte aktualisieren",
   "nearbyLocationsTitle": "Nahe Standorte",
-  "landingTitle": "BavulGO Track",
+  "landingTitle": "KYRADI Track",
   "landingIntro": "Wähle, wo du dein Gepäck abgeben möchtest. Tippe einen Punkt auf der Karte an, um Auslastung und Reservierungsdetails zu sehen.",
   "landingLocateSectionTitle": "Finde die nächsten Punkte",
   "landingLocateSectionSubtitle": "Teile deinen Standort, um Empfehlungen zu erhalten.",
@@ -555,6 +555,37 @@
   "notesHint": "Schloss, zerbrechlich, besondere Hinweise...",
   "luggageNameHint": "Gib dem Gepäck einen Namen (optional)",
   "luggageRegistrationNote": "Nach dem Speichern kann dein Team den QR-Sticker drucken. Kund:innen müssen ihn beim Abgeben und Abholen scannen.",
+  "luggageDelegateAction": "Bevollmächtigte Person",
+  "pickupPinTitle": "Abhol-PIN",
+  "pickupPinLabel": "Abhol-PIN",
+  "pickupPinHint": "4-stellige PIN",
+  "pickupPinGenerated": "Abhol-PIN: {pin}",
+  "@pickupPinGenerated": {
+    "placeholders": {
+      "pin": {}
+    }
+  },
+  "pickupPinRequiredMessage": "Abhol-PIN ist erforderlich.",
+  "pickupPinInvalidMessage": "PIN ist falsch. Bitte erneut versuchen.",
+  "delegateSetupTitle": "Bevollmächtigte Person",
+  "delegateNameLabel": "Vollständiger Name",
+  "delegatePhoneLabel": "Telefon",
+  "delegateEmailLabel": "E-Mail",
+  "delegateCodeTitle": "Bevollmächtigten-Code",
+  "delegateCodeLabel": "Bevollmächtigten-Code",
+  "delegateCodeHint": "6-stelliger Code",
+  "delegateCodeGenerated": "Bevollmächtigten-Code: {code}",
+  "@delegateCodeGenerated": {
+    "placeholders": {
+      "code": {}
+    }
+  },
+  "delegateCodeRequiredMessage": "Bevollmächtigten-Code erforderlich.",
+  "delegateCodeInvalidMessage": "Bevollmächtigten-Code ist ungültig.",
+  "delegateSavedMessage": "Bevollmächtigte Person gespeichert.",
+  "pickupPinSafetyWarning": "Speichere deine PIN und teile sie nicht. Diese PIN wird bei der Abholung benötigt.",
+  "pickupPinCopiedMessage": "PIN kopiert — bewahre sie sicher auf.",
+  "copy": "Kopieren",
   "luggageCreateFailed": "Gepäck konnte nicht erstellt werden.",
   "savingInProgress": "Wird gespeichert...",
   "statusLabel": "Status",

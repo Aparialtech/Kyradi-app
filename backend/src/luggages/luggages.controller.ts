@@ -33,6 +33,12 @@ export class LuggagesController {
     @Param('luggageId') luggageId: string,
     @Body() dto: UpdateLuggageStatusDto,
   ) {
-    return this.luggagesService.updateStatus(userId, luggageId, dto.status);
+    return this.luggagesService.updateStatus(
+      userId,
+      luggageId,
+      dto.status,
+      dto.pickupPin,
+      dto.delegateCode,
+    );
   }
 }

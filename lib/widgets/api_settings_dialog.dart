@@ -43,14 +43,17 @@ Future<ApiSettingsOutcome?> showApiSettingsDialog(BuildContext context) async {
                   readOnly: isEnvLocked,
                   decoration: InputDecoration(
                     labelText: loc.apiSettingsBaseUrlLabel,
-                    hintText: 'https://192.168.1.10:8080',
+                    hintText:
+                        'https://sharon-confidential-augustus.ngrok-free.de',
                     errorText: errorText,
                   ),
                   onSubmitted: (_) => Navigator.of(stateContext).pop(),
                 ),
                 const SizedBox(height: 12),
                 Text(
-                  loc.apiSettingsActiveLabel(ApiService.baseUrl),
+                  loc.apiSettingsActiveLabel(
+                    ApiService.baseUrl.isNotEmpty ? ApiService.baseUrl : '-',
+                  ),
                   style: theme.textTheme.bodySmall,
                 ),
                 const SizedBox(height: 8),

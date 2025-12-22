@@ -80,6 +80,8 @@ class _HomePageState extends State<HomePage> {
   bool _pushReminderEnabled = true;
   bool _emailReminderEnabled = true;
 
+  static const String _pickupPinStoragePrefix = 'pickup_pin_';
+
   final ImagePicker _imagePicker = ImagePicker();
   Uint8List? _identityDocPreview;
   IdentityDocumentType _identityDocType = IdentityDocumentType.idCard;
@@ -154,6 +156,16 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
+  Future<void> _storePickupPin(String luggageId, String pin) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('$_pickupPinStoragePrefix$luggageId', pin);
+  }
+
+  Future<String?> _loadPickupPin(String luggageId) async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString('$_pickupPinStoragePrefix$luggageId');
+  }
+
   Future<void> _loadIdentityProof() async {
     final prefs = await SharedPreferences.getInstance();
     final encoded = prefs.getString(_identityDocBytesKey);
@@ -195,7 +207,8 @@ class _HomePageState extends State<HomePage> {
       if (!mounted) return;
       final loc = AppLocalizations.of(context)!;
       if (result['ok'] != true) {
-        final rawMessage = (result['error'] ?? '').toString().trim();
+        final rawMessage =
+            (result['error'] ?? result['message'] ?? '').toString().trim();
         final message = rawMessage.isNotEmpty
             ? rawMessage
             : loc.profileLoadFailed(loc.unknownError);
@@ -462,6 +475,10 @@ class _HomePageState extends State<HomePage> {
     return 'BGO-$stamp-$suffix';
   }
 
+  String _generatePickupPin() {
+    return (_random.nextInt(9000) + 1000).toString();
+  }
+
   String _formatDateTime(DateTime? dateTime) {
     if (dateTime == null) return '-';
     return DateFormat('dd.MM.yyyy HH:mm').format(dateTime.toLocal());
@@ -506,6 +523,38 @@ class _HomePageState extends State<HomePage> {
       _LuggageFilter.stored => luggage.isDropped,
       _LuggageFilter.picked => luggage.isPickedUp,
     };
+  }
+
+  void _openLuggageListPage(String title, List<LuggageModel> items) {
+    final loc = AppLocalizations.of(context)!;
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => Scaffold(
+          appBar: AppBar(title: Text(title)),
+          body: SafeArea(
+            child: items.isEmpty
+                ? Padding(
+                    padding: const EdgeInsets.all(24),
+                    child: Text(
+                      loc.luggageEmptyStateFiltered,
+                      style: Theme.of(context)
+                          .textTheme
+                          .bodyMedium
+                          ?.copyWith(
+                            color: Theme.of(context)
+                                .colorScheme
+                                .onSurfaceVariant,
+                          ),
+                    ),
+                  )
+                : ListView(
+                    padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
+                    children: items.map(_buildLuggageCard).toList(),
+                  ),
+          ),
+        ),
+      ),
+    );
   }
 
   List<_LuggageFilterOption> _luggageFilterOptions(
@@ -777,6 +826,12 @@ class _HomePageState extends State<HomePage> {
                     label: loc.luggagePickupAction,
                     onPressed: () => _handleLuggageAction(luggage, _QrAction.pickup),
                   ),
+                if (!luggage.isPickedUp && !luggage.isCancelled)
+                  _ActionTextButton(
+                    icon: Icons.person_outline,
+                    label: loc.luggageDelegateAction,
+                    onPressed: () => _openDelegateDialog(luggage),
+                  ),
                 if (luggage.isAwaitingDrop && !luggage.isCancelled)
                   _ActionTextButton(
                     icon: Icons.cancel_outlined,
@@ -829,6 +884,7 @@ class _HomePageState extends State<HomePage> {
         builder: (_) => AddLuggagePage(
           userId: _userId!,
           qrGenerator: _generateQrCode,
+          pickupPinGenerator: _generatePickupPin,
         ),
       ),
     );
@@ -853,9 +909,10 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
-  void _showQrDialog(LuggageModel luggage) {
+  Future<void> _showQrDialog(LuggageModel luggage) async {
     if (_qrNavigationPending || !mounted) return;
     _qrNavigationPending = true;
+    final pin = await _loadPickupPin(luggage.id);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) {
         _qrNavigationPending = false;
@@ -864,7 +921,10 @@ class _HomePageState extends State<HomePage> {
       Navigator.of(context)
           .push(
             MaterialPageRoute<void>(
-              builder: (_) => QrPreviewPage(luggage: luggage),
+              builder: (_) => QrPreviewPage(
+                luggage: luggage,
+                pickupPin: pin,
+              ),
               fullscreenDialog: true,
             ),
           )
@@ -872,6 +932,47 @@ class _HomePageState extends State<HomePage> {
         _qrNavigationPending = false;
       });
     });
+  }
+
+  Future<String?> _requestPickupCredential(LuggageModel luggage) async {
+    final loc = AppLocalizations.of(context)!;
+    final isDelegate = luggage.isDelegateActive;
+    final controller = TextEditingController();
+    final title =
+        isDelegate ? loc.delegateCodeTitle : loc.pickupPinTitle;
+    final label =
+        isDelegate ? loc.delegateCodeLabel : loc.pickupPinLabel;
+    final hint =
+        isDelegate ? loc.delegateCodeHint : loc.pickupPinHint;
+
+    final result = await showDialog<String>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(title),
+        content: TextField(
+          controller: controller,
+          keyboardType: TextInputType.number,
+          textInputAction: TextInputAction.done,
+          decoration: InputDecoration(
+            labelText: label,
+            hintText: hint,
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text(loc.dialogDismiss),
+          ),
+          FilledButton(
+            onPressed: () {
+              Navigator.pop(ctx, controller.text.trim());
+            },
+            child: Text(loc.dialogConfirm),
+          ),
+        ],
+      ),
+    );
+    return result?.trim().isNotEmpty == true ? result : null;
   }
 
   Future<void> _handleLuggageAction(
@@ -890,11 +991,24 @@ class _HomePageState extends State<HomePage> {
     final status = action == _QrAction.drop
         ? luggageStatusDropped
         : luggageStatusPickedUp;
+    String? pickupPin;
+    String? delegateCode;
+    if (action == _QrAction.pickup) {
+      final credential = await _requestPickupCredential(luggage);
+      if (credential == null || credential.isEmpty) return;
+      if (luggage.isDelegateActive) {
+        delegateCode = credential;
+      } else {
+        pickupPin = credential;
+      }
+    }
     try {
       final result = await LuggageService.updateStatus(
         _userId!,
         luggage.id,
         status,
+        pickupPin,
+        delegateCode,
       );
       if (result['ok'] == true && result['luggage'] is Map<String, dynamic>) {
         final updated = LuggageModel.fromJson(
@@ -919,9 +1033,18 @@ class _HomePageState extends State<HomePage> {
       } else {
         if (!mounted) return;
         final loc = AppLocalizations.of(context)!;
-        final rawMessage = (result['error'] ?? '').toString().trim();
+        final rawMessage =
+            (result['error'] ?? result['message'] ?? '').toString().trim();
+        final message = switch (rawMessage) {
+          'PICKUP_PIN_REQUIRED' => loc.pickupPinRequiredMessage,
+          'PICKUP_CREDENTIAL_REQUIRED' => loc.pickupPinRequiredMessage,
+          'PICKUP_PIN_INVALID' => loc.pickupPinInvalidMessage,
+          'DELEGATE_CODE_REQUIRED' => loc.delegateCodeRequiredMessage,
+          'DELEGATE_CODE_INVALID' => loc.delegateCodeInvalidMessage,
+          _ => rawMessage,
+        };
         _snack(
-          rawMessage.isNotEmpty ? rawMessage : loc.operationFailed,
+          message.isNotEmpty ? message : loc.operationFailed,
           type: AppNotificationType.error,
         );
       }
@@ -929,6 +1052,102 @@ class _HomePageState extends State<HomePage> {
       if (!mounted) return;
       final loc = AppLocalizations.of(context)!;
       _snack(loc.operationFailedWithDetails('$e'),
+          type: AppNotificationType.error);
+    }
+  }
+
+  Future<void> _openDelegateDialog(LuggageModel luggage) async {
+    final loc = AppLocalizations.of(context)!;
+    final nameCtrl = TextEditingController(
+      text: luggage.pickupDelegate?.fullName ?? '',
+    );
+    final phoneCtrl = TextEditingController(
+      text: luggage.pickupDelegate?.phone ?? '',
+    );
+    final emailCtrl = TextEditingController(
+      text: luggage.pickupDelegate?.email ?? '',
+    );
+
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(loc.delegateSetupTitle),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: nameCtrl,
+              decoration: InputDecoration(labelText: loc.delegateNameLabel),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: phoneCtrl,
+              keyboardType: TextInputType.phone,
+              decoration: InputDecoration(labelText: loc.delegatePhoneLabel),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: emailCtrl,
+              keyboardType: TextInputType.emailAddress,
+              decoration: InputDecoration(labelText: loc.delegateEmailLabel),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(loc.dialogDismiss),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text(loc.save),
+          ),
+        ],
+      ),
+    );
+
+    if (result != true) return;
+    final payload = {
+      'pickupDelegateFullName': nameCtrl.text.trim(),
+      'pickupDelegatePhone': phoneCtrl.text.trim(),
+      'pickupDelegateEmail': emailCtrl.text.trim(),
+    };
+    try {
+      final res = await ApiService.updateLuggageMetadata(
+        _userId!,
+        luggage.id,
+        payload,
+      );
+      if (!mounted) return;
+      final delegateCode = res['delegateCode']?.toString();
+      if (res['ok'] == true && res['luggage'] is Map<String, dynamic>) {
+        final updated = LuggageModel.fromJson(
+          Map<String, dynamic>.from(res['luggage'] as Map),
+        );
+        setState(() => _replaceLuggage(updated));
+      }
+      if (delegateCode != null && delegateCode.isNotEmpty) {
+        await showDialog<void>(
+          context: context,
+          builder: (ctx) => AlertDialog(
+            title: Text(loc.delegateCodeTitle),
+            content: SelectableText(
+              loc.delegateCodeGenerated(delegateCode),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx),
+                child: Text(loc.dialogDismiss),
+              ),
+            ],
+          ),
+        );
+      } else {
+        _snack(loc.delegateSavedMessage, type: AppNotificationType.success);
+      }
+    } catch (e) {
+      if (!mounted) return;
+      _snack(loc.genericErrorWithDetails('$e'),
           type: AppNotificationType.error);
     }
   }
@@ -966,6 +1185,8 @@ class _HomePageState extends State<HomePage> {
         _userId!,
         luggage.id,
         luggageStatusCancelled,
+        null,
+        null,
       );
       if (result['ok'] == true && result['luggage'] is Map<String, dynamic>) {
         final updated = LuggageModel.fromJson(
@@ -1776,10 +1997,7 @@ class _HomePageState extends State<HomePage> {
               padding: const EdgeInsets.fromLTRB(16, 18, 16, 32),
               children: [
                 SectionCard(
-                  backgroundColor: Theme.of(context)
-                      .colorScheme
-                      .primaryContainer
-                      .withValues(alpha: 0.7),
+                  backgroundColor: const Color(0xFFFFC27A),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -1789,12 +2007,9 @@ class _HomePageState extends State<HomePage> {
                         icon: Icons.dashboard_customize_outlined,
                         action: Chip(
                           label: Text(loc.dashboardTotalCount(luggageCount)),
-                          backgroundColor: Theme.of(context)
-                              .colorScheme
-                              .primary
-                              .withValues(alpha: 0.15),
+                          backgroundColor: const Color(0xFFFF7A00),
                           labelStyle: Theme.of(context).textTheme.labelMedium?.copyWith(
-                                color: Theme.of(context).colorScheme.onPrimaryContainer,
+                                color: const Color(0xFF4B2400),
                               ),
                         ),
                       ),
@@ -1829,24 +2044,49 @@ class _HomePageState extends State<HomePage> {
                               value: _awaitingCount,
                               icon: Icons.timer_outlined,
                               color: Theme.of(context).colorScheme.secondary,
+                              onTap: () => _openLuggageListPage(
+                                loc.dashboardMetricAwaiting,
+                                _luggages
+                                    .where((luggage) =>
+                                        luggage.isAwaitingDrop)
+                                    .toList(),
+                              ),
                             ),
                             _DashboardMetricTile(
                               label: loc.dashboardMetricStored,
                               value: _storedCount,
                               icon: Icons.inventory_2_outlined,
                               color: Theme.of(context).colorScheme.primary,
+                              onTap: () => _openLuggageListPage(
+                                loc.dashboardMetricStored,
+                                _luggages
+                                    .where((luggage) => luggage.isDropped)
+                                    .toList(),
+                              ),
                             ),
                             _DashboardMetricTile(
                               label: loc.dashboardMetricPicked,
                               value: _pickedCount,
                               icon: Icons.check_circle_outline,
                               color: Theme.of(context).colorScheme.tertiary,
+                              onTap: () => _openLuggageListPage(
+                                loc.dashboardMetricPicked,
+                                _luggages
+                                    .where((luggage) => luggage.isPickedUp)
+                                    .toList(),
+                              ),
                             ),
                             _DashboardMetricTile(
                               label: loc.dashboardMetricCancelled,
                               value: _cancelledCount,
                               icon: Icons.cancel_schedule_send_outlined,
                               color: Theme.of(context).colorScheme.error,
+                              onTap: () => _openLuggageListPage(
+                                loc.dashboardMetricCancelled,
+                                _luggages
+                                    .where((luggage) => luggage.isCancelled)
+                                    .toList(),
+                              ),
                             ),
                           ];
                           if (constraints.maxWidth < 520) {
@@ -2645,54 +2885,63 @@ class _DashboardMetricTile extends StatelessWidget {
   final int value;
   final IconData icon;
   final Color color;
+  final VoidCallback? onTap;
 
   const _DashboardMetricTile({
     required this.label,
     required this.value,
     required this.icon,
     required this.color,
+    this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-      decoration: BoxDecoration(
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
         borderRadius: BorderRadius.circular(18),
-        color: theme.colorScheme.surface.withValues(alpha: 0.9),
-        border: Border.all(color: color.withValues(alpha: 0.2)),
-      ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: color.withValues(alpha: 0.15),
-              borderRadius: BorderRadius.circular(14),
-            ),
-            child: Icon(icon, color: color),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(18),
+            color: theme.colorScheme.surface.withValues(alpha: 0.9),
+            border: Border.all(color: color.withValues(alpha: 0.2)),
           ),
-          const SizedBox(width: 12),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+          child: Row(
             children: [
-              Text(
-                '$value',
-                style: theme.textTheme.headlineSmall?.copyWith(
-                  fontWeight: FontWeight.w800,
-                  color: color,
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(14),
                 ),
+                child: Icon(icon, color: color),
               ),
-              Text(
-                label,
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
-                ),
+              const SizedBox(width: 12),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    '$value',
+                    style: theme.textTheme.headlineSmall?.copyWith(
+                      fontWeight: FontWeight.w800,
+                      color: color,
+                    ),
+                  ),
+                  Text(
+                    label,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
-        ],
+        ),
       ),
     );
   }
@@ -2746,8 +2995,13 @@ class _InfoRow extends StatelessWidget {
 // ===== QR ve Luggage Ekranları =====
 class QrPreviewPage extends StatelessWidget {
   final LuggageModel luggage;
+  final String? pickupPin;
 
-  const QrPreviewPage({super.key, required this.luggage});
+  const QrPreviewPage({
+    super.key,
+    required this.luggage,
+    this.pickupPin,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -2817,6 +3071,51 @@ class QrPreviewPage extends StatelessWidget {
                 const SizedBox(height: 8),
                 Text(loc.noteLabel(luggage.note ?? ''),
                     style: theme.textTheme.bodySmall),
+              ],
+              if ((pickupPin ?? '').isNotEmpty) ...[
+                const SizedBox(height: 20),
+                SectionCard(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        loc.pickupPinTitle,
+                        style: theme.textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      SelectableText(
+                        pickupPin!,
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: 1.2,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        loc.pickupPinSafetyWarning,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      OutlinedButton.icon(
+                        onPressed: () {
+                          Clipboard.setData(ClipboardData(text: pickupPin!));
+                          AppNotification.show(
+                            context,
+                            message: loc.pickupPinCopiedMessage,
+                            type: AppNotificationType.success,
+                          );
+                        },
+                        icon: const Icon(Icons.copy),
+                        label: Text(loc.copy),
+                      ),
+                    ],
+                  ),
+                ),
               ],
               const SizedBox(height: 20),
               FilledButton.icon(
@@ -2893,9 +3192,11 @@ class QrPreviewPage extends StatelessWidget {
 class AddLuggagePage extends StatefulWidget {
   final String userId;
   final String Function() qrGenerator;
+  final String Function() pickupPinGenerator;
   const AddLuggagePage({
     required this.userId,
     required this.qrGenerator,
+    required this.pickupPinGenerator,
     super.key,
   });
 
@@ -2905,6 +3206,7 @@ class AddLuggagePage extends StatefulWidget {
 
 class _AddLuggagePageState extends State<AddLuggagePage> {
   late String _qrCode;
+  late String _pickupPin;
   final _labelCtrl = TextEditingController();
   final _weightCtrl = TextEditingController();
   final _noteCtrl = TextEditingController();
@@ -2919,6 +3221,11 @@ class _AddLuggagePageState extends State<AddLuggagePage> {
   DateTime? _dropTime;
   DateTime? _pickupTime;
   bool _scheduleError = false;
+
+  Future<void> _storePickupPin(String luggageId, String pin) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('pickup_pin_$luggageId', pin);
+  }
 
   List<DropLocation> _nearestLocations(LatLng target, {int limit = 3}) {
     final sorted = List<DropLocation>.from(_availableLocations)
@@ -2945,6 +3252,7 @@ class _AddLuggagePageState extends State<AddLuggagePage> {
   void initState() {
     super.initState();
     _qrCode = widget.qrGenerator();
+    _pickupPin = widget.pickupPinGenerator();
     _selectedLocation = _availableLocations.first;
     _loadNearbySuggestions();
   }
@@ -3078,6 +3386,52 @@ class _AddLuggagePageState extends State<AddLuggagePage> {
         final luggage = LuggageModel.fromJson(
           Map<String, dynamic>.from(result['luggage'] as Map),
         );
+        final pickupPin = (result['pickupPin'] ?? '').toString().trim();
+        final effectivePin = pickupPin.isNotEmpty ? pickupPin : _pickupPin;
+        if (effectivePin.isNotEmpty && mounted) {
+          await _storePickupPin(luggage.id, effectivePin);
+          await showDialog<void>(
+            context: context,
+            builder: (ctx) => AlertDialog(
+              title: Text(loc.pickupPinTitle),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  SelectableText(
+                    loc.pickupPinGenerated(effectivePin),
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    loc.pickupPinSafetyWarning,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: Theme.of(context)
+                              .colorScheme
+                              .onSurfaceVariant,
+                        ),
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    Clipboard.setData(ClipboardData(text: effectivePin));
+                    AppNotification.show(
+                      context,
+                      message: loc.pickupPinCopiedMessage,
+                      type: AppNotificationType.success,
+                    );
+                  },
+                  child: Text(loc.copy),
+                ),
+                TextButton(
+                  onPressed: () => Navigator.pop(ctx),
+                  child: Text(loc.dialogDismiss),
+                ),
+              ],
+            ),
+          );
+        }
         final enriched = luggage.copyWith(
           qrCode: _qrCode,
           dropLocationId: luggage.dropLocationId.isNotEmpty

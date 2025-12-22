@@ -58,7 +58,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get mapIntro =>
-      'Смотрите точки BavulGO на карте и строите лучший маршрут.';
+      'Смотрите точки KYRADI на карте и строите лучший маршрут.';
 
   @override
   String get walkingRoute => 'Пеший маршрут';
@@ -1153,7 +1153,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get commonSelect => 'Выбрать';
 
   @override
-  String get landingTitle => 'BavulGO Track';
+  String get landingTitle => 'KYRADI Track';
 
   @override
   String get landingIntro =>
@@ -1212,6 +1212,75 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get luggageRegistrationNote =>
       'После сохранения персонал сможет распечатать QR-стикер. Клиент должен сканировать код при сдаче и выдаче.';
+
+  @override
+  String get luggageDelegateAction => 'Доверенное лицо';
+
+  @override
+  String get pickupPinTitle => 'PIN выдачи';
+
+  @override
+  String get pickupPinLabel => 'PIN выдачи';
+
+  @override
+  String get pickupPinHint => '4-значный PIN';
+
+  @override
+  String pickupPinGenerated(Object pin) {
+    return 'PIN выдачи: $pin';
+  }
+
+  @override
+  String get pickupPinRequiredMessage => 'Нужен PIN выдачи.';
+
+  @override
+  String get pickupPinInvalidMessage => 'PIN неверный. Попробуйте снова.';
+
+  @override
+  String get delegateSetupTitle => 'Доверенное лицо';
+
+  @override
+  String get delegateNameLabel => 'Полное имя';
+
+  @override
+  String get delegatePhoneLabel => 'Телефон';
+
+  @override
+  String get delegateEmailLabel => 'E-mail';
+
+  @override
+  String get delegateCodeTitle => 'Код доверенного лица';
+
+  @override
+  String get delegateCodeLabel => 'Код доверенного лица';
+
+  @override
+  String get delegateCodeHint => '6-значный код';
+
+  @override
+  String delegateCodeGenerated(Object code) {
+    return 'Код доверенного лица: $code';
+  }
+
+  @override
+  String get delegateCodeRequiredMessage => 'Нужен код доверенного лица.';
+
+  @override
+  String get delegateCodeInvalidMessage => 'Код доверенного лица неверный.';
+
+  @override
+  String get delegateSavedMessage => 'Доверенное лицо сохранено.';
+
+  @override
+  String get pickupPinSafetyWarning =>
+      'Сохраните PIN и никому не сообщайте. Он понадобится при выдаче.';
+
+  @override
+  String get pickupPinCopiedMessage =>
+      'PIN скопирован — храните его в безопасном месте.';
+
+  @override
+  String get copy => 'Копировать';
 
   @override
   String get luggageCreateFailed => 'Не удалось создать багаж.';

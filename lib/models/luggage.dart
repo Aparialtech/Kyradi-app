@@ -23,6 +23,10 @@ class LuggageModel {
   final DateTime? pickupConfirmedAt;
   final DateTime? scheduledDropTime;
   final DateTime? scheduledPickupTime;
+  final LuggageDelegate? pickupDelegate;
+  final DateTime? delegateExpiresAt;
+  final DateTime? delegateUsedAt;
+  final bool delegateActive;
 
   const LuggageModel({
     required this.id,
@@ -40,6 +44,10 @@ class LuggageModel {
     this.pickupConfirmedAt,
     this.scheduledDropTime,
     this.scheduledPickupTime,
+    this.pickupDelegate,
+    this.delegateExpiresAt,
+    this.delegateUsedAt,
+    this.delegateActive = false,
   });
 
   factory LuggageModel.fromJson(Map<String, dynamic> json) {
@@ -65,6 +73,14 @@ class LuggageModel {
       pickupConfirmedAt: _parseDate(json['pickupConfirmedAt']),
       scheduledDropTime: _parseDate(json['scheduledDropTime']),
       scheduledPickupTime: _parseDate(json['scheduledPickupTime']),
+      pickupDelegate: json['pickupDelegate'] is Map
+          ? LuggageDelegate.fromJson(
+              Map<String, dynamic>.from(json['pickupDelegate'] as Map),
+            )
+          : null,
+      delegateExpiresAt: _parseDate(json['delegateExpiresAt']),
+      delegateUsedAt: _parseDate(json['delegateUsedAt']),
+      delegateActive: (json['delegateActive'] ?? false) == true,
     );
   }
 
@@ -84,6 +100,10 @@ class LuggageModel {
         'pickupConfirmedAt': pickupConfirmedAt?.toIso8601String(),
         'scheduledDropTime': scheduledDropTime?.toIso8601String(),
         'scheduledPickupTime': scheduledPickupTime?.toIso8601String(),
+        'pickupDelegate': pickupDelegate?.toJson(),
+        'delegateExpiresAt': delegateExpiresAt?.toIso8601String(),
+        'delegateUsedAt': delegateUsedAt?.toIso8601String(),
+        'delegateActive': delegateActive,
       };
 
   LuggageModel copyWith({
@@ -100,6 +120,10 @@ class LuggageModel {
     String? dropLocationName,
     DateTime? scheduledDropTime,
     DateTime? scheduledPickupTime,
+    LuggageDelegate? pickupDelegate,
+    DateTime? delegateExpiresAt,
+    DateTime? delegateUsedAt,
+    bool? delegateActive,
   }) {
     return LuggageModel(
       id: id,
@@ -117,6 +141,10 @@ class LuggageModel {
       pickupConfirmedAt: pickupConfirmedAt ?? this.pickupConfirmedAt,
       scheduledDropTime: scheduledDropTime ?? this.scheduledDropTime,
       scheduledPickupTime: scheduledPickupTime ?? this.scheduledPickupTime,
+      pickupDelegate: pickupDelegate ?? this.pickupDelegate,
+      delegateExpiresAt: delegateExpiresAt ?? this.delegateExpiresAt,
+      delegateUsedAt: delegateUsedAt ?? this.delegateUsedAt,
+      delegateActive: delegateActive ?? this.delegateActive,
     );
   }
 
@@ -159,6 +187,12 @@ class LuggageModel {
   bool get isPickedUp => status == LuggageStatus.pickedUp;
   bool get isCancelled => status == LuggageStatus.cancelled;
 
+  bool get isDelegateActive {
+    if (delegateActive) return true;
+    if (delegateExpiresAt == null || delegateUsedAt != null) return false;
+    return delegateExpiresAt!.isAfter(DateTime.now());
+  }
+
   static LuggageStatus _parseStatus(dynamic value) {
     final normalized = value?.toString().toLowerCase();
     switch (normalized) {
@@ -194,4 +228,30 @@ class LuggageModel {
         return luggageStatusCancelled;
     }
   }
+}
+
+class LuggageDelegate {
+  final String fullName;
+  final String phone;
+  final String email;
+
+  const LuggageDelegate({
+    this.fullName = '',
+    this.phone = '',
+    this.email = '',
+  });
+
+  factory LuggageDelegate.fromJson(Map<String, dynamic> json) {
+    return LuggageDelegate(
+      fullName: (json['fullName'] ?? '').toString(),
+      phone: (json['phone'] ?? '').toString(),
+      email: (json['email'] ?? '').toString(),
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+        'fullName': fullName,
+        'phone': phone,
+        'email': email,
+      };
 }

@@ -203,7 +203,7 @@ abstract class AppLocalizations {
   /// No description provided for @mapIntro.
   ///
   /// In tr, this message translates to:
-  /// **'BavulGO noktalarını haritada gör, en uygun rotayı oluştur.'**
+  /// **'KYRADI noktalarını haritada gör, en uygun rotayı oluştur.'**
   String get mapIntro;
 
   /// No description provided for @walkingRoute.
@@ -2129,7 +2129,7 @@ abstract class AppLocalizations {
   /// No description provided for @landingTitle.
   ///
   /// In tr, this message translates to:
-  /// **'BavulGO Track'**
+  /// **'KYRADI Track'**
   String get landingTitle;
 
   /// No description provided for @landingIntro.
@@ -2233,6 +2233,132 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Kaydın ardından personeliniz QR sticker çıktısını alabilir. Müşteri bırakma ve teslimde kodu okutmalıdır.'**
   String get luggageRegistrationNote;
+
+  /// No description provided for @luggageDelegateAction.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yetkili Kişi'**
+  String get luggageDelegateAction;
+
+  /// No description provided for @pickupPinTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Teslim PIN'**
+  String get pickupPinTitle;
+
+  /// No description provided for @pickupPinLabel.
+  ///
+  /// In tr, this message translates to:
+  /// **'Teslim PIN'**
+  String get pickupPinLabel;
+
+  /// No description provided for @pickupPinHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'4 haneli PIN'**
+  String get pickupPinHint;
+
+  /// No description provided for @pickupPinGenerated.
+  ///
+  /// In tr, this message translates to:
+  /// **'Teslim PIN: {pin}'**
+  String pickupPinGenerated(Object pin);
+
+  /// No description provided for @pickupPinRequiredMessage.
+  ///
+  /// In tr, this message translates to:
+  /// **'Teslim için PIN gerekli.'**
+  String get pickupPinRequiredMessage;
+
+  /// No description provided for @pickupPinInvalidMessage.
+  ///
+  /// In tr, this message translates to:
+  /// **'PIN hatalı. Tekrar dene.'**
+  String get pickupPinInvalidMessage;
+
+  /// No description provided for @delegateSetupTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yetkili Kişi'**
+  String get delegateSetupTitle;
+
+  /// No description provided for @delegateNameLabel.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ad Soyad'**
+  String get delegateNameLabel;
+
+  /// No description provided for @delegatePhoneLabel.
+  ///
+  /// In tr, this message translates to:
+  /// **'Telefon'**
+  String get delegatePhoneLabel;
+
+  /// No description provided for @delegateEmailLabel.
+  ///
+  /// In tr, this message translates to:
+  /// **'E-posta'**
+  String get delegateEmailLabel;
+
+  /// No description provided for @delegateCodeTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yetkili Kişi Kodu'**
+  String get delegateCodeTitle;
+
+  /// No description provided for @delegateCodeLabel.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yetkili Kodu'**
+  String get delegateCodeLabel;
+
+  /// No description provided for @delegateCodeHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'6 haneli kod'**
+  String get delegateCodeHint;
+
+  /// No description provided for @delegateCodeGenerated.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yetkili kodu: {code}'**
+  String delegateCodeGenerated(Object code);
+
+  /// No description provided for @delegateCodeRequiredMessage.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yetkili kodu gerekli.'**
+  String get delegateCodeRequiredMessage;
+
+  /// No description provided for @delegateCodeInvalidMessage.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yetkili kodu hatalı.'**
+  String get delegateCodeInvalidMessage;
+
+  /// No description provided for @delegateSavedMessage.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yetkili kişi kaydedildi.'**
+  String get delegateSavedMessage;
+
+  /// No description provided for @pickupPinSafetyWarning.
+  ///
+  /// In tr, this message translates to:
+  /// **'PIN’inizi kaydedin ve kimseyle paylaşmayın. Teslim alma sırasında bu PIN istenecektir.'**
+  String get pickupPinSafetyWarning;
+
+  /// No description provided for @pickupPinCopiedMessage.
+  ///
+  /// In tr, this message translates to:
+  /// **'PIN kopyalandı — PIN’inizi güvenli bir yerde saklayın.'**
+  String get pickupPinCopiedMessage;
+
+  /// No description provided for @copy.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kopyala'**
+  String get copy;
 
   /// No description provided for @luggageCreateFailed.
   ///

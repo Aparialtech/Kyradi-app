@@ -16,7 +16,7 @@
   "saveProfileError": "Save failed",
   "userInfo": "User Information",
   "map": "Map",
-  "mapIntro": "See BavulGO spots on the map and build your best route.",
+  "mapIntro": "See KYRADI spots on the map and build your best route.",
   "walkingRoute": "Walking Route",
   "drivingRoute": "Driving Route",
   "openInMaps": "Open in Google Maps",
@@ -569,7 +569,7 @@
   "refreshNearbyButton": "Update nearby locations",
   "nearbyLocationsTitle": "Nearby locations",
   "commonSelect": "Select",
-  "landingTitle": "BavulGO Track",
+  "landingTitle": "KYRADI Track",
   "landingIntro": "Choose where to drop your luggage. Tap a point on the map to see its occupancy and open reservation details.",
   "landingLocateSectionTitle": "Find the closest points",
   "landingLocateSectionSubtitle": "Share your location to list recommendations.",
@@ -597,6 +597,37 @@
   "notesHint": "Lock, fragile, special instructions...",
   "luggageNameHint": "Give the luggage a name (optional)",
   "luggageRegistrationNote": "After saving, your staff can print the QR sticker. Customers must scan the code when dropping off and picking up.",
+  "luggageDelegateAction": "Delegate",
+  "pickupPinTitle": "Pickup PIN",
+  "pickupPinLabel": "Pickup PIN",
+  "pickupPinHint": "4-digit PIN",
+  "pickupPinGenerated": "Pickup PIN: {pin}",
+  "@pickupPinGenerated": {
+    "placeholders": {
+      "pin": {}
+    }
+  },
+  "pickupPinRequiredMessage": "Pickup PIN is required.",
+  "pickupPinInvalidMessage": "PIN is incorrect. Try again.",
+  "delegateSetupTitle": "Delegate",
+  "delegateNameLabel": "Full name",
+  "delegatePhoneLabel": "Phone",
+  "delegateEmailLabel": "Email",
+  "delegateCodeTitle": "Delegate Code",
+  "delegateCodeLabel": "Delegate code",
+  "delegateCodeHint": "6-digit code",
+  "delegateCodeGenerated": "Delegate code: {code}",
+  "@delegateCodeGenerated": {
+    "placeholders": {
+      "code": {}
+    }
+  },
+  "delegateCodeRequiredMessage": "Delegate code is required.",
+  "delegateCodeInvalidMessage": "Delegate code is invalid.",
+  "delegateSavedMessage": "Delegate saved.",
+  "pickupPinSafetyWarning": "Save your PIN and do not share it. This PIN will be required during pickup.",
+  "pickupPinCopiedMessage": "PIN copied — keep it in a safe place.",
+  "copy": "Copy",
   "luggageCreateFailed": "Luggage could not be created.",
   "savingInProgress": "Saving...",
   "statusLabel": "Status",
