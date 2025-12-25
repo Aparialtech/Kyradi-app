@@ -31,6 +31,7 @@ import '../services/reminder_service.dart';
 const _identityDocPathKey = 'identity_doc_path';
 const _identityDocTypeKey = 'identity_doc_type';
 const _identityDocBytesKey = 'identity_doc_bytes';
+const _pickupPinStoragePrefix = 'pickup_pin_';
 
 const String _googleMapsApiKey = String.fromEnvironment(
   'GOOGLE_MAPS_API_KEY',
@@ -79,8 +80,6 @@ class _HomePageState extends State<HomePage> {
   bool _savingProfile = false;
   bool _pushReminderEnabled = true;
   bool _emailReminderEnabled = true;
-
-  static const String _pickupPinStoragePrefix = 'pickup_pin_';
 
   final ImagePicker _imagePicker = ImagePicker();
   Uint8List? _identityDocPreview;
@@ -3259,6 +3258,11 @@ class _AddLuggagePageState extends State<AddLuggagePage> {
     _weightCtrl.dispose();
     _noteCtrl.dispose();
     super.dispose();
+  }
+
+  Future<void> _storePickupPin(String luggageId, String pin) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('$_pickupPinStoragePrefix$luggageId', pin);
   }
 
   Future<void> _loadNearbySuggestions() async {
