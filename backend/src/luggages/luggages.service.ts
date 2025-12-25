@@ -1,4 +1,4 @@
-import { HttpException, Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { HttpException, Injectable, NotFoundException, BadRequestException, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Luggage, LuggageStatus } from './schemas/luggage.schema';
@@ -9,6 +9,8 @@ import { hashPassword, verifyPassword } from '../common/utils/password.util';
 
 @Injectable()
 export class LuggagesService {
+  private readonly logger = new Logger(LuggagesService.name);
+
   constructor(
     @InjectModel(Luggage.name)
     private readonly luggageModel: Model<Luggage>,
@@ -46,9 +48,9 @@ export class LuggagesService {
   async updateMetadata(userId: string, luggageId: string, dto: UpdateLuggageDto) {
     let delegateCode: string | undefined;
     const shouldIssueDelegate =
-      (dto.pickupDelegateFullName ?? '').trim().isNotEmpty ||
-      (dto.pickupDelegatePhone ?? '').trim().isNotEmpty ||
-      (dto.pickupDelegateEmail ?? '').trim().isNotEmpty;
+      (dto.pickupDelegateFullName ?? '').trim().length > 0 ||
+      (dto.pickupDelegatePhone ?? '').trim().length > 0 ||
+      (dto.pickupDelegateEmail ?? '').trim().length > 0;
     if (shouldIssueDelegate) {
       delegateCode = this.generateDelegateCode();
     }
@@ -138,7 +140,7 @@ export class LuggagesService {
       await this.refreshLocationOccupancy(saved.dropLocationId?.toString());
       return this._decorateLuggage(saved.toObject());
     } catch (error) {
-      console.error('Luggage status update failed', error);
+      this.logger.error('Luggage status update failed', (error as Error)?.stack);
       if (error instanceof HttpException) {
         throw error;
       }
