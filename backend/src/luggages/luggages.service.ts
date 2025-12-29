@@ -4,6 +4,7 @@ import { Model } from 'mongoose';
 import { Luggage, LuggageStatus } from './schemas/luggage.schema';
 import { CreateLuggageDto } from './dto/create-luggage.dto';
 import { UpdateLuggageDto } from './dto/update-luggage.dto';
+import { PricingEstimateDto } from './dto/pricing-estimate.dto';
 import { Location } from '../locations/schemas/location.schema';
 import { hashPassword, verifyPassword } from '../common/utils/password.util';
 
@@ -18,7 +19,107 @@ export class LuggagesService {
     private readonly locationModel: Model<Location>,
   ) {}
 
+  estimatePricing(dto: PricingEstimateDto) {
+    const dropAt = new Date(dto.dropAt);
+    const pickupAt = new Date(dto.pickupAt);
+    if (Number.isNaN(dropAt.getTime()) || Number.isNaN(pickupAt.getTime())) {
+      throw new BadRequestException('INVALID_DATE');
+    }
+    if (pickupAt.getTime() <= dropAt.getTime()) {
+      throw new BadRequestException('PICKUP_BEFORE_DROP');
+    }
+
+    const hours = (pickupAt.getTime() - dropAt.getTime()) / (1000 * 60 * 60);
+    let tier: '0-6' | '6-24' | 'daily';
+    let days = 1;
+    if (hours <= 6) {
+      tier = '0-6';
+    } else if (hours <= 24) {
+      tier = '6-24';
+    } else {
+      tier = 'daily';
+      days = Math.ceil(hours / 24);
+    }
+
+    const baseBySize: Record<PricingEstimateDto['sizeClass'], number> = {
+      small: 100,
+      medium: 150,
+      large: 200,
+    };
+    const sizeBase = baseBySize[dto.sizeClass];
+    if (!sizeBase) {
+      throw new BadRequestException('INVALID_SIZE_CLASS');
+    }
+
+    let basePrice = sizeBase;
+    if (tier === '6-24') {
+      basePrice = Math.round(sizeBase * 1.5);
+    } else if (tier === 'daily') {
+      basePrice = days * sizeBase;
+    }
+
+    const premiumProtectionFee =
+      dto.protectionLevel === 'premium' ? Math.round(basePrice * 0.2) : 0;
+
+    const pricingSubtotal = basePrice + premiumProtectionFee;
+    const hotelCommissionFee =
+      dto.paymentMethod === 'pay_at_hotel' ? Math.round(pricingSubtotal * 0.1) : 0;
+    const installmentFee =
+      dto.paymentMethod === 'installment' ? Math.round(pricingSubtotal * 0.05) : 0;
+
+    const total = basePrice + premiumProtectionFee + hotelCommissionFee + installmentFee;
+
+    return {
+      currency: 'TRY',
+      pricingBand: tier,
+      breakdown: {
+        basePrice,
+        premiumProtectionFee,
+        hotelCommissionFee,
+        installmentFee,
+      },
+      total,
+    };
+  }
+
   async create(userId: string, dto: CreateLuggageDto) {
+    const location = await this.locationModel
+      .findById(dto.dropLocationId)
+      .lean()
+      .exec();
+    if (!location) {
+      throw new NotFoundException('LOCATION_NOT_FOUND');
+    }
+    if (location.isActive === false) {
+      throw new BadRequestException('LOCATION_INACTIVE');
+    }
+    let dropTime =
+      dto.scheduledDropTime instanceof Date
+        ? dto.scheduledDropTime
+        : dto.scheduledDropTime
+          ? new Date(dto.scheduledDropTime)
+          : new Date();
+    if (Number.isNaN(dropTime.getTime())) {
+      dropTime = new Date();
+    }
+    const timezone = location.timezone || 'Europe/Istanbul';
+    const openingHours = location.openingHours ?? {};
+    if (!this._isLocationOpen(openingHours, timezone, dropTime)) {
+      throw new BadRequestException('LOCATION_CLOSED');
+    }
+    const maxCapacity =
+      typeof location.maxCapacity === 'number'
+        ? location.maxCapacity
+        : typeof location.totalSlots === 'number'
+          ? location.totalSlots
+          : 50;
+    const currentOccupancy = await this._getLocationOccupancy(
+      location._id?.toString() ?? location.id,
+    );
+    if (maxCapacity > 0 && currentOccupancy >= maxCapacity) {
+      throw new BadRequestException('LOCATION_FULL');
+    }
+
     const qrCode = await this.ensureUniqueQrCode(dto.qrCode);
     const pickupPin = this.generatePickupPin();
     const pickupPinHash = hashPassword(pickupPin);
@@ -30,6 +131,7 @@ export class LuggagesService {
       scheduledDropTime: dto.scheduledDropTime ? new Date(dto.scheduledDropTime) : undefined,
       scheduledPickupTime: dto.scheduledPickupTime ? new Date(dto.scheduledPickupTime) : undefined,
     });
+    await this.refreshLocationOccupancy(created.dropLocationId);
     return {
       luggage: this._decorateLuggage(created.toObject()),
       pickupPin,
@@ -180,14 +282,12 @@ export class LuggagesService {
     const normalized = locationId.toString();
     const location = await this.locationModel.findById(normalized).lean().exec();
     if (!location) return;
-    const usedSlots = await this.luggageModel
-      .countDocuments({
-        dropLocationId: normalized,
-        status: LuggageStatus.DROPPED,
-      })
-      .exec();
-    const totalSlots = location.totalSlots ?? 0;
-    const availableSlots = Math.max(totalSlots - usedSlots, 0);
+    const usedSlots = await this._getLocationOccupancy(normalized);
+    const capacity =
+      typeof location.maxCapacity === 'number'
+        ? location.maxCapacity
+        : location.totalSlots ?? 0;
+    const availableSlots = Math.max(capacity - usedSlots, 0);
     await this.locationModel
       .updateOne(
         { _id: normalized },
@@ -200,6 +300,86 @@ export class LuggagesService {
         },
       )
       .exec();
+  }
+
+  private async _getLocationOccupancy(locationId: string) {
+    return this.luggageModel
+      .countDocuments({
+        dropLocationId: locationId,
+        status: { $in: [LuggageStatus.AWAITING, LuggageStatus.DROPPED] },
+      })
+      .exec();
+  }
+
+  private _isLocationOpen(
+    openingHours: Record<string, { start: string; end: string }[]>,
+    timezone: string,
+    reference: Date,
+  ) {
+    if (!openingHours || Object.keys(openingHours).length === 0) return true;
+    let parts: Intl.DateTimeFormatPart[];
+    try {
+      const formatter = new Intl.DateTimeFormat('en-US', {
+        timeZone: timezone,
+        weekday: 'short',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false,
+      });
+      parts = formatter.formatToParts(reference);
+    } catch {
+      const fallback = new Intl.DateTimeFormat('en-US', {
+        weekday: 'short',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false,
+      });
+      parts = fallback.formatToParts(reference);
+    }
+    const weekdayPart = parts.find((part) => part.type === 'weekday')?.value ?? '';
+    const hourPart = parts.find((part) => part.type === 'hour')?.value ?? '00';
+    const minutePart = parts.find((part) => part.type === 'minute')?.value ?? '00';
+    const dayKey = this._weekdayKey(weekdayPart);
+    const ranges = (openingHours?.[dayKey] ?? []) as { start: string; end: string }[];
+    if (ranges.length === 0) return false;
+    const nowMinutes = Number(hourPart) * 60 + Number(minutePart);
+    return ranges.some((range) => {
+      const start = this._timeToMinutes(range.start);
+      const end = this._timeToMinutes(range.end);
+      if (start === null || end === null) return false;
+      return nowMinutes >= start && nowMinutes <= end;
+    });
+  }
+
+  private _weekdayKey(value: string) {
+    const normalized = value.toLowerCase().slice(0, 3);
+    switch (normalized) {
+      case 'mon':
+        return 'mon';
+      case 'tue':
+        return 'tue';
+      case 'wed':
+        return 'wed';
+      case 'thu':
+        return 'thu';
+      case 'fri':
+        return 'fri';
+      case 'sat':
+        return 'sat';
+      case 'sun':
+        return 'sun';
+      default:
+        return 'mon';
+    }
+  }
+
+  private _timeToMinutes(value?: string) {
+    if (!value) return null;
+    const [hourRaw, minuteRaw] = value.split(':');
+    const hour = Number(hourRaw);
+    const minute = Number(minuteRaw);
+    if (Number.isNaN(hour) || Number.isNaN(minute)) return null;
+    return hour * 60 + minute;
   }
 
   private _isDelegateActive(luggage: Luggage) {
@@ -221,4 +401,5 @@ export class LuggagesService {
       delegateActive: this._isDelegateActive(luggage as Luggage),
     };
   }
+
 }
