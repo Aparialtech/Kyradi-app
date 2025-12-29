@@ -123,6 +123,15 @@
   "loginForgotPassword": "Забыл пароль",
   "clearButton": "Очистить",
   "loginButtonLabel": "Войти",
+  "loginSocialDivider": "или",
+  "loginContinueWithGoogle": "Продолжить с Google",
+  "loginContinueWithApple": "Продолжить с Apple",
+  "loginSocialComingSoon": "{provider} скоро будет доступен.",
+  "@loginSocialComingSoon": {
+    "placeholders": {
+      "provider": {}
+    }
+  },
   "loginNoAccount": "Нет аккаунта?",
   "registerButtonLabel": "Зарегистрироваться",
   "loginSuccess": "Вход выполнен ✅",

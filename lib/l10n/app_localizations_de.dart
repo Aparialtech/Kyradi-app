@@ -338,6 +338,20 @@ class AppLocalizationsDe extends AppLocalizations {
   String get loginButtonLabel => 'Anmelden';
 
   @override
+  String get loginSocialDivider => 'oder';
+
+  @override
+  String get loginContinueWithGoogle => 'Weiter mit Google';
+
+  @override
+  String get loginContinueWithApple => 'Weiter mit Apple';
+
+  @override
+  String loginSocialComingSoon(Object provider) {
+    return '$provider ist bald verfügbar.';
+  }
+
+  @override
   String get loginNoAccount => 'Kein Konto?';
 
   @override

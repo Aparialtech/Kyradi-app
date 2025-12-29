@@ -123,6 +123,15 @@
   "loginForgotPassword": "Forgot password",
   "clearButton": "Clear",
   "loginButtonLabel": "Sign in",
+  "loginSocialDivider": "or",
+  "loginContinueWithGoogle": "Continue with Google",
+  "loginContinueWithApple": "Continue with Apple",
+  "loginSocialComingSoon": "{provider} will be available soon.",
+  "@loginSocialComingSoon": {
+    "placeholders": {
+      "provider": {}
+    }
+  },
   "loginNoAccount": "Don't have an account?",
   "registerButtonLabel": "Register",
   "loginSuccess": "Signed in successfully ✅",

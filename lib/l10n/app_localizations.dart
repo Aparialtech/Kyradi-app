@@ -722,6 +722,30 @@ abstract class AppLocalizations {
   /// **'Giriş Yap'**
   String get loginButtonLabel;
 
+  /// No description provided for @loginSocialDivider.
+  ///
+  /// In tr, this message translates to:
+  /// **'veya'**
+  String get loginSocialDivider;
+
+  /// No description provided for @loginContinueWithGoogle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Google ile devam et'**
+  String get loginContinueWithGoogle;
+
+  /// No description provided for @loginContinueWithApple.
+  ///
+  /// In tr, this message translates to:
+  /// **'Apple ile devam et'**
+  String get loginContinueWithApple;
+
+  /// No description provided for @loginSocialComingSoon.
+  ///
+  /// In tr, this message translates to:
+  /// **'{provider} yakında aktif olacak.'**
+  String loginSocialComingSoon(Object provider);
+
   /// No description provided for @loginNoAccount.
   ///
   /// In tr, this message translates to:

@@ -7,6 +7,7 @@ import { ResetPasswordDto } from './dto/reset-password.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
 import { VerifyCodeDto } from './dto/verify-code.dto';
 import { ResendVerifyDto } from './dto/resend-verify.dto';
+import { SocialLoginDto } from './dto/social-login.dto';
 
 @Controller('auth')
 export class AuthController {
@@ -45,5 +46,10 @@ export class AuthController {
   @Post('resend-verify')
   resendVerify(@Body() dto: ResendVerifyDto) {
     return this.authService.resendVerification(dto);
+  }
+
+  @Post('social')
+  socialLogin(@Body() dto: SocialLoginDto) {
+    return this.authService.socialLogin(dto);
   }
 }

@@ -176,6 +176,42 @@ class MockServer {
     };
   }
 
+  static Future<Map<String, dynamic>> socialLogin(
+    String provider,
+    String idToken,
+  ) async {
+    final state = await _loadState();
+    final users = (state['users'] as List).cast<Map<String, dynamic>>();
+    final email = '${provider}_demo@kyradi.com';
+    var user = _findUser(
+      users,
+      (u) => (u['email'] ?? '').toString().toLowerCase() == email,
+    );
+    if (user == null) {
+      final id = (state['nextUserId'] as int?) ?? 1;
+      state['nextUserId'] = id + 1;
+      user = <String, dynamic>{
+        'id': id.toString(),
+        'name': 'KYRADI',
+        'surname': 'Demo',
+        'email': email,
+        'phone': '',
+        'password': '',
+        'verified': true,
+        'luggages': <Map<String, dynamic>>[],
+      };
+      users.add(user);
+      state['users'] = users;
+      await _saveState(state);
+    }
+    return {
+      'ok': true,
+      'statusCode': 200,
+      'profile': _exposeUser(user),
+      'message': 'Demo sosyal giriş',
+    };
+  }
+
   static Future<Map<String, dynamic>> verifyCode(
     String email,
     String code,

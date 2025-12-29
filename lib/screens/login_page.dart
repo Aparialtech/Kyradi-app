@@ -2,6 +2,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:google_sign_in/google_sign_in.dart';
+import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 import '../widgets/gradient_button.dart';
 import '../widgets/api_settings_dialog.dart';
 import '../widgets/section_card.dart';
@@ -29,6 +31,82 @@ class _LoginPageState extends State<LoginPage> {
   void _notify(String message, {AppNotificationType type = AppNotificationType.info}) {
     if (!mounted) return;
     AppNotification.show(context, message: message, type: type);
+  }
+
+  Future<void> _handleSocialAuth(
+    Future<Map<String, dynamic>> Function() handler,
+  ) async {
+    if (_loading) return;
+    setState(() => _loading = true);
+    try {
+      final res = await handler();
+      if (!mounted) return;
+      setState(() => _loading = false);
+      final ok = res['ok'] == true;
+      final status = res['statusCode'] ?? 0;
+      final msg = (res['message'] ?? res['error'] ?? '').toString();
+      if (ok) {
+        final profile = res["profile"];
+        final userId = profile?["id"];
+        if (userId != null) {
+          final prefs = await SharedPreferences.getInstance();
+          if (!mounted) return;
+          await prefs.setString('userId', userId.toString());
+        }
+        _notify(AppLocalizations.of(context)!.loginSuccess,
+            type: AppNotificationType.success);
+        if (!mounted) return;
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(builder: (_) => const HomePage()),
+          (route) => false,
+        );
+      } else if (status == 400 || status == 401) {
+        _notify(msg.isNotEmpty ? msg : 'TOKEN_INVALID',
+            type: AppNotificationType.error);
+      } else {
+        _notify(msg.isNotEmpty ? msg : AppLocalizations.of(context)!.loginFailed,
+            type: AppNotificationType.error);
+      }
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _loading = false);
+      _notify(
+        AppLocalizations.of(context)!.genericErrorWithDetails('$e'),
+        type: AppNotificationType.error,
+      );
+    }
+  }
+
+  Future<Map<String, dynamic>> _signInWithGoogle() async {
+    final googleSignIn = GoogleSignIn(scopes: ['email']);
+    final account = await googleSignIn.signIn();
+    if (account == null) {
+      return {'ok': false, 'error': 'Login cancelled', 'statusCode': 400};
+    }
+    final auth = await account.authentication;
+    final idToken = auth.idToken;
+    if (idToken == null || idToken.isEmpty) {
+      return {'ok': false, 'error': 'TOKEN_INVALID', 'statusCode': 400};
+    }
+    return ApiService.socialLogin(provider: 'google', idToken: idToken);
+  }
+
+  Future<Map<String, dynamic>> _signInWithApple() async {
+    if (!await SignInWithApple.isAvailable()) {
+      return {'ok': false, 'error': 'Apple Sign-In unavailable', 'statusCode': 400};
+    }
+    final credential = await SignInWithApple.getAppleIDCredential(
+      scopes: [AppleIDAuthorizationScopes.email, AppleIDAuthorizationScopes.fullName],
+    );
+    final idToken = credential.identityToken;
+    if (idToken == null || idToken.isEmpty) {
+      return {'ok': false, 'error': 'TOKEN_INVALID', 'statusCode': 400};
+    }
+    return ApiService.socialLogin(
+      provider: 'apple',
+      idToken: idToken,
+      authorizationCode: credential.authorizationCode,
+    );
   }
 
   @override
@@ -308,6 +386,56 @@ class _LoginPageState extends State<LoginPage> {
                                 text: l10n.loginButtonLabel,
                                 onPressed: _loading ? null : _submit,
                                 loading: _loading,
+                              ),
+                              const SizedBox(height: 18),
+                              Row(
+                                children: [
+                                  const Expanded(child: Divider()),
+                                  Padding(
+                                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                                    child: Text(
+                                      l10n.loginSocialDivider,
+                                      style: theme.textTheme.bodySmall?.copyWith(
+                                        color:
+                                            theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                                      ),
+                                    ),
+                                  ),
+                                  const Expanded(child: Divider()),
+                                ],
+                              ),
+                              const SizedBox(height: 14),
+                              OutlinedButton.icon(
+                                onPressed: _loading
+                                    ? null
+                                    : () => _handleSocialAuth(_signInWithGoogle),
+                                icon: const CircleAvatar(
+                                  radius: 10,
+                                  backgroundColor: Color(0xFFEA4335),
+                                  child: Text(
+                                    'G',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                  ),
+                                ),
+                                label: Text(l10n.loginContinueWithGoogle),
+                                style: OutlinedButton.styleFrom(
+                                  padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                                ),
+                              ),
+                              const SizedBox(height: 10),
+                              OutlinedButton.icon(
+                                onPressed: _loading
+                                    ? null
+                                    : () => _handleSocialAuth(_signInWithApple),
+                                icon: const Icon(Icons.apple),
+                                label: Text(l10n.loginContinueWithApple),
+                                style: OutlinedButton.styleFrom(
+                                  padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                                ),
                               ),
                             ],
                           ),

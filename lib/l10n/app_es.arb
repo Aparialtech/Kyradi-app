@@ -123,6 +123,15 @@
   "loginForgotPassword": "Olvidé mi contraseña",
   "clearButton": "Limpiar",
   "loginButtonLabel": "Iniciar sesión",
+  "loginSocialDivider": "o",
+  "loginContinueWithGoogle": "Continuar con Google",
+  "loginContinueWithApple": "Continuar con Apple",
+  "loginSocialComingSoon": "{provider} estará disponible pronto.",
+  "@loginSocialComingSoon": {
+    "placeholders": {
+      "provider": {}
+    }
+  },
   "loginNoAccount": "¿No tienes cuenta?",
   "registerButtonLabel": "Registrarse",
   "loginSuccess": "Inicio de sesión exitoso ✅",

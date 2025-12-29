@@ -337,6 +337,20 @@ class AppLocalizationsTr extends AppLocalizations {
   String get loginButtonLabel => 'Giriş Yap';
 
   @override
+  String get loginSocialDivider => 'veya';
+
+  @override
+  String get loginContinueWithGoogle => 'Google ile devam et';
+
+  @override
+  String get loginContinueWithApple => 'Apple ile devam et';
+
+  @override
+  String loginSocialComingSoon(Object provider) {
+    return '$provider yakında aktif olacak.';
+  }
+
+  @override
   String get loginNoAccount => 'Hesabın yok mu?';
 
   @override

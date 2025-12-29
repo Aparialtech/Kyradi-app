@@ -337,6 +337,20 @@ class AppLocalizationsEn extends AppLocalizations {
   String get loginButtonLabel => 'Sign in';
 
   @override
+  String get loginSocialDivider => 'or';
+
+  @override
+  String get loginContinueWithGoogle => 'Continue with Google';
+
+  @override
+  String get loginContinueWithApple => 'Continue with Apple';
+
+  @override
+  String loginSocialComingSoon(Object provider) {
+    return '$provider will be available soon.';
+  }
+
+  @override
   String get loginNoAccount => 'Don\'t have an account?';
 
   @override

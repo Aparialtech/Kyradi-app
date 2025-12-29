@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart'
     show kIsWeb, defaultTargetPlatform, TargetPlatform, debugPrint;
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 import 'mock_server.dart';
 
@@ -23,12 +24,18 @@ class ApiService {
   static bool _initialized = false;
   static String? _customBaseUrl;
   static String? _authToken;
+  static const FlutterSecureStorage _secureStorage =
+      FlutterSecureStorage(aOptions: AndroidOptions(encryptedSharedPreferences: true));
 
   static Future<void> ensureInitialized() async {
     if (_initialized) return;
     _prefs = await SharedPreferences.getInstance();
     _customBaseUrl = _prefs?.getString(_PrefsKeys.baseUrl);
-    _authToken = _prefs?.getString(_PrefsKeys.authToken);
+    _authToken = await _secureStorage.read(key: _PrefsKeys.authToken);
+    _authToken ??= _prefs?.getString(_PrefsKeys.authToken);
+    if (_authToken != null && _authToken!.isNotEmpty) {
+      await _secureStorage.write(key: _PrefsKeys.authToken, value: _authToken);
+    }
     _initialized = true;
   }
 
@@ -49,8 +56,10 @@ class ApiService {
     await ensureInitialized();
     _authToken = value;
     if (value == null || value.isEmpty) {
+      await _secureStorage.delete(key: _PrefsKeys.authToken);
       await _prefs?.remove(_PrefsKeys.authToken);
     } else {
+      await _secureStorage.write(key: _PrefsKeys.authToken, value: value);
       await _prefs?.setString(_PrefsKeys.authToken, value);
     }
   }
@@ -255,6 +264,31 @@ class ApiService {
     final result = await _post('/auth/login', {
       'email': email,
       'password': password,
+    });
+    result['statusCode'] ??= result['_httpStatus'];
+    if (result['ok'] == true) {
+      await _storeAuthToken((result['accessToken'] ?? result['token'])?.toString());
+      if (result['user'] is Map<String, dynamic>) {
+        result['profile'] = _normalizeProfile(
+          Map<String, dynamic>.from(result['user'] as Map),
+        );
+      }
+    }
+    return result;
+  }
+
+  static Future<Map<String, dynamic>> socialLogin({
+    required String provider,
+    required String idToken,
+    String? authorizationCode,
+  }) async {
+    if (_usingMockBackend) {
+      return MockServer.socialLogin(provider, idToken);
+    }
+    final result = await _post('/auth/social', {
+      'provider': provider,
+      'idToken': idToken,
+      if (authorizationCode != null) 'authorizationCode': authorizationCode,
     });
     result['statusCode'] ??= result['_httpStatus'];
     if (result['ok'] == true) {

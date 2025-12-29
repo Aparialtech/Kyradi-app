@@ -21,6 +21,20 @@ export class EmergencyContact {
 
 export const EmergencyContactSchema = SchemaFactory.createForClass(EmergencyContact);
 
+@Schema({ _id: false })
+export class OAuthAccount {
+  @Prop({ required: true })
+  provider: string;
+
+  @Prop({ required: true })
+  sub: string;
+
+  @Prop()
+  email?: string;
+}
+
+export const OAuthAccountSchema = SchemaFactory.createForClass(OAuthAccount);
+
 @Schema({ collection: 'users', timestamps: true })
 export class User extends Document {
   @Prop({ required: true })
@@ -58,6 +72,9 @@ export class User extends Document {
 
   @Prop({ default: false })
   verified: boolean;
+
+  @Prop({ type: [OAuthAccountSchema], default: [] })
+  oauthAccounts: OAuthAccount[];
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

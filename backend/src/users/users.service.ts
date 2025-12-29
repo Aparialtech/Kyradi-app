@@ -36,6 +36,48 @@ export class UsersService {
     return this.userModel.findOne({ email: email.toLowerCase() }).exec();
   }
 
+  async findByProvider(provider: string, sub: string) {
+    return this.userModel.findOne({
+      oauthAccounts: { $elemMatch: { provider, sub } },
+    }).exec();
+  }
+
+  async createSocialUser(params: {
+    name: string;
+    surname: string;
+    email: string;
+    provider: string;
+    sub: string;
+  }) {
+    const created = await this.userModel.create({
+      name: params.name,
+      surname: params.surname,
+      email: params.email.toLowerCase(),
+      passwordHash: hashPassword(`${params.provider}-${Date.now()}-${Math.random()}`),
+      verified: true,
+      oauthAccounts: [{ provider: params.provider, sub: params.sub, email: params.email }],
+    });
+    return created;
+  }
+
+  async attachProvider(
+    user: User,
+    provider: string,
+    sub: string,
+    email?: string,
+  ) {
+    const accounts = Array.isArray(user.oauthAccounts) ? user.oauthAccounts : [];
+    const exists = accounts.some(
+      (acc) => acc.provider === provider && acc.sub === sub,
+    );
+    if (!exists) {
+      accounts.push({ provider, sub, email });
+      user.oauthAccounts = accounts;
+      await user.save();
+    }
+    return user;
+  }
+
   async findById(id: string) {
     const user = await this.userModel.findById(id).lean().exec();
     if (!user) throw new NotFoundException('User not found');

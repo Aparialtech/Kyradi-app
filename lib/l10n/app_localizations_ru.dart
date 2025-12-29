@@ -339,6 +339,20 @@ class AppLocalizationsRu extends AppLocalizations {
   String get loginButtonLabel => 'Войти';
 
   @override
+  String get loginSocialDivider => 'или';
+
+  @override
+  String get loginContinueWithGoogle => 'Продолжить с Google';
+
+  @override
+  String get loginContinueWithApple => 'Продолжить с Apple';
+
+  @override
+  String loginSocialComingSoon(Object provider) {
+    return '$provider скоро будет доступен.';
+  }
+
+  @override
   String get loginNoAccount => 'Нет аккаунта?';
 
   @override

@@ -123,6 +123,15 @@
   "loginForgotPassword": "Şifremi unuttum",
   "clearButton": "Temizle",
   "loginButtonLabel": "Giriş Yap",
+  "loginSocialDivider": "veya",
+  "loginContinueWithGoogle": "Google ile devam et",
+  "loginContinueWithApple": "Apple ile devam et",
+  "loginSocialComingSoon": "{provider} yakında aktif olacak.",
+  "@loginSocialComingSoon": {
+    "placeholders": {
+      "provider": {}
+    }
+  },
   "loginNoAccount": "Hesabın yok mu?",
   "registerButtonLabel": "Kayıt Ol",
   "loginSuccess": "Giriş başarılı ✅",
