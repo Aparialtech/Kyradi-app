@@ -2162,6 +2162,168 @@ abstract class AppLocalizations {
   /// **'Bavullarını bırakmak istediğin noktayı seç. Haritadan dilediğin noktaya dokun, doluluk oranını gör ve rezervasyon detayını aç.'**
   String get landingIntro;
 
+  /// No description provided for @occupancyLabel.
+  ///
+  /// In tr, this message translates to:
+  /// **'Doluluk: {current}/{max}'**
+  String occupancyLabel(Object current, Object max);
+
+  /// No description provided for @locationOpenLabel.
+  ///
+  /// In tr, this message translates to:
+  /// **'Açık'**
+  String get locationOpenLabel;
+
+  /// No description provided for @locationClosedLabel.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kapalı'**
+  String get locationClosedLabel;
+
+  /// No description provided for @openingHoursTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Çalışma Saatleri'**
+  String get openingHoursTitle;
+
+  /// No description provided for @openingHoursSubtitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Haftalık program'**
+  String get openingHoursSubtitle;
+
+  /// No description provided for @openingHoursAlwaysOpen.
+  ///
+  /// In tr, this message translates to:
+  /// **'7/24 açık'**
+  String get openingHoursAlwaysOpen;
+
+  /// No description provided for @openingHoursClosed.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kapalı'**
+  String get openingHoursClosed;
+
+  /// No description provided for @locationFullWarning.
+  ///
+  /// In tr, this message translates to:
+  /// **'Seçilen lokasyon dolu.'**
+  String get locationFullWarning;
+
+  /// No description provided for @locationClosedWarning.
+  ///
+  /// In tr, this message translates to:
+  /// **'Seçilen lokasyon şu anda kapalı.'**
+  String get locationClosedWarning;
+
+  /// No description provided for @locationInactiveWarning.
+  ///
+  /// In tr, this message translates to:
+  /// **'Seçilen lokasyon aktif değil.'**
+  String get locationInactiveWarning;
+
+  /// No description provided for @protectionLevelTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Koruma Seviyesi'**
+  String get protectionLevelTitle;
+
+  /// No description provided for @protectionStandard.
+  ///
+  /// In tr, this message translates to:
+  /// **'Standart'**
+  String get protectionStandard;
+
+  /// No description provided for @protectionPremium.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ek sigorta (premium)'**
+  String get protectionPremium;
+
+  /// No description provided for @paymentMethodTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ödeme Yöntemi'**
+  String get paymentMethodTitle;
+
+  /// No description provided for @paymentMethodCard.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kart'**
+  String get paymentMethodCard;
+
+  /// No description provided for @paymentMethodInstallment.
+  ///
+  /// In tr, this message translates to:
+  /// **'Taksit'**
+  String get paymentMethodInstallment;
+
+  /// No description provided for @paymentMethodPayAtHotel.
+  ///
+  /// In tr, this message translates to:
+  /// **'Otelde öde'**
+  String get paymentMethodPayAtHotel;
+
+  /// No description provided for @installmentCountLabel.
+  ///
+  /// In tr, this message translates to:
+  /// **'Taksit sayısı'**
+  String get installmentCountLabel;
+
+  /// No description provided for @pricingEstimateTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tahmini Ücret'**
+  String get pricingEstimateTitle;
+
+  /// No description provided for @pricingEstimateLoading.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tahmin hesaplanıyor...'**
+  String get pricingEstimateLoading;
+
+  /// No description provided for @pricingBasePriceLabel.
+  ///
+  /// In tr, this message translates to:
+  /// **'Baz fiyat'**
+  String get pricingBasePriceLabel;
+
+  /// No description provided for @pricingPremiumFeeLabel.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ek sigorta'**
+  String get pricingPremiumFeeLabel;
+
+  /// No description provided for @pricingHotelCommissionLabel.
+  ///
+  /// In tr, this message translates to:
+  /// **'Otel komisyonu'**
+  String get pricingHotelCommissionLabel;
+
+  /// No description provided for @pricingInstallmentFeeLabel.
+  ///
+  /// In tr, this message translates to:
+  /// **'Taksit farkı'**
+  String get pricingInstallmentFeeLabel;
+
+  /// No description provided for @pricingTotalLabel.
+  ///
+  /// In tr, this message translates to:
+  /// **'Toplam'**
+  String get pricingTotalLabel;
+
+  /// No description provided for @pricingEstimateDisclaimer.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu ücret tahminidir, gerçek teslim saatine göre güncellenebilir.'**
+  String get pricingEstimateDisclaimer;
+
+  /// No description provided for @pricingEstimateUnavailable.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tahmin için bırakma ve teslim saatini seçin.'**
+  String get pricingEstimateUnavailable;
+
   /// No description provided for @landingLocateSectionTitle.
   ///
   /// In tr, this message translates to:

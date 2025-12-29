@@ -14,6 +14,38 @@ class ReservationSlot {
   });
 }
 
+class OpeningHoursRange {
+  final String start;
+  final String end;
+
+  const OpeningHoursRange({
+    required this.start,
+    required this.end,
+  });
+
+  factory OpeningHoursRange.fromJson(Map<String, dynamic> json) {
+    return OpeningHoursRange(
+      start: (json['start'] ?? '').toString(),
+      end: (json['end'] ?? '').toString(),
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+        'start': start,
+        'end': end,
+      };
+}
+
+const Map<String, List<OpeningHoursRange>> kAlwaysOpenHours = {
+  'mon': [OpeningHoursRange(start: '00:00', end: '23:59')],
+  'tue': [OpeningHoursRange(start: '00:00', end: '23:59')],
+  'wed': [OpeningHoursRange(start: '00:00', end: '23:59')],
+  'thu': [OpeningHoursRange(start: '00:00', end: '23:59')],
+  'fri': [OpeningHoursRange(start: '00:00', end: '23:59')],
+  'sat': [OpeningHoursRange(start: '00:00', end: '23:59')],
+  'sun': [OpeningHoursRange(start: '00:00', end: '23:59')],
+};
+
 class DropLocation {
   final String id;
   final String name;
@@ -22,6 +54,11 @@ class DropLocation {
   final int totalSlots;
   final int availableSlots;
   final int usedSlots;
+  final int maxCapacity;
+  final int currentOccupancy;
+  final Map<String, List<OpeningHoursRange>> openingHours;
+  final String timezone;
+  final bool isActive;
   final List<ReservationSlot> reservations;
 
   DropLocation({
@@ -32,15 +69,30 @@ class DropLocation {
     required this.totalSlots,
     required this.availableSlots,
     int? usedSlots,
+    int? maxCapacity,
+    int? currentOccupancy,
+    Map<String, List<OpeningHoursRange>>? openingHours,
+    String? timezone,
+    bool? isActive,
     this.reservations = const [],
-  }) : usedSlots = usedSlots ??
-            (totalSlots - availableSlots).clamp(0, totalSlots);
+  })  : usedSlots = usedSlots ?? (totalSlots - availableSlots).clamp(0, totalSlots),
+        maxCapacity = maxCapacity ?? totalSlots,
+        currentOccupancy =
+            currentOccupancy ??
+            (usedSlots ?? (totalSlots - availableSlots).clamp(0, totalSlots)),
+        openingHours = openingHours ?? const {},
+        timezone = timezone ?? 'Europe/Istanbul',
+        isActive = isActive ?? true;
 
   factory DropLocation.fromJson(Map<String, dynamic> json) {
     final total = _toDouble(json['totalSlots']).round();
     final available = _toDouble(json['availableSlots']).round();
     final lat = _toDouble(json['latitude'] ?? json['lat']);
     final lng = _toDouble(json['longitude'] ?? json['lng']);
+    final used = _toDouble(json['usedSlots'] ?? (total - available)).round();
+    final maxCapacity = _toDouble(json['maxCapacity'] ?? total).round();
+    final current = _toDouble(json['currentOccupancy'] ?? used).round();
+    final openingHours = _parseOpeningHours(json['openingHours']);
     return DropLocation(
       id: (json['id'] ?? json['_id'] ?? '').toString(),
       name: (json['name'] ?? '').toString(),
@@ -48,7 +100,14 @@ class DropLocation {
       position: LatLng(lat, lng),
       totalSlots: total,
       availableSlots: available,
-      usedSlots: _toDouble(json['usedSlots'] ?? (total - available)).round(),
+      usedSlots: used,
+      maxCapacity: maxCapacity,
+      currentOccupancy: current,
+      openingHours: openingHours,
+      timezone: (json['timezone'] ?? '').toString().isNotEmpty
+          ? json['timezone'].toString()
+          : 'Europe/Istanbul',
+      isActive: json['isActive'] == false ? false : true,
       reservations: const [],
     );
   }
@@ -62,9 +121,41 @@ class DropLocation {
         'totalSlots': totalSlots,
         'availableSlots': availableSlots,
         'usedSlots': usedSlots,
+        'maxCapacity': maxCapacity,
+        'currentOccupancy': currentOccupancy,
+        'openingHours': openingHours.map(
+          (key, value) => MapEntry(key, value.map((range) => range.toJson()).toList()),
+        ),
+        'timezone': timezone,
+        'isActive': isActive,
       };
 
   int get occupiedSlots => usedSlots.clamp(0, totalSlots);
+
+  double get occupancyRate {
+    final capacity = maxCapacity == 0 ? totalSlots : maxCapacity;
+    if (capacity == 0) return 0;
+    return currentOccupancy.clamp(0, capacity) / capacity;
+  }
+
+  bool get isFull => maxCapacity > 0 && currentOccupancy >= maxCapacity;
+
+  bool isOpenAt(DateTime when) {
+    if (!isActive) return false;
+    if (openingHours.isEmpty) return true;
+    final dayKey = _weekdayKey(when.weekday);
+    final ranges = openingHours[dayKey] ?? const [];
+    if (ranges.isEmpty) return false;
+    final nowMinutes = when.hour * 60 + when.minute;
+    return ranges.any((range) {
+      final start = _timeToMinutes(range.start);
+      final end = _timeToMinutes(range.end);
+      if (start == null || end == null) return false;
+      return nowMinutes >= start && nowMinutes <= end;
+    });
+  }
+
+  bool get isOpenNow => isOpenAt(DateTime.now());
 
   static double _toDouble(dynamic value) {
     if (value is num) return value.toDouble();
@@ -72,9 +163,49 @@ class DropLocation {
     return 0;
   }
 
-  double get occupancyRate {
-    if (totalSlots == 0) return 0;
-    return occupiedSlots / totalSlots;
+  static Map<String, List<OpeningHoursRange>> _parseOpeningHours(dynamic value) {
+    if (value is! Map) return const {};
+    final result = <String, List<OpeningHoursRange>>{};
+    value.forEach((key, raw) {
+      final dayKey = key.toString();
+      if (raw is List) {
+        result[dayKey] = raw
+            .whereType<Map>()
+            .map((item) => OpeningHoursRange.fromJson(Map<String, dynamic>.from(item)))
+            .toList();
+      }
+    });
+    return result;
+  }
+
+  static String _weekdayKey(int weekday) {
+    switch (weekday) {
+      case DateTime.monday:
+        return 'mon';
+      case DateTime.tuesday:
+        return 'tue';
+      case DateTime.wednesday:
+        return 'wed';
+      case DateTime.thursday:
+        return 'thu';
+      case DateTime.friday:
+        return 'fri';
+      case DateTime.saturday:
+        return 'sat';
+      case DateTime.sunday:
+        return 'sun';
+      default:
+        return 'mon';
+    }
+  }
+
+  static int? _timeToMinutes(String value) {
+    final parts = value.split(':');
+    if (parts.length < 2) return null;
+    final hour = int.tryParse(parts[0]);
+    final minute = int.tryParse(parts[1]);
+    if (hour == null || minute == null) return null;
+    return hour * 60 + minute;
   }
 }
 
@@ -90,6 +221,11 @@ class DropLocationsRepository {
       totalSlots: 12,
       availableSlots: 3,
       usedSlots: 12 - 3,
+      maxCapacity: 12,
+      currentOccupancy: 12 - 3,
+      openingHours: kAlwaysOpenHours,
+      timezone: 'Europe/Istanbul',
+      isActive: true,
       reservations: [
         ReservationSlot(
           code: 'BG-4521',
@@ -111,6 +247,11 @@ class DropLocationsRepository {
       totalSlots: 8,
       availableSlots: 1,
       usedSlots: 8 - 1,
+      maxCapacity: 8,
+      currentOccupancy: 8 - 1,
+      openingHours: kAlwaysOpenHours,
+      timezone: 'Europe/Istanbul',
+      isActive: true,
       reservations: [
         ReservationSlot(
           code: 'BG-4610',
@@ -127,6 +268,11 @@ class DropLocationsRepository {
       totalSlots: 10,
       availableSlots: 4,
       usedSlots: 10 - 4,
+      maxCapacity: 10,
+      currentOccupancy: 10 - 4,
+      openingHours: kAlwaysOpenHours,
+      timezone: 'Europe/Istanbul',
+      isActive: true,
       reservations: [
         ReservationSlot(
           code: 'BG-4622',
@@ -143,6 +289,11 @@ class DropLocationsRepository {
       totalSlots: 16,
       availableSlots: 6,
       usedSlots: 16 - 6,
+      maxCapacity: 16,
+      currentOccupancy: 16 - 6,
+      openingHours: kAlwaysOpenHours,
+      timezone: 'Europe/Istanbul',
+      isActive: true,
       reservations: [
         ReservationSlot(
           code: 'BG-4631',
@@ -164,6 +315,11 @@ class DropLocationsRepository {
       totalSlots: 5,
       availableSlots: 0,
       usedSlots: 5,
+      maxCapacity: 5,
+      currentOccupancy: 5,
+      openingHours: kAlwaysOpenHours,
+      timezone: 'Europe/Istanbul',
+      isActive: true,
       reservations: [
         ReservationSlot(
           code: 'BG-4701',
@@ -185,6 +341,11 @@ class DropLocationsRepository {
       totalSlots: 9,
       availableSlots: 2,
       usedSlots: 9 - 2,
+      maxCapacity: 9,
+      currentOccupancy: 9 - 2,
+      openingHours: kAlwaysOpenHours,
+      timezone: 'Europe/Istanbul',
+      isActive: true,
       reservations: [
         ReservationSlot(
           code: 'BG-4800',

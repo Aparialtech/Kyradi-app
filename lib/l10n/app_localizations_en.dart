@@ -1170,6 +1170,91 @@ class AppLocalizationsEn extends AppLocalizations {
       'Choose where to drop your luggage. Tap a point on the map to see its occupancy and open reservation details.';
 
   @override
+  String occupancyLabel(Object current, Object max) {
+    return 'Occupancy: $current/$max';
+  }
+
+  @override
+  String get locationOpenLabel => 'Open';
+
+  @override
+  String get locationClosedLabel => 'Closed';
+
+  @override
+  String get openingHoursTitle => 'Opening Hours';
+
+  @override
+  String get openingHoursSubtitle => 'Weekly schedule';
+
+  @override
+  String get openingHoursAlwaysOpen => 'Open 24/7';
+
+  @override
+  String get openingHoursClosed => 'Closed';
+
+  @override
+  String get locationFullWarning => 'Selected location is full.';
+
+  @override
+  String get locationClosedWarning => 'Selected location is currently closed.';
+
+  @override
+  String get locationInactiveWarning => 'Selected location is inactive.';
+
+  @override
+  String get protectionLevelTitle => 'Protection Level';
+
+  @override
+  String get protectionStandard => 'Standard';
+
+  @override
+  String get protectionPremium => 'Premium protection';
+
+  @override
+  String get paymentMethodTitle => 'Payment Method';
+
+  @override
+  String get paymentMethodCard => 'Card';
+
+  @override
+  String get paymentMethodInstallment => 'Installment';
+
+  @override
+  String get paymentMethodPayAtHotel => 'Pay at hotel';
+
+  @override
+  String get installmentCountLabel => 'Installment count';
+
+  @override
+  String get pricingEstimateTitle => 'Estimated Price';
+
+  @override
+  String get pricingEstimateLoading => 'Calculating estimate...';
+
+  @override
+  String get pricingBasePriceLabel => 'Base price';
+
+  @override
+  String get pricingPremiumFeeLabel => 'Premium protection';
+
+  @override
+  String get pricingHotelCommissionLabel => 'Hotel commission';
+
+  @override
+  String get pricingInstallmentFeeLabel => 'Installment fee';
+
+  @override
+  String get pricingTotalLabel => 'Total';
+
+  @override
+  String get pricingEstimateDisclaimer =>
+      'This is an estimate and may change based on actual drop-off time.';
+
+  @override
+  String get pricingEstimateUnavailable =>
+      'Select drop and pickup times to see an estimate.';
+
+  @override
   String get landingLocateSectionTitle => 'Find the closest points';
 
   @override

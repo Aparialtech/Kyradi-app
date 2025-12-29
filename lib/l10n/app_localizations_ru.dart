@@ -1174,6 +1174,91 @@ class AppLocalizationsRu extends AppLocalizations {
       'Выбери, где оставить багаж. Нажми точку на карте, чтобы увидеть заполненность и открыть детали бронирования.';
 
   @override
+  String occupancyLabel(Object current, Object max) {
+    return 'Заполненность: $current/$max';
+  }
+
+  @override
+  String get locationOpenLabel => 'Открыто';
+
+  @override
+  String get locationClosedLabel => 'Закрыто';
+
+  @override
+  String get openingHoursTitle => 'Часы работы';
+
+  @override
+  String get openingHoursSubtitle => 'Еженедельный график';
+
+  @override
+  String get openingHoursAlwaysOpen => 'Открыто 24/7';
+
+  @override
+  String get openingHoursClosed => 'Закрыто';
+
+  @override
+  String get locationFullWarning => 'Выбранная локация заполнена.';
+
+  @override
+  String get locationClosedWarning => 'Выбранная локация сейчас закрыта.';
+
+  @override
+  String get locationInactiveWarning => 'Выбранная локация неактивна.';
+
+  @override
+  String get protectionLevelTitle => 'Уровень защиты';
+
+  @override
+  String get protectionStandard => 'Стандарт';
+
+  @override
+  String get protectionPremium => 'Премиум-защита';
+
+  @override
+  String get paymentMethodTitle => 'Способ оплаты';
+
+  @override
+  String get paymentMethodCard => 'Карта';
+
+  @override
+  String get paymentMethodInstallment => 'Рассрочка';
+
+  @override
+  String get paymentMethodPayAtHotel => 'Оплата в отеле';
+
+  @override
+  String get installmentCountLabel => 'Количество платежей';
+
+  @override
+  String get pricingEstimateTitle => 'Предварительная стоимость';
+
+  @override
+  String get pricingEstimateLoading => 'Расчёт стоимости...';
+
+  @override
+  String get pricingBasePriceLabel => 'Базовая цена';
+
+  @override
+  String get pricingPremiumFeeLabel => 'Премиум-защита';
+
+  @override
+  String get pricingHotelCommissionLabel => 'Комиссия отеля';
+
+  @override
+  String get pricingInstallmentFeeLabel => 'Наценка за рассрочку';
+
+  @override
+  String get pricingTotalLabel => 'Итого';
+
+  @override
+  String get pricingEstimateDisclaimer =>
+      'Это оценка, итоговая сумма может измениться по фактическому времени сдачи.';
+
+  @override
+  String get pricingEstimateUnavailable =>
+      'Выберите время сдачи и получения, чтобы увидеть оценку.';
+
+  @override
   String get landingLocateSectionTitle => 'Найди ближайшие точки';
 
   @override

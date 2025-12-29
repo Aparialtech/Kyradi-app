@@ -1171,6 +1171,91 @@ class AppLocalizationsTr extends AppLocalizations {
       'Bavullarını bırakmak istediğin noktayı seç. Haritadan dilediğin noktaya dokun, doluluk oranını gör ve rezervasyon detayını aç.';
 
   @override
+  String occupancyLabel(Object current, Object max) {
+    return 'Doluluk: $current/$max';
+  }
+
+  @override
+  String get locationOpenLabel => 'Açık';
+
+  @override
+  String get locationClosedLabel => 'Kapalı';
+
+  @override
+  String get openingHoursTitle => 'Çalışma Saatleri';
+
+  @override
+  String get openingHoursSubtitle => 'Haftalık program';
+
+  @override
+  String get openingHoursAlwaysOpen => '7/24 açık';
+
+  @override
+  String get openingHoursClosed => 'Kapalı';
+
+  @override
+  String get locationFullWarning => 'Seçilen lokasyon dolu.';
+
+  @override
+  String get locationClosedWarning => 'Seçilen lokasyon şu anda kapalı.';
+
+  @override
+  String get locationInactiveWarning => 'Seçilen lokasyon aktif değil.';
+
+  @override
+  String get protectionLevelTitle => 'Koruma Seviyesi';
+
+  @override
+  String get protectionStandard => 'Standart';
+
+  @override
+  String get protectionPremium => 'Ek sigorta (premium)';
+
+  @override
+  String get paymentMethodTitle => 'Ödeme Yöntemi';
+
+  @override
+  String get paymentMethodCard => 'Kart';
+
+  @override
+  String get paymentMethodInstallment => 'Taksit';
+
+  @override
+  String get paymentMethodPayAtHotel => 'Otelde öde';
+
+  @override
+  String get installmentCountLabel => 'Taksit sayısı';
+
+  @override
+  String get pricingEstimateTitle => 'Tahmini Ücret';
+
+  @override
+  String get pricingEstimateLoading => 'Tahmin hesaplanıyor...';
+
+  @override
+  String get pricingBasePriceLabel => 'Baz fiyat';
+
+  @override
+  String get pricingPremiumFeeLabel => 'Ek sigorta';
+
+  @override
+  String get pricingHotelCommissionLabel => 'Otel komisyonu';
+
+  @override
+  String get pricingInstallmentFeeLabel => 'Taksit farkı';
+
+  @override
+  String get pricingTotalLabel => 'Toplam';
+
+  @override
+  String get pricingEstimateDisclaimer =>
+      'Bu ücret tahminidir, gerçek teslim saatine göre güncellenebilir.';
+
+  @override
+  String get pricingEstimateUnavailable =>
+      'Tahmin için bırakma ve teslim saatini seçin.';
+
+  @override
   String get landingLocateSectionTitle => 'Sana en yakın noktaları bul';
 
   @override

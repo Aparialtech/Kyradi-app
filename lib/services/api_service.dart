@@ -7,6 +7,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 import 'mock_server.dart';
+import '../models/pricing_models.dart';
+
+const String kApiBaseUrl = 'https://kyradi-app-production.up.railway.app';
 
 class ApiService {
   ApiService._();
@@ -234,7 +237,10 @@ class ApiService {
 
     // hata durumları
     map['ok'] = false;
-    if (decoded is Map && decoded.containsKey('error')) {
+    if (decoded is Map && (decoded.containsKey('error') || decoded.containsKey('message'))) {
+      if (map['error'] == null && map['message'] != null) {
+        map['error'] = map['message'];
+      }
       return map;
     }
 
@@ -415,6 +421,29 @@ class ApiService {
       result['locations'] = result['data'];
     }
     return result;
+  }
+
+  static Future<PricingEstimateResponse> estimatePricing(
+    PricingEstimateRequest req,
+  ) async {
+    final uri = Uri.parse('$kApiBaseUrl/pricing/estimate');
+
+    final res = await http.post(
+      uri,
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode(req.toJson()),
+    );
+
+    final body = res.body.isNotEmpty ? jsonDecode(res.body) : null;
+
+    if (res.statusCode >= 200 && res.statusCode < 300) {
+      return PricingEstimateResponse.fromJson(body as Map<String, dynamic>);
+    }
+
+    final msg = (body is Map && body['message'] != null)
+        ? body['message'].toString()
+        : res.body;
+    throw Exception('Pricing estimate failed (${res.statusCode}): $msg');
   }
 
   static Future<Map<String, dynamic>> getUserLuggages(String userId) async {

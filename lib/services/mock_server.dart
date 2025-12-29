@@ -350,6 +350,16 @@ class MockServer {
             'totalSlots': loc.totalSlots,
             'availableSlots': loc.availableSlots,
             'usedSlots': loc.usedSlots,
+            'maxCapacity': loc.maxCapacity,
+            'currentOccupancy': loc.currentOccupancy,
+            'openingHours': loc.openingHours.map(
+              (key, value) => MapEntry(
+                key,
+                value.map((range) => range.toJson()).toList(),
+              ),
+            ),
+            'timezone': loc.timezone,
+            'isActive': loc.isActive,
           },
         )
         .toList();

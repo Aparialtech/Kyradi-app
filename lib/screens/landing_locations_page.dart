@@ -166,7 +166,7 @@ class _LandingLocationsPageState extends State<LandingLocationsPage> {
                       leading: const Icon(Icons.pin_drop_outlined),
                       title: Text(location.name),
                       subtitle: Text(
-                        '${AppLocalizations.of(context)!.availableSlotsLabel(location.availableSlots, location.totalSlots)} • ${location.address}',
+                        '${loc.occupancyLabel(location.currentOccupancy, location.maxCapacity)} • ${location.address}',
                       ),
                       trailing: TextButton(
                         onPressed: () => _openLocationDetail(location),
@@ -239,12 +239,30 @@ class _LandingLocationsPageState extends State<LandingLocationsPage> {
                         .withValues(alpha: 0.4),
                   ),
                   const SizedBox(height: 6),
-                  Text(
-                    AppLocalizations.of(context)!
-                        .availableSlotsLabel(location.availableSlots, location.totalSlots),
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
+                  Row(
+                    children: [
+                      Text(
+                        loc.occupancyLabel(
+                          location.currentOccupancy,
+                          location.maxCapacity,
+                        ),
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const Spacer(),
+                      Text(
+                        location.isOpenNow
+                            ? loc.locationOpenLabel
+                            : loc.locationClosedLabel,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: location.isOpenNow
+                              ? theme.colorScheme.primary
+                              : theme.colorScheme.error,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),

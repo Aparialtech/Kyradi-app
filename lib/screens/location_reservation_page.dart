@@ -9,6 +9,40 @@ class LocationReservationPage extends StatelessWidget {
   final String locationId;
   const LocationReservationPage({super.key, required this.locationId});
 
+  List<Widget> _buildOpeningHoursList(
+    BuildContext context,
+    DropLocation location,
+  ) {
+    final loc = AppLocalizations.of(context)!;
+    final locale = Localizations.localeOf(context).toLanguageTag();
+    final dayFormatter = DateFormat('EEEE', locale);
+    final baseMonday = DateTime(2024, 1, 1);
+    const dayKeys = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
+    return List.generate(dayKeys.length, (index) {
+      final dayKey = dayKeys[index];
+      final label = dayFormatter.format(baseMonday.add(Duration(days: index)));
+      final ranges = location.openingHours[dayKey] ?? const [];
+      final hoursLabel = ranges.isEmpty
+          ? loc.openingHoursClosed
+          : ranges.map((range) => '${range.start} - ${range.end}').join(', ');
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 4),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(label, style: Theme.of(context).textTheme.bodyMedium),
+            Text(
+              hoursLabel,
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
+            ),
+          ],
+        ),
+      );
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final loc = AppLocalizations.of(context)!;
@@ -41,12 +75,24 @@ class LocationReservationPage extends StatelessWidget {
                 ),
                 const SizedBox(height: 12),
                 Text(
-                  loc.availableSlotsLabel(
-                    location.availableSlots,
-                    location.totalSlots,
+                  loc.occupancyLabel(
+                    location.currentOccupancy,
+                    location.maxCapacity,
                   ),
                   style: theme.textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  location.isOpenNow
+                      ? loc.locationOpenLabel
+                      : loc.locationClosedLabel,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: location.isOpenNow
+                        ? theme.colorScheme.primary
+                        : theme.colorScheme.error,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
                 const SizedBox(height: 8),
@@ -54,6 +100,29 @@ class LocationReservationPage extends StatelessWidget {
                   value: location.occupancyRate,
                   backgroundColor: theme.colorScheme.primary.withValues(alpha: 0.08),
                 ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 18),
+          SectionCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                SectionHeader(
+                  title: loc.openingHoursTitle,
+                  subtitle: location.openingHours.isEmpty
+                      ? loc.openingHoursAlwaysOpen
+                      : loc.openingHoursSubtitle,
+                  icon: Icons.access_time,
+                ),
+                const SizedBox(height: 12),
+                if (location.openingHours.isEmpty)
+                  Text(
+                    loc.openingHoursAlwaysOpen,
+                    style: theme.textTheme.bodyMedium,
+                  )
+                else
+                  ..._buildOpeningHoursList(context, location),
               ],
             ),
           ),

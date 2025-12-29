@@ -1185,6 +1185,92 @@ class AppLocalizationsDe extends AppLocalizations {
       'Wähle, wo du dein Gepäck abgeben möchtest. Tippe einen Punkt auf der Karte an, um Auslastung und Reservierungsdetails zu sehen.';
 
   @override
+  String occupancyLabel(Object current, Object max) {
+    return 'Auslastung: $current/$max';
+  }
+
+  @override
+  String get locationOpenLabel => 'Geöffnet';
+
+  @override
+  String get locationClosedLabel => 'Geschlossen';
+
+  @override
+  String get openingHoursTitle => 'Öffnungszeiten';
+
+  @override
+  String get openingHoursSubtitle => 'Wöchentlicher Plan';
+
+  @override
+  String get openingHoursAlwaysOpen => 'Rund um die Uhr geöffnet';
+
+  @override
+  String get openingHoursClosed => 'Geschlossen';
+
+  @override
+  String get locationFullWarning => 'Der ausgewählte Standort ist voll.';
+
+  @override
+  String get locationClosedWarning =>
+      'Der ausgewählte Standort ist derzeit geschlossen.';
+
+  @override
+  String get locationInactiveWarning => 'Der ausgewählte Standort ist inaktiv.';
+
+  @override
+  String get protectionLevelTitle => 'Schutzstufe';
+
+  @override
+  String get protectionStandard => 'Standard';
+
+  @override
+  String get protectionPremium => 'Premium-Schutz';
+
+  @override
+  String get paymentMethodTitle => 'Zahlungsmethode';
+
+  @override
+  String get paymentMethodCard => 'Karte';
+
+  @override
+  String get paymentMethodInstallment => 'Ratenzahlung';
+
+  @override
+  String get paymentMethodPayAtHotel => 'Im Hotel zahlen';
+
+  @override
+  String get installmentCountLabel => 'Anzahl der Raten';
+
+  @override
+  String get pricingEstimateTitle => 'Preisvorschau';
+
+  @override
+  String get pricingEstimateLoading => 'Preis wird berechnet...';
+
+  @override
+  String get pricingBasePriceLabel => 'Basispreis';
+
+  @override
+  String get pricingPremiumFeeLabel => 'Premium-Schutz';
+
+  @override
+  String get pricingHotelCommissionLabel => 'Hotelprovision';
+
+  @override
+  String get pricingInstallmentFeeLabel => 'Ratenaufschlag';
+
+  @override
+  String get pricingTotalLabel => 'Gesamt';
+
+  @override
+  String get pricingEstimateDisclaimer =>
+      'Dies ist eine Schätzung und kann sich je nach tatsächlicher Abgabezeit ändern.';
+
+  @override
+  String get pricingEstimateUnavailable =>
+      'Wähle Abgabe- und Abholzeit, um eine Schätzung zu sehen.';
+
+  @override
   String get landingLocateSectionTitle => 'Finde die nächsten Punkte';
 
   @override

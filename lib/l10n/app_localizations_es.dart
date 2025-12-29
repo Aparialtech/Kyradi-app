@@ -1188,6 +1188,93 @@ class AppLocalizationsEs extends AppLocalizations {
       'Elige dónde dejar tu equipaje. Toca un punto en el mapa para ver su ocupación y abrir los detalles de la reserva.';
 
   @override
+  String occupancyLabel(Object current, Object max) {
+    return 'Ocupación: $current/$max';
+  }
+
+  @override
+  String get locationOpenLabel => 'Abierto';
+
+  @override
+  String get locationClosedLabel => 'Cerrado';
+
+  @override
+  String get openingHoursTitle => 'Horario de apertura';
+
+  @override
+  String get openingHoursSubtitle => 'Horario semanal';
+
+  @override
+  String get openingHoursAlwaysOpen => 'Abierto 24/7';
+
+  @override
+  String get openingHoursClosed => 'Cerrado';
+
+  @override
+  String get locationFullWarning => 'La ubicación seleccionada está llena.';
+
+  @override
+  String get locationClosedWarning =>
+      'La ubicación seleccionada está cerrada en este momento.';
+
+  @override
+  String get locationInactiveWarning =>
+      'La ubicación seleccionada está inactiva.';
+
+  @override
+  String get protectionLevelTitle => 'Nivel de protección';
+
+  @override
+  String get protectionStandard => 'Estándar';
+
+  @override
+  String get protectionPremium => 'Protección premium';
+
+  @override
+  String get paymentMethodTitle => 'Método de pago';
+
+  @override
+  String get paymentMethodCard => 'Tarjeta';
+
+  @override
+  String get paymentMethodInstallment => 'Cuotas';
+
+  @override
+  String get paymentMethodPayAtHotel => 'Pagar en el hotel';
+
+  @override
+  String get installmentCountLabel => 'Número de cuotas';
+
+  @override
+  String get pricingEstimateTitle => 'Precio estimado';
+
+  @override
+  String get pricingEstimateLoading => 'Calculando estimación...';
+
+  @override
+  String get pricingBasePriceLabel => 'Precio base';
+
+  @override
+  String get pricingPremiumFeeLabel => 'Protección premium';
+
+  @override
+  String get pricingHotelCommissionLabel => 'Comisión del hotel';
+
+  @override
+  String get pricingInstallmentFeeLabel => 'Recargo por cuotas';
+
+  @override
+  String get pricingTotalLabel => 'Total';
+
+  @override
+  String get pricingEstimateDisclaimer =>
+      'Este precio es una estimación y puede variar según la hora real de entrega.';
+
+  @override
+  String get pricingEstimateUnavailable =>
+      'Selecciona las horas de entrega y recogida para ver una estimación.';
+
+  @override
   String get landingLocateSectionTitle => 'Encuentra los puntos más cercanos';
 
   @override

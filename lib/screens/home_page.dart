@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:math';
 import 'package:flutter/foundation.dart' show kIsWeb;
@@ -16,6 +17,7 @@ import 'package:intl/intl.dart';
 import 'package:image_picker/image_picker.dart';
 import '../models/luggage.dart';
 import '../models/user.dart';
+import '../models/pricing_models.dart';
 import 'change_password_page.dart';
 import '../services/api_service.dart';
 import '../services/luggage_service.dart';
@@ -902,6 +904,7 @@ class _HomePageState extends State<HomePage> {
       );
       final loc = AppLocalizations.of(context)!;
       _snack(loc.luggageCreated, type: AppNotificationType.success);
+      await _loadLocations();
       if (await Vibration.hasVibrator() ?? false) {
         Vibration.vibrate(duration: 200);
       }
@@ -1757,6 +1760,8 @@ class _HomePageState extends State<HomePage> {
 
   Widget _buildLocationCard(DropLocation location, bool isActive) {
     final theme = Theme.of(context);
+    final loc = AppLocalizations.of(context)!;
+    final isOpen = location.isOpenNow;
     return SizedBox(
       width: 220,
       child: Card(
@@ -1787,6 +1792,38 @@ class _HomePageState extends State<HomePage> {
                   style: theme.textTheme.bodySmall,
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: isOpen
+                            ? theme.colorScheme.primary.withValues(alpha: 0.15)
+                            : theme.colorScheme.error.withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text(
+                        isOpen ? loc.locationOpenLabel : loc.locationClosedLabel,
+                        style: theme.textTheme.labelSmall?.copyWith(
+                          color:
+                              isOpen ? theme.colorScheme.primary : theme.colorScheme.error,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                    const Spacer(),
+                    Text(
+                      loc.occupancyLabel(
+                        location.currentOccupancy,
+                        location.maxCapacity,
+                      ),
+                      style: theme.textTheme.labelSmall?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
                 ),
                 const Spacer(),
                 Row(
@@ -1831,9 +1868,9 @@ class _HomePageState extends State<HomePage> {
                 ),
               ),
               Text(
-                loc.availableSlotsLabel(
-                  location.availableSlots,
-                  location.totalSlots,
+                loc.occupancyLabel(
+                  location.currentOccupancy,
+                  location.maxCapacity,
                 ),
                 style: theme.textTheme.bodyMedium?.copyWith(
                   color: theme.colorScheme.primary,
@@ -3211,16 +3248,31 @@ class _AddLuggagePageState extends State<AddLuggagePage> {
   final _noteCtrl = TextEditingController();
   String _size = 'Orta';
   String _color = 'Siyah';
+  String _protectionLevel = 'standard';
+  String _paymentMethod = 'card';
+  int _installmentCount = 3;
   bool _saving = false;
   late DropLocation _selectedLocation;
-  final List<DropLocation> _availableLocations = DropLocationsRepository.locations;
+  final List<DropLocation> _availableLocations = [];
   final List<DropLocation> _nearbySuggestions = [];
+  bool _loadingLocations = false;
   bool _loadingNearby = false;
   String? _nearbyError;
   DateTime? _dropTime;
   DateTime? _pickupTime;
   bool _scheduleError = false;
+  PricingEstimateResponse? _pricingEstimate;
+  bool _pricingLoading = false;
+  String? _pricingError;
+  Timer? _pricingDebounce;
 
+  String? _locationBlockReason(DropLocation location, AppLocalizations loc) {
+    if (!location.isActive) return loc.locationInactiveWarning;
+    final checkTime = _dropTime ?? DateTime.now();
+    if (!location.isOpenAt(checkTime)) return loc.locationClosedWarning;
+    if (location.isFull) return loc.locationFullWarning;
+    return null;
+  }
 
   List<DropLocation> _nearestLocations(LatLng target, {int limit = 3}) {
     final sorted = List<DropLocation>.from(_availableLocations)
@@ -3248,16 +3300,109 @@ class _AddLuggagePageState extends State<AddLuggagePage> {
     super.initState();
     _qrCode = widget.qrGenerator();
     _pickupPin = widget.pickupPinGenerator();
-    _selectedLocation = _availableLocations.first;
-    _loadNearbySuggestions();
+    _selectedLocation = DropLocationsRepository.locations.first;
+    _availableLocations
+      ..clear()
+      ..addAll(DropLocationsRepository.locations);
+    _loadLocations();
   }
 
   @override
   void dispose() {
+    _pricingDebounce?.cancel();
     _labelCtrl.dispose();
     _weightCtrl.dispose();
     _noteCtrl.dispose();
     super.dispose();
+  }
+
+  String _sizeClassValue(String label) {
+    switch (label) {
+      case 'Küçük':
+        return 'small';
+      case 'Büyük':
+        return 'large';
+      case 'Orta':
+      default:
+        return 'medium';
+    }
+  }
+
+  int _breakdownValue(String key) {
+    final raw = _pricingEstimate?.breakdown[key];
+    if (raw is num) return raw.round();
+    if (raw is String) return int.tryParse(raw) ?? 0;
+    return 0;
+  }
+
+  String _formatPrice(int value) {
+    final formatted = NumberFormat.decimalPattern().format(value);
+    return '$formatted ₺';
+  }
+
+  Widget _buildPricingRow(
+    String label,
+    String value,
+    ThemeData theme, {
+    bool emphasized = false,
+  }) {
+    final style = emphasized
+        ? theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w700)
+        : theme.textTheme.bodyMedium;
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(label, style: style),
+          Text(value, style: style),
+        ],
+      ),
+    );
+  }
+
+  void _schedulePricingEstimate() {
+    _pricingDebounce?.cancel();
+    _pricingDebounce = Timer(const Duration(milliseconds: 400), _fetchPricingEstimate);
+  }
+
+  Future<void> _fetchPricingEstimate() async {
+    if (_dropTime == null || _pickupTime == null) {
+      setState(() {
+        _pricingEstimate = null;
+        _pricingError = null;
+        _pricingLoading = false;
+      });
+      return;
+    }
+    setState(() {
+      _pricingLoading = true;
+      _pricingError = null;
+    });
+    try {
+      final req = PricingEstimateRequest(
+        sizeClass: _sizeClassValue(_size),
+        dropAt: _dropTime!,
+        pickupAt: _pickupTime!,
+        protectionLevel: _protectionLevel,
+        paymentMethod: _paymentMethod,
+        installmentCount: _paymentMethod == 'installment' ? _installmentCount : null,
+        locationId: _selectedLocation.id,
+      );
+      final estimate = await ApiService.estimatePricing(req);
+      if (!mounted) return;
+      setState(() {
+        _pricingEstimate = estimate;
+        _pricingLoading = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _pricingEstimate = null;
+        _pricingLoading = false;
+        _pricingError = e.toString();
+      });
+    }
   }
 
   Future<void> _storePickupPin(String luggageId, String pin) async {
@@ -3307,6 +3452,36 @@ class _AddLuggagePageState extends State<AddLuggagePage> {
     }
   }
 
+  Future<void> _loadLocations() async {
+    setState(() => _loadingLocations = true);
+    try {
+      final remote = await LocationsService.fetchLocations();
+      if (!mounted) return;
+      setState(() {
+        _availableLocations
+          ..clear()
+          ..addAll(remote.isNotEmpty ? remote : DropLocationsRepository.locations);
+        _selectedLocation = _availableLocations.isNotEmpty
+            ? _availableLocations.first
+            : DropLocationsRepository.locations.first;
+        _loadingLocations = false;
+      });
+      await _loadNearbySuggestions();
+      _schedulePricingEstimate();
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _availableLocations
+          ..clear()
+          ..addAll(DropLocationsRepository.locations);
+        _selectedLocation = _availableLocations.first;
+        _loadingLocations = false;
+      });
+      await _loadNearbySuggestions();
+      _schedulePricingEstimate();
+    }
+  }
+
   void _regenerateQr() {
     setState(() => _qrCode = widget.qrGenerator());
   }
@@ -3347,6 +3522,7 @@ class _AddLuggagePageState extends State<AddLuggagePage> {
       }
       _scheduleError = false;
     });
+    _schedulePricingEstimate();
   }
 
   Future<void> _submit() async {
@@ -3356,6 +3532,15 @@ class _AddLuggagePageState extends State<AddLuggagePage> {
       AppNotification.show(
         context,
         message: loc.scheduleTimesRequired,
+        type: AppNotificationType.warning,
+      );
+      return;
+    }
+    final blockReason = _locationBlockReason(_selectedLocation, loc);
+    if (blockReason != null) {
+      AppNotification.show(
+        context,
+        message: blockReason,
         type: AppNotificationType.warning,
       );
       return;
@@ -3453,10 +3638,31 @@ await _storePickupPin(id, effectivePin);
         );
         Navigator.pop(context, enriched);
       } else {
-        final message = (result['error'] ?? '').toString().trim();
+        final message =
+            (result['error'] ?? result['message'] ?? '').toString().trim();
         final statusCode = (result['statusCode'] ?? 0) as int;
         final lower = message.toLowerCase();
-        if (statusCode == 409 || lower.contains('duplicate') || lower.contains('qr')) {
+        if (message == 'LOCATION_CLOSED') {
+          AppNotification.show(
+            context,
+            message: loc.locationClosedWarning,
+            type: AppNotificationType.warning,
+          );
+        } else if (message == 'LOCATION_FULL') {
+          AppNotification.show(
+            context,
+            message: loc.locationFullWarning,
+            type: AppNotificationType.warning,
+          );
+        } else if (message == 'LOCATION_INACTIVE') {
+          AppNotification.show(
+            context,
+            message: loc.locationInactiveWarning,
+            type: AppNotificationType.warning,
+          );
+        } else if (statusCode == 409 ||
+            lower.contains('duplicate') ||
+            lower.contains('qr')) {
           _regenerateQr();
           AppNotification.show(
             context,
@@ -3487,6 +3693,7 @@ await _storePickupPin(id, effectivePin);
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final loc = AppLocalizations.of(context)!;
+    final blockReason = _locationBlockReason(_selectedLocation, loc);
     return Scaffold(
       appBar: AppBar(title: Text(loc.addLuggageTitle)),
       body: SafeArea(
@@ -3557,6 +3764,110 @@ await _storePickupPin(id, effectivePin);
                 ),
               ),
               const SizedBox(height: 12),
+              Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        loc.pricingEstimateTitle,
+                        style: theme.textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      if (blockReason != null)
+                        Row(
+                          children: [
+                            Icon(
+                              Icons.warning_amber_outlined,
+                              color: theme.colorScheme.error,
+                              size: 18,
+                            ),
+                            const SizedBox(width: 6),
+                            Expanded(
+                              child: Text(
+                                blockReason,
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                  color: theme.colorScheme.error,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      if (_pricingLoading)
+                        Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          child: Row(
+                            children: [
+                              const SizedBox(
+                                width: 18,
+                                height: 18,
+                                child: CircularProgressIndicator(strokeWidth: 2),
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                loc.pricingEstimateLoading,
+                                style: theme.textTheme.bodySmall,
+                              ),
+                            ],
+                          ),
+                        )
+                      else if (_pricingEstimate != null)
+                        Column(
+                          children: [
+                            _buildPricingRow(
+                              loc.pricingBasePriceLabel,
+                              _formatPrice(_breakdownValue('basePrice')),
+                              theme,
+                            ),
+                            _buildPricingRow(
+                              loc.pricingPremiumFeeLabel,
+                              _formatPrice(_breakdownValue('premiumProtectionFee')),
+                              theme,
+                            ),
+                            _buildPricingRow(
+                              loc.pricingHotelCommissionLabel,
+                              _formatPrice(_breakdownValue('hotelCommissionFee')),
+                              theme,
+                            ),
+                            _buildPricingRow(
+                              loc.pricingInstallmentFeeLabel,
+                              _formatPrice(_breakdownValue('installmentFee')),
+                              theme,
+                            ),
+                            const Divider(height: 20),
+                            _buildPricingRow(
+                              loc.pricingTotalLabel,
+                              _formatPrice(_pricingEstimate!.total),
+                              theme,
+                              emphasized: true,
+                            ),
+                          ],
+                        )
+                      else
+                        Text(
+                          _pricingError ?? loc.pricingEstimateUnavailable,
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: _pricingError != null
+                                ? theme.colorScheme.error
+                                : theme.colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                      const SizedBox(height: 8),
+                      Text(
+                        loc.pricingEstimateDisclaimer,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
               TextField(
                 controller: _weightCtrl,
                 keyboardType: TextInputType.number,
@@ -3581,7 +3892,12 @@ await _storePickupPin(id, effectivePin);
                     )
                     .toList(),
                 onChanged:
-                    _saving ? null : (v) => setState(() => _size = v ?? 'Orta'),
+                    _saving
+                        ? null
+                        : (v) {
+                            setState(() => _size = v ?? 'Orta');
+                            _schedulePricingEstimate();
+                          },
                 decoration: InputDecoration(
                   labelText: loc.size,
                   prefixIcon: const Icon(Icons.luggage_outlined),
@@ -3608,6 +3924,108 @@ await _storePickupPin(id, effectivePin);
                 ),
               ),
               const SizedBox(height: 12),
+              Card(
+                child: Column(
+                  children: [
+                    ListTile(
+                      leading: const Icon(Icons.shield_outlined),
+                      title: Text(loc.protectionLevelTitle),
+                    ),
+                    RadioListTile<String>(
+                      value: 'standard',
+                      groupValue: _protectionLevel,
+                      onChanged: _saving
+                          ? null
+                          : (value) {
+                              if (value == null) return;
+                              setState(() => _protectionLevel = value);
+                              _schedulePricingEstimate();
+                            },
+                      title: Text(loc.protectionStandard),
+                    ),
+                    RadioListTile<String>(
+                      value: 'premium',
+                      groupValue: _protectionLevel,
+                      onChanged: _saving
+                          ? null
+                          : (value) {
+                              if (value == null) return;
+                              setState(() => _protectionLevel = value);
+                              _schedulePricingEstimate();
+                            },
+                      title: Text(loc.protectionPremium),
+                    ),
+                    const Divider(height: 1),
+                    ListTile(
+                      leading: const Icon(Icons.payments_outlined),
+                      title: Text(loc.paymentMethodTitle),
+                    ),
+                    RadioListTile<String>(
+                      value: 'card',
+                      groupValue: _paymentMethod,
+                      onChanged: _saving
+                          ? null
+                          : (value) {
+                              if (value == null) return;
+                              setState(() => _paymentMethod = value);
+                              _schedulePricingEstimate();
+                            },
+                      title: Text(loc.paymentMethodCard),
+                    ),
+                    RadioListTile<String>(
+                      value: 'installment',
+                      groupValue: _paymentMethod,
+                      onChanged: _saving
+                          ? null
+                          : (value) {
+                              if (value == null) return;
+                              setState(() => _paymentMethod = value);
+                              _schedulePricingEstimate();
+                            },
+                      title: Text(loc.paymentMethodInstallment),
+                    ),
+                    if (_paymentMethod == 'installment')
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+                        child: DropdownButtonFormField<int>(
+                          value: _installmentCount,
+                          decoration: InputDecoration(
+                            labelText: loc.installmentCountLabel,
+                            prefixIcon: const Icon(Icons.calendar_view_month),
+                          ),
+                          items: const [2, 3, 4, 5, 6]
+                              .map(
+                                (count) => DropdownMenuItem(
+                                  value: count,
+                                  child: Text(count.toString()),
+                                ),
+                              )
+                              .toList(),
+                          onChanged: _saving
+                              ? null
+                              : (value) {
+                                  if (value == null) return;
+                                  setState(() => _installmentCount = value);
+                                  _schedulePricingEstimate();
+                                },
+                        ),
+                      ),
+                    RadioListTile<String>(
+                      value: 'pay_at_hotel',
+                      groupValue: _paymentMethod,
+                      onChanged: _saving
+                          ? null
+                          : (value) {
+                              if (value == null) return;
+                              setState(() => _paymentMethod = value);
+                              _schedulePricingEstimate();
+                            },
+                      title: Text(loc.paymentMethodPayAtHotel),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 12),
               DropdownButtonFormField<String>(
                 key: ValueKey(_selectedLocation.id),
                 initialValue: _selectedLocation.id,
@@ -3615,7 +4033,9 @@ await _storePickupPin(id, effectivePin);
                   labelText: loc.deliveryPointLabel,
                   prefixIcon: const Icon(Icons.location_on_outlined),
                 ),
-                items: _availableLocations
+                items: (_availableLocations.isNotEmpty
+                        ? _availableLocations
+                        : DropLocationsRepository.locations)
                     .map(
                       (location) => DropdownMenuItem<String>(
                         value: location.id,
@@ -3632,9 +4052,15 @@ await _storePickupPin(id, effectivePin);
                 onChanged: _saving
                     ? null
                     : (value) {
-                        final match = DropLocationsRepository.byId(value);
+                        final match = _availableLocations.firstWhere(
+                          (location) => location.id == value,
+                          orElse: () =>
+                              DropLocationsRepository.byId(value) ??
+                              _selectedLocation,
+                        );
                         if (match != null) {
                           setState(() => _selectedLocation = match);
+                          _schedulePricingEstimate();
                         }
                       },
               ),
@@ -3648,6 +4074,54 @@ await _storePickupPin(id, effectivePin);
                   ),
                 ),
               ),
+              const SizedBox(height: 6),
+              Row(
+                children: [
+                  Text(
+                    loc.occupancyLabel(
+                      _selectedLocation.currentOccupancy,
+                      _selectedLocation.maxCapacity,
+                    ),
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const Spacer(),
+                  Text(
+                    _selectedLocation.isOpenAt(_dropTime ?? DateTime.now())
+                        ? loc.locationOpenLabel
+                        : loc.locationClosedLabel,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: _selectedLocation.isOpenAt(_dropTime ?? DateTime.now())
+                          ? theme.colorScheme.primary
+                          : theme.colorScheme.error,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+              if (blockReason != null) ...[
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    Icon(
+                      Icons.warning_amber_outlined,
+                      color: theme.colorScheme.error,
+                      size: 18,
+                    ),
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: Text(
+                        blockReason,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.error,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
               if (_nearbyError != null) ...[
                 const SizedBox(height: 8),
                 Text(
@@ -3790,7 +4264,7 @@ await _storePickupPin(id, effectivePin);
               ),
               const SizedBox(height: 20),
               FilledButton.icon(
-                onPressed: _saving ? null : _submit,
+                onPressed: _saving || blockReason != null || _loadingLocations ? null : _submit,
                 icon: _saving
                     ? const SizedBox(
                         height: 16,
