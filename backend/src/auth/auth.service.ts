@@ -113,7 +113,7 @@ export class AuthService {
       const parts = full.split(' ').filter(Boolean);
       return {
         name: profile.givenName ?? parts[0] ?? fallback,
-        surname: profile.familyName ?? parts.slice(1).join(' ') || 'User',
+        surname: (profile.familyName ?? parts.slice(1).join(' ')) || 'User',
       };
     }
     return {
