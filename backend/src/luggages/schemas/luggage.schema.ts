@@ -8,6 +8,19 @@ export enum LuggageStatus {
   CANCELLED = 'cancelled',
 }
 
+export enum PaymentMethod {
+  CARD = 'card',
+  INSTALLMENT = 'installment',
+  PAY_AT_HOTEL = 'pay_at_hotel',
+}
+
+export enum PaymentStatus {
+  UNPAID = 'unpaid',
+  PENDING = 'pending',
+  PAID = 'paid',
+  FAILED = 'failed',
+}
+
 @Schema({ _id: false })
 export class PickupDelegate {
   @Prop()
@@ -60,8 +73,38 @@ export class Luggage extends Document {
   @Prop()
   note?: string;
 
+  @Prop()
+  ownerName?: string;
+
+  @Prop()
+  ownerPhone?: string;
+
+  @Prop()
+  ownerEmail?: string;
+
   @Prop({ enum: LuggageStatus, default: LuggageStatus.AWAITING })
   status: LuggageStatus;
+
+  @Prop({ enum: PaymentMethod })
+  paymentMethod?: PaymentMethod;
+
+  @Prop({ enum: PaymentStatus, default: PaymentStatus.UNPAID })
+  paymentStatus: PaymentStatus;
+
+  @Prop()
+  totalPrice?: number;
+
+  @Prop()
+  providerPaymentId?: string;
+
+  @Prop()
+  checkoutUrl?: string;
+
+  @Prop()
+  transactionId?: string;
+
+  @Prop()
+  paidAt?: Date;
 
   @Prop({ required: true })
   dropLocationId: string;

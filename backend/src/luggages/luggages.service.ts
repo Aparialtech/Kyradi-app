@@ -1,11 +1,13 @@
 import { HttpException, Injectable, NotFoundException, BadRequestException, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { Luggage, LuggageStatus } from './schemas/luggage.schema';
+import { Luggage, LuggageStatus, PaymentStatus } from './schemas/luggage.schema';
 import { CreateLuggageDto } from './dto/create-luggage.dto';
 import { UpdateLuggageDto } from './dto/update-luggage.dto';
 import { PricingEstimateDto } from './dto/pricing-estimate.dto';
 import { Location } from '../locations/schemas/location.schema';
+import { User } from '../users/schemas/user.schema';
+import { MailService } from '../common/mail/mail.service';
 import { hashPassword, verifyPassword } from '../common/utils/password.util';
 
 @Injectable()
@@ -17,6 +19,9 @@ export class LuggagesService {
     private readonly luggageModel: Model<Luggage>,
     @InjectModel(Location.name)
     private readonly locationModel: Model<Location>,
+    @InjectModel(User.name)
+    private readonly userModel: Model<User>,
+    private readonly mailService: MailService,
   ) {}
 
   estimatePricing(dto: PricingEstimateDto) {
@@ -132,9 +137,35 @@ export class LuggagesService {
       scheduledPickupTime: dto.scheduledPickupTime ? new Date(dto.scheduledPickupTime) : undefined,
     });
     await this.refreshLocationOccupancy(created.dropLocationId);
+    let pinSent = false;
+    let pinSentTo = '';
+    const user = await this.userModel.findById(userId).lean().exec();
+    if (user?.email) {
+      pinSentTo = user.email;
+      try {
+        console.log('[PIN_MAIL] about to send', {
+          to: user.email,
+          luggageId: created._id?.toString(),
+        });
+        pinSent = await this.mailService.sendPickupPin({
+          to: user.email,
+          pin: pickupPin,
+          luggageId: created._id?.toString(),
+        });
+        if (pinSent) {
+          console.log('[PIN_MAIL] sent ok', {
+            to: user.email,
+            luggageId: created._id?.toString(),
+          });
+        }
+      } catch (err) {
+        console.error('[PIN_MAIL] send failed', err);
+      }
+    }
     return {
       luggage: this._decorateLuggage(created.toObject()),
-      pickupPin,
+      pinSent,
+      pinSentTo,
     };
   }
 
@@ -149,11 +180,13 @@ export class LuggagesService {
 
   async updateMetadata(userId: string, luggageId: string, dto: UpdateLuggageDto) {
     let delegateCode: string | undefined;
+    const existing = await this.luggageModel.findOne({ _id: luggageId, userId }).exec();
+    if (!existing) throw new NotFoundException('Luggage not found');
     const shouldIssueDelegate =
       (dto.pickupDelegateFullName ?? '').trim().length > 0 ||
       (dto.pickupDelegatePhone ?? '').trim().length > 0 ||
       (dto.pickupDelegateEmail ?? '').trim().length > 0;
-    if (shouldIssueDelegate) {
+    if (shouldIssueDelegate && !existing.delegateCodeHash) {
       delegateCode = this.generateDelegateCode();
     }
     const updated = await this.luggageModel
@@ -176,9 +209,11 @@ export class LuggagesService {
                 phone: dto.pickupDelegatePhone?.trim() ?? '',
                 email: dto.pickupDelegateEmail?.trim() ?? '',
               },
-              delegateCodeHash: hashPassword(delegateCode ?? ''),
-              delegateExpiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
-              delegateUsedAt: null,
+              ...(delegateCode && {
+                delegateCodeHash: hashPassword(delegateCode ?? ''),
+                delegateExpiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
+                delegateUsedAt: null,
+              }),
             }),
           },
         },
@@ -207,28 +242,43 @@ export class LuggagesService {
         throw new NotFoundException('Luggage not found');
       }
       const now = new Date();
+      if (status === LuggageStatus.DROPPED) {
+        if (luggage.paymentStatus !== PaymentStatus.PAID) {
+          throw new BadRequestException('PAYMENT_REQUIRED_BEFORE_DROP');
+        }
+      }
       if (status === LuggageStatus.PICKED) {
         const validPin =
           !!pickupPin &&
           !!luggage.pickupPinHash &&
           verifyPassword(pickupPin, luggage.pickupPinHash);
+        const hasDelegate = !!luggage.delegateCodeHash;
         const validDelegate =
           !!delegateCode &&
           !!luggage.delegateCodeHash &&
           verifyPassword(delegateCode, luggage.delegateCodeHash);
-        if (!validPin && !validDelegate) {
-          if (!pickupPin && !delegateCode) {
-            throw new BadRequestException('PICKUP_CREDENTIAL_REQUIRED');
-          }
-          if (pickupPin && !validPin) {
-            throw new BadRequestException('PICKUP_PIN_INVALID');
-          }
-          if (delegateCode && !validDelegate) {
+        if (!pickupPin && !delegateCode) {
+          throw new BadRequestException(
+            hasDelegate ? 'DELEGATE_CODE_REQUIRED' : 'PICKUP_PIN_REQUIRED',
+          );
+        }
+        if (delegateCode) {
+          if (!luggage.delegateCodeHash) {
             throw new BadRequestException('DELEGATE_CODE_INVALID');
           }
-          throw new BadRequestException('PICKUP_CREDENTIAL_INVALID');
+          if (luggage.delegateUsedAt) {
+            throw new BadRequestException('DELEGATE_ALREADY_USED');
+          }
+          if (!this._isDelegateActive(luggage)) {
+            throw new BadRequestException('DELEGATE_CODE_EXPIRED');
+          }
+          if (!validDelegate) {
+            throw new BadRequestException('DELEGATE_CODE_INVALID');
+          }
+        } else if (pickupPin && !validPin) {
+          throw new BadRequestException('PICKUP_PIN_INVALID');
         }
-        if (validDelegate && this._isDelegateActive(luggage)) {
+        if (validDelegate) {
           luggage.delegateUsedAt = now;
         }
       }

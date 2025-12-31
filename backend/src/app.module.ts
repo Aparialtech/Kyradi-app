@@ -8,6 +8,7 @@ import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
 import { LuggagesModule } from './luggages/luggages.module';
 import { UploadsModule } from './uploads/uploads.module';
+import { PaymentsModule } from './payments/payments.module';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { UploadsModule } from './uploads/uploads.module';
     UsersModule,
     AuthModule,
     LuggagesModule,
+    PaymentsModule,
     UploadsModule,
   ],
   controllers: [AppController],

@@ -80,4 +80,33 @@ export class MailService {
       return false;
     }
   }
+
+  async sendPickupPin(params: {
+    to: string;
+    pin: string;
+    luggageId?: string;
+  }): Promise<boolean> {
+    const transporter = await this.getTransporter();
+    if (!transporter) return false;
+
+    const labelLine = params.luggageId ? `Luggage ID: ${params.luggageId}\n` : '';
+    try {
+      await transporter.sendMail({
+        from: this.fromAddress(),
+        to: params.to,
+        subject: 'Your Kyradi Pickup PIN',
+        text: `Your Kyradi pickup PIN:\n${labelLine}${params.pin}`,
+        html:
+          `<p>Hello,</p>` +
+          `<p>Your Kyradi pickup PIN:</p>` +
+          (params.luggageId ? `<p><strong>Luggage ID:</strong> ${params.luggageId}</p>` : '') +
+          `<p style="font-size:22px;font-weight:bold;letter-spacing:4px;">${params.pin}</p>` +
+          `<p>This PIN is required for pickup.</p>`,
+      });
+      return true;
+    } catch (error) {
+      this.logger.error('Teslim PIN e-postası gönderilemedi', (error as Error).message);
+      return false;
+    }
+  }
 }
