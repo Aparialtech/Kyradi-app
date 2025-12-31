@@ -15,6 +15,11 @@ export class LuggagesController {
 
   @Post()
   create(@Param('userId') userId: string, @Body() dto: CreateLuggageDto) {
+    console.log('[PIN_MAIL] endpoint hit', {
+      path: '/users/:userId/luggages',
+      user: userId,
+      body: dto,
+    });
     return this.luggagesService.create(userId, dto);
   }
 

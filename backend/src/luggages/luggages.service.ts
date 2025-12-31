@@ -145,6 +145,8 @@ export class LuggagesService {
       try {
         console.log('[PIN_MAIL] about to send', {
           to: user.email,
+          from: process.env.MAIL_FROM ? 'set' : 'missing',
+          resendKey: process.env.RESEND_API_KEY ? 'set' : 'missing',
           luggageId: created._id?.toString(),
         });
         pinSent = await this.mailService.sendPickupPin({
@@ -159,7 +161,7 @@ export class LuggagesService {
           });
         }
       } catch (err) {
-        console.error('[PIN_MAIL] send failed', err);
+        console.log('[PIN_MAIL] send failed', (err as Error)?.message || err);
       }
     }
     return {

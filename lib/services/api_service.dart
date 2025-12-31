@@ -483,7 +483,28 @@ class ApiService {
       body['scheduledPickupTime'] =
           (body['scheduledPickupTime'] as DateTime).toIso8601String();
     }
-    final result = await _post('/users/$userId/luggages', body);
+    final path = '/users/$userId/luggages';
+    final uri = _buildUri(path);
+    print(
+      '[PIN_FLOW] sending request: ${{
+        'method': 'POST',
+        'url': uri?.toString(),
+        'body': body,
+      }}',
+    );
+    Map<String, dynamic> result;
+    try {
+      result = await _post(path, body);
+      print(
+        '[PIN_FLOW] response: ${{
+          'status': result['statusCode'],
+          'body': result,
+        }}',
+      );
+    } catch (e) {
+      print('[PIN_FLOW] error: $e');
+      rethrow;
+    }
     result['statusCode'] ??= result['_httpStatus'];
     if (result['ok'] == true && result['luggage'] is! Map) {
       final doc = _stripMeta(result);
