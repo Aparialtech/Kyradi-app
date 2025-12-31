@@ -9,7 +9,7 @@ export class PaymentsController {
 
   @Get('status')
   status(@Query('reservationId') reservationId?: string) {
-    if (!reservationId || reservationId.trim().isEmpty) {
+    if (!reservationId?.trim()) {
       throw new BadRequestException({ message: 'reservationId is required' });
     }
     return { ok: true, reservationId, status: 'unknown' };
