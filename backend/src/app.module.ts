@@ -9,6 +9,7 @@ import { AuthModule } from './auth/auth.module';
 import { LuggagesModule } from './luggages/luggages.module';
 import { UploadsModule } from './uploads/uploads.module';
 import { PaymentsModule } from './payments/payments.module';
+import { PricingModule } from './pricing/pricing.module';
 
 @Module({
   imports: [
@@ -23,6 +24,7 @@ import { PaymentsModule } from './payments/payments.module';
     LocationsModule,
     UploadsModule,
     PaymentsModule,
+    PricingModule,
   ],
   controllers: [AppController],
   providers: [AppService],
