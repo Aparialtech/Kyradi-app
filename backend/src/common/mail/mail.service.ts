@@ -103,16 +103,43 @@ export class MailService {
   }
 
   async sendResetCode(email: string, code: string): Promise<boolean> {
+    const subject = 'KYRADI Password Reset Code';
+    const text =
+      `Hello,\n\n` +
+      `Your password reset code is:\n\n` +
+      `${code}\n\n` +
+      `This code is valid for a limited time.\n\n` +
+      `Thank you,\n` +
+      `Kyradi Team`;
+    const html =
+      `<p>Hello,</p>` +
+      `<p>Your password reset code is:</p>` +
+      `<p style="font-size:22px;font-weight:bold;letter-spacing:4px;">${code}</p>` +
+      `<p>This code is valid for a limited time.</p>` +
+      `<p>Thank you,<br/>Kyradi Team</p>`;
+
+    this.logProviderContext();
+    if (this.provider === 'resend') {
+      const ok = await this.sendResendEmail({
+        to: email,
+        subject,
+        text,
+        html,
+      });
+      if (ok) this.logger.log('[MailService] resend sent ok (reset)');
+      else this.logger.error('[MailService] resend failed (reset)');
+      return ok;
+    }
+
     const transporter = await this.getTransporter();
     if (!transporter) return false;
-
     try {
       await transporter.sendMail({
         from: this.fromAddress(),
         to: email,
-        subject: 'KYRADI Şifre Sıfırlama Kodu',
-        text: `KYRADI hesabın için şifre sıfırlama kodun: ${code}`,
-        html: `<p>Merhaba,</p><p>KYRADI hesabın için şifre sıfırlama talebinde bulundun. Tek kullanımlık kodun:</p><p style="font-size:20px;font-weight:bold;letter-spacing:4px;">${code}</p><p>Bu kod 15 dakika boyunca geçerlidir. Eğer bu isteği sen yapmadıysan lütfen destek ekibimizle iletişime geç.</p>`
+        subject,
+        text,
+        html,
       });
       return true;
     } catch (error) {
@@ -122,19 +149,43 @@ export class MailService {
   }
 
   async sendVerificationCode(email: string, code: string): Promise<boolean> {
+    const subject = 'KYRADI Verification Code';
+    const text =
+      `Hello,\n\n` +
+      `Your verification code is:\n\n` +
+      `${code}\n\n` +
+      `This code is valid for a limited time.\n\n` +
+      `Thank you,\n` +
+      `Kyradi Team`;
+    const html =
+      `<p>Hello,</p>` +
+      `<p>Your verification code is:</p>` +
+      `<p style="font-size:22px;font-weight:bold;letter-spacing:4px;">${code}</p>` +
+      `<p>This code is valid for a limited time.</p>` +
+      `<p>Thank you,<br/>Kyradi Team</p>`;
+
+    this.logProviderContext();
+    if (this.provider === 'resend') {
+      const ok = await this.sendResendEmail({
+        to: email,
+        subject,
+        text,
+        html,
+      });
+      if (ok) this.logger.log('[MailService] resend sent ok (verify)');
+      else this.logger.error('[MailService] resend failed (verify)');
+      return ok;
+    }
+
     const transporter = await this.getTransporter();
     if (!transporter) return false;
-
     try {
       await transporter.sendMail({
         from: this.fromAddress(),
         to: email,
-        subject: 'KYRADI Hesap Doğrulama Kodu',
-        text: `KYRADI hesabını doğrulamak için kodun: ${code}`,
-        html:
-            `<p>Merhaba,</p><p>KYRADI hesabını tamamlamak için aşağıdaki doğrulama kodunu kullan:</p>` +
-            `<p style="font-size:22px;font-weight:bold;letter-spacing:6px;">${code}</p>` +
-            '<p>Bu kod 15 dakika geçerlidir. Sen talep etmediysen bu maili yok sayabilirsin.</p>',
+        subject,
+        text,
+        html,
       });
       return true;
     } catch (error) {
@@ -148,15 +199,20 @@ export class MailService {
     pin: string;
     luggageId?: string;
   }): Promise<boolean> {
-    const labelLine = params.luggageId ? `Luggage ID: ${params.luggageId}\n` : '';
     const subject = 'Your Kyradi Pickup PIN';
-    const text = `Your Kyradi pickup PIN:\n${labelLine}${params.pin}`;
+    const text =
+      `Hello,\n\n` +
+      `Your Kyradi pickup PIN is:\n\n` +
+      `${params.pin}\n\n` +
+      `Please keep this PIN safe. It will be required when picking up your luggage.\n\n` +
+      `Thank you,\n` +
+      `Kyradi Team`;
     const html =
       `<p>Hello,</p>` +
-      `<p>Your Kyradi pickup PIN:</p>` +
-      (params.luggageId ? `<p><strong>Luggage ID:</strong> ${params.luggageId}</p>` : '') +
+      `<p>Your Kyradi pickup PIN is:</p>` +
       `<p style="font-size:22px;font-weight:bold;letter-spacing:4px;">${params.pin}</p>` +
-      `<p>This PIN is required for pickup.</p>`;
+      `<p>Please keep this PIN safe. It will be required when picking up your luggage.</p>` +
+      `<p>Thank you,<br/>Kyradi Team</p>`;
 
     this.logProviderContext();
     if (this.provider === 'resend') {
