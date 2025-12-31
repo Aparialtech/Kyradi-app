@@ -1,12 +1,12 @@
 import { Controller, Get } from '@nestjs/common';
-import { AppService } from './app.service';
 
 @Controller()
 export class AppController {
-  constructor(private readonly appService: AppService) {}
-
-  @Get()
-  getHello(): string {
-    return this.appService.getHello();
+  @Get('/__version')
+  version() {
+    return {
+      builtAt: process.env.BUILT_AT || 'unknown',
+      commit: process.env.RAILWAY_GIT_COMMIT_SHA || process.env.GIT_SHA || 'unknown',
+    };
   }
 }
