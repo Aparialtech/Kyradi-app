@@ -932,6 +932,18 @@ abstract class AppLocalizations {
   /// **'Aparial\'in ve Genel Taşıma Şirketlerinin Reddettiği Maddeler'**
   String get registerRestrictedDialogTitle;
 
+  /// No description provided for @registerKvkkDocumentBody.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kişisel Verilerin Korunması ve İşlenmesine İlişkin Aydınlatma Metni\nBu metin, KYRADI platformu kapsamında işlenen kişisel verilerin, 6698 sayılı Kişisel Verilerin Korunması Kanunu (\"KVKK\") uyarınca hangi kapsamda ve hangi amaçlarla işlendiğini açıklamak amacıyla hazırlanmıştır.\n\nİşlenen Kişisel Veri Türleri\nKYRADI platformu kapsamında aşağıdaki kişisel veri grupları işlenmektedir:\nMüşteri verileri:\nAd Soyad, Telefon, QR kod tokenı, Rezervasyon ve dolap bilgisi, Ödeme tutarı ve işlem numarası\nPersonel verileri:\nAd Soyad, E-posta, Kullanıcı rolü, IP, işlem logları, oturum bilgisi\nTeknik veriler:\nAudit log kayıtları, Tarayıcı/cihaz bilgisi, Hata raporları\n\nVeri İşleme Amaçları\nKişisel veriler; rezervasyon akışının sağlanması, QR kod üretimi ve doğrulaması, ödeme intent yönetimi, bagaj teslim ve iade sürecinin yürütülmesi, sistem güvenliğinin sağlanması ve kötüye kullanımın tespiti, yasal saklama yükümlülüklerinin yerine getirilmesi ile raporlama ve platform iyileştirmeleri amaçlarıyla işlenmektedir.\n\nHukuki Dayanaklar\nKişisel veriler, KVKK’nın 5/2-c maddesi kapsamında sözleşmenin kurulması ve ifası, 5/2-f maddesi kapsamında meşru menfaat, 5/2-ç maddesi kapsamında hukuki yükümlülükler ile açık rıza gerektiren durumlarda ilgili kişinin açık rızasına dayanılarak işlenmektedir.\n\nVerilerin Aktarıldığı Taraflar\nKişisel veriler; ödeme hizmetlerinin sağlanması amacıyla Stripe ve Iyzico gibi ödeme servislerine, altyapı ve barındırma hizmetleri kapsamında AWS, Google Cloud, Render ve Vercel gibi bulut sağlayıcılara, zorunlu hallerde kamu kurumlarına ve hukuki veya mali danışmanlara aktarılabilmektedir.\n\nSaklama Süreleri\nKişisel veriler; rezervasyon ve ödeme kayıtları için 10 yıl, audit log kayıtları için 2 yıl, kullanıcı hesapları için hesap kapanışından itibaren 1 yıl süreyle saklanmakta olup, QR kod tokenları 1–24 saat aralığında muhafaza edilmektedir.\n\nGüvenlik Tedbirleri\nKYRADI platformunda; tenant bazlı veri izolasyonu, parola hashleme, JWT tabanlı güvenlik, rol bazlı erişim kontrolü, rate limiting ve saldırı önleme mekanizmaları ile kritik işlemler için audit log tutulması gibi teknik ve idari güvenlik tedbirleri uygulanmaktadır.\n\nİlgili Kişinin Hakları\nKVKK’nın 11. maddesi kapsamında ilgili kişiler; kişisel verilerinin işlenip işlenmediğini öğrenme, silme ve düzeltme talebinde bulunma, veri işlemeye itiraz etme ve zarar halinde tazminat talep etme haklarına sahiptir.\n\nBaşvurular kvkk@kyradi.com adresi üzerinden iletilebilir.'**
+  String get registerKvkkDocumentBody;
+
+  /// No description provided for @registerRestrictedDocumentBody.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu belge, Aparial ve genel taşıma şirketleri tarafından taşınması reddedilen maddeleri özetlemektedir.\nGüvenlik, yasal düzenlemeler ve operasyonel riskler nedeniyle aşağıda belirtilen maddeler taşımaya kabul edilmez:\n\nTehlikeli ve Riskli Maddeler\n- Patlayıcı maddeler (dinamit, havai fişek, el bombası vb.)\n- Yanıcı ve parlayıcı maddeler (benzin, tiner, boya, çözücü vb.)\n- Basınçlı gazlar (propan, butan, oksijen tüpleri vb.)\n- Toksik, zehirli veya aşındırıcı kimyasallar (asit, baz, ağartıcı vb.)\n- Radyoaktif maddeler\n- Yanıcı kimyasallar içeren sıvılar veya çözücüler\n- Patlama veya yangın riski oluşturan herhangi bir madde veya cihaz\n\nSilah ve Tehlikeli Ekipmanlar\n- Silahlar, mühimmat ve benzeri ateşli cihazlar\n- Kesici veya delici aletler (hançer, uzun bıçak, sivri metal aletler vb.)\n\nCihazlar ve Basınçlı Ürünler\n- Gaz veya yakıt içeren cihazlar (yakıt dolu kamp ocakları vb.)\n- Basınçlı aerosol kutuları (tehlikeli gaz içeren spreyler)\n- Yüksek kapasiteli veya yedek lityum piller ve bataryalar\n\nRahatsızlık ve Güvenlik Riski Oluşturan Maddeler\n- Ağır kokulu, duman çıkaran veya çevreyi rahatsız eden maddeler\n\nDeğerli Eşyalar\n- Ziynet eşyalar (altın, mücevher vb. değerli eşyalar) taşımaya kabul edilmez.\n- Para (miktarına bakılmaksızın) taşımaya kabul edilmez.\n\nNot:\nBazı maddeler belirli izin, miktar veya güvenlik önlemleri ile taşınabilir. Ancak genel olarak bu tür maddeler hem Aparial hem de diğer taşıma şirketleri tarafından reddedilmektedir.'**
+  String get registerRestrictedDocumentBody;
+
   /// No description provided for @registerSuccessMessage.
   ///
   /// In tr, this message translates to:
@@ -2264,6 +2276,108 @@ abstract class AppLocalizations {
   /// **'Otelde öde'**
   String get paymentMethodPayAtHotel;
 
+  /// No description provided for @paymentHotelCommissionNote.
+  ///
+  /// In tr, this message translates to:
+  /// **'Otelde yüzde 5 komisyon eklenecektir.'**
+  String get paymentHotelCommissionNote;
+
+  /// No description provided for @paymentStartAction.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ödemeyi Başlat'**
+  String get paymentStartAction;
+
+  /// No description provided for @paymentRequiredBeforeDropMessage.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ödeme tamamlanmadan bırakma yapılamaz.'**
+  String get paymentRequiredBeforeDropMessage;
+
+  /// No description provided for @paymentNotCompletedMessage.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ödeme tamamlanmadan bırakma yapılamaz.'**
+  String get paymentNotCompletedMessage;
+
+  /// No description provided for @paymentCompletedMessage.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ödeme tamamlandı. Bavulu bırakabilirsiniz.'**
+  String get paymentCompletedMessage;
+
+  /// No description provided for @paymentPageTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ödeme'**
+  String get paymentPageTitle;
+
+  /// No description provided for @paymentPageSubtitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kart bilgilerinizi girerek ödemenizi tamamlayın.'**
+  String get paymentPageSubtitle;
+
+  /// No description provided for @paymentCardNumberLabel.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kart Numarası'**
+  String get paymentCardNumberLabel;
+
+  /// No description provided for @paymentCardNameLabel.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kart Üzerindeki İsim'**
+  String get paymentCardNameLabel;
+
+  /// No description provided for @paymentExpiryLabel.
+  ///
+  /// In tr, this message translates to:
+  /// **'Son Kullanma'**
+  String get paymentExpiryLabel;
+
+  /// No description provided for @paymentCvcLabel.
+  ///
+  /// In tr, this message translates to:
+  /// **'CVC'**
+  String get paymentCvcLabel;
+
+  /// No description provided for @paymentCompleteAction.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ödemeyi Tamamla'**
+  String get paymentCompleteAction;
+
+  /// No description provided for @paymentFormIncompleteMessage.
+  ///
+  /// In tr, this message translates to:
+  /// **'Lütfen kart bilgilerini eksiksiz girin.'**
+  String get paymentFormIncompleteMessage;
+
+  /// No description provided for @paymentFailedMessage.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ödeme tamamlanamadı.'**
+  String get paymentFailedMessage;
+
+  /// No description provided for @paymentPayAtHotelTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Otelde Ödeme'**
+  String get paymentPayAtHotelTitle;
+
+  /// No description provided for @paymentPayAtHotelBody.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ödemenizi seçtiğiniz lokasyonda tamamlayabilirsiniz.'**
+  String get paymentPayAtHotelBody;
+
+  /// No description provided for @paymentTotalLabel.
+  ///
+  /// In tr, this message translates to:
+  /// **'Toplam: {amount} ₺'**
+  String paymentTotalLabel(Object amount);
+
   /// No description provided for @installmentCountLabel.
   ///
   /// In tr, this message translates to:
@@ -2323,6 +2437,18 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Tahmin için bırakma ve teslim saatini seçin.'**
   String get pricingEstimateUnavailable;
+
+  /// No description provided for @pickupPinSentMessage.
+  ///
+  /// In tr, this message translates to:
+  /// **'PIN mailinize gönderildi.'**
+  String get pickupPinSentMessage;
+
+  /// No description provided for @pickupPinFailedMessage.
+  ///
+  /// In tr, this message translates to:
+  /// **'PIN gönderilemedi, lütfen daha sonra tekrar deneyin.'**
+  String get pickupPinFailedMessage;
 
   /// No description provided for @landingLocateSectionTitle.
   ///
@@ -2423,8 +2549,224 @@ abstract class AppLocalizations {
   /// No description provided for @luggageDelegateAction.
   ///
   /// In tr, this message translates to:
-  /// **'Yetkili Kişi'**
+  /// **'Acil durum kişisine teslim et'**
   String get luggageDelegateAction;
+
+  /// No description provided for @delegateInfoRequiredMessage.
+  ///
+  /// In tr, this message translates to:
+  /// **'Acil durum kişisinin bilgilerini doldurun.'**
+  String get delegateInfoRequiredMessage;
+
+  /// No description provided for @howItWorksTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Nasıl çalışır?'**
+  String get howItWorksTitle;
+
+  /// No description provided for @howItWorksIntro.
+  ///
+  /// In tr, this message translates to:
+  /// **'KYRADI, “kurye yok” modelinde çalışan bir bavul bırakma ve teslim alma uygulamasıdır. Bavulunu seçtiğin otele/partner noktaya kendin götürür, güvenli şekilde bırakır ve geri alırken PIN ile doğrularsın. Süreç boyunca adım adım yönlendirilir ve net bilgilendirmeler alırsın.'**
+  String get howItWorksIntro;
+
+  /// No description provided for @howItWorksStep1Title.
+  ///
+  /// In tr, this message translates to:
+  /// **'1) Lokasyon seçimi ve uygunluk kontrolü'**
+  String get howItWorksStep1Title;
+
+  /// No description provided for @howItWorksStep1Body.
+  ///
+  /// In tr, this message translates to:
+  /// **'Uygulama, harita ve liste üzerinden partner noktaları gösterir. Her lokasyonun çalışma saatleri, maksimum kapasitesi ve anlık doluluğu vardır. Lokasyon kapalı, dolu veya pasifse bavul ekleme ve/veya bırakma adımı engellenir. Bu sayede kapıda sürpriz yaşamazsın ve gerçekten hizmet alabileceğin noktayı seçersin.'**
+  String get howItWorksStep1Body;
+
+  /// No description provided for @howItWorksStep2Title.
+  ///
+  /// In tr, this message translates to:
+  /// **'2) Bavul bilgileri, süre ve koruma seçimi'**
+  String get howItWorksStep2Title;
+
+  /// No description provided for @howItWorksStep2Body.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bavulunu eklerken boyutu (small/medium/large), bırakma ve teslim alma saatlerini belirlersin. Bu bilgiler fiyatı etkiler. Koruma seviyesi olarak “Standart koruma” (varsayılan) veya “Ek sigorta (premium)” seçebilirsin. Seçimini değiştirdikçe tahmini ücret güncellenir.'**
+  String get howItWorksStep2Body;
+
+  /// No description provided for @howItWorksStep3Title.
+  ///
+  /// In tr, this message translates to:
+  /// **'3) Tahmini Ücret kartı nasıl çalışır?'**
+  String get howItWorksStep3Title;
+
+  /// No description provided for @howItWorksStep3Body.
+  ///
+  /// In tr, this message translates to:
+  /// **'Uygulamadaki “Tahmini Ücret” kartı; boyut, süre, koruma ve ödeme yöntemine göre hesaplanır. Süre için 0–6 saat, 6–24 saat ve günlük tier kullanılır. Bu ücret bir ön bilgilendirmedir; gerçek teslim saatine göre değişebilir.'**
+  String get howItWorksStep3Body;
+
+  /// No description provided for @howItWorksStep4Title.
+  ///
+  /// In tr, this message translates to:
+  /// **'4) Rezervasyon oluşturma'**
+  String get howItWorksStep4Title;
+
+  /// No description provided for @howItWorksStep4Body.
+  ///
+  /// In tr, this message translates to:
+  /// **'Rezervasyon oluşturabilir ve planını netleştirebilirsin. Ancak rezervasyon, “Bavulu Bırak” adımı tamamlanmadan hizmeti aktive etmez.'**
+  String get howItWorksStep4Body;
+
+  /// No description provided for @howItWorksStep5Title.
+  ///
+  /// In tr, this message translates to:
+  /// **'5) Lokasyona gidip “Bavulu Bırak”'**
+  String get howItWorksStep5Title;
+
+  /// No description provided for @howItWorksStep5Body.
+  ///
+  /// In tr, this message translates to:
+  /// **'“Bavulu Bırak” butonu, bırakma sürecini başlatan ana adımdır. Kurye yoktur; bavulu lokasyona sen götürürsün. QR doğrulaması ve ödeme tamamlanmadan bırakma işlemi tamamlanamaz. Önemli: Bavulu Bırak butonu ödemesiz asla tamamlanamaz.'**
+  String get howItWorksStep5Body;
+
+  /// No description provided for @howItWorksStep6Title.
+  ///
+  /// In tr, this message translates to:
+  /// **'6) Ödeme ekranı ve 3 yöntem'**
+  String get howItWorksStep6Title;
+
+  /// No description provided for @howItWorksStep6Body.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ödeme adımında üç seçenek vardır: (1) Otelde ödeme: ödeme otelde alınır, ek komisyon ücrete yansıyabilir. (2) Kredi/Banka kartı: MagicPay altyapısı ile güvenli ödeme yapılır. (3) Taksitli ödeme: vade farkı ücrete yansıyabilir.'**
+  String get howItWorksStep6Body;
+
+  /// No description provided for @howItWorksStep7Title.
+  ///
+  /// In tr, this message translates to:
+  /// **'7) Ödeme başarılı/başarısız olursa ne olur?'**
+  String get howItWorksStep7Title;
+
+  /// No description provided for @howItWorksStep7Body.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ödeme başarılı olursa bırakma tamamlanır ve PIN üretilir. Ödeme başarısız olursa uygulama net bir hata mesajı verir ve tekrar denemen için yönlendirir; bırakma tamamlanmaz.'**
+  String get howItWorksStep7Body;
+
+  /// No description provided for @howItWorksStep8Title.
+  ///
+  /// In tr, this message translates to:
+  /// **'8) PIN ile teslim alma'**
+  String get howItWorksStep8Title;
+
+  /// No description provided for @howItWorksStep8Body.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bırakma tamamlandığında teslim alma PIN’i oluşturulur. PIN ekranda gösterilir ve ayrıca e‑posta ile gönderilebilir. Mail gitmese bile süreç bozulmaz; PIN ile lokasyonda teslim alma doğrulanır.'**
+  String get howItWorksStep8Body;
+
+  /// No description provided for @howItWorksFaqTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sık Sorulan Sorular'**
+  String get howItWorksFaqTitle;
+
+  /// No description provided for @howItWorksFaq1Q.
+  ///
+  /// In tr, this message translates to:
+  /// **'Neden ödeme bırakma anında?'**
+  String get howItWorksFaq1Q;
+
+  /// No description provided for @howItWorksFaq1A.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ödeme, hizmetin aktifleştiği anı temsil eder ve kapasite/rezervasyon dengesini korur. Bu nedenle bırakma ödemesiz tamamlanamaz.'**
+  String get howItWorksFaq1A;
+
+  /// No description provided for @howItWorksFaq2Q.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tahmini ücret neden değişebilir?'**
+  String get howItWorksFaq2Q;
+
+  /// No description provided for @howItWorksFaq2A.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tahmin; boyut, süre ve teslim saatine göre hesaplanır. Gerçek bırakma/teslim saatleri değişirse ücret de değişebilir.'**
+  String get howItWorksFaq2A;
+
+  /// No description provided for @howItWorksFaq3Q.
+  ///
+  /// In tr, this message translates to:
+  /// **'Lokasyon kapalıysa/doluysa ne yapmalıyım?'**
+  String get howItWorksFaq3Q;
+
+  /// No description provided for @howItWorksFaq3A.
+  ///
+  /// In tr, this message translates to:
+  /// **'Uygulama bunu açıkça gösterir. Farklı bir lokasyon seçebilir veya daha uygun bir saat için planlama yapabilirsin.'**
+  String get howItWorksFaq3A;
+
+  /// No description provided for @howItWorksFaq4Q.
+  ///
+  /// In tr, this message translates to:
+  /// **'Otelde ödeme seçersem kart ekranı açılır mı?'**
+  String get howItWorksFaq4Q;
+
+  /// No description provided for @howItWorksFaq4A.
+  ///
+  /// In tr, this message translates to:
+  /// **'Hayır. Otelde ödeme seçildiğinde kart ekranı açılmaz; ödeme otelde alınır. Ek komisyon ücrete yansıyabilir.'**
+  String get howItWorksFaq4A;
+
+  /// No description provided for @howItWorksFaq5Q.
+  ///
+  /// In tr, this message translates to:
+  /// **'Taksit nasıl işler?'**
+  String get howItWorksFaq5Q;
+
+  /// No description provided for @howItWorksFaq5A.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kredi kartı ile ödeme sırasında taksit seçilir. Seçilen vade farkı ücrete yansıyabilir ve toplam tutar buna göre hesaplanır.'**
+  String get howItWorksFaq5A;
+
+  /// No description provided for @howItWorksFaq6Q.
+  ///
+  /// In tr, this message translates to:
+  /// **'Premium koruma ne sağlar?'**
+  String get howItWorksFaq6Q;
+
+  /// No description provided for @howItWorksFaq6A.
+  ///
+  /// In tr, this message translates to:
+  /// **'Standart korumaya ek güvence sunar. Ek sigorta seçildiğinde ücret biraz artabilir; detaylar “Tahmini Ücret” kartında görünür.'**
+  String get howItWorksFaq6A;
+
+  /// No description provided for @howItWorksFaq7Q.
+  ///
+  /// In tr, this message translates to:
+  /// **'PIN’i kaybedersem ne olur?'**
+  String get howItWorksFaq7Q;
+
+  /// No description provided for @howItWorksFaq7A.
+  ///
+  /// In tr, this message translates to:
+  /// **'PIN, e‑posta ile yeniden gönderilebilir. Gerekirse profil/rezervasyon detaylarından tekrar görebilirsin. Destek ekibi de yardımcı olur.'**
+  String get howItWorksFaq7A;
+
+  /// No description provided for @howItWorksFaq8Q.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ödeme oldu ama uygulama güncellenmedi, ne yapmalıyım?'**
+  String get howItWorksFaq8Q;
+
+  /// No description provided for @howItWorksFaq8A.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bağlantını kontrol edip sayfayı yenile. Ödeme durumunu kontrol etmek için tekrar dene. Sorun sürerse destek ekibiyle iletişime geç.'**
+  String get howItWorksFaq8A;
 
   /// No description provided for @pickupPinTitle.
   ///
@@ -2522,11 +2864,53 @@ abstract class AppLocalizations {
   /// **'Yetkili kodu hatalı.'**
   String get delegateCodeInvalidMessage;
 
+  /// No description provided for @delegateCodeExpiredMessage.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yetkili kodunun süresi dolmuş.'**
+  String get delegateCodeExpiredMessage;
+
+  /// No description provided for @delegateCodeUsedMessage.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yetkili kodu daha önce kullanılmış.'**
+  String get delegateCodeUsedMessage;
+
   /// No description provided for @delegateSavedMessage.
   ///
   /// In tr, this message translates to:
   /// **'Yetkili kişi kaydedildi.'**
   String get delegateSavedMessage;
+
+  /// No description provided for @delegateEmergencyCodeTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Acil Durum Kodu'**
+  String get delegateEmergencyCodeTitle;
+
+  /// No description provided for @ownerInfoTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sahip Bilgileri'**
+  String get ownerInfoTitle;
+
+  /// No description provided for @ownerNameLabel.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ad Soyad'**
+  String get ownerNameLabel;
+
+  /// No description provided for @ownerPhoneLabel.
+  ///
+  /// In tr, this message translates to:
+  /// **'Telefon'**
+  String get ownerPhoneLabel;
+
+  /// No description provided for @ownerEmailLabel.
+  ///
+  /// In tr, this message translates to:
+  /// **'E-posta'**
+  String get ownerEmailLabel;
 
   /// No description provided for @pickupPinSafetyWarning.
   ///

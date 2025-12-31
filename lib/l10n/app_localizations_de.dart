@@ -458,6 +458,14 @@ class AppLocalizationsDe extends AppLocalizations {
       'Von Aparial und allgemeinen Transportunternehmen abgelehnte Gegenstände';
 
   @override
+  String get registerKvkkDocumentBody =>
+      'Information zur Verarbeitung personenbezogener Daten\nDieser Text erläutert, welche personenbezogenen Daten im Rahmen der KYRADI-Plattform nach dem türkischen Datenschutzgesetz Nr. 6698 (\"KVKK\") in welchem Umfang und zu welchen Zwecken verarbeitet werden.\n\nArten der verarbeiteten personenbezogenen Daten\nIm Rahmen von KYRADI werden folgende Datenkategorien verarbeitet:\nKundendaten:\nVor- und Nachname, Telefon, QR-Code-Token, Reservierungs- und Schließfachinformationen, Zahlungsbetrag und Transaktionsnummer\nMitarbeiterdaten:\nVor- und Nachname, E-Mail, Benutzerrolle, IP, Transaktionslogs, Sitzungsinformationen\nTechnische Daten:\nAudit-Log-Einträge, Browser-/Geräteinformationen, Fehlerberichte\n\nZwecke der Verarbeitung\nPersonenbezogene Daten werden verarbeitet, um den Reservierungsablauf bereitzustellen, QR-Codes zu erzeugen und zu verifizieren, Zahlungs-Intents zu verwalten, die Gepäckabgabe und -abholung durchzuführen, die Systemsicherheit zu gewährleisten und Missbrauch zu erkennen, gesetzliche Aufbewahrungspflichten zu erfüllen sowie für Reporting und Plattformverbesserungen.\n\nRechtsgrundlagen\nPersonenbezogene Daten werden gemäß KVKK Art. 5/2-c (Vertragsschluss und -erfüllung), Art. 5/2-f (berechtigtes Interesse), Art. 5/2-ç (gesetzliche Pflichten) sowie auf Basis ausdrücklicher Einwilligung verarbeitet, soweit erforderlich.\n\nEmpfänger der Datenübermittlung\nPersonenbezogene Daten können an Zahlungsdienstleister wie Stripe und Iyzico, Cloud-Anbieter wie AWS, Google Cloud, Render und Vercel, zuständige Behörden in zwingenden Fällen sowie an rechtliche oder finanzielle Berater übermittelt werden.\n\nAufbewahrungsfristen\nPersonenbezogene Daten werden für Reservierungs- und Zahlungsdaten 10 Jahre, für Audit-Logs 2 Jahre und für Benutzerkonten 1 Jahr nach Kontoschließung aufbewahrt; QR-Code-Tokens werden 1–24 Stunden gespeichert.\n\nSicherheitsmaßnahmen\nKYRADI setzt technische und organisatorische Sicherheitsmaßnahmen wie mandantenbasierte Datenisolierung, Passwort-Hashing, JWT-basierte Sicherheit, rollenbasierte Zugriffskontrolle, Rate Limiting und Angriffsprävention sowie Audit-Logs für kritische Vorgänge ein.\n\nRechte der betroffenen Person\nGemäß Art. 11 der KVKK haben betroffene Personen das Recht, Auskunft über die Verarbeitung zu erhalten, Löschung oder Berichtigung zu verlangen, der Verarbeitung zu widersprechen und bei Schadenersatzansprüchen geltend zu machen.\n\nAnträge können an kvkk@kyradi.com gesendet werden.';
+
+  @override
+  String get registerRestrictedDocumentBody =>
+      'Dieses Dokument fasst Gegenstände zusammen, die Aparial und allgemeine Transportunternehmen nicht zur Beförderung annehmen.\nAus Sicherheits-, gesetzlichen und betrieblichen Risikogründen werden die folgenden Gegenstände nicht angenommen:\n\nGefährliche und riskante Gegenstände\n- Explosivstoffe (Dynamit, Feuerwerk, Handgranaten usw.)\n- Entzündliche und brennbare Stoffe (Benzin, Verdünner, Farbe, Lösungsmittel usw.)\n- Druckgase (Propan, Butan, Sauerstoffflaschen usw.)\n- Giftige oder ätzende Chemikalien (Säure, Lauge, Bleichmittel usw.)\n- Radioaktive Stoffe\n- Entzündliche Flüssigkeiten oder Lösungsmittel mit gefährlichen Chemikalien\n- Jeglicher Stoff oder jedes Gerät mit Explosions- oder Brandrisiko\n\nWaffen und gefährliche Ausrüstung\n- Waffen, Munition und ähnliche Schusswaffen\n- Schneid- oder Stichwerkzeuge (Dolche, lange Messer, spitze Metallwerkzeuge usw.)\n\nGeräte und Druckprodukte\n- Geräte mit Gas oder Treibstoff (Campingkocher mit Brennstoff usw.)\n- Druckaerosoldosen (Sprays mit gefährlichem Gas)\n- Hochkapazitäts- oder Ersatz-Lithiumbatterien\n\nStörende oder sicherheitsrelevante Gegenstände\n- Stark riechende, rauchende oder störende Stoffe\n\nWertsachen\n- Schmuck (Gold, Edelsteine usw.) wird nicht angenommen.\n- Bargeld (unabhängig von der Höhe) wird nicht angenommen.\n\nHinweis:\nEinige Gegenstände können mit bestimmten Genehmigungen, Mengen oder Sicherheitsmaßnahmen transportiert werden. Im Allgemeinen werden solche Gegenstände jedoch sowohl von Aparial als auch von anderen Transportunternehmen abgelehnt.';
+
+  @override
   String get registerSuccessMessage =>
       'Registrierung erfolgreich ✅ Bestätigungs-E-Mail gesendet.';
 
@@ -1239,6 +1247,67 @@ class AppLocalizationsDe extends AppLocalizations {
   String get paymentMethodPayAtHotel => 'Im Hotel zahlen';
 
   @override
+  String get paymentHotelCommissionNote =>
+      'Eine Hotelprovision von 5 % wird hinzugefügt.';
+
+  @override
+  String get paymentStartAction => 'Zahlung starten';
+
+  @override
+  String get paymentRequiredBeforeDropMessage =>
+      'Ohne Zahlung kann die Abgabe nicht abgeschlossen werden.';
+
+  @override
+  String get paymentNotCompletedMessage =>
+      'Die Zahlung muss vor der Abgabe abgeschlossen sein.';
+
+  @override
+  String get paymentCompletedMessage =>
+      'Zahlung abgeschlossen. Du kannst das Gepäck abgeben.';
+
+  @override
+  String get paymentPageTitle => 'Zahlung';
+
+  @override
+  String get paymentPageSubtitle =>
+      'Gib deine Kartendaten ein, um die Zahlung abzuschließen.';
+
+  @override
+  String get paymentCardNumberLabel => 'Kartennummer';
+
+  @override
+  String get paymentCardNameLabel => 'Name auf der Karte';
+
+  @override
+  String get paymentExpiryLabel => 'Gültig bis';
+
+  @override
+  String get paymentCvcLabel => 'CVC';
+
+  @override
+  String get paymentCompleteAction => 'Zahlung abschließen';
+
+  @override
+  String get paymentFormIncompleteMessage =>
+      'Bitte alle Kartendaten ausfüllen.';
+
+  @override
+  String get paymentFailedMessage =>
+      'Zahlung konnte nicht abgeschlossen werden.';
+
+  @override
+  String get paymentPayAtHotelTitle => 'Im Hotel zahlen';
+
+  @override
+  String get paymentPayAtHotelBody =>
+      'Du kannst die Zahlung am ausgewählten Standort abschließen.';
+
+  @override
+  String paymentTotalLabel(Object amount) {
+    return 'Gesamt: $amount TRY';
+  }
+
+  @override
   String get installmentCountLabel => 'Anzahl der Raten';
 
   @override
@@ -1269,6 +1338,14 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get pricingEstimateUnavailable =>
       'Wähle Abgabe- und Abholzeit, um eine Schätzung zu sehen.';
+
+  @override
+  String get pickupPinSentMessage =>
+      'Die Abhol-PIN wurde an deine E-Mail gesendet.';
+
+  @override
+  String get pickupPinFailedMessage =>
+      'PIN konnte nicht gesendet werden. Bitte später erneut versuchen.';
 
   @override
   String get landingLocateSectionTitle => 'Finde die nächsten Punkte';
@@ -1326,7 +1403,135 @@ class AppLocalizationsDe extends AppLocalizations {
       'Nach dem Speichern kann dein Team den QR-Sticker drucken. Kund:innen müssen ihn beim Abgeben und Abholen scannen.';
 
   @override
-  String get luggageDelegateAction => 'Bevollmächtigte Person';
+  String get luggageDelegateAction => 'An Notfallkontakt übergeben';
+
+  @override
+  String get delegateInfoRequiredMessage =>
+      'Bitte die Daten der Notfallperson ausfüllen.';
+
+  @override
+  String get howItWorksTitle => 'So funktioniert’s';
+
+  @override
+  String get howItWorksIntro =>
+      'KYRADI is a self-drop, “no courier” luggage storage app. You take your luggage to a partner location, drop it off securely, and pick it up later with a PIN. The app guides you step by step with clear information throughout the process.';
+
+  @override
+  String get howItWorksStep1Title => '1) Location selection and availability';
+
+  @override
+  String get howItWorksStep1Body =>
+      'Locations have working hours, maximum capacity, and live occupancy. If a location is closed, full, or inactive, adding or dropping luggage is blocked. This helps you choose a truly available point.';
+
+  @override
+  String get howItWorksStep2Title => '2) Luggage details, time, and protection';
+
+  @override
+  String get howItWorksStep2Body =>
+      'Enter size (small/medium/large), drop and pickup times. These affect pricing. Choose “Standard protection” (default) or “Premium protection.” The estimate updates as you change your choices.';
+
+  @override
+  String get howItWorksStep3Title => '3) Estimated price card';
+
+  @override
+  String get howItWorksStep3Body =>
+      'The estimate is calculated by size, duration tier (0–6 hours, 6–24 hours, daily), protection, and payment method. It is a preview and may change based on actual drop-off time.';
+
+  @override
+  String get howItWorksStep4Title => '4) Reservation';
+
+  @override
+  String get howItWorksStep4Body =>
+      'You can create a reservation to plan ahead. However, the service is not activated until “Drop Luggage” is completed.';
+
+  @override
+  String get howItWorksStep5Title => '5) Go to the location and “Drop Luggage”';
+
+  @override
+  String get howItWorksStep5Body =>
+      '“Drop Luggage” is the main action that starts the drop-off. There is no courier; you bring the luggage yourself. QR verification and payment must be completed first. Important: Drop Luggage cannot be completed without payment.';
+
+  @override
+  String get howItWorksStep6Title => '6) Payment screen and methods';
+
+  @override
+  String get howItWorksStep6Body =>
+      'Three options are available: (1) Pay at hotel: payment is collected at the location, and a commission may apply. (2) Card payment: secure MagicPay checkout. (3) Installments: a fee may apply and is reflected in the total.';
+
+  @override
+  String get howItWorksStep7Title => '7) Payment success or failure';
+
+  @override
+  String get howItWorksStep7Body =>
+      'If payment succeeds, drop-off is completed and a PIN is generated. If it fails, the app shows a clear error and lets you retry; drop-off is not completed.';
+
+  @override
+  String get howItWorksStep8Title => '8) Pickup with PIN';
+
+  @override
+  String get howItWorksStep8Body =>
+      'After successful drop-off, a pickup PIN is generated. It is shown on screen and can also be emailed. Even if email fails, the process continues; the PIN is used for pickup verification.';
+
+  @override
+  String get howItWorksFaqTitle => 'Frequently Asked Questions';
+
+  @override
+  String get howItWorksFaq1Q => 'Why is payment required at drop-off?';
+
+  @override
+  String get howItWorksFaq1A =>
+      'Payment activates the service and keeps availability accurate. Drop-off cannot be completed without payment.';
+
+  @override
+  String get howItWorksFaq2Q => 'Why can the estimate change?';
+
+  @override
+  String get howItWorksFaq2A =>
+      'Estimates are based on size, duration, and times. Actual drop/pickup times can change the price.';
+
+  @override
+  String get howItWorksFaq3Q => 'What if a location is closed or full?';
+
+  @override
+  String get howItWorksFaq3A =>
+      'The app will show this clearly. Choose another location or a different time.';
+
+  @override
+  String get howItWorksFaq4Q =>
+      'If I choose pay at hotel, will a card screen open?';
+
+  @override
+  String get howItWorksFaq4A =>
+      'No. Payment is collected at the location. A commission may be reflected in the total.';
+
+  @override
+  String get howItWorksFaq5Q => 'How do installments work?';
+
+  @override
+  String get howItWorksFaq5A =>
+      'Select installments during card payment. Any installment fee is reflected in the total.';
+
+  @override
+  String get howItWorksFaq6Q => 'What does premium protection provide?';
+
+  @override
+  String get howItWorksFaq6A =>
+      'It adds extra coverage beyond standard protection. The estimate card shows the fee.';
+
+  @override
+  String get howItWorksFaq7Q => 'What if I lose my PIN?';
+
+  @override
+  String get howItWorksFaq7A =>
+      'You can resend it by email and view it in your profile or reservation details. Support can help if needed.';
+
+  @override
+  String get howItWorksFaq8Q =>
+      'Payment succeeded but the app didn’t update. What should I do?';
+
+  @override
+  String get howItWorksFaq8A =>
+      'Check your connection and refresh. Try again to confirm status. If the issue persists, contact support.';
 
   @override
   String get pickupPinTitle => 'Abhol-PIN';
@@ -1384,7 +1589,30 @@ class AppLocalizationsDe extends AppLocalizations {
       'Bevollmächtigten-Code ist ungültig.';
 
   @override
+  String get delegateCodeExpiredMessage =>
+      'Bevollmächtigten-Code ist abgelaufen.';
+
+  @override
+  String get delegateCodeUsedMessage =>
+      'Bevollmächtigten-Code wurde bereits verwendet.';
+
+  @override
   String get delegateSavedMessage => 'Bevollmächtigte Person gespeichert.';
+
+  @override
+  String get delegateEmergencyCodeTitle => 'Notfallcode';
+
+  @override
+  String get ownerInfoTitle => 'Besitzerinfo';
+
+  @override
+  String get ownerNameLabel => 'Name';
+
+  @override
+  String get ownerPhoneLabel => 'Telefon';
+
+  @override
+  String get ownerEmailLabel => 'E-Mail';
 
   @override
   String get pickupPinSafetyWarning =>

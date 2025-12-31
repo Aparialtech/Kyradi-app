@@ -19,6 +19,7 @@ import '../models/luggage.dart';
 import '../models/user.dart';
 import '../models/pricing_models.dart';
 import 'change_password_page.dart';
+import 'payment_page.dart';
 import '../services/api_service.dart';
 import '../services/luggage_service.dart';
 import '../services/locations_service.dart';
@@ -816,11 +817,19 @@ class _HomePageState extends State<HomePage> {
                 onPressed: () => _showQrDialog(luggage),
               ),
                 if (luggage.status == LuggageStatus.awaitingDrop)
-                  _ActionFilledButton(
-                    icon: Icons.inventory_2_outlined,
-                    label: loc.luggageDropAction,
-                    onPressed: () => _handleLuggageAction(luggage, _QrAction.drop),
-                  )
+                  if (luggage.isPaymentPaid)
+                    _ActionFilledButton(
+                      icon: Icons.inventory_2_outlined,
+                      label: loc.luggageDropAction,
+                      onPressed: () =>
+                          _handleLuggageAction(luggage, _QrAction.drop),
+                    )
+                  else
+                    _ActionFilledButton(
+                      icon: Icons.payments_outlined,
+                      label: loc.paymentStartAction,
+                      onPressed: () => _startPaymentFlow(luggage),
+                    )
                 else if (luggage.status == LuggageStatus.dropped)
                   _ActionFilledButton(
                     icon: Icons.check_circle_outline,
@@ -831,7 +840,7 @@ class _HomePageState extends State<HomePage> {
                   _ActionTextButton(
                     icon: Icons.person_outline,
                     label: loc.luggageDelegateAction,
-                    onPressed: () => _openDelegateDialog(luggage),
+                    onPressed: () => _handleDelegateDelivery(luggage),
                   ),
                 if (luggage.isAwaitingDrop && !luggage.isCancelled)
                   _ActionTextButton(
@@ -886,6 +895,10 @@ class _HomePageState extends State<HomePage> {
           userId: _userId!,
           qrGenerator: _generateQrCode,
           pickupPinGenerator: _generatePickupPin,
+          ownerName:
+              '${_currentUser?.name ?? ''} ${_currentUser?.surname ?? ''}'.trim(),
+          ownerPhone: _currentUser?.phone,
+          ownerEmail: _currentUser?.email,
         ),
       ),
     );
@@ -938,14 +951,21 @@ class _HomePageState extends State<HomePage> {
 
   Future<String?> _requestPickupCredential(LuggageModel luggage) async {
     final loc = AppLocalizations.of(context)!;
-    final isDelegate = luggage.isDelegateActive;
+    return _requestPickupCredentialWithMode(
+      luggage,
+      useDelegate: luggage.isDelegateActive,
+    );
+  }
+
+  Future<String?> _requestPickupCredentialWithMode(
+    LuggageModel luggage, {
+    required bool useDelegate,
+  }) async {
+    final loc = AppLocalizations.of(context)!;
     final controller = TextEditingController();
-    final title =
-        isDelegate ? loc.delegateCodeTitle : loc.pickupPinTitle;
-    final label =
-        isDelegate ? loc.delegateCodeLabel : loc.pickupPinLabel;
-    final hint =
-        isDelegate ? loc.delegateCodeHint : loc.pickupPinHint;
+    final title = useDelegate ? loc.delegateCodeTitle : loc.pickupPinTitle;
+    final label = useDelegate ? loc.delegateCodeLabel : loc.pickupPinLabel;
+    final hint = useDelegate ? loc.delegateCodeHint : loc.pickupPinHint;
 
     final result = await showDialog<String>(
       context: context,
@@ -979,11 +999,21 @@ class _HomePageState extends State<HomePage> {
 
   Future<void> _handleLuggageAction(
     LuggageModel luggage,
-    _QrAction action,
+    _QrAction action, {
+    bool forcePin = false,
+  }
   ) async {
     if (_userId == null) {
       final loc = AppLocalizations.of(context)!;
       _snack(loc.loginRequired, type: AppNotificationType.warning);
+      return;
+    }
+    if (action == _QrAction.drop && !luggage.isPaymentPaid) {
+      final loc = AppLocalizations.of(context)!;
+      _snack(
+        loc.paymentRequiredBeforeDropMessage,
+        type: AppNotificationType.warning,
+      );
       return;
     }
 
@@ -996,9 +1026,13 @@ class _HomePageState extends State<HomePage> {
     String? pickupPin;
     String? delegateCode;
     if (action == _QrAction.pickup) {
-      final credential = await _requestPickupCredential(luggage);
+      final useDelegate = !forcePin && luggage.isDelegateActive;
+      final credential = await _requestPickupCredentialWithMode(
+        luggage,
+        useDelegate: useDelegate,
+      );
       if (credential == null || credential.isEmpty) return;
-      if (luggage.isDelegateActive) {
+      if (useDelegate) {
         delegateCode = credential;
       } else {
         pickupPin = credential;
@@ -1039,10 +1073,11 @@ class _HomePageState extends State<HomePage> {
             (result['error'] ?? result['message'] ?? '').toString().trim();
         final message = switch (rawMessage) {
           'PICKUP_PIN_REQUIRED' => loc.pickupPinRequiredMessage,
-          'PICKUP_CREDENTIAL_REQUIRED' => loc.pickupPinRequiredMessage,
           'PICKUP_PIN_INVALID' => loc.pickupPinInvalidMessage,
           'DELEGATE_CODE_REQUIRED' => loc.delegateCodeRequiredMessage,
           'DELEGATE_CODE_INVALID' => loc.delegateCodeInvalidMessage,
+          'DELEGATE_CODE_EXPIRED' => loc.delegateCodeExpiredMessage,
+          'DELEGATE_ALREADY_USED' => loc.delegateCodeUsedMessage,
           _ => rawMessage,
         };
         _snack(
@@ -1058,16 +1093,111 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
+  Future<void> _startPaymentFlow(LuggageModel luggage) async {
+    if (_userId == null) {
+      final loc = AppLocalizations.of(context)!;
+      _snack(loc.loginRequired, type: AppNotificationType.warning);
+      return;
+    }
+    final loc = AppLocalizations.of(context)!;
+    final method = (luggage.paymentMethod ?? 'card').trim();
+    try {
+      final checkoutResult = await ApiService.startPaymentCheckout(
+        reservationId: luggage.id,
+        paymentMethod: method.isEmpty ? 'card' : method,
+      );
+      if (checkoutResult['ok'] != true) {
+        final message =
+            (checkoutResult['error'] ?? checkoutResult['message'] ?? '')
+                .toString()
+                .trim();
+        _snack(
+          message.isNotEmpty ? message : loc.operationFailed,
+          type: AppNotificationType.error,
+        );
+        return;
+      }
+      final updated = luggage.copyWith(
+        paymentStatus: checkoutResult['paymentStatus']?.toString(),
+        providerPaymentId: checkoutResult['providerPaymentId']?.toString(),
+        checkoutUrl: checkoutResult['checkoutUrl']?.toString(),
+      );
+      if (!mounted) return;
+      setState(() => _replaceLuggage(updated));
+
+      final result = await Navigator.of(context).push<Map<String, dynamic>>(
+        MaterialPageRoute(
+          builder: (_) => PaymentPage(
+            reservationId: luggage.id,
+            paymentMethod: method.isEmpty ? 'card' : method,
+            totalPrice: updated.totalPrice ?? 0,
+            sizeLabel: luggage.size ?? 'Orta',
+            dropAt: luggage.scheduledDropTime,
+            pickupAt: luggage.scheduledPickupTime,
+            locationId: luggage.dropLocationId,
+          ),
+        ),
+      );
+      if (result?['paymentMethod'] != null) {
+        final next = updated.copyWith(
+          paymentMethod: result?['paymentMethod']?.toString(),
+        );
+        if (!mounted) return;
+        setState(() => _replaceLuggage(next));
+      }
+      if (result?['completed'] != true) {
+        _snack(
+          loc.paymentNotCompletedMessage,
+          type: AppNotificationType.warning,
+        );
+      }
+
+      final statusResult = await ApiService.getPaymentStatus(luggage.id);
+      final paymentStatus = statusResult['paymentStatus']?.toString() ?? '';
+      final refreshed = updated.copyWith(
+        paymentStatus: paymentStatus,
+        totalPrice: statusResult['totalPrice'] is num
+            ? (statusResult['totalPrice'] as num).round()
+            : updated.totalPrice,
+        transactionId: statusResult['transactionId']?.toString(),
+        paidAt: statusResult['paidAt'] != null
+            ? DateTime.tryParse(statusResult['paidAt'].toString())
+            : updated.paidAt,
+      );
+      if (!mounted) return;
+      setState(() => _replaceLuggage(refreshed));
+
+      if (paymentStatus == paymentStatusPaid) {
+        _snack(loc.paymentCompletedMessage, type: AppNotificationType.success);
+      } else {
+        _snack(
+          loc.paymentNotCompletedMessage,
+          type: AppNotificationType.warning,
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
+      _snack(
+        loc.operationFailedWithDetails('$e'),
+        type: AppNotificationType.error,
+      );
+    }
+  }
+
   Future<void> _openDelegateDialog(LuggageModel luggage) async {
     final loc = AppLocalizations.of(context)!;
+    final emergency = _currentUser?.emergencyContact;
+    final initialName = emergency?.fullName ?? luggage.pickupDelegate?.fullName ?? '';
+    final initialPhone = emergency?.phone ?? luggage.pickupDelegate?.phone ?? '';
+    final initialEmail = emergency?.email ?? luggage.pickupDelegate?.email ?? '';
     final nameCtrl = TextEditingController(
-      text: luggage.pickupDelegate?.fullName ?? '',
+      text: initialName,
     );
     final phoneCtrl = TextEditingController(
-      text: luggage.pickupDelegate?.phone ?? '',
+      text: initialPhone,
     );
     final emailCtrl = TextEditingController(
-      text: luggage.pickupDelegate?.email ?? '',
+      text: initialEmail,
     );
 
     final result = await showDialog<bool>(
@@ -1132,11 +1262,16 @@ class _HomePageState extends State<HomePage> {
         await showDialog<void>(
           context: context,
           builder: (ctx) => AlertDialog(
-            title: Text(loc.delegateCodeTitle),
-            content: SelectableText(
-              loc.delegateCodeGenerated(delegateCode),
-            ),
+            title: Text(loc.delegateEmergencyCodeTitle),
+            content: SelectableText(delegateCode),
             actions: [
+              TextButton(
+                onPressed: () {
+                  Clipboard.setData(ClipboardData(text: delegateCode));
+                  Navigator.pop(ctx);
+                },
+                child: Text(loc.copy),
+              ),
               TextButton(
                 onPressed: () => Navigator.pop(ctx),
                 child: Text(loc.dialogDismiss),
@@ -1152,6 +1287,44 @@ class _HomePageState extends State<HomePage> {
       _snack(loc.genericErrorWithDetails('$e'),
           type: AppNotificationType.error);
     }
+  }
+
+  bool _hasDelegateInfo(LuggageModel luggage) {
+    final delegate = luggage.pickupDelegate;
+    if (delegate != null) {
+      final filled = (delegate.fullName?.trim().isNotEmpty == true) &&
+          (delegate.phone?.trim().isNotEmpty == true) &&
+          (delegate.email?.trim().isNotEmpty == true);
+      if (filled) return true;
+    }
+    final emergency = _currentUser?.emergencyContact;
+    if (emergency == null) return false;
+    return emergency.fullName.trim().isNotEmpty &&
+        emergency.phone.trim().isNotEmpty &&
+        emergency.email.trim().isNotEmpty;
+  }
+
+  Future<void> _handleDelegateDelivery(LuggageModel luggage) async {
+    final loc = AppLocalizations.of(context)!;
+    if (!_hasDelegateInfo(luggage)) {
+      _snack(loc.delegateInfoRequiredMessage, type: AppNotificationType.warning);
+      await _openDelegateDialog(luggage);
+      return;
+    }
+    if (luggage.pickupDelegate == null ||
+        (luggage.pickupDelegate?.fullName ?? '').trim().isEmpty) {
+      final emergency = _currentUser?.emergencyContact;
+      if (emergency != null && _userId != null) {
+        await ApiService.updateLuggageMetadata(_userId!, luggage.id, {
+          'pickupDelegateFullName': emergency.fullName,
+          'pickupDelegatePhone': emergency.phone,
+          'pickupDelegateEmail': emergency.email,
+        });
+        if (!mounted) return;
+        await _loadUserLuggages(_userId!);
+      }
+    }
+    await _handleLuggageAction(luggage, _QrAction.pickup, forcePin: true);
   }
 
   Future<void> _cancelReservation(LuggageModel luggage) async {
@@ -2047,6 +2220,21 @@ class _HomePageState extends State<HomePage> {
                           labelStyle: Theme.of(context).textTheme.labelMedium?.copyWith(
                                 color: const Color(0xFF4B2400),
                               ),
+                        ),
+                      ),
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: TextButton.icon(
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => const HowItWorksPage(),
+                              ),
+                            );
+                          },
+                          icon: const Icon(Icons.info_outline),
+                          label: Text(loc.howItWorksTitle),
                         ),
                       ),
                       const SizedBox(height: 16),
@@ -3108,6 +3296,36 @@ class QrPreviewPage extends StatelessWidget {
                 Text(loc.noteLabel(luggage.note ?? ''),
                     style: theme.textTheme.bodySmall),
               ],
+              if ((luggage.ownerName ?? '').isNotEmpty ||
+                  (luggage.ownerPhone ?? '').isNotEmpty ||
+                  (luggage.ownerEmail ?? '').isNotEmpty) ...[
+                const SizedBox(height: 12),
+                SectionCard(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      if ((luggage.ownerName ?? '').isNotEmpty)
+                        Text(
+                          '${loc.ownerNameLabel}: ${luggage.ownerName}',
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      if ((luggage.ownerPhone ?? '').isNotEmpty)
+                        Text(
+                          '${loc.ownerPhoneLabel}: ${luggage.ownerPhone}',
+                          style: theme.textTheme.bodyMedium,
+                        ),
+                      if ((luggage.ownerEmail ?? '').isNotEmpty)
+                        Text(
+                          '${loc.ownerEmailLabel}: ${luggage.ownerEmail}',
+                          style: theme.textTheme.bodyMedium,
+                        ),
+                    ],
+                  ),
+                ),
+              ],
               if ((pickupPin ?? '').isNotEmpty) ...[
                 const SizedBox(height: 20),
                 SectionCard(
@@ -3229,10 +3447,16 @@ class AddLuggagePage extends StatefulWidget {
   final String userId;
   final String Function() qrGenerator;
   final String Function() pickupPinGenerator;
+  final String? ownerName;
+  final String? ownerPhone;
+  final String? ownerEmail;
   const AddLuggagePage({
     required this.userId,
     required this.qrGenerator,
     required this.pickupPinGenerator,
+    this.ownerName,
+    this.ownerPhone,
+    this.ownerEmail,
     super.key,
   });
 
@@ -3558,11 +3782,16 @@ class _AddLuggagePageState extends State<AddLuggagePage> {
         'size': _size,
         'color': _color,
         'note': _noteCtrl.text.trim(),
+        'ownerName': widget.ownerName ?? '',
+        'ownerPhone': widget.ownerPhone ?? '',
+        'ownerEmail': widget.ownerEmail ?? '',
         'status': luggageStatusAwaitingDrop,
         'dropLocationId': _selectedLocation.id,
         'dropLocationName': _selectedLocation.name,
         'scheduledDropTime': _dropTime?.toIso8601String(),
         'scheduledPickupTime': _pickupTime?.toIso8601String(),
+        'paymentMethod': _paymentMethod,
+        'totalPrice': _pricingEstimate?.total,
       };
 
       final result = await ApiService.createLuggage(widget.userId, payload);
@@ -3571,61 +3800,31 @@ class _AddLuggagePageState extends State<AddLuggagePage> {
         final luggage = LuggageModel.fromJson(
           Map<String, dynamic>.from(result['luggage'] as Map),
         );
-        final pickupPin = (result['pickupPin'] ?? '').toString().trim();
-        final effectivePin = pickupPin.isNotEmpty ? pickupPin : _pickupPin;
+        final effectivePin = _pickupPin;
+        bool pinNoticeShown = false;
+        if (result.containsKey('pinSent') && mounted) {
+          final pinSent = result['pinSent'] == true;
+          AppNotification.show(
+            context,
+            message:
+                pinSent ? loc.pickupPinSentMessage : loc.pickupPinFailedMessage,
+            type: pinSent ? AppNotificationType.success : AppNotificationType.warning,
+          );
+          pinNoticeShown = true;
+        }
         if (effectivePin.isNotEmpty && mounted) {
           final id = luggage.id?.toString();
-if (id == null || id.isEmpty) {
-  if (mounted) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Valiz ID bulunamadı, PIN kaydedilemedi.')),
-    );
-  }
-  return;
-}
-await _storePickupPin(id, effectivePin);
-
-          await showDialog<void>(
-            context: context,
-            builder: (ctx) => AlertDialog(
-              title: Text(loc.pickupPinTitle),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  SelectableText(
-                    loc.pickupPinGenerated(effectivePin),
-                  ),
-                  const SizedBox(height: 12),
-                  Text(
-                    loc.pickupPinSafetyWarning,
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: Theme.of(context)
-                              .colorScheme
-                              .onSurfaceVariant,
-                        ),
-                  ),
-                ],
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () {
-                    Clipboard.setData(ClipboardData(text: effectivePin));
-                    AppNotification.show(
-                      context,
-                      message: loc.pickupPinCopiedMessage,
-                      type: AppNotificationType.success,
-                    );
-                  },
-                  child: Text(loc.copy),
+          if (id == null || id.isEmpty) {
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Valiz ID bulunamadı, PIN kaydedilemedi.'),
                 ),
-                TextButton(
-                  onPressed: () => Navigator.pop(ctx),
-                  child: Text(loc.dialogDismiss),
-                ),
-              ],
-            ),
-          );
+              );
+            }
+            return;
+          }
+          await _storePickupPin(id, effectivePin);
         }
         final enriched = luggage.copyWith(
           qrCode: _qrCode,
@@ -3636,6 +3835,10 @@ await _storePickupPin(id, effectivePin);
               ? luggage.dropLocationName
               : _selectedLocation.name,
         );
+        if (pinNoticeShown) {
+          await Future.delayed(const Duration(seconds: 2));
+          if (!mounted) return;
+        }
         Navigator.pop(context, enriched);
       } else {
         final message =
@@ -3756,115 +3959,43 @@ await _storePickupPin(id, effectivePin);
                 ),
               ),
               const SizedBox(height: 16),
+              if ((widget.ownerName ?? '').isNotEmpty ||
+                  (widget.ownerPhone ?? '').isNotEmpty ||
+                  (widget.ownerEmail ?? '').isNotEmpty) ...[
+                Card(
+                  child: Padding(
+                    padding: const EdgeInsets.all(12),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        if ((widget.ownerName ?? '').isNotEmpty)
+                          Text(
+                            '${loc.ownerNameLabel}: ${widget.ownerName}',
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        if ((widget.ownerPhone ?? '').isNotEmpty)
+                          Text(
+                            '${loc.ownerPhoneLabel}: ${widget.ownerPhone}',
+                            style: theme.textTheme.bodyMedium,
+                          ),
+                        if ((widget.ownerEmail ?? '').isNotEmpty)
+                          Text(
+                            '${loc.ownerEmailLabel}: ${widget.ownerEmail}',
+                            style: theme.textTheme.bodyMedium,
+                          ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+              ],
               TextField(
                 controller: _labelCtrl,
                 decoration: InputDecoration(
                   labelText: loc.luggageNameHint,
                   prefixIcon: const Icon(Icons.badge_outlined),
-                ),
-              ),
-              const SizedBox(height: 12),
-              Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(12),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        loc.pricingEstimateTitle,
-                        style: theme.textTheme.titleSmall?.copyWith(
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      if (blockReason != null)
-                        Row(
-                          children: [
-                            Icon(
-                              Icons.warning_amber_outlined,
-                              color: theme.colorScheme.error,
-                              size: 18,
-                            ),
-                            const SizedBox(width: 6),
-                            Expanded(
-                              child: Text(
-                                blockReason,
-                                style: theme.textTheme.bodySmall?.copyWith(
-                                  color: theme.colorScheme.error,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      if (_pricingLoading)
-                        Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                          child: Row(
-                            children: [
-                              const SizedBox(
-                                width: 18,
-                                height: 18,
-                                child: CircularProgressIndicator(strokeWidth: 2),
-                              ),
-                              const SizedBox(width: 8),
-                              Text(
-                                loc.pricingEstimateLoading,
-                                style: theme.textTheme.bodySmall,
-                              ),
-                            ],
-                          ),
-                        )
-                      else if (_pricingEstimate != null)
-                        Column(
-                          children: [
-                            _buildPricingRow(
-                              loc.pricingBasePriceLabel,
-                              _formatPrice(_breakdownValue('basePrice')),
-                              theme,
-                            ),
-                            _buildPricingRow(
-                              loc.pricingPremiumFeeLabel,
-                              _formatPrice(_breakdownValue('premiumProtectionFee')),
-                              theme,
-                            ),
-                            _buildPricingRow(
-                              loc.pricingHotelCommissionLabel,
-                              _formatPrice(_breakdownValue('hotelCommissionFee')),
-                              theme,
-                            ),
-                            _buildPricingRow(
-                              loc.pricingInstallmentFeeLabel,
-                              _formatPrice(_breakdownValue('installmentFee')),
-                              theme,
-                            ),
-                            const Divider(height: 20),
-                            _buildPricingRow(
-                              loc.pricingTotalLabel,
-                              _formatPrice(_pricingEstimate!.total),
-                              theme,
-                              emphasized: true,
-                            ),
-                          ],
-                        )
-                      else
-                        Text(
-                          _pricingError ?? loc.pricingEstimateUnavailable,
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: _pricingError != null
-                                ? theme.colorScheme.error
-                                : theme.colorScheme.onSurfaceVariant,
-                          ),
-                        ),
-                      const SizedBox(height: 8),
-                      Text(
-                        loc.pricingEstimateDisclaimer,
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: theme.colorScheme.onSurfaceVariant,
-                        ),
-                      ),
-                    ],
-                  ),
                 ),
               ),
               const SizedBox(height: 12),
@@ -4022,6 +4153,16 @@ await _storePickupPin(id, effectivePin);
                             },
                       title: Text(loc.paymentMethodPayAtHotel),
                     ),
+                    if (_paymentMethod == 'pay_at_hotel')
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(56, 0, 16, 12),
+                        child: Text(
+                          loc.paymentHotelCommissionNote,
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                      ),
                   ],
                 ),
               ),
@@ -4262,6 +4403,115 @@ await _storePickupPin(id, effectivePin);
                   prefixIcon: const Icon(Icons.sticky_note_2_outlined),
                 ),
               ),
+              const SizedBox(height: 12),
+              Text(
+                loc.luggageRegistrationNote,
+                style: theme.textTheme.bodySmall,
+              ),
+              const SizedBox(height: 12),
+              Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        loc.pricingEstimateTitle,
+                        style: theme.textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      if (blockReason != null)
+                        Row(
+                          children: [
+                            Icon(
+                              Icons.warning_amber_outlined,
+                              color: theme.colorScheme.error,
+                              size: 18,
+                            ),
+                            const SizedBox(width: 6),
+                            Expanded(
+                              child: Text(
+                                blockReason,
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                  color: theme.colorScheme.error,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      if (_pricingLoading)
+                        Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          child: Row(
+                            children: [
+                              const SizedBox(
+                                width: 18,
+                                height: 18,
+                                child: CircularProgressIndicator(strokeWidth: 2),
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                loc.pricingEstimateLoading,
+                                style: theme.textTheme.bodySmall,
+                              ),
+                            ],
+                          ),
+                        )
+                      else if (_pricingEstimate != null)
+                        Column(
+                          children: [
+                            _buildPricingRow(
+                              loc.pricingBasePriceLabel,
+                              _formatPrice(_breakdownValue('basePrice')),
+                              theme,
+                            ),
+                            _buildPricingRow(
+                              loc.pricingPremiumFeeLabel,
+                              _formatPrice(_breakdownValue('premiumProtectionFee')),
+                              theme,
+                            ),
+                            _buildPricingRow(
+                              loc.pricingHotelCommissionLabel,
+                              _formatPrice(_breakdownValue('hotelCommissionFee')),
+                              theme,
+                            ),
+                            _buildPricingRow(
+                              loc.pricingInstallmentFeeLabel,
+                              _formatPrice(_breakdownValue('installmentFee')),
+                              theme,
+                            ),
+                            const Divider(height: 20),
+                            _buildPricingRow(
+                              loc.pricingTotalLabel,
+                              _formatPrice(_pricingEstimate!.total),
+                              theme,
+                              emphasized: true,
+                            ),
+                          ],
+                        )
+                      else
+                        Text(
+                          _pricingError ?? loc.pricingEstimateUnavailable,
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: _pricingError != null
+                                ? theme.colorScheme.error
+                                : theme.colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                      const SizedBox(height: 8),
+                      Text(
+                        loc.pricingEstimateDisclaimer,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
               const SizedBox(height: 20),
               FilledButton.icon(
                 onPressed: _saving || blockReason != null || _loadingLocations ? null : _submit,
@@ -4273,11 +4523,6 @@ await _storePickupPin(id, effectivePin);
                       )
                     : const Icon(Icons.save_alt),
                 label: Text(_saving ? loc.savingInProgress : loc.save),
-              ),
-              const SizedBox(height: 12),
-              Text(
-                loc.luggageRegistrationNote,
-                style: theme.textTheme.bodySmall,
               ),
             ],
           ),
@@ -4444,6 +4689,112 @@ class _QrScanPageState extends State<_QrScanPage> {
         onPressed: () => Navigator.of(context).pop(),
         label: Text(loc.dialogDismiss),
         icon: const Icon(Icons.close),
+      ),
+    );
+  }
+}
+
+class HowItWorksPage extends StatelessWidget {
+  const HowItWorksPage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final loc = AppLocalizations.of(context)!;
+    final steps = [
+      [loc.howItWorksStep1Title, loc.howItWorksStep1Body],
+      [loc.howItWorksStep2Title, loc.howItWorksStep2Body],
+      [loc.howItWorksStep3Title, loc.howItWorksStep3Body],
+      [loc.howItWorksStep4Title, loc.howItWorksStep4Body],
+      [loc.howItWorksStep5Title, loc.howItWorksStep5Body],
+      [loc.howItWorksStep6Title, loc.howItWorksStep6Body],
+      [loc.howItWorksStep7Title, loc.howItWorksStep7Body],
+      [loc.howItWorksStep8Title, loc.howItWorksStep8Body],
+    ];
+    final faqs = [
+      [loc.howItWorksFaq1Q, loc.howItWorksFaq1A],
+      [loc.howItWorksFaq2Q, loc.howItWorksFaq2A],
+      [loc.howItWorksFaq3Q, loc.howItWorksFaq3A],
+      [loc.howItWorksFaq4Q, loc.howItWorksFaq4A],
+      [loc.howItWorksFaq5Q, loc.howItWorksFaq5A],
+      [loc.howItWorksFaq6Q, loc.howItWorksFaq6A],
+      [loc.howItWorksFaq7Q, loc.howItWorksFaq7A],
+      [loc.howItWorksFaq8Q, loc.howItWorksFaq8A],
+    ];
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(loc.howItWorksTitle),
+      ),
+      body: ListView(
+        padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
+        children: [
+          Text(
+            loc.howItWorksTitle,
+            style: theme.textTheme.titleLarge?.copyWith(
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            loc.howItWorksIntro,
+            style: theme.textTheme.bodyMedium,
+          ),
+          const SizedBox(height: 16),
+          ...steps.map(
+            (step) => Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: SectionCard(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      step[0],
+                      style: theme.textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      step[1],
+                      style: theme.textTheme.bodyMedium,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            loc.howItWorksFaqTitle,
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          const SizedBox(height: 8),
+          ...faqs.map(
+            (item) => Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: SectionCard(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      item[0],
+                      style: theme.textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      item[1],
+                      style: theme.textTheme.bodyMedium,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

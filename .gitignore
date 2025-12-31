@@ -50,3 +50,7 @@ app.*.map.json
 backend.zip
 backend/uploads/
 untranslated.txt
+# Flutter / iOS generated duplicates (with numbers)
+.flutter-plugins-dependencies*
+ios/Flutter/Generated*.xcconfig
+ios/Flutter/flutter_export_environment*.sh

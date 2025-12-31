@@ -507,6 +507,13 @@ class MockServer {
       'pickupConfirmedAt': null,
       'scheduledDropTime': payload['scheduledDropTime'],
       'scheduledPickupTime': payload['scheduledPickupTime'],
+      'paymentMethod': payload['paymentMethod'],
+      'paymentStatus': payload['paymentStatus'] ?? 'unpaid',
+      'totalPrice': payload['totalPrice'],
+      'providerPaymentId': null,
+      'checkoutUrl': null,
+      'transactionId': null,
+      'paidAt': null,
     };
 
     luggages.add(newLuggage);
@@ -604,6 +611,125 @@ class MockServer {
       'statusCode': 200,
       'luggage': _exposeLuggage(luggage),
       'message': 'Demo ortamında bavul bilgileri güncellendi',
+    };
+  }
+
+  static Future<Map<String, dynamic>> startPaymentCheckout({
+    required String reservationId,
+    required String paymentMethod,
+    int? installmentCount,
+  }) async {
+    final state = await _loadState();
+    final users = (state['users'] as List).cast<Map<String, dynamic>>();
+    Map<String, dynamic>? target;
+    for (final user in users) {
+      final luggages = _ensureLuggageList(user);
+      final found =
+          luggages.firstWhere((l) => l['id'] == reservationId, orElse: () => {});
+      if (found.isNotEmpty) {
+        target = found;
+        break;
+      }
+    }
+    if (target == null) {
+      return {
+        'ok': false,
+        'statusCode': 404,
+        'error': 'Demo: Rezervasyon bulunamadı',
+      };
+    }
+    final providerPaymentId = 'MP-DEMO-${DateTime.now().millisecondsSinceEpoch}';
+    target['paymentMethod'] = paymentMethod;
+    if (paymentMethod == 'pay_at_hotel') {
+      target['paymentStatus'] = 'unpaid';
+      target['checkoutUrl'] = null;
+    } else {
+      target['paymentStatus'] = 'pending';
+      target['providerPaymentId'] = providerPaymentId;
+      target['checkoutUrl'] = 'https://example.com/checkout/$providerPaymentId';
+    }
+    await _saveState(state);
+    return {
+      'ok': true,
+      'statusCode': 200,
+      'checkoutUrl': target['checkoutUrl'],
+      'providerPaymentId': target['providerPaymentId'],
+      'paymentStatus': target['paymentStatus'],
+      'installmentCount': installmentCount,
+    };
+  }
+
+  static Future<Map<String, dynamic>> getPaymentStatus(String reservationId) async {
+    final state = await _loadState();
+    final users = (state['users'] as List).cast<Map<String, dynamic>>();
+    Map<String, dynamic>? target;
+    for (final user in users) {
+      final luggages = _ensureLuggageList(user);
+      final found =
+          luggages.firstWhere((l) => l['id'] == reservationId, orElse: () => {});
+      if (found.isNotEmpty) {
+        target = found;
+        break;
+      }
+    }
+    if (target == null) {
+      return {
+        'ok': false,
+        'statusCode': 404,
+        'error': 'Demo: Rezervasyon bulunamadı',
+      };
+    }
+    return {
+      'ok': true,
+      'statusCode': 200,
+      'paymentStatus': target['paymentStatus'] ?? 'unpaid',
+      'totalPrice': target['totalPrice'] ?? 0,
+      'transactionId': target['transactionId'],
+      'paidAt': target['paidAt'],
+    };
+  }
+
+  static Future<Map<String, dynamic>> sendPaymentWebhook({
+    required String providerPaymentId,
+    required String status,
+    String? transactionId,
+  }) async {
+    final state = await _loadState();
+    final users = (state['users'] as List).cast<Map<String, dynamic>>();
+    Map<String, dynamic>? target;
+    for (final user in users) {
+      final luggages = _ensureLuggageList(user);
+      final found = luggages.firstWhere(
+        (l) => (l['providerPaymentId'] ?? '').toString() == providerPaymentId,
+        orElse: () => {},
+      );
+      if (found.isNotEmpty) {
+        target = found;
+        break;
+      }
+    }
+    if (target == null) {
+      return {
+        'ok': false,
+        'statusCode': 404,
+        'error': 'Demo: Ödeme bulunamadı',
+      };
+    }
+    if (status == 'success' || status == 'paid') {
+      target['paymentStatus'] = 'paid';
+      target['transactionId'] =
+          transactionId ?? 'TX-${DateTime.now().millisecondsSinceEpoch}';
+      target['paidAt'] = DateTime.now().toIso8601String();
+    } else if (status == 'failed') {
+      target['paymentStatus'] = 'failed';
+    }
+    await _saveState(state);
+    return {
+      'ok': true,
+      'statusCode': 200,
+      'paymentStatus': target['paymentStatus'],
+      'transactionId': target['transactionId'],
+      'paidAt': target['paidAt'],
     };
   }
 }

@@ -457,6 +457,14 @@ class AppLocalizationsTr extends AppLocalizations {
       'Aparial\'in ve Genel Taşıma Şirketlerinin Reddettiği Maddeler';
 
   @override
+  String get registerKvkkDocumentBody =>
+      'Kişisel Verilerin Korunması ve İşlenmesine İlişkin Aydınlatma Metni\nBu metin, KYRADI platformu kapsamında işlenen kişisel verilerin, 6698 sayılı Kişisel Verilerin Korunması Kanunu (\"KVKK\") uyarınca hangi kapsamda ve hangi amaçlarla işlendiğini açıklamak amacıyla hazırlanmıştır.\n\nİşlenen Kişisel Veri Türleri\nKYRADI platformu kapsamında aşağıdaki kişisel veri grupları işlenmektedir:\nMüşteri verileri:\nAd Soyad, Telefon, QR kod tokenı, Rezervasyon ve dolap bilgisi, Ödeme tutarı ve işlem numarası\nPersonel verileri:\nAd Soyad, E-posta, Kullanıcı rolü, IP, işlem logları, oturum bilgisi\nTeknik veriler:\nAudit log kayıtları, Tarayıcı/cihaz bilgisi, Hata raporları\n\nVeri İşleme Amaçları\nKişisel veriler; rezervasyon akışının sağlanması, QR kod üretimi ve doğrulaması, ödeme intent yönetimi, bagaj teslim ve iade sürecinin yürütülmesi, sistem güvenliğinin sağlanması ve kötüye kullanımın tespiti, yasal saklama yükümlülüklerinin yerine getirilmesi ile raporlama ve platform iyileştirmeleri amaçlarıyla işlenmektedir.\n\nHukuki Dayanaklar\nKişisel veriler, KVKK’nın 5/2-c maddesi kapsamında sözleşmenin kurulması ve ifası, 5/2-f maddesi kapsamında meşru menfaat, 5/2-ç maddesi kapsamında hukuki yükümlülükler ile açık rıza gerektiren durumlarda ilgili kişinin açık rızasına dayanılarak işlenmektedir.\n\nVerilerin Aktarıldığı Taraflar\nKişisel veriler; ödeme hizmetlerinin sağlanması amacıyla Stripe ve Iyzico gibi ödeme servislerine, altyapı ve barındırma hizmetleri kapsamında AWS, Google Cloud, Render ve Vercel gibi bulut sağlayıcılara, zorunlu hallerde kamu kurumlarına ve hukuki veya mali danışmanlara aktarılabilmektedir.\n\nSaklama Süreleri\nKişisel veriler; rezervasyon ve ödeme kayıtları için 10 yıl, audit log kayıtları için 2 yıl, kullanıcı hesapları için hesap kapanışından itibaren 1 yıl süreyle saklanmakta olup, QR kod tokenları 1–24 saat aralığında muhafaza edilmektedir.\n\nGüvenlik Tedbirleri\nKYRADI platformunda; tenant bazlı veri izolasyonu, parola hashleme, JWT tabanlı güvenlik, rol bazlı erişim kontrolü, rate limiting ve saldırı önleme mekanizmaları ile kritik işlemler için audit log tutulması gibi teknik ve idari güvenlik tedbirleri uygulanmaktadır.\n\nİlgili Kişinin Hakları\nKVKK’nın 11. maddesi kapsamında ilgili kişiler; kişisel verilerinin işlenip işlenmediğini öğrenme, silme ve düzeltme talebinde bulunma, veri işlemeye itiraz etme ve zarar halinde tazminat talep etme haklarına sahiptir.\n\nBaşvurular kvkk@kyradi.com adresi üzerinden iletilebilir.';
+
+  @override
+  String get registerRestrictedDocumentBody =>
+      'Bu belge, Aparial ve genel taşıma şirketleri tarafından taşınması reddedilen maddeleri özetlemektedir.\nGüvenlik, yasal düzenlemeler ve operasyonel riskler nedeniyle aşağıda belirtilen maddeler taşımaya kabul edilmez:\n\nTehlikeli ve Riskli Maddeler\n- Patlayıcı maddeler (dinamit, havai fişek, el bombası vb.)\n- Yanıcı ve parlayıcı maddeler (benzin, tiner, boya, çözücü vb.)\n- Basınçlı gazlar (propan, butan, oksijen tüpleri vb.)\n- Toksik, zehirli veya aşındırıcı kimyasallar (asit, baz, ağartıcı vb.)\n- Radyoaktif maddeler\n- Yanıcı kimyasallar içeren sıvılar veya çözücüler\n- Patlama veya yangın riski oluşturan herhangi bir madde veya cihaz\n\nSilah ve Tehlikeli Ekipmanlar\n- Silahlar, mühimmat ve benzeri ateşli cihazlar\n- Kesici veya delici aletler (hançer, uzun bıçak, sivri metal aletler vb.)\n\nCihazlar ve Basınçlı Ürünler\n- Gaz veya yakıt içeren cihazlar (yakıt dolu kamp ocakları vb.)\n- Basınçlı aerosol kutuları (tehlikeli gaz içeren spreyler)\n- Yüksek kapasiteli veya yedek lityum piller ve bataryalar\n\nRahatsızlık ve Güvenlik Riski Oluşturan Maddeler\n- Ağır kokulu, duman çıkaran veya çevreyi rahatsız eden maddeler\n\nDeğerli Eşyalar\n- Ziynet eşyalar (altın, mücevher vb. değerli eşyalar) taşımaya kabul edilmez.\n- Para (miktarına bakılmaksızın) taşımaya kabul edilmez.\n\nNot:\nBazı maddeler belirli izin, miktar veya güvenlik önlemleri ile taşınabilir. Ancak genel olarak bu tür maddeler hem Aparial hem de diğer taşıma şirketleri tarafından reddedilmektedir.';
+
+  @override
   String get registerSuccessMessage =>
       'Kayıt başarılı ✅ Doğrulama e-postası gönderildi.';
 
@@ -1224,6 +1232,66 @@ class AppLocalizationsTr extends AppLocalizations {
   String get paymentMethodPayAtHotel => 'Otelde öde';
 
   @override
+  String get paymentHotelCommissionNote =>
+      'Otelde yüzde 5 komisyon eklenecektir.';
+
+  @override
+  String get paymentStartAction => 'Ödemeyi Başlat';
+
+  @override
+  String get paymentRequiredBeforeDropMessage =>
+      'Ödeme tamamlanmadan bırakma yapılamaz.';
+
+  @override
+  String get paymentNotCompletedMessage =>
+      'Ödeme tamamlanmadan bırakma yapılamaz.';
+
+  @override
+  String get paymentCompletedMessage =>
+      'Ödeme tamamlandı. Bavulu bırakabilirsiniz.';
+
+  @override
+  String get paymentPageTitle => 'Ödeme';
+
+  @override
+  String get paymentPageSubtitle =>
+      'Kart bilgilerinizi girerek ödemenizi tamamlayın.';
+
+  @override
+  String get paymentCardNumberLabel => 'Kart Numarası';
+
+  @override
+  String get paymentCardNameLabel => 'Kart Üzerindeki İsim';
+
+  @override
+  String get paymentExpiryLabel => 'Son Kullanma';
+
+  @override
+  String get paymentCvcLabel => 'CVC';
+
+  @override
+  String get paymentCompleteAction => 'Ödemeyi Tamamla';
+
+  @override
+  String get paymentFormIncompleteMessage =>
+      'Lütfen kart bilgilerini eksiksiz girin.';
+
+  @override
+  String get paymentFailedMessage => 'Ödeme tamamlanamadı.';
+
+  @override
+  String get paymentPayAtHotelTitle => 'Otelde Ödeme';
+
+  @override
+  String get paymentPayAtHotelBody =>
+      'Ödemenizi seçtiğiniz lokasyonda tamamlayabilirsiniz.';
+
+  @override
+  String paymentTotalLabel(Object amount) {
+    return 'Toplam: $amount ₺';
+  }
+
+  @override
   String get installmentCountLabel => 'Taksit sayısı';
 
   @override
@@ -1254,6 +1322,13 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get pricingEstimateUnavailable =>
       'Tahmin için bırakma ve teslim saatini seçin.';
+
+  @override
+  String get pickupPinSentMessage => 'PIN mailinize gönderildi.';
+
+  @override
+  String get pickupPinFailedMessage =>
+      'PIN gönderilemedi, lütfen daha sonra tekrar deneyin.';
 
   @override
   String get landingLocateSectionTitle => 'Sana en yakın noktaları bul';
@@ -1311,7 +1386,136 @@ class AppLocalizationsTr extends AppLocalizations {
       'Kaydın ardından personeliniz QR sticker çıktısını alabilir. Müşteri bırakma ve teslimde kodu okutmalıdır.';
 
   @override
-  String get luggageDelegateAction => 'Yetkili Kişi';
+  String get luggageDelegateAction => 'Acil durum kişisine teslim et';
+
+  @override
+  String get delegateInfoRequiredMessage =>
+      'Acil durum kişisinin bilgilerini doldurun.';
+
+  @override
+  String get howItWorksTitle => 'Nasıl çalışır?';
+
+  @override
+  String get howItWorksIntro =>
+      'KYRADI, “kurye yok” modelinde çalışan bir bavul bırakma ve teslim alma uygulamasıdır. Bavulunu seçtiğin otele/partner noktaya kendin götürür, güvenli şekilde bırakır ve geri alırken PIN ile doğrularsın. Süreç boyunca adım adım yönlendirilir ve net bilgilendirmeler alırsın.';
+
+  @override
+  String get howItWorksStep1Title => '1) Lokasyon seçimi ve uygunluk kontrolü';
+
+  @override
+  String get howItWorksStep1Body =>
+      'Uygulama, harita ve liste üzerinden partner noktaları gösterir. Her lokasyonun çalışma saatleri, maksimum kapasitesi ve anlık doluluğu vardır. Lokasyon kapalı, dolu veya pasifse bavul ekleme ve/veya bırakma adımı engellenir. Bu sayede kapıda sürpriz yaşamazsın ve gerçekten hizmet alabileceğin noktayı seçersin.';
+
+  @override
+  String get howItWorksStep2Title =>
+      '2) Bavul bilgileri, süre ve koruma seçimi';
+
+  @override
+  String get howItWorksStep2Body =>
+      'Bavulunu eklerken boyutu (small/medium/large), bırakma ve teslim alma saatlerini belirlersin. Bu bilgiler fiyatı etkiler. Koruma seviyesi olarak “Standart koruma” (varsayılan) veya “Ek sigorta (premium)” seçebilirsin. Seçimini değiştirdikçe tahmini ücret güncellenir.';
+
+  @override
+  String get howItWorksStep3Title => '3) Tahmini Ücret kartı nasıl çalışır?';
+
+  @override
+  String get howItWorksStep3Body =>
+      'Uygulamadaki “Tahmini Ücret” kartı; boyut, süre, koruma ve ödeme yöntemine göre hesaplanır. Süre için 0–6 saat, 6–24 saat ve günlük tier kullanılır. Bu ücret bir ön bilgilendirmedir; gerçek teslim saatine göre değişebilir.';
+
+  @override
+  String get howItWorksStep4Title => '4) Rezervasyon oluşturma';
+
+  @override
+  String get howItWorksStep4Body =>
+      'Rezervasyon oluşturabilir ve planını netleştirebilirsin. Ancak rezervasyon, “Bavulu Bırak” adımı tamamlanmadan hizmeti aktive etmez.';
+
+  @override
+  String get howItWorksStep5Title => '5) Lokasyona gidip “Bavulu Bırak”';
+
+  @override
+  String get howItWorksStep5Body =>
+      '“Bavulu Bırak” butonu, bırakma sürecini başlatan ana adımdır. Kurye yoktur; bavulu lokasyona sen götürürsün. QR doğrulaması ve ödeme tamamlanmadan bırakma işlemi tamamlanamaz. Önemli: Bavulu Bırak butonu ödemesiz asla tamamlanamaz.';
+
+  @override
+  String get howItWorksStep6Title => '6) Ödeme ekranı ve 3 yöntem';
+
+  @override
+  String get howItWorksStep6Body =>
+      'Ödeme adımında üç seçenek vardır: (1) Otelde ödeme: ödeme otelde alınır, ek komisyon ücrete yansıyabilir. (2) Kredi/Banka kartı: MagicPay altyapısı ile güvenli ödeme yapılır. (3) Taksitli ödeme: vade farkı ücrete yansıyabilir.';
+
+  @override
+  String get howItWorksStep7Title =>
+      '7) Ödeme başarılı/başarısız olursa ne olur?';
+
+  @override
+  String get howItWorksStep7Body =>
+      'Ödeme başarılı olursa bırakma tamamlanır ve PIN üretilir. Ödeme başarısız olursa uygulama net bir hata mesajı verir ve tekrar denemen için yönlendirir; bırakma tamamlanmaz.';
+
+  @override
+  String get howItWorksStep8Title => '8) PIN ile teslim alma';
+
+  @override
+  String get howItWorksStep8Body =>
+      'Bırakma tamamlandığında teslim alma PIN’i oluşturulur. PIN ekranda gösterilir ve ayrıca e‑posta ile gönderilebilir. Mail gitmese bile süreç bozulmaz; PIN ile lokasyonda teslim alma doğrulanır.';
+
+  @override
+  String get howItWorksFaqTitle => 'Sık Sorulan Sorular';
+
+  @override
+  String get howItWorksFaq1Q => 'Neden ödeme bırakma anında?';
+
+  @override
+  String get howItWorksFaq1A =>
+      'Ödeme, hizmetin aktifleştiği anı temsil eder ve kapasite/rezervasyon dengesini korur. Bu nedenle bırakma ödemesiz tamamlanamaz.';
+
+  @override
+  String get howItWorksFaq2Q => 'Tahmini ücret neden değişebilir?';
+
+  @override
+  String get howItWorksFaq2A =>
+      'Tahmin; boyut, süre ve teslim saatine göre hesaplanır. Gerçek bırakma/teslim saatleri değişirse ücret de değişebilir.';
+
+  @override
+  String get howItWorksFaq3Q => 'Lokasyon kapalıysa/doluysa ne yapmalıyım?';
+
+  @override
+  String get howItWorksFaq3A =>
+      'Uygulama bunu açıkça gösterir. Farklı bir lokasyon seçebilir veya daha uygun bir saat için planlama yapabilirsin.';
+
+  @override
+  String get howItWorksFaq4Q => 'Otelde ödeme seçersem kart ekranı açılır mı?';
+
+  @override
+  String get howItWorksFaq4A =>
+      'Hayır. Otelde ödeme seçildiğinde kart ekranı açılmaz; ödeme otelde alınır. Ek komisyon ücrete yansıyabilir.';
+
+  @override
+  String get howItWorksFaq5Q => 'Taksit nasıl işler?';
+
+  @override
+  String get howItWorksFaq5A =>
+      'Kredi kartı ile ödeme sırasında taksit seçilir. Seçilen vade farkı ücrete yansıyabilir ve toplam tutar buna göre hesaplanır.';
+
+  @override
+  String get howItWorksFaq6Q => 'Premium koruma ne sağlar?';
+
+  @override
+  String get howItWorksFaq6A =>
+      'Standart korumaya ek güvence sunar. Ek sigorta seçildiğinde ücret biraz artabilir; detaylar “Tahmini Ücret” kartında görünür.';
+
+  @override
+  String get howItWorksFaq7Q => 'PIN’i kaybedersem ne olur?';
+
+  @override
+  String get howItWorksFaq7A =>
+      'PIN, e‑posta ile yeniden gönderilebilir. Gerekirse profil/rezervasyon detaylarından tekrar görebilirsin. Destek ekibi de yardımcı olur.';
+
+  @override
+  String get howItWorksFaq8Q =>
+      'Ödeme oldu ama uygulama güncellenmedi, ne yapmalıyım?';
+
+  @override
+  String get howItWorksFaq8A =>
+      'Bağlantını kontrol edip sayfayı yenile. Ödeme durumunu kontrol etmek için tekrar dene. Sorun sürerse destek ekibiyle iletişime geç.';
 
   @override
   String get pickupPinTitle => 'Teslim PIN';
@@ -1366,7 +1570,28 @@ class AppLocalizationsTr extends AppLocalizations {
   String get delegateCodeInvalidMessage => 'Yetkili kodu hatalı.';
 
   @override
+  String get delegateCodeExpiredMessage => 'Yetkili kodunun süresi dolmuş.';
+
+  @override
+  String get delegateCodeUsedMessage => 'Yetkili kodu daha önce kullanılmış.';
+
+  @override
   String get delegateSavedMessage => 'Yetkili kişi kaydedildi.';
+
+  @override
+  String get delegateEmergencyCodeTitle => 'Acil Durum Kodu';
+
+  @override
+  String get ownerInfoTitle => 'Sahip Bilgileri';
+
+  @override
+  String get ownerNameLabel => 'Ad Soyad';
+
+  @override
+  String get ownerPhoneLabel => 'Telefon';
+
+  @override
+  String get ownerEmailLabel => 'E-posta';
 
   @override
   String get pickupPinSafetyWarning =>

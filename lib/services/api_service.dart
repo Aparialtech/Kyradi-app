@@ -494,6 +494,63 @@ class ApiService {
     return result;
   }
 
+  static Future<Map<String, dynamic>> startPaymentCheckout({
+    required String reservationId,
+    required String paymentMethod,
+    int? installmentCount,
+  }) async {
+    if (_usingMockBackend) {
+      return MockServer.startPaymentCheckout(
+        reservationId: reservationId,
+        paymentMethod: paymentMethod,
+        installmentCount: installmentCount,
+      );
+    }
+    final body = <String, dynamic>{
+      'reservationId': reservationId,
+      'paymentMethod': paymentMethod,
+    };
+    if (installmentCount != null) {
+      body['installmentCount'] = installmentCount;
+    }
+    final result = await _post('/payments/checkout', body);
+    result['statusCode'] ??= result['_httpStatus'];
+    return result;
+  }
+
+  static Future<Map<String, dynamic>> getPaymentStatus(String reservationId) async {
+    if (_usingMockBackend) {
+      return MockServer.getPaymentStatus(reservationId);
+    }
+    final result = await _get('/payments/status?reservationId=$reservationId');
+    result['statusCode'] ??= result['_httpStatus'];
+    return result;
+  }
+
+  static Future<Map<String, dynamic>> sendPaymentWebhook({
+    required String providerPaymentId,
+    required String status,
+    String? transactionId,
+  }) async {
+    if (_usingMockBackend) {
+      return MockServer.sendPaymentWebhook(
+        providerPaymentId: providerPaymentId,
+        status: status,
+        transactionId: transactionId,
+      );
+    }
+    final body = <String, dynamic>{
+      'providerPaymentId': providerPaymentId,
+      'status': status,
+    };
+    if (transactionId != null && transactionId.isNotEmpty) {
+      body['transactionId'] = transactionId;
+    }
+    final result = await _post('/payments/webhook', body);
+    result['statusCode'] ??= result['_httpStatus'];
+    return result;
+  }
+
   static Future<Map<String, dynamic>> updateLuggageStatus(
     String userId,
     String luggageId,

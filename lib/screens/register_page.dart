@@ -29,7 +29,6 @@ class _RegisterPageState extends State<RegisterPage> {
 
   String _gender = 'none';
   bool _loading = false;
-  bool _notRobot = false;
   bool _kvkkAccepted = false;
   bool _restrictedItemsAccepted = false;
   String _baseUrlLabel = ApiService.baseUrl;
@@ -98,18 +97,30 @@ class _RegisterPageState extends State<RegisterPage> {
     );
   }
 
+  Future<void> _openAgreementPage({
+    required String title,
+    required String body,
+    required ValueChanged<bool> onAccepted,
+  }) async {
+    final accepted = await Navigator.of(context).push<bool>(
+      MaterialPageRoute(
+        builder: (_) => AgreementReadPage(
+          title: title,
+          body: body,
+        ),
+      ),
+    );
+    if (accepted == true) {
+      if (!mounted) return;
+      onAccepted(true);
+    }
+  }
+
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
     final l10n = AppLocalizations.of(context)!;
     if (_birthDate == null) {
       _notify(l10n.validationBirthDateRequired, type: AppNotificationType.warning);
-      return;
-    }
-    if (!_notRobot) {
-      _notify(
-        l10n.registerCaptchaWarning,
-        type: AppNotificationType.warning,
-      );
       return;
     }
     if (!_kvkkAccepted) {
@@ -394,36 +405,27 @@ class _RegisterPageState extends State<RegisterPage> {
                           ),
                         ),
                         const SizedBox(height: 14),
-                        CheckboxListTile(
-                          value: _notRobot,
-                          onChanged: (v) =>
-                              setState(() => _notRobot = v ?? false),
-                          title: Text(l10n.registerCaptchaLabel),
-                          controlAffinity: ListTileControlAffinity.leading,
-                          dense: true,
-                          contentPadding: EdgeInsets.zero,
-                        ),
-                        _AgreementCheckbox(
-                          value: _kvkkAccepted,
+                        _AgreementTile(
+                          accepted: _kvkkAccepted,
                           label: l10n.registerKvkkAgreementLabel,
-                          onChanged: (v) =>
-                              setState(() => _kvkkAccepted = v ?? false),
-                          onViewPressed: () => _showAgreementDialog(
+                          onOpen: () => _openAgreementPage(
                             title: l10n.registerKvkkDialogTitle,
-                            body: _kvkkDocumentBody,
+                            body: l10n.registerKvkkDocumentBody,
+                            onAccepted: (v) => setState(() => _kvkkAccepted = v),
                           ),
-                          viewLabel: l10n.registerAgreementView,
+                          actionLabel: l10n.registerAgreementView,
                         ),
-                        _AgreementCheckbox(
-                          value: _restrictedItemsAccepted,
+                        _AgreementTile(
+                          accepted: _restrictedItemsAccepted,
                           label: l10n.registerRestrictedAgreementLabel,
-                          onChanged: (v) =>
-                              setState(() => _restrictedItemsAccepted = v ?? false),
-                          onViewPressed: () => _showAgreementDialog(
+                          onOpen: () => _openAgreementPage(
                             title: l10n.registerRestrictedDialogTitle,
-                            body: _restrictedItemsDocumentBody,
+                            body: l10n.registerRestrictedDocumentBody,
+                            onAccepted: (v) => setState(
+                              () => _restrictedItemsAccepted = v,
+                            ),
                           ),
-                          viewLabel: l10n.registerAgreementView,
+                          actionLabel: l10n.registerAgreementView,
                         ),
                         const SizedBox(height: 8),
                         GradientButton(
@@ -460,41 +462,56 @@ class _RegisterPageState extends State<RegisterPage> {
   }
 }
 
-class _AgreementCheckbox extends StatelessWidget {
-  const _AgreementCheckbox({
-    required this.value,
+class _AgreementTile extends StatelessWidget {
+  const _AgreementTile({
+    required this.accepted,
     required this.label,
-    required this.onChanged,
-    required this.onViewPressed,
-    required this.viewLabel,
+    required this.onOpen,
+    required this.actionLabel,
   });
 
-  final bool value;
+  final bool accepted;
   final String label;
-  final ValueChanged<bool?> onChanged;
-  final VoidCallback onViewPressed;
-  final String viewLabel;
+  final VoidCallback onOpen;
+  final String actionLabel;
 
   @override
   Widget build(BuildContext context) {
-    return CheckboxListTile(
-      value: value,
-      onChanged: onChanged,
-      controlAffinity: ListTileControlAffinity.leading,
-      dense: false,
-      contentPadding: EdgeInsets.zero,
-      title: Column(
+    final theme = Theme.of(context);
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(label),
-          TextButton(
-            onPressed: onViewPressed,
-            style: TextButton.styleFrom(
-              padding: EdgeInsets.zero,
-              minimumSize: const Size(0, 32),
-              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+          AnimatedOpacity(
+            opacity: accepted ? 1 : 0,
+            duration: const Duration(milliseconds: 200),
+            child: const Icon(
+              Icons.check_circle,
+              color: Color(0xFF2E7D32),
+              size: 20,
             ),
-            child: Text(viewLabel),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(label),
+                TextButton(
+                  onPressed: onOpen,
+                  style: TextButton.styleFrom(
+                    padding: EdgeInsets.zero,
+                    minimumSize: const Size(0, 32),
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  ),
+                  child: Text(
+                    actionLabel,
+                    style: theme.textTheme.labelLarge,
+                  ),
+                ),
+              ],
+            ),
           ),
         ],
       ),
@@ -502,92 +519,103 @@ class _AgreementCheckbox extends StatelessWidget {
   }
 }
 
-const String _kvkkDocumentBody = '''
-1. Giriş
-Bu metin, KYRADI platformu kapsamında işlenen kişisel verilerin KVKK'ya uygun şekilde nasıl işlendiğini açıklar.
+class AgreementReadPage extends StatefulWidget {
+  const AgreementReadPage({
+    super.key,
+    required this.title,
+    required this.body,
+  });
 
-2. İşlenen Kişisel Veri Türleri
-2.1 Müşteri Verileri
-- Ad Soyad
-- Telefon
-- QR kod tokenı
-- Rezervasyon ve dolap bilgisi
-- Ödeme tutarı ve işlem numarası
+  final String title;
+  final String body;
 
-2.2 Personel Verileri
-- Ad Soyad
-- E-posta
-- Kullanıcı rolü
-- IP, işlem logları, oturum bilgisi
+  @override
+  State<AgreementReadPage> createState() => _AgreementReadPageState();
+}
 
-2.3 Teknik Veriler
-- Audit log kayıtları
-- Tarayıcı/cihaz bilgisi
-- Hata raporları
+class _AgreementReadPageState extends State<AgreementReadPage> {
+  final ScrollController _controller = ScrollController();
+  double _progress = 0.0;
 
-3. Veri İşleme Amaçları
-- Rezervasyon akışının sağlanması
-- QR kod üretimi/doğrulaması
-- Ödeme intent yönetimi
-- Bagaj teslim ve iade süreci
-- Sistem güvenliği ve kötüye kullanım tespiti
-- Yasal saklamalar
-- Raporlama ve platform iyileştirmeleri
+  @override
+  void initState() {
+    super.initState();
+    _controller.addListener(_handleScroll);
+  }
 
-4. Hukuki Dayanaklar
-- KVKK m.5/2-c – sözleşmenin kurulması/ifası
-- KVKK m.5/2-f – meşru menfaat
-- KVKK m.5/2-ç – hukuki yükümlülük
-- Açık rıza – isteğe bağlı bilgilendirmeler
+  @override
+  void dispose() {
+    _controller.removeListener(_handleScroll);
+    _controller.dispose();
+    super.dispose();
+  }
 
-5. Verilerin Aktarıldığı Taraflar
-- Ödeme servisleri: Stripe, Iyzico
-- Bulut sağlayıcılar: AWS, Google Cloud, Render, Vercel
-- Kamu kurumları (zorunlu hallerde)
-- Hukuk ve mali danışmanlar
+  void _handleScroll() {
+    if (!_controller.hasClients) return;
+    final max = _controller.position.maxScrollExtent;
+    final current = max <= 0 ? 0.0 : (_controller.offset / max);
+    setState(() => _progress = current.clamp(0.0, 1.0));
+  }
 
-6. Saklama Süreleri
-- Rezervasyon: 10 yıl
-- Ödeme: 10 yıl
-- Audit log: 2 yıl
-- Kullanıcı hesapları: kapanıştan 1 yıl sonra
-- QR token: 1–24 saat
-
-7. Güvenlik Tedbirleri
-- Tenant bazlı veri izolasyonu
-- Parola hashleme
-- JWT tabanlı güvenlik
-- Rol bazlı erişim kontrolü
-- Rate limiting ve saldırı önleme
-- Kritik işlemlerde audit log
-
-8. Haklar (KVKK m.11)
-- Veri işlenip işlenmediğini öğrenme
-- Silme ve düzeltme talebi
-- İşlemeye itiraz
-- Tazminat talebi
-
-Başvuru: kvkk@kyradi.com
-''';
-
-const String _restrictedItemsDocumentBody = '''
-Bu belge, Aparial ve genel taşıma şirketleri tarafından taşınması reddedilen maddeleri özetlemektedir.
-
-- Patlayıcı maddeler (dinamit, havai fişek, el bombası vb.)
-- Yanıcı ve parlayıcı maddeler (benzin, tiner, boya, çözücü vb.)
-- Basınçlı gazlar (propan, butan, oksijen tüpleri vb.)
-- Toksik, zehirli veya aşındırıcı kimyasallar (asit, baz, ağartıcı vb.)
-- Silahlar, mühimmat ve benzeri ateşli cihazlar
-- Kesici veya delici aletler (hançer, uzun bıçak, sivri metal aletler vb.)
-- Radyoaktif maddeler
-- Yüksek kapasiteli veya yedek lityum piller ve bataryalar
-- Ağır kokulu, duman çıkaran veya çevreyi rahatsız eden maddeler
-- Gaz veya yakıt içeren cihazlar (yakıt dolu kamp ocakları vb.)
-- Basınçlı aerosol kutuları (tehlikeli gaz içeren spreyler)
-- Yanıcı kimyasallar içeren sıvılar veya çözücüler
-- Patlama veya yangın riski oluşturan herhangi bir madde veya cihaz
-- Ziynet eşyalar (altın, mücevher vb. değerli eşyalar) taşımaya kabul edilmez.
-- Para (miktarına bakılmaksızın) taşımaya kabul edilmez.
-
-Not: Bazı maddeler belirli izin, miktar veya güvenlik önlemleri ile taşınabilir. Ancak genel olarak bu tür maddeler hem Aparial hem de diğer taşıma şirketleri tarafından reddedilmektedir.
-''';
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final atEnd = _progress >= 1.0;
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(widget.title),
+        leading: BackButton(
+          onPressed: () => Navigator.of(context).pop(atEnd),
+        ),
+      ),
+      body: SingleChildScrollView(
+        controller: _controller,
+        padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
+        child: SelectableText(widget.body),
+      ),
+      bottomNavigationBar: SafeArea(
+        top: false,
+        child: Container(
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+          child: Row(
+            children: [
+              Expanded(
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: Container(
+                    height: 14,
+                    color: theme.colorScheme.surfaceContainerHighest,
+                    child: Align(
+                      alignment: Alignment.centerLeft,
+                      child: TweenAnimationBuilder<double>(
+                        duration: const Duration(milliseconds: 200),
+                        tween: Tween<double>(begin: 0, end: _progress),
+                        builder: (context, value, _) {
+                          return FractionallySizedBox(
+                            widthFactor: value.clamp(0.0, 1.0),
+                            child: Container(
+                              color: const Color(0xFF2E7D32),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              AnimatedOpacity(
+                opacity: atEnd ? 1 : 0,
+                duration: const Duration(milliseconds: 200),
+                child: const Icon(
+                  Icons.check_circle,
+                  color: Color(0xFF2E7D32),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
