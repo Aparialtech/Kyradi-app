@@ -10,7 +10,7 @@ import UIKit
     _ application: UIApplication,
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
   ) -> Bool {
-    GMSServices.provideAPIKey("REMOVED_GOOGLE_KEY")
+    GMSServices.provideAPIKey("REMOVED")
     if engine == nil {
       let newEngine = FlutterEngine(name: "default_engine")
       newEngine.run()

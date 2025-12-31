@@ -392,6 +392,36 @@ abstract class AppLocalizations {
   /// **'Boyut'**
   String get size;
 
+  /// No description provided for @sizeSmallDimensions.
+  ///
+  /// In tr, this message translates to:
+  /// **'max 55x40x20 cm'**
+  String get sizeSmallDimensions;
+
+  /// No description provided for @sizeMediumDimensions.
+  ///
+  /// In tr, this message translates to:
+  /// **'max 65x45x25 cm'**
+  String get sizeMediumDimensions;
+
+  /// No description provided for @sizeLargeDimensions.
+  ///
+  /// In tr, this message translates to:
+  /// **'65x45x25 cm üstü'**
+  String get sizeLargeDimensions;
+
+  /// No description provided for @sizeSmallNote.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kabin boy ve sırt çantaları için uygundur'**
+  String get sizeSmallNote;
+
+  /// No description provided for @sizeSelectionNote.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bavul tesliminde boyut kontrol edilir, yanlış seçimde fiyat güncellenebilir.'**
+  String get sizeSelectionNote;
+
   /// No description provided for @color.
   ///
   /// In tr, this message translates to:
@@ -623,7 +653,7 @@ abstract class AppLocalizations {
   /// No description provided for @introTagline.
   ///
   /// In tr, this message translates to:
-  /// **'Global bavul sistemi'**
+  /// **'Global Bavul Sistemi'**
   String get introTagline;
 
   /// No description provided for @introTrackButton.
@@ -1364,6 +1394,12 @@ abstract class AppLocalizations {
   /// **'Açık noktaların doluluk ve rezervasyon bilgilerini incele.'**
   String get reservationSectionSubtitle;
 
+  /// No description provided for @reservationEditTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Rezervasyonu Düzenle'**
+  String get reservationEditTitle;
+
   /// No description provided for @luggagesSectionSubtitle.
   ///
   /// In tr, this message translates to:
@@ -1399,6 +1435,12 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Teslim'**
   String get luggageFilterPicked;
+
+  /// No description provided for @luggageFilterCancelled.
+  ///
+  /// In tr, this message translates to:
+  /// **'İptal Edilen'**
+  String get luggageFilterCancelled;
 
   /// No description provided for @luggageEmptyStateNoItems.
   ///
@@ -2387,7 +2429,7 @@ abstract class AppLocalizations {
   /// No description provided for @pricingEstimateTitle.
   ///
   /// In tr, this message translates to:
-  /// **'Tahmini Ücret'**
+  /// **'Tahmini Fiyat'**
   String get pricingEstimateTitle;
 
   /// No description provided for @pricingEstimateLoading.
@@ -2425,6 +2467,78 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Toplam'**
   String get pricingTotalLabel;
+
+  /// No description provided for @pricingTierLabel.
+  ///
+  /// In tr, this message translates to:
+  /// **'Süre bandı'**
+  String get pricingTierLabel;
+
+  /// No description provided for @pricingPriceLabel.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tahmini fiyat'**
+  String get pricingPriceLabel;
+
+  /// No description provided for @pricingTier0To6.
+  ///
+  /// In tr, this message translates to:
+  /// **'0–6 saat'**
+  String get pricingTier0To6;
+
+  /// No description provided for @pricingTier6To24.
+  ///
+  /// In tr, this message translates to:
+  /// **'6–24 saat'**
+  String get pricingTier6To24;
+
+  /// No description provided for @pricingTierDaily.
+  ///
+  /// In tr, this message translates to:
+  /// **'{days} gün'**
+  String pricingTierDaily(Object days);
+
+  /// No description provided for @pricingInvalidRangeMessage.
+  ///
+  /// In tr, this message translates to:
+  /// **'Teslim saati bırakma saatinden sonra olmalı.'**
+  String get pricingInvalidRangeMessage;
+
+  /// No description provided for @pricingQuoteFailedMessage.
+  ///
+  /// In tr, this message translates to:
+  /// **'Fiyat hesaplanamadı'**
+  String get pricingQuoteFailedMessage;
+
+  /// No description provided for @pricingSummaryTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ücret Özeti'**
+  String get pricingSummaryTitle;
+
+  /// No description provided for @pricingSummaryEdit.
+  ///
+  /// In tr, this message translates to:
+  /// **'Düzenle'**
+  String get pricingSummaryEdit;
+
+  /// No description provided for @pricingSummarySizeLabel.
+  ///
+  /// In tr, this message translates to:
+  /// **'Boyut'**
+  String get pricingSummarySizeLabel;
+
+  /// No description provided for @pricingSummaryDurationLabel.
+  ///
+  /// In tr, this message translates to:
+  /// **'Süre'**
+  String get pricingSummaryDurationLabel;
+
+  /// No description provided for @pricingSummaryAmountLabel.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tutar'**
+  String get pricingSummaryAmountLabel;
 
   /// No description provided for @pricingEstimateDisclaimer.
   ///

@@ -155,6 +155,22 @@ class AppLocalizationsTr extends AppLocalizations {
   String get size => 'Boyut';
 
   @override
+  String get sizeSmallDimensions => 'max 55x40x20 cm';
+
+  @override
+  String get sizeMediumDimensions => 'max 65x45x25 cm';
+
+  @override
+  String get sizeLargeDimensions => '65x45x25 cm üstü';
+
+  @override
+  String get sizeSmallNote => 'Kabin boy ve sırt çantaları için uygundur';
+
+  @override
+  String get sizeSelectionNote =>
+      'Bavul tesliminde boyut kontrol edilir, yanlış seçimde fiyat güncellenebilir.';
+
+  @override
   String get color => 'Renk';
 
   @override
@@ -281,7 +297,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get emergencyContactNote => 'Acil durumlarda bu kişi aranacaktır.';
 
   @override
-  String get introTagline => 'Global bavul sistemi';
+  String get introTagline => 'Global Bavul Sistemi';
 
   @override
   String get introTrackButton => 'Takip Et';
@@ -696,6 +712,9 @@ class AppLocalizationsTr extends AppLocalizations {
       'Açık noktaların doluluk ve rezervasyon bilgilerini incele.';
 
   @override
+  String get reservationEditTitle => 'Rezervasyonu Düzenle';
+
+  @override
   String get luggagesSectionSubtitle =>
       'QR kodlarını göster, bırakma/teslim işlemlerini tamamla.';
 
@@ -713,6 +732,9 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get luggageFilterPicked => 'Teslim';
+
+  @override
+  String get luggageFilterCancelled => 'İptal Edilen';
 
   @override
   String get luggageEmptyStateNoItems =>
@@ -1295,7 +1317,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get installmentCountLabel => 'Taksit sayısı';
 
   @override
-  String get pricingEstimateTitle => 'Tahmini Ücret';
+  String get pricingEstimateTitle => 'Tahmini Fiyat';
 
   @override
   String get pricingEstimateLoading => 'Tahmin hesaplanıyor...';
@@ -1314,6 +1336,45 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get pricingTotalLabel => 'Toplam';
+
+  @override
+  String get pricingTierLabel => 'Süre bandı';
+
+  @override
+  String get pricingPriceLabel => 'Tahmini fiyat';
+
+  @override
+  String get pricingTier0To6 => '0–6 saat';
+
+  @override
+  String get pricingTier6To24 => '6–24 saat';
+
+  @override
+  String pricingTierDaily(Object days) {
+    return '$days gün';
+  }
+
+  @override
+  String get pricingInvalidRangeMessage =>
+      'Teslim saati bırakma saatinden sonra olmalı.';
+
+  @override
+  String get pricingQuoteFailedMessage => 'Fiyat hesaplanamadı';
+
+  @override
+  String get pricingSummaryTitle => 'Ücret Özeti';
+
+  @override
+  String get pricingSummaryEdit => 'Düzenle';
+
+  @override
+  String get pricingSummarySizeLabel => 'Boyut';
+
+  @override
+  String get pricingSummaryDurationLabel => 'Süre';
+
+  @override
+  String get pricingSummaryAmountLabel => 'Tutar';
 
   @override
   String get pricingEstimateDisclaimer =>

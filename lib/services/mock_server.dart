@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:shared_preferences/shared_preferences.dart';
 import '../core/drop_locations.dart';
+import '../models/pricing_models.dart';
 
 class MockServer {
   MockServer._();
@@ -618,6 +619,9 @@ class MockServer {
     required String reservationId,
     required String paymentMethod,
     int? installmentCount,
+    String? sizeClass,
+    DateTime? startAt,
+    DateTime? endAt,
   }) async {
     final state = await _loadState();
     final users = (state['users'] as List).cast<Map<String, dynamic>>();
@@ -731,5 +735,68 @@ class MockServer {
       'transactionId': target['transactionId'],
       'paidAt': target['paidAt'],
     };
+  }
+
+  static PricingQuoteResponse getPricingQuote({
+    required String sizeClass,
+    required DateTime startAt,
+    required DateTime endAt,
+    String? protectionLevel,
+  }) {
+    final durationHours =
+        endAt.difference(startAt).inMilliseconds / 3600000;
+    if (!(durationHours > 0)) {
+      throw Exception('INVALID_DURATION');
+    }
+    final normalized = _normalizeSizeClass(sizeClass);
+    final prices = {
+      'S': {'t0_6': 29, 't6_24': 59, 'daily': 99},
+      'M': {'t0_6': 39, 't6_24': 79, 'daily': 129},
+      'L': {'t0_6': 49, 't6_24': 99, 'daily': 159},
+    };
+    final row = prices[normalized];
+    if (row == null) {
+      throw Exception('INVALID_SIZE_CLASS');
+    }
+    String tier;
+    int unitPrice;
+    int? daysCharged;
+    int priceTry;
+    if (durationHours <= 6) {
+      tier = '0_6';
+      unitPrice = row['t0_6']!;
+      priceTry = unitPrice;
+    } else if (durationHours <= 24) {
+      tier = '6_24';
+      unitPrice = row['t6_24']!;
+      priceTry = unitPrice;
+    } else {
+      tier = 'daily';
+      unitPrice = row['daily']!;
+      daysCharged = (durationHours / 24).ceil();
+      priceTry = daysCharged * unitPrice;
+    }
+    return PricingQuoteResponse(
+      durationHours: durationHours,
+      tier: tier,
+      priceTry: priceTry,
+      daysCharged: daysCharged,
+      breakdown: {
+        'sizeClass': normalized,
+        'tier': tier,
+        'unitPrice': unitPrice,
+        if (daysCharged != null) 'daysCharged': daysCharged,
+      },
+    );
+  }
+
+  static String _normalizeSizeClass(String sizeClass) {
+    final cleaned = sizeClass.trim().toLowerCase();
+    if (cleaned == 'small') return 'S';
+    if (cleaned == 'medium') return 'M';
+    if (cleaned == 'large') return 'L';
+    final upper = sizeClass.trim().toUpperCase();
+    if (upper == 'S' || upper == 'M' || upper == 'L') return upper;
+    return sizeClass.trim();
   }
 }

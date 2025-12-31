@@ -446,6 +446,41 @@ class ApiService {
     throw Exception('Pricing estimate failed (${res.statusCode}): $msg');
   }
 
+  static Future<PricingQuoteResponse> getPricingQuote({
+    required String sizeClass,
+    required DateTime startAt,
+    required DateTime endAt,
+    String? protectionLevel,
+  }) async {
+    if (_usingMockBackend) {
+      return MockServer.getPricingQuote(
+        sizeClass: sizeClass,
+        startAt: startAt,
+        endAt: endAt,
+        protectionLevel: protectionLevel,
+      );
+    }
+    final base = _buildUri('/pricing/quote');
+    if (base == null) {
+      throw Exception('API base URL missing');
+    }
+    final uri = base.replace(queryParameters: {
+      'sizeClass': sizeClass,
+      'startAt': startAt.toUtc().toIso8601String(),
+      'endAt': endAt.toUtc().toIso8601String(),
+      if (protectionLevel != null) 'protectionLevel': protectionLevel,
+    });
+    final res = await http.get(uri, headers: _jsonHeaders());
+    final body = res.body.isNotEmpty ? jsonDecode(res.body) : null;
+    if (res.statusCode >= 200 && res.statusCode < 300) {
+      return PricingQuoteResponse.fromJson(body as Map<String, dynamic>);
+    }
+    final msg = (body is Map && body['message'] != null)
+        ? body['message'].toString()
+        : res.body;
+    throw Exception('Pricing quote failed (${res.statusCode}): $msg');
+  }
+
   static Future<Map<String, dynamic>> getUserLuggages(String userId) async {
     if (_usingMockBackend) return MockServer.getUserLuggages(userId);
     final result = await _get('/users/$userId/luggages');
@@ -519,12 +554,18 @@ class ApiService {
     required String reservationId,
     required String paymentMethod,
     int? installmentCount,
+    String? sizeClass,
+    DateTime? startAt,
+    DateTime? endAt,
   }) async {
     if (_usingMockBackend) {
       return MockServer.startPaymentCheckout(
         reservationId: reservationId,
         paymentMethod: paymentMethod,
         installmentCount: installmentCount,
+        sizeClass: sizeClass,
+        startAt: startAt,
+        endAt: endAt,
       );
     }
     final body = <String, dynamic>{
@@ -533,6 +574,15 @@ class ApiService {
     };
     if (installmentCount != null) {
       body['installmentCount'] = installmentCount;
+    }
+    if (sizeClass != null) {
+      body['sizeClass'] = sizeClass;
+    }
+    if (startAt != null) {
+      body['startAt'] = startAt.toUtc().toIso8601String();
+    }
+    if (endAt != null) {
+      body['endAt'] = endAt.toUtc().toIso8601String();
     }
     final result = await _post('/payments/checkout', body);
     result['statusCode'] ??= result['_httpStatus'];
@@ -543,7 +593,10 @@ class ApiService {
     if (_usingMockBackend) {
       return MockServer.getPaymentStatus(reservationId);
     }
-    final result = await _get('/payments/status?reservationId=$reservationId');
+    final base = _buildUri('/payments/status');
+    if (base == null) return _missingBaseUrlError();
+    final uri = base.replace(queryParameters: {'reservationId': reservationId});
+    final result = await _get(uri.toString());
     result['statusCode'] ??= result['_httpStatus'];
     return result;
   }

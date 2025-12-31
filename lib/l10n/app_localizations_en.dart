@@ -155,6 +155,22 @@ class AppLocalizationsEn extends AppLocalizations {
   String get size => 'Size';
 
   @override
+  String get sizeSmallDimensions => 'max 55x40x20 cm';
+
+  @override
+  String get sizeMediumDimensions => 'max 65x45x25 cm';
+
+  @override
+  String get sizeLargeDimensions => 'over 65x45x25 cm';
+
+  @override
+  String get sizeSmallNote => 'Suitable for cabin-size and backpacks';
+
+  @override
+  String get sizeSelectionNote =>
+      'Size is checked at drop-off; price may be updated if the selection is incorrect.';
+
+  @override
   String get color => 'Color';
 
   @override
@@ -695,6 +711,9 @@ class AppLocalizationsEn extends AppLocalizations {
       'Check availability and occupancy details.';
 
   @override
+  String get reservationEditTitle => 'Edit Reservation';
+
+  @override
   String get luggagesSectionSubtitle =>
       'Show QR codes and complete drop/pickup steps.';
 
@@ -712,6 +731,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get luggageFilterPicked => 'Picked Up';
+
+  @override
+  String get luggageFilterCancelled => 'Cancelled';
 
   @override
   String get luggageEmptyStateNoItems => 'No luggage yet. Add your first bag!';
@@ -1313,6 +1335,45 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get pricingTotalLabel => 'Total';
+
+  @override
+  String get pricingTierLabel => 'Time band';
+
+  @override
+  String get pricingPriceLabel => 'Estimated price';
+
+  @override
+  String get pricingTier0To6 => '0–6 hours';
+
+  @override
+  String get pricingTier6To24 => '6–24 hours';
+
+  @override
+  String pricingTierDaily(Object days) {
+    return '$days days';
+  }
+
+  @override
+  String get pricingInvalidRangeMessage =>
+      'Pickup time must be after drop-off time.';
+
+  @override
+  String get pricingQuoteFailedMessage => 'Price could not be calculated';
+
+  @override
+  String get pricingSummaryTitle => 'Price Summary';
+
+  @override
+  String get pricingSummaryEdit => 'Edit';
+
+  @override
+  String get pricingSummarySizeLabel => 'Size';
+
+  @override
+  String get pricingSummaryDurationLabel => 'Duration';
+
+  @override
+  String get pricingSummaryAmountLabel => 'Amount';
 
   @override
   String get pricingEstimateDisclaimer =>

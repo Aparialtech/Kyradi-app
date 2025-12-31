@@ -155,6 +155,22 @@ class AppLocalizationsRu extends AppLocalizations {
   String get size => 'Размер';
 
   @override
+  String get sizeSmallDimensions => 'до 55x40x20 см';
+
+  @override
+  String get sizeMediumDimensions => 'до 65x45x25 см';
+
+  @override
+  String get sizeLargeDimensions => 'более 65x45x25 см';
+
+  @override
+  String get sizeSmallNote => 'Подходит для ручной клади и рюкзаков';
+
+  @override
+  String get sizeSelectionNote =>
+      'Размер проверяется при сдаче; при неверном выборе цена может измениться.';
+
+  @override
   String get color => 'Цвет';
 
   @override
@@ -697,6 +713,9 @@ class AppLocalizationsRu extends AppLocalizations {
       'Смотри доступность и занятость точек.';
 
   @override
+  String get reservationEditTitle => 'Изменить бронирование';
+
+  @override
   String get luggagesSectionSubtitle =>
       'Показывай QR-коды и завершай шаги сдачи/получения.';
 
@@ -714,6 +733,9 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get luggageFilterPicked => 'Выдано';
+
+  @override
+  String get luggageFilterCancelled => 'Отменено';
 
   @override
   String get luggageEmptyStateNoItems =>
@@ -1315,6 +1337,45 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get pricingTotalLabel => 'Итого';
+
+  @override
+  String get pricingTierLabel => 'Временной диапазон';
+
+  @override
+  String get pricingPriceLabel => 'Предварительная цена';
+
+  @override
+  String get pricingTier0To6 => '0–6 часов';
+
+  @override
+  String get pricingTier6To24 => '6–24 часа';
+
+  @override
+  String pricingTierDaily(Object days) {
+    return '$days дней';
+  }
+
+  @override
+  String get pricingInvalidRangeMessage =>
+      'Время получения должно быть позже времени сдачи.';
+
+  @override
+  String get pricingQuoteFailedMessage => 'Не удалось рассчитать цену';
+
+  @override
+  String get pricingSummaryTitle => 'Сводка цены';
+
+  @override
+  String get pricingSummaryEdit => 'Изменить';
+
+  @override
+  String get pricingSummarySizeLabel => 'Размер';
+
+  @override
+  String get pricingSummaryDurationLabel => 'Длительность';
+
+  @override
+  String get pricingSummaryAmountLabel => 'Сумма';
 
   @override
   String get pricingEstimateDisclaimer =>

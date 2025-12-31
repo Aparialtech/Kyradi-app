@@ -58,3 +58,42 @@ class PricingEstimateResponse {
     );
   }
 }
+
+class PricingQuoteResponse {
+  final double durationHours;
+  final String tier;
+  final int priceTry;
+  final int? daysCharged;
+  final Map<String, dynamic> breakdown;
+
+  const PricingQuoteResponse({
+    required this.durationHours,
+    required this.tier,
+    required this.priceTry,
+    required this.breakdown,
+    this.daysCharged,
+  });
+
+  factory PricingQuoteResponse.fromJson(Map<String, dynamic> json) {
+    final rawPrice = json['priceTry'];
+    final priceTry =
+        rawPrice is num ? rawPrice.round() : int.tryParse('$rawPrice') ?? 0;
+    final rawDuration = json['durationHours'];
+    final durationHours = rawDuration is num
+        ? rawDuration.toDouble()
+        : double.tryParse('$rawDuration') ?? 0;
+    final rawDays = json['daysCharged'];
+    final daysCharged =
+        rawDays is num ? rawDays.round() : int.tryParse('$rawDays');
+    final breakdownRaw = json['breakdown'];
+    return PricingQuoteResponse(
+      durationHours: durationHours,
+      tier: (json['tier'] ?? '').toString(),
+      priceTry: priceTry,
+      daysCharged: daysCharged,
+      breakdown: breakdownRaw is Map<String, dynamic>
+          ? Map<String, dynamic>.from(breakdownRaw)
+          : {},
+    );
+  }
+}

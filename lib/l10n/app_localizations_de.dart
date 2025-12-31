@@ -155,6 +155,22 @@ class AppLocalizationsDe extends AppLocalizations {
   String get size => 'Größe';
 
   @override
+  String get sizeSmallDimensions => 'max. 55x40x20 cm';
+
+  @override
+  String get sizeMediumDimensions => 'max. 65x45x25 cm';
+
+  @override
+  String get sizeLargeDimensions => 'über 65x45x25 cm';
+
+  @override
+  String get sizeSmallNote => 'Geeignet für Kabinengepäck und Rucksäcke';
+
+  @override
+  String get sizeSelectionNote =>
+      'Die Größe wird bei der Abgabe geprüft; bei falscher Auswahl kann der Preis angepasst werden.';
+
+  @override
   String get color => 'Farbe';
 
   @override
@@ -703,6 +719,9 @@ class AppLocalizationsDe extends AppLocalizations {
       'Sieh dir Verfügbarkeit und Auslastung an.';
 
   @override
+  String get reservationEditTitle => 'Reservierung bearbeiten';
+
+  @override
   String get luggagesSectionSubtitle =>
       'Zeige QR-Codes und schließe Abgabe- bzw. Abholschritte ab.';
 
@@ -720,6 +739,9 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get luggageFilterPicked => 'Abgeholt';
+
+  @override
+  String get luggageFilterCancelled => 'Storniert';
 
   @override
   String get luggageEmptyStateNoItems =>
@@ -1330,6 +1352,45 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get pricingTotalLabel => 'Gesamt';
+
+  @override
+  String get pricingTierLabel => 'Zeitraum';
+
+  @override
+  String get pricingPriceLabel => 'Geschätzter Preis';
+
+  @override
+  String get pricingTier0To6 => '0–6 Stunden';
+
+  @override
+  String get pricingTier6To24 => '6–24 Stunden';
+
+  @override
+  String pricingTierDaily(Object days) {
+    return '$days Tage';
+  }
+
+  @override
+  String get pricingInvalidRangeMessage =>
+      'Die Abholzeit muss nach der Abgabe liegen.';
+
+  @override
+  String get pricingQuoteFailedMessage => 'Preis konnte nicht berechnet werden';
+
+  @override
+  String get pricingSummaryTitle => 'Preisübersicht';
+
+  @override
+  String get pricingSummaryEdit => 'Bearbeiten';
+
+  @override
+  String get pricingSummarySizeLabel => 'Größe';
+
+  @override
+  String get pricingSummaryDurationLabel => 'Dauer';
+
+  @override
+  String get pricingSummaryAmountLabel => 'Betrag';
 
   @override
   String get pricingEstimateDisclaimer =>

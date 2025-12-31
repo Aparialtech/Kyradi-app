@@ -96,7 +96,9 @@ class _HomePageState extends State<HomePage> {
   bool _locationsLoading = false;
   String? _selectedDeliveryId;
   DropLocation? _selectedMapLocation;
-  Set<_LuggageFilter> _luggageFilter = const {_LuggageFilter.all};
+  LuggageFilter _selectedFilter = LuggageFilter.all;
+  final ScrollController _dashboardScrollController = ScrollController();
+  final GlobalKey _luggageListKey = GlobalKey();
   GoogleMapController? _googleMapController;
   Polyline? _activeRoute;
   _RouteMode? _activeRouteMode;
@@ -112,6 +114,12 @@ class _HomePageState extends State<HomePage> {
     _restoreUserIdThenLoad();
     _loadIdentityProof();
     _loadReminderPrefs();
+  }
+
+  @override
+  void dispose() {
+    _dashboardScrollController.dispose();
+    super.dispose();
   }
 
   Future<void> _loadLocations() async {
@@ -509,22 +517,45 @@ class _HomePageState extends State<HomePage> {
       _luggages.where((l) => l.isCancelled).length;
 
   List<LuggageModel> get _visibleLuggages {
-    final filter = _luggageFilter.first;
-    if (filter == _LuggageFilter.all) {
+    if (_selectedFilter == LuggageFilter.all) {
       return List<LuggageModel>.unmodifiable(_luggages);
     }
     return _luggages
-        .where((l) => _matchesFilter(l, filter))
+        .where((l) => _matchesFilter(l, _selectedFilter))
         .toList(growable: false);
   }
 
-  bool _matchesFilter(LuggageModel luggage, _LuggageFilter filter) {
+  bool _matchesFilter(LuggageModel luggage, LuggageFilter filter) {
     return switch (filter) {
-      _LuggageFilter.all => true,
-      _LuggageFilter.awaiting => luggage.isAwaitingDrop,
-      _LuggageFilter.stored => luggage.isDropped,
-      _LuggageFilter.picked => luggage.isPickedUp,
+      LuggageFilter.all => true,
+      LuggageFilter.pending => luggage.isAwaitingDrop,
+      LuggageFilter.stored => luggage.isDropped,
+      LuggageFilter.delivered => luggage.isPickedUp,
+      LuggageFilter.cancelled => luggage.isCancelled,
     };
+  }
+
+  void _setLuggageFilter(LuggageFilter filter, {bool scrollToList = false}) {
+    setState(() => _selectedFilter = filter);
+    if (!scrollToList) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final context = _luggageListKey.currentContext;
+      if (context != null) {
+        Scrollable.ensureVisible(
+          context,
+          duration: const Duration(milliseconds: 350),
+          curve: Curves.easeInOut,
+        );
+        return;
+      }
+      if (_dashboardScrollController.hasClients) {
+        _dashboardScrollController.animateTo(
+          _dashboardScrollController.position.maxScrollExtent,
+          duration: const Duration(milliseconds: 350),
+          curve: Curves.easeInOut,
+        );
+      }
+    });
   }
 
   void _openLuggageListPage(String title, List<LuggageModel> items) {
@@ -564,24 +595,29 @@ class _HomePageState extends State<HomePage> {
   ) {
     return [
       _LuggageFilterOption(
-        value: _LuggageFilter.all,
+        value: LuggageFilter.all,
         label: loc.luggageFilterAll,
         icon: Icons.all_inbox_outlined,
       ),
       _LuggageFilterOption(
-        value: _LuggageFilter.awaiting,
+        value: LuggageFilter.pending,
         label: loc.luggageFilterAwaiting,
         icon: Icons.timer_outlined,
       ),
       _LuggageFilterOption(
-        value: _LuggageFilter.stored,
+        value: LuggageFilter.stored,
         label: loc.luggageFilterStored,
         icon: Icons.inventory_2_outlined,
       ),
       _LuggageFilterOption(
-        value: _LuggageFilter.picked,
+        value: LuggageFilter.delivered,
         label: loc.luggageFilterPicked,
         icon: Icons.check_circle_outline,
+      ),
+      _LuggageFilterOption(
+        value: LuggageFilter.cancelled,
+        label: loc.luggageFilterCancelled,
+        icon: Icons.cancel_schedule_send_outlined,
       ),
     ];
   }
@@ -840,7 +876,12 @@ class _HomePageState extends State<HomePage> {
                   _ActionTextButton(
                     icon: Icons.person_outline,
                     label: loc.luggageDelegateAction,
-                    onPressed: () => _handleDelegateDelivery(luggage),
+                    onPressed: luggage.isPaymentPaid
+                        ? () => _handleDelegateDelivery(luggage)
+                        : () => _snack(
+                              loc.paymentRequiredBeforeDropMessage,
+                              type: AppNotificationType.warning,
+                            ),
                   ),
                 if (luggage.isAwaitingDrop && !luggage.isCancelled)
                   _ActionTextButton(
@@ -1105,6 +1146,9 @@ class _HomePageState extends State<HomePage> {
       final checkoutResult = await ApiService.startPaymentCheckout(
         reservationId: luggage.id,
         paymentMethod: method.isEmpty ? 'card' : method,
+        sizeClass: _pricingSizeClass(luggage.size),
+        startAt: luggage.scheduledDropTime,
+        endAt: luggage.scheduledPickupTime,
       );
       if (checkoutResult['ok'] != true) {
         final message =
@@ -1128,6 +1172,7 @@ class _HomePageState extends State<HomePage> {
       final result = await Navigator.of(context).push<Map<String, dynamic>>(
         MaterialPageRoute(
           builder: (_) => PaymentPage(
+            userId: _userId ?? '',
             reservationId: luggage.id,
             paymentMethod: method.isEmpty ? 'card' : method,
             totalPrice: updated.totalPrice ?? 0,
@@ -1138,6 +1183,9 @@ class _HomePageState extends State<HomePage> {
           ),
         ),
       );
+      if (result?['action'] == 'edit') {
+        return;
+      }
       if (result?['paymentMethod'] != null) {
         final next = updated.copyWith(
           paymentMethod: result?['paymentMethod']?.toString(),
@@ -1306,6 +1354,13 @@ class _HomePageState extends State<HomePage> {
 
   Future<void> _handleDelegateDelivery(LuggageModel luggage) async {
     final loc = AppLocalizations.of(context)!;
+    if (!luggage.isPaymentPaid) {
+      _snack(
+        loc.paymentRequiredBeforeDropMessage,
+        type: AppNotificationType.warning,
+      );
+      return;
+    }
     if (!_hasDelegateInfo(luggage)) {
       _snack(loc.delegateInfoRequiredMessage, type: AppNotificationType.warning);
       await _openDelegateDialog(luggage);
@@ -2203,6 +2258,7 @@ class _HomePageState extends State<HomePage> {
           children: [
             // === Dashboard ===
             ListView(
+              controller: _dashboardScrollController,
               padding: const EdgeInsets.fromLTRB(16, 18, 16, 32),
               children: [
                 SectionCard(
@@ -2422,6 +2478,7 @@ class _HomePageState extends State<HomePage> {
                 ),
                 const SizedBox(height: 16),
                 SectionCard(
+                  key: _luggageListKey,
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -2429,11 +2486,6 @@ class _HomePageState extends State<HomePage> {
                         title: loc.myLuggages,
                         subtitle: loc.luggagesSectionSubtitle,
                         icon: Icons.wallet_travel,
-                        action: FilledButton.icon(
-                          onPressed: _openAddLuggage,
-                          icon: const Icon(Icons.add),
-                          label: Text(loc.newLuggageButton),
-                        ),
                       ),
                       const SizedBox(height: 16),
                       LayoutBuilder(
@@ -2448,7 +2500,7 @@ class _HomePageState extends State<HomePage> {
                               runSpacing: 8,
                               children: filterOptions.map((option) {
                                 final isSelected =
-                                    _luggageFilter.contains(option.value);
+                                    _selectedFilter == option.value;
                                 return ChoiceChip(
                                   label: Text(option.label),
                                   avatar: Icon(
@@ -2458,15 +2510,13 @@ class _HomePageState extends State<HomePage> {
                                   selected: isSelected,
                                   showCheckmark: false,
                                   onSelected: (_) {
-                                    setState(() => _luggageFilter = {
-                                          option.value,
-                                        });
+                                    _setLuggageFilter(option.value);
                                   },
                                 );
                               }).toList(),
                             );
                           }
-                          return SegmentedButton<_LuggageFilter>(
+                          return SegmentedButton<LuggageFilter>(
                             segments: filterOptions
                                 .map(
                                   (option) => ButtonSegment(
@@ -2476,9 +2526,10 @@ class _HomePageState extends State<HomePage> {
                                   ),
                                 )
                                 .toList(),
-                            selected: _luggageFilter,
+                            selected: {_selectedFilter},
                             onSelectionChanged: (value) {
-                              setState(() => _luggageFilter = value);
+                              if (value.isEmpty) return;
+                              _setLuggageFilter(value.first);
                             },
                           );
                         },
@@ -2494,18 +2545,31 @@ class _HomePageState extends State<HomePage> {
                             : _visibleLuggages.isEmpty
                                 ? Padding(
                                     padding: const EdgeInsets.symmetric(vertical: 24),
-                                    child: Text(
-                                      _luggages.isEmpty
-                                          ? loc.luggageEmptyStateNoItems
-                                          : loc.luggageEmptyStateFiltered,
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .bodyMedium
-                                          ?.copyWith(
-                                            color: Theme.of(context)
-                                                .colorScheme
-                                                .onSurfaceVariant,
-                                          ),
+                                    child: Column(
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      children: [
+                                        Icon(
+                                          Icons.inbox_outlined,
+                                          size: 24,
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .onSurfaceVariant,
+                                        ),
+                                        const SizedBox(height: 8),
+                                        Text(
+                                          _luggages.isEmpty
+                                              ? loc.luggageEmptyStateNoItems
+                                              : loc.luggageEmptyStateFiltered,
+                                          style: Theme.of(context)
+                                              .textTheme
+                                              .bodyMedium
+                                              ?.copyWith(
+                                                color: Theme.of(context)
+                                                    .colorScheme
+                                                    .onSurfaceVariant,
+                                              ),
+                                        ),
+                                      ],
                                     ),
                                   )
                                 : Column(
@@ -3069,7 +3133,7 @@ enum _RouteMode { walking, transit, driving }
 
 enum _QrAction { drop, pickup }
 
-enum _LuggageFilter { all, awaiting, stored, picked }
+enum LuggageFilter { all, pending, stored, delivered, cancelled }
 
 class _LuggageFilterOption {
   const _LuggageFilterOption({
@@ -3078,7 +3142,7 @@ class _LuggageFilterOption {
     required this.icon,
   });
 
-  final _LuggageFilter value;
+  final LuggageFilter value;
   final String label;
   final IconData icon;
 }
@@ -3485,7 +3549,7 @@ class _AddLuggagePageState extends State<AddLuggagePage> {
   DateTime? _dropTime;
   DateTime? _pickupTime;
   bool _scheduleError = false;
-  PricingEstimateResponse? _pricingEstimate;
+  PricingQuoteResponse? _pricingQuote;
   bool _pricingLoading = false;
   String? _pricingError;
   Timer? _pricingDebounce;
@@ -3552,16 +3616,23 @@ class _AddLuggagePageState extends State<AddLuggagePage> {
     }
   }
 
-  int _breakdownValue(String key) {
-    final raw = _pricingEstimate?.breakdown[key];
-    if (raw is num) return raw.round();
-    if (raw is String) return int.tryParse(raw) ?? 0;
-    return 0;
-  }
-
   String _formatPrice(int value) {
     final formatted = NumberFormat.decimalPattern().format(value);
     return '$formatted ₺';
+  }
+
+  String _formatPricingTier(PricingQuoteResponse quote, AppLocalizations loc) {
+    switch (quote.tier) {
+      case '0_6':
+        return loc.pricingTier0To6;
+      case '6_24':
+        return loc.pricingTier6To24;
+      case 'daily':
+        final days = quote.daysCharged ?? 1;
+        return loc.pricingTierDaily(days);
+      default:
+        return quote.tier;
+    }
   }
 
   Widget _buildPricingRow(
@@ -3585,17 +3656,26 @@ class _AddLuggagePageState extends State<AddLuggagePage> {
     );
   }
 
-  void _schedulePricingEstimate() {
+  void _schedulePricingQuote() {
     _pricingDebounce?.cancel();
-    _pricingDebounce = Timer(const Duration(milliseconds: 400), _fetchPricingEstimate);
+    _pricingDebounce = Timer(const Duration(milliseconds: 400), _fetchPricingQuote);
   }
 
-  Future<void> _fetchPricingEstimate() async {
+  Future<void> _fetchPricingQuote() async {
     if (_dropTime == null || _pickupTime == null) {
       setState(() {
-        _pricingEstimate = null;
+        _pricingQuote = null;
         _pricingError = null;
         _pricingLoading = false;
+      });
+      return;
+    }
+    if (!_pickupTime!.isAfter(_dropTime!)) {
+      final loc = AppLocalizations.of(context)!;
+      setState(() {
+        _pricingQuote = null;
+        _pricingLoading = false;
+        _pricingError = loc.pricingInvalidRangeMessage;
       });
       return;
     }
@@ -3604,25 +3684,20 @@ class _AddLuggagePageState extends State<AddLuggagePage> {
       _pricingError = null;
     });
     try {
-      final req = PricingEstimateRequest(
+      final quote = await ApiService.getPricingQuote(
         sizeClass: _sizeClassValue(_size),
-        dropAt: _dropTime!,
-        pickupAt: _pickupTime!,
-        protectionLevel: _protectionLevel,
-        paymentMethod: _paymentMethod,
-        installmentCount: _paymentMethod == 'installment' ? _installmentCount : null,
-        locationId: _selectedLocation.id,
+        startAt: _dropTime!,
+        endAt: _pickupTime!,
       );
-      final estimate = await ApiService.estimatePricing(req);
       if (!mounted) return;
       setState(() {
-        _pricingEstimate = estimate;
+        _pricingQuote = quote;
         _pricingLoading = false;
       });
     } catch (e) {
       if (!mounted) return;
       setState(() {
-        _pricingEstimate = null;
+        _pricingQuote = null;
         _pricingLoading = false;
         _pricingError = e.toString();
       });
@@ -3691,7 +3766,7 @@ class _AddLuggagePageState extends State<AddLuggagePage> {
         _loadingLocations = false;
       });
       await _loadNearbySuggestions();
-      _schedulePricingEstimate();
+      _schedulePricingQuote();
     } catch (_) {
       if (!mounted) return;
       setState(() {
@@ -3702,7 +3777,7 @@ class _AddLuggagePageState extends State<AddLuggagePage> {
         _loadingLocations = false;
       });
       await _loadNearbySuggestions();
-      _schedulePricingEstimate();
+      _schedulePricingQuote();
     }
   }
 
@@ -3746,7 +3821,7 @@ class _AddLuggagePageState extends State<AddLuggagePage> {
       }
       _scheduleError = false;
     });
-    _schedulePricingEstimate();
+    _schedulePricingQuote();
   }
 
   Future<void> _submit() async {
@@ -3791,7 +3866,7 @@ class _AddLuggagePageState extends State<AddLuggagePage> {
         'scheduledDropTime': _dropTime?.toIso8601String(),
         'scheduledPickupTime': _pickupTime?.toIso8601String(),
         'paymentMethod': _paymentMethod,
-        'totalPrice': _pricingEstimate?.total,
+        'totalPrice': _pricingQuote?.priceTry,
       };
 
       final result = await ApiService.createLuggage(widget.userId, payload);
@@ -4011,27 +4086,64 @@ class _AddLuggagePageState extends State<AddLuggagePage> {
                 ),
               ),
               const SizedBox(height: 12),
-              DropdownButtonFormField<String>(
-                key: ValueKey('size_$_size'),
-                initialValue: _size,
-                items: ['Küçük', 'Orta', 'Büyük']
-                    .map(
-                      (value) => DropdownMenuItem(
-                        value: value,
-                        child: Text(_localizedSizeLabel(value, loc)),
-                      ),
-                    )
-                    .toList(),
-                onChanged:
-                    _saving
-                        ? null
-                        : (v) {
-                            setState(() => _size = v ?? 'Orta');
-                            _schedulePricingEstimate();
-                          },
-                decoration: InputDecoration(
-                  labelText: loc.size,
-                  prefixIcon: const Icon(Icons.luggage_outlined),
+              Text(
+                loc.size,
+                style: theme.textTheme.titleSmall?.copyWith(
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  Expanded(
+                    child: _SizeCardOption(
+                      label: loc.small,
+                      description: loc.sizeSmallDimensions,
+                      note: loc.sizeSmallNote,
+                      selected: _size == 'Küçük',
+                      onTap: _saving
+                          ? null
+                          : () {
+                              setState(() => _size = 'Küçük');
+                              _schedulePricingQuote();
+                            },
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: _SizeCardOption(
+                      label: loc.medium,
+                      description: loc.sizeMediumDimensions,
+                      selected: _size == 'Orta',
+                      onTap: _saving
+                          ? null
+                          : () {
+                              setState(() => _size = 'Orta');
+                              _schedulePricingQuote();
+                            },
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: _SizeCardOption(
+                      label: loc.large,
+                      description: loc.sizeLargeDimensions,
+                      selected: _size == 'Büyük',
+                      onTap: _saving
+                          ? null
+                          : () {
+                              setState(() => _size = 'Büyük');
+                              _schedulePricingQuote();
+                            },
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 4),
+              Text(
+                loc.sizeSelectionNote,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
                 ),
               ),
               const SizedBox(height: 12),
@@ -4070,7 +4182,7 @@ class _AddLuggagePageState extends State<AddLuggagePage> {
                           : (value) {
                               if (value == null) return;
                               setState(() => _protectionLevel = value);
-                              _schedulePricingEstimate();
+                              _schedulePricingQuote();
                             },
                       title: Text(loc.protectionStandard),
                     ),
@@ -4082,7 +4194,7 @@ class _AddLuggagePageState extends State<AddLuggagePage> {
                           : (value) {
                               if (value == null) return;
                               setState(() => _protectionLevel = value);
-                              _schedulePricingEstimate();
+                              _schedulePricingQuote();
                             },
                       title: Text(loc.protectionPremium),
                     ),
@@ -4099,7 +4211,7 @@ class _AddLuggagePageState extends State<AddLuggagePage> {
                           : (value) {
                               if (value == null) return;
                               setState(() => _paymentMethod = value);
-                              _schedulePricingEstimate();
+                              _schedulePricingQuote();
                             },
                       title: Text(loc.paymentMethodCard),
                     ),
@@ -4111,7 +4223,7 @@ class _AddLuggagePageState extends State<AddLuggagePage> {
                           : (value) {
                               if (value == null) return;
                               setState(() => _paymentMethod = value);
-                              _schedulePricingEstimate();
+                              _schedulePricingQuote();
                             },
                       title: Text(loc.paymentMethodInstallment),
                     ),
@@ -4137,7 +4249,7 @@ class _AddLuggagePageState extends State<AddLuggagePage> {
                               : (value) {
                                   if (value == null) return;
                                   setState(() => _installmentCount = value);
-                                  _schedulePricingEstimate();
+                                  _schedulePricingQuote();
                                 },
                         ),
                       ),
@@ -4149,7 +4261,7 @@ class _AddLuggagePageState extends State<AddLuggagePage> {
                           : (value) {
                               if (value == null) return;
                               setState(() => _paymentMethod = value);
-                              _schedulePricingEstimate();
+                              _schedulePricingQuote();
                             },
                       title: Text(loc.paymentMethodPayAtHotel),
                     ),
@@ -4201,7 +4313,7 @@ class _AddLuggagePageState extends State<AddLuggagePage> {
                         );
                         if (match != null) {
                           setState(() => _selectedLocation = match);
-                          _schedulePricingEstimate();
+                          _schedulePricingQuote();
                         }
                       },
               ),
@@ -4460,33 +4572,18 @@ class _AddLuggagePageState extends State<AddLuggagePage> {
                             ],
                           ),
                         )
-                      else if (_pricingEstimate != null)
+                      else if (_pricingQuote != null)
                         Column(
                           children: [
                             _buildPricingRow(
-                              loc.pricingBasePriceLabel,
-                              _formatPrice(_breakdownValue('basePrice')),
-                              theme,
-                            ),
-                            _buildPricingRow(
-                              loc.pricingPremiumFeeLabel,
-                              _formatPrice(_breakdownValue('premiumProtectionFee')),
-                              theme,
-                            ),
-                            _buildPricingRow(
-                              loc.pricingHotelCommissionLabel,
-                              _formatPrice(_breakdownValue('hotelCommissionFee')),
-                              theme,
-                            ),
-                            _buildPricingRow(
-                              loc.pricingInstallmentFeeLabel,
-                              _formatPrice(_breakdownValue('installmentFee')),
+                              loc.pricingTierLabel,
+                              _formatPricingTier(_pricingQuote!, loc),
                               theme,
                             ),
                             const Divider(height: 20),
                             _buildPricingRow(
-                              loc.pricingTotalLabel,
-                              _formatPrice(_pricingEstimate!.total),
+                              loc.pricingPriceLabel,
+                              _formatPrice(_pricingQuote!.priceTry),
                               theme,
                               emphasized: true,
                             ),
@@ -4842,6 +4939,81 @@ class _ActionFilledButton extends StatelessWidget {
   }
 }
 
+class _SizeCardOption extends StatelessWidget {
+  final String label;
+  final String description;
+  final String? note;
+  final bool selected;
+  final VoidCallback? onTap;
+
+  const _SizeCardOption({
+    required this.label,
+    required this.description,
+    this.note,
+    required this.selected,
+    this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final borderColor = selected
+        ? theme.colorScheme.primary
+        : theme.colorScheme.outlineVariant;
+    final background = selected
+        ? theme.colorScheme.primary.withValues(alpha: 0.08)
+        : theme.colorScheme.surface;
+    return SizedBox(
+      height: 110,
+      child: Material(
+        color: background,
+        borderRadius: BorderRadius.circular(12),
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(12),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: borderColor),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: 3),
+                Text(
+                  description,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.textTheme.bodySmall?.copyWith(height: 1.3),
+                ),
+                if (note != null) ...[
+                  const SizedBox(height: 3),
+                  Text(
+                    note!,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                      height: 1.3,
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 String _localizedSizeLabel(String? raw, AppLocalizations loc) {
   final normalized = raw?.toLowerCase().trim();
   switch (normalized) {
@@ -4858,6 +5030,25 @@ String _localizedSizeLabel(String? raw, AppLocalizations loc) {
       return loc.large;
     default:
       return raw ?? '';
+  }
+}
+
+String _pricingSizeClass(String? raw) {
+  final normalized = raw?.toLowerCase().trim();
+  switch (normalized) {
+    case 'küçük':
+    case 'kucuk':
+    case 'small':
+      return 'small';
+    case 'orta':
+    case 'medium':
+      return 'medium';
+    case 'büyük':
+    case 'buyuk':
+    case 'large':
+      return 'large';
+    default:
+      return 'medium';
   }
 }
 
