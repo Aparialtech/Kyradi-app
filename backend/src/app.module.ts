@@ -10,6 +10,8 @@ import { LuggagesModule } from './luggages/luggages.module';
 import { UploadsModule } from './uploads/uploads.module';
 import { PaymentsModule } from './payments/payments.module';
 import { PricingModule } from './pricing/pricing.module';
+import { DirectionsModule } from './directions/directions.module';
+import { DirectionsController } from './directions/directions.controller';
 
 @Module({
   imports: [
@@ -25,8 +27,9 @@ import { PricingModule } from './pricing/pricing.module';
     UploadsModule,
     PaymentsModule,
     PricingModule,
+    DirectionsModule,
   ],
-  controllers: [AppController],
+  controllers: [DirectionsController, AppController],
   providers: [AppService],
 })
 export class AppModule {}
