@@ -1,8 +1,8 @@
 import { BadRequestException, Controller, Get, InternalServerErrorException, Query } from '@nestjs/common';
 
-@Controller('directions')
+@Controller()
 export class DirectionsController {
-  @Get()
+  @Get('directions')
   async getDirections(
     @Query('origin') origin?: string,
     @Query('destination') destination?: string,
