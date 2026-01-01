@@ -57,3 +57,4 @@ ios/Flutter/flutter_export_environment*.sh
 ios/Runner/Secrets.xcconfig
 .env.local
 .env.local
+ios/Runner/Secrets.xcconfig
