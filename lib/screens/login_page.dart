@@ -1,11 +1,11 @@
 // lib/screens/login_page.dart
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 import '../widgets/gradient_button.dart';
-import '../widgets/api_settings_dialog.dart';
 import '../widgets/section_card.dart';
 import '../services/api_service.dart';
 import '../widgets/app_notification.dart';
@@ -13,6 +13,9 @@ import '../l10n/app_localizations.dart';
 import 'home_page.dart';
 import 'register_page.dart';
 import 'forgot_password_page.dart'; // ✅ eklendi
+
+const _webGoogleClientId =
+    '183178163952-gg63pl5lqvo15hkcpp8vmigpeu7jsb91.apps.googleusercontent.com';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -26,7 +29,7 @@ class _LoginPageState extends State<LoginPage> {
   final _passCtrl = TextEditingController();
   bool _obscure = true;
   bool _loading = false;
-  String _baseUrlLabel = ApiService.baseUrl;
+  bool _googleBusy = false;
 
   void _notify(String message, {AppNotificationType type = AppNotificationType.info}) {
     if (!mounted) return;
@@ -60,6 +63,9 @@ class _LoginPageState extends State<LoginPage> {
           MaterialPageRoute(builder: (_) => const HomePage()),
           (route) => false,
         );
+      } else if (msg.toLowerCase().contains('popup_closed') ||
+          msg.toLowerCase().contains('login cancelled')) {
+        return;
       } else if (status == 400 || status == 401) {
         _notify(msg.isNotEmpty ? msg : 'TOKEN_INVALID',
             type: AppNotificationType.error);
@@ -78,17 +84,41 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   Future<Map<String, dynamic>> _signInWithGoogle() async {
-    final googleSignIn = GoogleSignIn(scopes: ['email']);
-    final account = await googleSignIn.signIn();
-    if (account == null) {
-      return {'ok': false, 'error': 'Login cancelled', 'statusCode': 400};
+    if (_googleBusy) {
+      return {'ok': false, 'error': 'BUSY', 'statusCode': 429};
     }
-    final auth = await account.authentication;
-    final idToken = auth.idToken;
-    if (idToken == null || idToken.isEmpty) {
-      return {'ok': false, 'error': 'TOKEN_INVALID', 'statusCode': 400};
+    _googleBusy = true;
+    try {
+      final googleSignIn = GoogleSignIn(
+        scopes: ['email', 'profile', 'openid'],
+        clientId: kIsWeb ? _webGoogleClientId : null,
+      );
+      final account = await googleSignIn.signIn();
+      if (account == null) {
+        return {'ok': false, 'error': 'Login cancelled', 'statusCode': 400};
+      }
+      final auth = await account.authentication;
+      print("idToken len: ${auth.idToken?.length}  accessToken len: ${auth.accessToken?.length}");
+      final idToken = auth.idToken;
+      final accessToken = auth.accessToken;
+      if ((idToken == null || idToken.isEmpty) &&
+          (accessToken == null || accessToken.isEmpty)) {
+        return {'ok': false, 'error': 'TOKEN_INVALID', 'statusCode': 400};
+      }
+      return ApiService.socialLogin(
+        provider: 'google',
+        idToken: idToken,
+        accessToken: idToken == null || idToken.isEmpty ? accessToken : null,
+      );
+    } catch (e) {
+      final message = e.toString().toLowerCase();
+      if (message.contains('popup_closed')) {
+        return {'ok': false, 'error': 'popup_closed', 'statusCode': 400};
+      }
+      rethrow;
+    } finally {
+      _googleBusy = false;
     }
-    return ApiService.socialLogin(provider: 'google', idToken: idToken);
   }
 
   Future<Map<String, dynamic>> _signInWithApple() async {
@@ -114,14 +144,6 @@ class _LoginPageState extends State<LoginPage> {
     _emailCtrl.dispose();
     _passCtrl.dispose();
     super.dispose();
-  }
-
-  Future<void> _openServerSettings() async {
-    final outcome = await showApiSettingsDialog(context);
-    if (outcome == null) return;
-    if (!mounted) return;
-    setState(() => _baseUrlLabel = ApiService.baseUrl);
-    _notify(outcome.message, type: AppNotificationType.info);
   }
 
   Future<void> _submit() async {
@@ -237,14 +259,6 @@ class _LoginPageState extends State<LoginPage> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      Align(
-                        alignment: Alignment.centerRight,
-                        child: QuickActionTile(
-                          label: l10n.serverButtonLabel,
-                          icon: Icons.settings_ethernet,
-                          onTap: _openServerSettings,
-                        ),
-                      ),
                       const SizedBox(height: 12),
                       SectionCard(
                         padding: const EdgeInsets.symmetric(horizontal: 26, vertical: 24),
@@ -469,23 +483,12 @@ class _LoginPageState extends State<LoginPage> {
                       const SizedBox(height: 20),
                       SectionCard(
                         padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
-                        child: Column(
-                          children: [
-                            Text(
-                              l10n.copyrightNotice,
-                              style: theme.textTheme.bodySmall?.copyWith(
-                                color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
-                              ),
-                            ),
-                            const SizedBox(height: 6),
-                            Text(
-                              l10n.serverStatus(_baseUrlLabel),
-                              style: theme.textTheme.bodySmall?.copyWith(
-                                color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
-                              ),
-                              textAlign: TextAlign.center,
-                            ),
-                          ],
+                        child: Text(
+                          l10n.copyrightNotice,
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                          ),
+                          textAlign: TextAlign.center,
                         ),
                       ),
                     ],

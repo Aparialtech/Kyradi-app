@@ -126,12 +126,27 @@ export class AuthService {
     if (dto.provider !== 'google' && dto.provider !== 'apple') {
       throw new BadRequestException('PROVIDER_UNSUPPORTED');
     }
+    console.log(
+      'SOCIAL',
+      dto.provider,
+      !!dto.idToken,
+      !!dto.accessToken,
+      dto.accessToken?.length,
+    );
     let payload: JWTPayload;
     try {
-      payload =
-        dto.provider === 'google'
-          ? await this.verifyGoogleIdToken(dto.idToken)
-          : await this.verifyAppleIdToken(dto.idToken);
+      if (dto.provider === 'google') {
+        if (dto.idToken && dto.idToken.trim().length > 0) {
+          payload = await this.verifyGoogleIdToken(dto.idToken);
+        } else if (dto.accessToken && dto.accessToken.trim().length > 0) {
+          payload = await this.fetchGoogleUserInfo(dto.accessToken);
+        } else {
+          throw new BadRequestException('TOKEN_INVALID');
+        }
+      } else {
+        if (!dto.idToken) throw new BadRequestException('TOKEN_INVALID');
+        payload = await this.verifyAppleIdToken(dto.idToken);
+      }
     } catch (_) {
       throw new BadRequestException('TOKEN_INVALID');
     }
@@ -173,6 +188,39 @@ export class AuthService {
     const safeUser = this.usersService.toSafeObject(user as any);
     const token = this.generateToken(user.id, user.email);
     return { accessToken: token, user: safeUser };
+  }
+
+  private async fetchGoogleUserInfo(accessToken: string): Promise<JWTPayload> {
+    const res = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+    console.log('GOOGLE_USERINFO_STATUS', res.status);
+    if (!res.ok) {
+      const text = await res.text();
+      console.log('GOOGLE_USERINFO_BODY', text);
+      throw new BadRequestException('TOKEN_INVALID');
+    }
+    const data = await res.json();
+    console.log(
+      'GOOGLE_USERINFO_KEYS',
+      Object.keys(data),
+      'sub:',
+      data?.sub,
+      'email:',
+      data?.email,
+    );
+    if (!data?.sub) {
+      throw new BadRequestException('TOKEN_INVALID');
+    }
+    return {
+      sub: data.sub,
+      email: data.email,
+      ...(data.name ? { name: data.name } : {}),
+      ...(data.given_name ? { given_name: data.given_name } : {}),
+      ...(data.family_name ? { family_name: data.family_name } : {}),
+    } as JWTPayload;
   }
 
   async forgot(dto: ForgotPasswordDto) {

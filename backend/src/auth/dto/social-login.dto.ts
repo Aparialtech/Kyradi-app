@@ -5,8 +5,13 @@ export class SocialLoginDto {
   @IsIn(['google', 'apple'])
   provider: 'google' | 'apple';
 
+  @IsOptional()
   @IsString()
-  idToken: string;
+  idToken?: string;
+
+  @IsOptional()
+  @IsString()
+  accessToken?: string;
 
   @IsOptional()
   @IsString()

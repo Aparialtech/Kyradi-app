@@ -10,6 +10,7 @@ import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:vibration/vibration.dart';
+import 'package:flutter_polyline_points/flutter_polyline_points.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:flutter/services.dart';
 import 'package:qr_flutter/qr_flutter.dart';
@@ -101,6 +102,7 @@ class _HomePageState extends State<HomePage> {
   final GlobalKey _luggageListKey = GlobalKey();
   GoogleMapController? _googleMapController;
   Polyline? _activeRoute;
+  final Set<Polyline> _polylines = {};
   _RouteMode? _activeRouteMode;
   bool _fetchingRoute = false;
 
@@ -114,6 +116,13 @@ class _HomePageState extends State<HomePage> {
     _restoreUserIdThenLoad();
     _loadIdentityProof();
     _loadReminderPrefs();
+    Future.delayed(const Duration(seconds: 2), () {
+      if (!mounted) return;
+      _loadRoute(
+        origin: const LatLng(41.015, 28.979),
+        destination: const LatLng(41.042, 29.009),
+      );
+    });
   }
 
   @override
@@ -650,6 +659,60 @@ class _HomePageState extends State<HomePage> {
   void _snack(String msg, {AppNotificationType type = AppNotificationType.info}) {
     if (!mounted) return;
     AppNotification.show(context, message: msg, type: type);
+  }
+
+  Future<void> _loadRoute({
+    required LatLng origin,
+    required LatLng destination,
+  }) async {
+    final base = "https://kyradi-app-production.up.railway.app";
+
+    final uri = Uri.parse("$base/directions").replace(queryParameters: {
+      "origin": "${origin.latitude},${origin.longitude}",
+      "destination": "${destination.latitude},${destination.longitude}",
+    });
+
+    print("ROUTE başladı");
+    print("ROUTE URL: $uri");
+    final resp = await http.get(uri);
+    final data = jsonDecode(resp.body);
+    if (data is Map && data["routes"] == null && data["status"] == null) {
+      print("ROUTE response unexpected: ${resp.body}");
+      throw Exception("Directions failed: unexpected response");
+    }
+
+    if (data["status"] != "OK") {
+      print("ROUTE status: ${data["status"]}");
+      throw Exception(
+        "Directions failed: ${data["status"]} ${data["error_message"] ?? ""}",
+      );
+    }
+    print("ROUTE status: ${data["status"]}");
+
+    final String encoded = data["routes"][0]["overview_polyline"]["points"];
+    final decoded = PolylinePoints().decodePolyline(encoded);
+
+    final points = decoded
+        .map((p) => LatLng(p.latitude, p.longitude))
+        .toList();
+
+    setState(() {
+      _polylines.removeWhere((p) => p.polylineId.value == "route");
+      _polylines.add(
+        Polyline(
+          polylineId: const PolylineId("route"),
+          points: points,
+          width: 5,
+        ),
+      );
+    });
+
+    if (_googleMapController != null && points.isNotEmpty) {
+      final bounds = _boundsFromPoints(points);
+      await _googleMapController!.animateCamera(
+        CameraUpdate.newLatLngBounds(bounds, 48),
+      );
+    }
   }
 
   Future<void> _openExternalMaps(
@@ -1750,10 +1813,10 @@ class _HomePageState extends State<HomePage> {
       );
     }).toSet();
 
-    final polylines = <Polyline>{};
-    if (_activeRoute != null) {
-      polylines.add(_activeRoute!);
-    }
+    final polylines = <Polyline>{
+      ..._polylines,
+      if (_activeRoute != null) _activeRoute!,
+    };
 
     final initialTarget =
         _selectedMapLocation?.position ?? locations.first.position;
@@ -2311,7 +2374,12 @@ class _HomePageState extends State<HomePage> {
                           QuickActionTile(
                             label: loc.quickTransit,
                             icon: Icons.directions_transit,
-                            onTap: _openTransitRoute,
+                            onTap: () async {
+                              await _loadRoute(
+                                origin: const LatLng(41.015, 28.979),
+                                destination: const LatLng(41.042, 29.009),
+                              );
+                            },
                           ),
                         ],
                       ),

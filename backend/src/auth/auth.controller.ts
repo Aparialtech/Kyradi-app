@@ -50,6 +50,7 @@ export class AuthController {
 
   @Post('social')
   socialLogin(@Body() dto: SocialLoginDto) {
+    console.log('AUTH_SOCIAL_HIT_FROM_NEW_CODE');
     return this.authService.socialLogin(dto);
   }
 }

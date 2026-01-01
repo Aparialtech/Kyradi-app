@@ -285,15 +285,17 @@ class ApiService {
 
   static Future<Map<String, dynamic>> socialLogin({
     required String provider,
-    required String idToken,
+    String? idToken,
+    String? accessToken,
     String? authorizationCode,
   }) async {
     if (_usingMockBackend) {
-      return MockServer.socialLogin(provider, idToken);
+      return MockServer.socialLogin(provider, idToken ?? accessToken ?? '');
     }
     final result = await _post('/auth/social', {
       'provider': provider,
-      'idToken': idToken,
+      if (idToken != null && idToken.isNotEmpty) 'idToken': idToken,
+      if (accessToken != null && accessToken.isNotEmpty) 'accessToken': accessToken,
       if (authorizationCode != null) 'authorizationCode': authorizationCode,
     });
     result['statusCode'] ??= result['_httpStatus'];
