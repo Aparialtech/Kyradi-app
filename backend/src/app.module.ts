@@ -11,7 +11,6 @@ import { UploadsModule } from './uploads/uploads.module';
 import { PaymentsModule } from './payments/payments.module';
 import { PricingModule } from './pricing/pricing.module';
 import { DirectionsModule } from './directions/directions.module';
-import { DirectionsController } from './directions/directions.controller';
 
 @Module({
   imports: [
@@ -29,7 +28,7 @@ import { DirectionsController } from './directions/directions.controller';
     PricingModule,
     DirectionsModule,
   ],
-  controllers: [DirectionsController, AppController],
+  controllers: [AppController],
   providers: [AppService],
 })
 export class AppModule {}
