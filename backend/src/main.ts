@@ -12,6 +12,7 @@ async function bootstrap() {
     prefix: '/uploads/',
   });
   const port = Number(process.env.PORT) || 3000;
+  console.log("BOOT OK - directions route should exist");
   await app.listen(port, '0.0.0.0');
 }
 bootstrap();
