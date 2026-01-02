@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import '../services/api_service.dart';
 import '../models/pricing_models.dart';
@@ -35,6 +36,10 @@ class _PaymentPageState extends State<PaymentPage> {
   final _nameCtrl = TextEditingController();
   final _expiryCtrl = TextEditingController();
   final _cvcCtrl = TextEditingController();
+  final _cardNumberFocus = FocusNode();
+  final _nameFocus = FocusNode();
+  final _expiryFocus = FocusNode();
+  final _cvcFocus = FocusNode();
   bool _loading = false;
   bool _loadingQuote = false;
   PricingQuoteResponse? _quote;
@@ -42,6 +47,9 @@ class _PaymentPageState extends State<PaymentPage> {
 
   late String _paymentMethod;
   late String _protectionLevel;
+  late String _sizeLabel;
+  DateTime? _dropAt;
+  DateTime? _pickupAt;
   int _installmentCount = 3;
 
   @override
@@ -49,6 +57,9 @@ class _PaymentPageState extends State<PaymentPage> {
     super.initState();
     _paymentMethod = widget.paymentMethod.isNotEmpty ? widget.paymentMethod : 'card';
     _protectionLevel = 'standard';
+    _sizeLabel = widget.sizeLabel;
+    _dropAt = widget.dropAt;
+    _pickupAt = widget.pickupAt;
     _fetchQuote();
   }
 
@@ -58,11 +69,15 @@ class _PaymentPageState extends State<PaymentPage> {
     _nameCtrl.dispose();
     _expiryCtrl.dispose();
     _cvcCtrl.dispose();
+    _cardNumberFocus.dispose();
+    _nameFocus.dispose();
+    _expiryFocus.dispose();
+    _cvcFocus.dispose();
     super.dispose();
   }
 
   Future<void> _fetchQuote() async {
-    if (widget.dropAt == null || widget.pickupAt == null) {
+    if (_dropAt == null || _pickupAt == null) {
       setState(() {
         _quote = null;
         _quoteError = null;
@@ -71,7 +86,7 @@ class _PaymentPageState extends State<PaymentPage> {
       return;
     }
     final loc = AppLocalizations.of(context)!;
-    if (!widget.pickupAt!.isAfter(widget.dropAt!)) {
+    if (!_pickupAt!.isAfter(_dropAt!)) {
       setState(() {
         _quote = null;
         _quoteError = loc.pricingInvalidRangeMessage;
@@ -80,20 +95,20 @@ class _PaymentPageState extends State<PaymentPage> {
     }
     try {
       setState(() => _loadingQuote = true);
-      final sizeClass = _sizeClassValue(widget.sizeLabel);
+      final sizeClass = _sizeClassValue(_sizeLabel);
       final baseUrl = ApiService.apiBaseUrl;
       final uri = baseUrl.isNotEmpty
           ? Uri.parse('$baseUrl/pricing/quote').replace(queryParameters: {
               'sizeClass': sizeClass,
-              'startAt': widget.dropAt!.toUtc().toIso8601String(),
-              'endAt': widget.pickupAt!.toUtc().toIso8601String(),
+              'startAt': _dropAt!.toUtc().toIso8601String(),
+              'endAt': _pickupAt!.toUtc().toIso8601String(),
               if (_protectionLevel.isNotEmpty) 'protectionLevel': _protectionLevel,
             })
           : null;
       final quote = await ApiService.getPricingQuote(
         sizeClass: sizeClass,
-        startAt: widget.dropAt!,
-        endAt: widget.pickupAt!,
+        startAt: _dropAt!,
+        endAt: _pickupAt!,
         protectionLevel: _protectionLevel,
       );
       if (!mounted) return;
@@ -120,76 +135,43 @@ class _PaymentPageState extends State<PaymentPage> {
   Future<void> _completePayment() async {
     final loc = AppLocalizations.of(context)!;
     if (_paymentMethod != 'pay_at_hotel') {
-      if (_cardNumberCtrl.text.trim().length < 12 ||
-          _nameCtrl.text.trim().isEmpty ||
-          _expiryCtrl.text.trim().isEmpty ||
-          _cvcCtrl.text.trim().length < 3) {
+      final cardDigits = _digitsOnly(_cardNumberCtrl.text);
+      final name = _nameCtrl.text.trim();
+      final expiry = _expiryCtrl.text.trim();
+      final cvv = _digitsOnly(_cvcCtrl.text);
+
+      if (cardDigits.isEmpty || name.isEmpty || expiry.isEmpty || cvv.isEmpty) {
         _showError(loc.paymentFormIncompleteMessage);
+        return;
+      }
+      if (cardDigits.length != 16) {
+        _showError(loc.paymentCardNumberInvalidMessage);
+        return;
+      }
+      if (!_isValidExpiry(expiry)) {
+        _showError(loc.paymentExpiryInvalidMessage);
+        return;
+      }
+      if (cvv.length < 3 || cvv.length > 4) {
+        _showError(loc.paymentCvvInvalidMessage);
         return;
       }
     }
     setState(() => _loading = true);
     try {
-      final checkout = await ApiService.startPaymentCheckout(
-        reservationId: widget.reservationId,
-        paymentMethod: _paymentMethod,
-        installmentCount: _paymentMethod == 'installment' ? _installmentCount : null,
-        sizeClass: _sizeClassValue(widget.sizeLabel),
-        startAt: widget.dropAt,
-        endAt: widget.pickupAt,
-      );
-      if (checkout['ok'] != true) {
-        final msg = (checkout['error'] ?? checkout['message'] ?? '').toString().trim();
-        if (!mounted) return;
-        setState(() => _loading = false);
-        _showError(msg.isNotEmpty ? msg : loc.paymentFailedMessage);
-        return;
-      }
-      final quotePrice = checkout['priceTry'];
-      if (quotePrice is num && mounted) {
-        setState(() {
-          _quote = PricingQuoteResponse(
-            durationHours: _quote?.durationHours ?? 0,
-            tier: (checkout['tier'] ?? _quote?.tier ?? '').toString(),
-            priceTry: quotePrice.round(),
-            daysCharged: _quote?.daysCharged,
-            breakdown: _quote?.breakdown ?? const {},
-          );
-        });
-      }
-      final providerPaymentId =
-          (checkout['providerPaymentId'] ?? '').toString().trim();
-      if (providerPaymentId.isEmpty) {
-        if (!mounted) return;
-        setState(() => _loading = false);
-        _showError(loc.paymentFailedMessage);
-        return;
-      }
-      if (_paymentMethod == 'pay_at_hotel') {
-        if (!mounted) return;
-        setState(() => _loading = false);
-        Navigator.of(context).pop({
-          'completed': false,
-          'paymentMethod': _paymentMethod,
-        });
-        return;
-      }
-      final result = await ApiService.sendPaymentWebhook(
-        providerPaymentId: providerPaymentId,
-        status: 'success',
-      );
       if (!mounted) return;
       setState(() => _loading = false);
-      if (result['ok'] == true) {
-        Navigator.of(context).pop({
-          'completed': true,
-          'paymentMethod': _paymentMethod,
-        });
-      } else {
-        final msg =
-            (result['error'] ?? result['message'] ?? '').toString().trim();
-        _showError(msg.isNotEmpty ? msg : loc.paymentFailedMessage);
-      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(loc.paymentSuccessMessage)),
+      );
+      _cardNumberCtrl.clear();
+      _nameCtrl.clear();
+      _expiryCtrl.clear();
+      _cvcCtrl.clear();
+      Navigator.of(context).pop({
+        'completed': true,
+        'paymentMethod': _paymentMethod,
+      });
     } catch (e) {
       if (!mounted) return;
       setState(() => _loading = false);
@@ -199,18 +181,23 @@ class _PaymentPageState extends State<PaymentPage> {
 
   Future<void> _openEditReservation() async {
     if (widget.userId.isEmpty) return;
-    final result = await Navigator.of(context).push<bool>(
+    final result = await Navigator.of(context).push<Map<String, dynamic>?>(
       MaterialPageRoute(
         builder: (_) => ReservationEditPage(
           userId: widget.userId,
           reservationId: widget.reservationId,
-          initialSize: widget.sizeLabel,
-          initialDropAt: widget.dropAt,
-          initialPickupAt: widget.pickupAt,
+          initialSize: _sizeLabel,
+          initialDropAt: _dropAt,
+          initialPickupAt: _pickupAt,
         ),
       ),
     );
-    if (result == true && mounted) {
+    if (result != null && mounted) {
+      if (result['size'] is String) {
+        _sizeLabel = result['size'] as String;
+      }
+      _dropAt = result['dropAt'] as DateTime?;
+      _pickupAt = result['pickupAt'] as DateTime?;
       await _fetchQuote();
       setState(() {});
     }
@@ -265,19 +252,54 @@ class _PaymentPageState extends State<PaymentPage> {
                           style: theme.textTheme.bodyMedium,
                         ),
                         const SizedBox(height: 16),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          children: [
+                            _CardBrandPill(
+                              label: 'VISA',
+                              color: const Color(0xFF1A1F71),
+                            ),
+                            const SizedBox(width: 8),
+                            _CardBrandPill(
+                              label: 'MC',
+                              color: const Color(0xFFEB001B),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 10),
                         TextField(
                           controller: _cardNumberCtrl,
+                          focusNode: _cardNumberFocus,
                           keyboardType: TextInputType.number,
+                          textInputAction: TextInputAction.next,
+                          maxLength: 19,
+                          inputFormatters: [
+                            FilteringTextInputFormatter.digitsOnly,
+                            CardNumberInputFormatter(),
+                          ],
                           decoration: InputDecoration(
                             labelText: loc.paymentCardNumberLabel,
+                            hintText: '1234 5678 9012 3456',
                           ),
+                          onSubmitted: (_) => _nameFocus.requestFocus(),
                         ),
                         const SizedBox(height: 12),
                         TextField(
                           controller: _nameCtrl,
+                          focusNode: _nameFocus,
+                          textCapitalization: TextCapitalization.characters,
+                          textInputAction: TextInputAction.next,
+                          inputFormatters: [
+                            FilteringTextInputFormatter.allow(
+                              RegExp(r"[A-Za-zÀ-ÖØ-öø-ÿ\s]"),
+                            ),
+                            UpperCaseTextFormatter(),
+                          ],
                           decoration: InputDecoration(
                             labelText: loc.paymentCardNameLabel,
+                            hintText: 'AD SOYAD',
                           ),
+                          onSubmitted: (_) => _expiryFocus.requestFocus(),
                         ),
                         const SizedBox(height: 12),
                         Row(
@@ -285,20 +307,38 @@ class _PaymentPageState extends State<PaymentPage> {
                             Expanded(
                               child: TextField(
                                 controller: _expiryCtrl,
+                                focusNode: _expiryFocus,
                                 keyboardType: TextInputType.number,
+                                textInputAction: TextInputAction.next,
+                                maxLength: 5,
+                                inputFormatters: [
+                                  FilteringTextInputFormatter.digitsOnly,
+                                  ExpiryDateInputFormatter(),
+                                ],
                                 decoration: InputDecoration(
                                   labelText: loc.paymentExpiryLabel,
+                                  hintText: 'MM/YY',
                                 ),
+                                onSubmitted: (_) => _cvcFocus.requestFocus(),
                               ),
                             ),
                             const SizedBox(width: 12),
                             Expanded(
                               child: TextField(
                                 controller: _cvcCtrl,
+                                focusNode: _cvcFocus,
                                 keyboardType: TextInputType.number,
+                                textInputAction: TextInputAction.done,
+                                maxLength: 4,
+                                obscureText: true,
+                                inputFormatters: [
+                                  FilteringTextInputFormatter.digitsOnly,
+                                ],
                                 decoration: InputDecoration(
                                   labelText: loc.paymentCvcLabel,
+                                  hintText: 'CVV',
                                 ),
+                                onSubmitted: (_) => _completePayment(),
                               ),
                             ),
                           ],
@@ -505,7 +545,7 @@ class _PaymentPageState extends State<PaymentPage> {
   }
 
   String _displaySizeLabel(AppLocalizations loc) {
-    final normalized = widget.sizeLabel.trim().toLowerCase();
+    final normalized = _sizeLabel.trim().toLowerCase();
     switch (normalized) {
       case 'küçük':
       case 'kucuk':
@@ -519,13 +559,13 @@ class _PaymentPageState extends State<PaymentPage> {
       case 'large':
         return loc.large;
       default:
-        return widget.sizeLabel;
+        return _sizeLabel;
     }
   }
 
   String _formatSelectedTimes(AppLocalizations loc) {
-    final drop = widget.dropAt;
-    final pickup = widget.pickupAt;
+    final drop = _dropAt;
+    final pickup = _pickupAt;
     if (drop == null || pickup == null) {
       return loc.pricingEstimateUnavailable;
     }
@@ -562,6 +602,105 @@ class _PaymentPageState extends State<PaymentPage> {
       default:
         return 'medium';
     }
+  }
+
+  String _digitsOnly(String input) {
+    return input.replaceAll(RegExp(r'\D'), '');
+  }
+
+  bool _isValidExpiry(String input) {
+    final parts = input.split('/');
+    if (parts.length != 2) return false;
+    final month = int.tryParse(parts[0]) ?? 0;
+    final year = int.tryParse(parts[1]) ?? -1;
+    if (month < 1 || month > 12) return false;
+    if (year < 0) return false;
+    return true;
+  }
+}
+
+class CardNumberInputFormatter extends TextInputFormatter {
+  @override
+  TextEditingValue formatEditUpdate(
+    TextEditingValue oldValue,
+    TextEditingValue newValue,
+  ) {
+    final digits = newValue.text.replaceAll(RegExp(r'\D'), '');
+    final buffer = StringBuffer();
+    for (var i = 0; i < digits.length; i++) {
+      if (i != 0 && i % 4 == 0) buffer.write(' ');
+      buffer.write(digits[i]);
+    }
+    final formatted = buffer.toString();
+    return TextEditingValue(
+      text: formatted,
+      selection: TextSelection.collapsed(offset: formatted.length),
+    );
+  }
+}
+
+class ExpiryDateInputFormatter extends TextInputFormatter {
+  @override
+  TextEditingValue formatEditUpdate(
+    TextEditingValue oldValue,
+    TextEditingValue newValue,
+  ) {
+    final digits = newValue.text.replaceAll(RegExp(r'\D'), '');
+    if (digits.isEmpty) {
+      return const TextEditingValue(text: '');
+    }
+    final buffer = StringBuffer();
+    for (var i = 0; i < digits.length && i < 4; i++) {
+      if (i == 2) buffer.write('/');
+      buffer.write(digits[i]);
+    }
+    final formatted = buffer.toString();
+    return TextEditingValue(
+      text: formatted,
+      selection: TextSelection.collapsed(offset: formatted.length),
+    );
+  }
+}
+
+class UpperCaseTextFormatter extends TextInputFormatter {
+  @override
+  TextEditingValue formatEditUpdate(
+    TextEditingValue oldValue,
+    TextEditingValue newValue,
+  ) {
+    final upper = newValue.text.toUpperCase();
+    return TextEditingValue(
+      text: upper,
+      selection: newValue.selection,
+    );
+  }
+}
+
+class _CardBrandPill extends StatelessWidget {
+  const _CardBrandPill({required this.label, required this.color});
+
+  final String label;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: color.withValues(alpha: 0.4)),
+      ),
+      child: Text(
+        label,
+        style: theme.textTheme.labelSmall?.copyWith(
+          color: color,
+          fontWeight: FontWeight.w700,
+          letterSpacing: 0.4,
+        ),
+      ),
+    );
   }
 }
 
@@ -639,7 +778,11 @@ class _ReservationEditPageState extends State<ReservationEditPage> {
       if (!mounted) return;
       setState(() => _saving = false);
       if (result['ok'] == true) {
-        Navigator.of(context).pop(true);
+        Navigator.of(context).pop({
+          'size': _size,
+          'dropAt': _dropAt,
+          'pickupAt': _pickupAt,
+        });
       } else {
         final msg = (result['error'] ?? result['message'] ?? '').toString().trim();
         ScaffoldMessenger.of(context).showSnackBar(

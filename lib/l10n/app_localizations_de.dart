@@ -1318,6 +1318,20 @@ class AppLocalizationsDe extends AppLocalizations {
       'Zahlung konnte nicht abgeschlossen werden.';
 
   @override
+  String get paymentSuccessMessage => 'Zahlung erfolgreich erhalten';
+
+  @override
+  String get paymentCardNumberInvalidMessage =>
+      'Kartennummer muss 16 Ziffern haben.';
+
+  @override
+  String get paymentExpiryInvalidMessage =>
+      'Ablaufdatum muss im Format MM/JJ sein.';
+
+  @override
+  String get paymentCvvInvalidMessage => 'CVV muss 3 oder 4 Ziffern haben.';
+
+  @override
   String get paymentPayAtHotelTitle => 'Im Hotel zahlen';
 
   @override

@@ -2402,6 +2402,30 @@ abstract class AppLocalizations {
   /// **'Ödeme tamamlanamadı.'**
   String get paymentFailedMessage;
 
+  /// No description provided for @paymentSuccessMessage.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ödeme başarıyla alındı'**
+  String get paymentSuccessMessage;
+
+  /// No description provided for @paymentCardNumberInvalidMessage.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kart numarası 16 hane olmalı.'**
+  String get paymentCardNumberInvalidMessage;
+
+  /// No description provided for @paymentExpiryInvalidMessage.
+  ///
+  /// In tr, this message translates to:
+  /// **'Son kullanma tarihi MM/YY formatında olmalı.'**
+  String get paymentExpiryInvalidMessage;
+
+  /// No description provided for @paymentCvvInvalidMessage.
+  ///
+  /// In tr, this message translates to:
+  /// **'CVV 3 veya 4 haneli olmalı.'**
+  String get paymentCvvInvalidMessage;
+
   /// No description provided for @paymentPayAtHotelTitle.
   ///
   /// In tr, this message translates to:

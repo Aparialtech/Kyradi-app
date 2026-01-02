@@ -35,8 +35,6 @@ import '../services/reminder_service.dart';
 const _identityDocPathKey = 'identity_doc_path';
 const _identityDocTypeKey = 'identity_doc_type';
 const _identityDocBytesKey = 'identity_doc_bytes';
-const _pickupPinStoragePrefix = 'pickup_pin_';
-
 const String _googleMapsApiKey = String.fromEnvironment(
   'GOOGLE_MAPS_API_KEY',
   defaultValue: 'REMOVED_GOOGLE_KEY',
@@ -173,16 +171,6 @@ class _HomePageState extends State<HomePage> {
       final loc = AppLocalizations.of(context)!;
       _snack(loc.userIdReadFailed('$e'), type: AppNotificationType.error);
     }
-  }
-
-  Future<void> _storePickupPin(String luggageId, String pin) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('$_pickupPinStoragePrefix$luggageId', pin);
-  }
-
-  Future<String?> _loadPickupPin(String luggageId) async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getString('$_pickupPinStoragePrefix$luggageId');
   }
 
   Future<void> _loadIdentityProof() async {
@@ -664,32 +652,47 @@ class _HomePageState extends State<HomePage> {
   Future<void> _loadRoute({
     required LatLng origin,
     required LatLng destination,
+    String? locationId,
+    String mode = 'walking',
   }) async {
     final base = "https://kyradi-app-production.up.railway.app";
 
     final uri = Uri.parse("$base/directions").replace(queryParameters: {
       "origin": "${origin.latitude},${origin.longitude}",
       "destination": "${destination.latitude},${destination.longitude}",
+      "mode": mode,
     });
 
-    print("ROUTE başladı");
-    print("ROUTE URL: $uri");
+    print("ROUTE_DEBUG başladı");
+    print(
+      "ROUTE_DEBUG origin=${origin.latitude},${origin.longitude} "
+      "dest=${destination.latitude},${destination.longitude} "
+      "mode=$mode "
+      "locationId=${locationId ?? '-'}",
+    );
+    print("ROUTE_DEBUG URL: $uri");
     final resp = await http.get(uri);
+    final snippet =
+        resp.body.length > 300 ? resp.body.substring(0, 300) : resp.body;
+    print("ROUTE_DEBUG HTTP ${resp.statusCode} BODY: $snippet");
     final data = jsonDecode(resp.body);
     if (data is Map && data["routes"] == null && data["status"] == null) {
-      print("ROUTE response unexpected: ${resp.body}");
+      print("ROUTE_DEBUG unexpected response: $snippet");
       throw Exception("Directions failed: unexpected response");
     }
 
     if (data["status"] != "OK") {
-      print("ROUTE status: ${data["status"]}");
+      print(
+        "ROUTE_DEBUG status: ${data["status"]} error: ${data["error_message"] ?? ""}",
+      );
       throw Exception(
         "Directions failed: ${data["status"]} ${data["error_message"] ?? ""}",
       );
     }
-    print("ROUTE status: ${data["status"]}");
+    print("ROUTE_DEBUG status: ${data["status"]}");
 
     final String encoded = data["routes"][0]["overview_polyline"]["points"];
+    print("ROUTE_DEBUG points length: ${encoded.length}");
     final decoded = PolylinePoints().decodePolyline(encoded);
 
     final points = decoded
@@ -697,7 +700,7 @@ class _HomePageState extends State<HomePage> {
         .toList();
 
     setState(() {
-      _polylines.removeWhere((p) => p.polylineId.value == "route");
+      _polylines.clear();
       _polylines.add(
         Polyline(
           polylineId: const PolylineId("route"),
@@ -1031,7 +1034,6 @@ class _HomePageState extends State<HomePage> {
   Future<void> _showQrDialog(LuggageModel luggage) async {
     if (_qrNavigationPending || !mounted) return;
     _qrNavigationPending = true;
-    final pin = await _loadPickupPin(luggage.id);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) {
         _qrNavigationPending = false;
@@ -1042,7 +1044,6 @@ class _HomePageState extends State<HomePage> {
             MaterialPageRoute<void>(
               builder: (_) => QrPreviewPage(
                 luggage: luggage,
-                pickupPin: pin,
               ),
               fullscreenDialog: true,
             ),
@@ -1587,12 +1588,6 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future<void> _drawRoute(DropLocation location, _RouteMode mode) async {
-    if (_googleMapsApiKey.isEmpty) {
-      if (!mounted) return;
-      final loc = AppLocalizations.of(context)!;
-      _snack(loc.mapsMissingApiKey, type: AppNotificationType.error);
-      return;
-    }
     final hasLocation = await _ensureCurrentPosition(showSnackOnSuccess: false);
     if (!hasLocation || _lat == null || _lng == null) return;
 
@@ -1602,92 +1597,25 @@ class _HomePageState extends State<HomePage> {
       _selectedMapLocation = location;
     });
 
-    final modeParam = switch (mode) {
-      _RouteMode.walking => 'walking',
-      _RouteMode.transit => 'transit',
-      _RouteMode.driving => 'driving',
-    };
-
-    final origin = '${_lat!},${_lng!}';
-    final destination =
-        '${location.position.latitude},${location.position.longitude}';
-
-    final buffer = StringBuffer(
-      'https://maps.googleapis.com/maps/api/directions/json'
-      '?origin=$origin&destination=$destination'
-      '&mode=$modeParam&key=$_googleMapsApiKey',
-    );
-    if (mode == _RouteMode.transit) {
-      final departure = DateTime.now().millisecondsSinceEpoch ~/ 1000;
-      buffer.write('&departure_time=$departure');
-    }
-
-    final uri = Uri.parse(buffer.toString());
-
     try {
-      final res = await http.get(uri).timeout(const Duration(seconds: 15));
       if (!mounted) return;
-      final loc = AppLocalizations.of(context)!;
-      if (res.statusCode != 200) {
-        _snack(
-          loc.routeFetchFailedWithDetails('${res.statusCode}'),
-          type: AppNotificationType.error,
-        );
-        return;
-      }
-
-      final body = jsonDecode(res.body) as Map<String, dynamic>;
-      final status = (body['status'] ?? '').toString();
-      if (status.isNotEmpty && status != 'OK') {
-        final message = body['error_message']?.toString();
-        final hint = message?.isNotEmpty == true
-            ? message!
-            : loc.directionsApiError(status);
-        _snack(hint, type: AppNotificationType.error);
-        return;
-      }
-
-      final routes = body['routes'] as List<dynamic>?;
-      if (routes == null || routes.isEmpty) {
-        _snack(loc.routeNotFound, type: AppNotificationType.warning);
-        return;
-      }
-
-      final overview = routes.first['overview_polyline']?['points'] as String?;
-      if (overview == null || overview.isEmpty) {
-        _snack(loc.routeDataMissing, type: AppNotificationType.error);
-        return;
-      }
-
-      final points = _decodePolyline(overview);
-      if (!mounted) return;
-      final theme = Theme.of(context);
-      final polyline = Polyline(
-        polylineId: PolylineId('route_${mode.name}_${location.id}'),
-        color: _routeColorFor(mode, theme),
-        width: 6,
-        points: points,
+      final origin = LatLng(_lat!, _lng!);
+      final modeParam = switch (mode) {
+        _RouteMode.walking => 'walking',
+        _RouteMode.transit => 'transit',
+        _RouteMode.driving => 'driving',
+      };
+      await _loadRoute(
+        origin: origin,
+        destination: location.position,
+        locationId: location.id,
+        mode: modeParam,
       );
-
       if (!mounted) return;
       setState(() {
-        _activeRoute = polyline;
+        _activeRoute = null;
         _selectedMapLocation = location;
       });
-
-      final controller = _googleMapController;
-      if (controller != null && points.isNotEmpty) {
-        final bounds = _boundsFromPoints(points);
-        try {
-          await controller.animateCamera(
-            CameraUpdate.newLatLngBounds(bounds, 64),
-          );
-        } catch (_) {
-          await controller.animateCamera(
-            CameraUpdate.newLatLngZoom(points.first, 13.5),
-          );
-        }
-      }
     } catch (e) {
       if (!mounted) return;
       final loc = AppLocalizations.of(context)!;
@@ -1806,9 +1734,27 @@ class _HomePageState extends State<HomePage> {
           snippet: location.address,
           onTap: () => _showLocationSheet(location),
         ),
-        onTap: () {
+        onTap: () async {
           setState(() => _selectedMapLocation = location);
           _focusOnLocation(location);
+          final hasLocation =
+              await _ensureCurrentPosition(showSnackOnSuccess: false);
+          if (!hasLocation || _lat == null || _lng == null) return;
+          try {
+            await _loadRoute(
+              origin: LatLng(_lat!, _lng!),
+              destination: location.position,
+              locationId: location.id,
+              mode: 'walking',
+            );
+          } catch (e) {
+            if (!mounted) return;
+            final loc = AppLocalizations.of(context)!;
+            _snack(
+              loc.routeFetchFailedWithDetails('$e'),
+              type: AppNotificationType.error,
+            );
+          }
         },
       );
     }).toSet();
@@ -2375,10 +2321,27 @@ class _HomePageState extends State<HomePage> {
                             label: loc.quickTransit,
                             icon: Icons.directions_transit,
                             onTap: () async {
-                              await _loadRoute(
-                                origin: const LatLng(41.015, 28.979),
-                                destination: const LatLng(41.042, 29.009),
-                              );
+                              final target =
+                                  _selectedMapLocation ?? _effectiveLocations.first;
+                              final hasLocation =
+                                  await _ensureCurrentPosition(showSnackOnSuccess: false);
+                              if (!hasLocation || _lat == null || _lng == null) {
+                                return;
+                              }
+                              try {
+                                await _loadRoute(
+                                  origin: LatLng(_lat!, _lng!),
+                                  destination: target.position,
+                                  locationId: target.id,
+                                  mode: 'walking',
+                                );
+                              } catch (e) {
+                                if (!mounted) return;
+                                _snack(
+                                  loc.routeFetchFailedWithDetails('$e'),
+                                  type: AppNotificationType.error,
+                                );
+                              }
                             },
                           ),
                         ],
@@ -3351,12 +3314,10 @@ class _InfoRow extends StatelessWidget {
 // ===== QR ve Luggage Ekranları =====
 class QrPreviewPage extends StatelessWidget {
   final LuggageModel luggage;
-  final String? pickupPin;
 
   const QrPreviewPage({
     super.key,
     required this.luggage,
-    this.pickupPin,
   });
 
   @override
@@ -3428,82 +3389,15 @@ class QrPreviewPage extends StatelessWidget {
                 Text(loc.noteLabel(luggage.note ?? ''),
                     style: theme.textTheme.bodySmall),
               ],
-              if ((luggage.ownerName ?? '').isNotEmpty ||
-                  (luggage.ownerPhone ?? '').isNotEmpty ||
-                  (luggage.ownerEmail ?? '').isNotEmpty) ...[
-                const SizedBox(height: 12),
-                SectionCard(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      if ((luggage.ownerName ?? '').isNotEmpty)
-                        Text(
-                          '${loc.ownerNameLabel}: ${luggage.ownerName}',
-                          style: theme.textTheme.bodyMedium?.copyWith(
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      if ((luggage.ownerPhone ?? '').isNotEmpty)
-                        Text(
-                          '${loc.ownerPhoneLabel}: ${luggage.ownerPhone}',
-                          style: theme.textTheme.bodyMedium,
-                        ),
-                      if ((luggage.ownerEmail ?? '').isNotEmpty)
-                        Text(
-                          '${loc.ownerEmailLabel}: ${luggage.ownerEmail}',
-                          style: theme.textTheme.bodyMedium,
-                        ),
-                    ],
-                  ),
-                ),
-              ],
-              if ((pickupPin ?? '').isNotEmpty) ...[
-                const SizedBox(height: 20),
-                SectionCard(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        loc.pickupPinTitle,
-                        style: theme.textTheme.titleSmall?.copyWith(
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      SelectableText(
-                        pickupPin!,
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.w700,
-                          letterSpacing: 1.2,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        loc.pickupPinSafetyWarning,
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: theme.colorScheme.onSurfaceVariant,
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                      OutlinedButton.icon(
-                        onPressed: () {
-                          Clipboard.setData(ClipboardData(text: pickupPin!));
-                          AppNotification.show(
-                            context,
-                            message: loc.pickupPinCopiedMessage,
-                            type: AppNotificationType.success,
-                          );
-                        },
-                        icon: const Icon(Icons.copy),
-                        label: Text(loc.copy),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
               const SizedBox(height: 20),
+              Text(
+                loc.pickupPinSentMessage,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 12),
               FilledButton.icon(
                 onPressed: () {
                   Clipboard.setData(ClipboardData(text: luggage.qrCode));
@@ -3724,6 +3618,46 @@ class _AddLuggagePageState extends State<AddLuggagePage> {
     );
   }
 
+  Widget _buildOwnerInfoTile(
+    ThemeData theme, {
+    required IconData icon,
+    required String label,
+    required String value,
+  }) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.7),
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 18, color: theme.colorScheme.primary),
+          const SizedBox(width: 8),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                label,
+                style: theme.textTheme.labelSmall?.copyWith(
+                  color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                ),
+              ),
+              Text(
+                value,
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
   void _schedulePricingQuote() {
     _pricingDebounce?.cancel();
     _pricingDebounce = Timer(const Duration(milliseconds: 400), _fetchPricingQuote);
@@ -3756,6 +3690,7 @@ class _AddLuggagePageState extends State<AddLuggagePage> {
         sizeClass: _sizeClassValue(_size),
         startAt: _dropTime!,
         endAt: _pickupTime!,
+        protectionLevel: _protectionLevel,
       );
       if (!mounted) return;
       setState(() {
@@ -3770,11 +3705,6 @@ class _AddLuggagePageState extends State<AddLuggagePage> {
         _pricingError = e.toString();
       });
     }
-  }
-
-  Future<void> _storePickupPin(String luggageId, String pin) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('$_pickupPinStoragePrefix$luggageId', pin);
   }
 
   Future<void> _loadNearbySuggestions() async {
@@ -3934,6 +3864,7 @@ class _AddLuggagePageState extends State<AddLuggagePage> {
         'scheduledDropTime': _dropTime?.toIso8601String(),
         'scheduledPickupTime': _pickupTime?.toIso8601String(),
         'paymentMethod': _paymentMethod,
+        'protectionLevel': _protectionLevel,
         'totalPrice': _pricingQuote?.priceTry,
       };
 
@@ -3943,7 +3874,6 @@ class _AddLuggagePageState extends State<AddLuggagePage> {
         final luggage = LuggageModel.fromJson(
           Map<String, dynamic>.from(result['luggage'] as Map),
         );
-        final effectivePin = _pickupPin;
         bool pinNoticeShown = false;
         if (result.containsKey('pinSent') && mounted) {
           final pinSent = result['pinSent'] == true;
@@ -3954,20 +3884,6 @@ class _AddLuggagePageState extends State<AddLuggagePage> {
             type: pinSent ? AppNotificationType.success : AppNotificationType.warning,
           );
           pinNoticeShown = true;
-        }
-        if (effectivePin.isNotEmpty && mounted) {
-          final id = luggage.id?.toString();
-          if (id == null || id.isEmpty) {
-            if (mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Valiz ID bulunamadı, PIN kaydedilemedi.'),
-                ),
-              );
-            }
-            return;
-          }
-          await _storePickupPin(id, effectivePin);
         }
         final enriched = luggage.copyWith(
           qrCode: _qrCode,
@@ -4105,31 +4021,34 @@ class _AddLuggagePageState extends State<AddLuggagePage> {
               if ((widget.ownerName ?? '').isNotEmpty ||
                   (widget.ownerPhone ?? '').isNotEmpty ||
                   (widget.ownerEmail ?? '').isNotEmpty) ...[
-                Card(
-                  child: Padding(
-                    padding: const EdgeInsets.all(12),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        if ((widget.ownerName ?? '').isNotEmpty)
-                          Text(
-                            '${loc.ownerNameLabel}: ${widget.ownerName}',
-                            style: theme.textTheme.bodyMedium?.copyWith(
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        if ((widget.ownerPhone ?? '').isNotEmpty)
-                          Text(
-                            '${loc.ownerPhoneLabel}: ${widget.ownerPhone}',
-                            style: theme.textTheme.bodyMedium,
-                          ),
-                        if ((widget.ownerEmail ?? '').isNotEmpty)
-                          Text(
-                            '${loc.ownerEmailLabel}: ${widget.ownerEmail}',
-                            style: theme.textTheme.bodyMedium,
-                          ),
-                      ],
-                    ),
+                SectionCard(
+                  padding: const EdgeInsets.all(16),
+                  child: Wrap(
+                    spacing: 12,
+                    runSpacing: 12,
+                    children: [
+                      if ((widget.ownerName ?? '').isNotEmpty)
+                        _buildOwnerInfoTile(
+                          theme,
+                          icon: Icons.person_outline,
+                          label: loc.ownerNameLabel,
+                          value: widget.ownerName!,
+                        ),
+                      if ((widget.ownerPhone ?? '').isNotEmpty)
+                        _buildOwnerInfoTile(
+                          theme,
+                          icon: Icons.phone_outlined,
+                          label: loc.ownerPhoneLabel,
+                          value: widget.ownerPhone!,
+                        ),
+                      if ((widget.ownerEmail ?? '').isNotEmpty)
+                        _buildOwnerInfoTile(
+                          theme,
+                          icon: Icons.email_outlined,
+                          label: loc.ownerEmailLabel,
+                          value: widget.ownerEmail!,
+                        ),
+                    ],
                   ),
                 ),
                 const SizedBox(height: 16),
@@ -4644,10 +4563,46 @@ class _AddLuggagePageState extends State<AddLuggagePage> {
                         Column(
                           children: [
                             _buildPricingRow(
+                              loc.pricingSummarySizeLabel,
+                              _localizedSizeLabel(_size, loc),
+                              theme,
+                            ),
+                            _buildPricingRow(
+                              loc.protectionLevelTitle,
+                              _protectionLevel == 'premium'
+                                  ? loc.protectionPremium
+                                  : loc.protectionStandard,
+                              theme,
+                            ),
+                            _buildPricingRow(
+                              loc.pricingBasePriceLabel,
+                              _formatPrice(
+                                _pricingQuote!.priceTry -
+                                    ((_pricingQuote!.breakdown['premiumProtectionFee']
+                                                    as num?)
+                                                ?.round() ??
+                                            0),
+                              ),
+                              theme,
+                            ),
+                            _buildPricingRow(
                               loc.pricingTierLabel,
                               _formatPricingTier(_pricingQuote!, loc),
                               theme,
                             ),
+                            if ((_pricingQuote!.breakdown['premiumProtectionFee'] is num) &&
+                                (_pricingQuote!.breakdown['premiumProtectionFee'] as num)
+                                        .round() >
+                                    0)
+                              _buildPricingRow(
+                                loc.pricingPremiumFeeLabel,
+                                '+${_formatPrice(
+                                  (_pricingQuote!.breakdown['premiumProtectionFee']
+                                          as num)
+                                      .round(),
+                                )}',
+                                theme,
+                              ),
                             const Divider(height: 20),
                             _buildPricingRow(
                               loc.pricingPriceLabel,

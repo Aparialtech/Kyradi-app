@@ -12,6 +12,7 @@ export interface PricingQuoteResult {
     sizeClass: PricingSizeClass;
     tier: PricingTier;
     unitPrice: number;
+    premiumProtectionFee?: number;
     daysCharged?: number;
   };
 }
@@ -36,6 +37,7 @@ export function calculatePricingQuote(
   sizeClass: string,
   startAt: Date,
   endAt: Date,
+  protectionLevel?: string,
 ): PricingQuoteResult {
   if (Number.isNaN(startAt.getTime()) || Number.isNaN(endAt.getTime())) {
     throw new BadRequestException('INVALID_DATE');
@@ -72,15 +74,20 @@ export function calculatePricingQuote(
     priceTry = daysCharged * unitPrice;
   }
 
+  const premiumProtectionFee =
+    protectionLevel === 'premium' ? Math.round(priceTry * 0.2) : 0;
+  const totalPrice = priceTry + premiumProtectionFee;
+
   return {
     durationHours,
     tier,
     daysCharged,
-    priceTry,
+    priceTry: totalPrice,
     breakdown: {
       sizeClass: normalizedSize,
       tier,
       unitPrice,
+      ...(premiumProtectionFee > 0 ? { premiumProtectionFee } : {}),
       ...(daysCharged ? { daysCharged } : {}),
     },
   };

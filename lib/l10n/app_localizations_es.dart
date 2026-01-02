@@ -1321,6 +1321,19 @@ class AppLocalizationsEs extends AppLocalizations {
   String get paymentFailedMessage => 'No se pudo completar el pago.';
 
   @override
+  String get paymentSuccessMessage => 'Pago recibido correctamente';
+
+  @override
+  String get paymentCardNumberInvalidMessage =>
+      'El número de tarjeta debe tener 16 dígitos.';
+
+  @override
+  String get paymentExpiryInvalidMessage => 'La fecha debe ser MM/AA.';
+
+  @override
+  String get paymentCvvInvalidMessage => 'El CVV debe tener 3 o 4 dígitos.';
+
+  @override
   String get paymentPayAtHotelTitle => 'Pagar en el hotel';
 
   @override

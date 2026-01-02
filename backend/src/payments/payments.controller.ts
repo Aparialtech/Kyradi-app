@@ -8,8 +8,14 @@ export class PaymentsController {
     const sizeClass = body['sizeClass']?.toString();
     const startAt = body['startAt']?.toString();
     const endAt = body['endAt']?.toString();
+    const protectionLevel = body['protectionLevel']?.toString();
     if (sizeClass && startAt && endAt) {
-      const quote = calculatePricingQuote(sizeClass, new Date(startAt), new Date(endAt));
+      const quote = calculatePricingQuote(
+        sizeClass,
+        new Date(startAt),
+        new Date(endAt),
+        protectionLevel,
+      );
       return {
         ok: true,
         priceTry: quote.priceTry,

@@ -776,6 +776,9 @@ class MockServer {
       daysCharged = (durationHours / 24).ceil();
       priceTry = daysCharged * unitPrice;
     }
+    final premiumProtectionFee =
+        protectionLevel == 'premium' ? (priceTry * 0.2).round() : 0;
+    priceTry += premiumProtectionFee;
     return PricingQuoteResponse(
       durationHours: durationHours,
       tier: tier,
@@ -785,6 +788,7 @@ class MockServer {
         'sizeClass': normalized,
         'tier': tier,
         'unitPrice': unitPrice,
+        if (premiumProtectionFee > 0) 'premiumProtectionFee': premiumProtectionFee,
         if (daysCharged != null) 'daysCharged': daysCharged,
       },
     );

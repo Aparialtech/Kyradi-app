@@ -1302,6 +1302,19 @@ class AppLocalizationsTr extends AppLocalizations {
   String get paymentFailedMessage => 'Ödeme tamamlanamadı.';
 
   @override
+  String get paymentSuccessMessage => 'Ödeme başarıyla alındı';
+
+  @override
+  String get paymentCardNumberInvalidMessage => 'Kart numarası 16 hane olmalı.';
+
+  @override
+  String get paymentExpiryInvalidMessage =>
+      'Son kullanma tarihi MM/YY formatında olmalı.';
+
+  @override
+  String get paymentCvvInvalidMessage => 'CVV 3 veya 4 haneli olmalı.';
+
+  @override
   String get paymentPayAtHotelTitle => 'Otelde Ödeme';
 
   @override

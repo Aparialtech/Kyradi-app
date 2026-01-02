@@ -3,8 +3,8 @@ import { calculatePricingQuote } from '../common/utils/pricing-quote.util';
 
 @Injectable()
 export class PricingService {
-  quote(sizeClass: string, startAt: Date, endAt: Date) {
-    const quote = calculatePricingQuote(sizeClass, startAt, endAt);
+  quote(sizeClass: string, startAt: Date, endAt: Date, protectionLevel?: string) {
+    const quote = calculatePricingQuote(sizeClass, startAt, endAt, protectionLevel);
     return {
       sizeClass: quote.breakdown.sizeClass,
       startAt: startAt.toISOString(),

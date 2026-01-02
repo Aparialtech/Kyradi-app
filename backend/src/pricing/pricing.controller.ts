@@ -10,10 +10,16 @@ export class PricingController {
     @Query('sizeClass') sizeClass?: string,
     @Query('startAt') startAt?: string,
     @Query('endAt') endAt?: string,
+    @Query('protectionLevel') protectionLevel?: string,
   ) {
     if (!sizeClass || !startAt || !endAt) {
       throw new BadRequestException('MISSING_PRICING_PARAMS');
     }
-    return this.pricingService.quote(sizeClass, new Date(startAt), new Date(endAt));
+    return this.pricingService.quote(
+      sizeClass,
+      new Date(startAt),
+      new Date(endAt),
+      protectionLevel,
+    );
   }
 }

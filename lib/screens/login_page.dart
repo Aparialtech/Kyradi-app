@@ -419,36 +419,56 @@ class _LoginPageState extends State<LoginPage> {
                                 ],
                               ),
                               const SizedBox(height: 14),
-                              OutlinedButton.icon(
-                                onPressed: _loading
-                                    ? null
-                                    : () => _handleSocialAuth(_signInWithGoogle),
-                                icon: const CircleAvatar(
-                                  radius: 10,
-                                  backgroundColor: Color(0xFFEA4335),
-                                  child: Text(
-                                    'G',
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w700,
-                                    ),
+                              Align(
+                                alignment: Alignment.center,
+                                child: ConstrainedBox(
+                                  constraints: const BoxConstraints(maxWidth: 360),
+                                  child: Row(
+                                    children: [
+                                      Expanded(
+                                        child: OutlinedButton.icon(
+                                          onPressed: _loading
+                                              ? null
+                                              : () => _handleSocialAuth(_signInWithGoogle),
+                                          icon: const CircleAvatar(
+                                            radius: 10,
+                                            backgroundColor: Color(0xFFEA4335),
+                                            child: Text(
+                                              'G',
+                                              style: TextStyle(
+                                                color: Colors.white,
+                                                fontSize: 12,
+                                                fontWeight: FontWeight.w700,
+                                              ),
+                                            ),
+                                          ),
+                                          label: Text(l10n.loginContinueWithGoogle),
+                                          style: OutlinedButton.styleFrom(
+                                            padding: const EdgeInsets.symmetric(
+                                              vertical: 12,
+                                              horizontal: 10,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                      const SizedBox(width: 12),
+                                      Expanded(
+                                        child: OutlinedButton.icon(
+                                          onPressed: _loading
+                                              ? null
+                                              : () => _handleSocialAuth(_signInWithApple),
+                                          icon: const Icon(Icons.apple),
+                                          label: Text(l10n.loginContinueWithApple),
+                                          style: OutlinedButton.styleFrom(
+                                            padding: const EdgeInsets.symmetric(
+                                              vertical: 12,
+                                              horizontal: 10,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ],
                                   ),
-                                ),
-                                label: Text(l10n.loginContinueWithGoogle),
-                                style: OutlinedButton.styleFrom(
-                                  padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-                                ),
-                              ),
-                              const SizedBox(height: 10),
-                              OutlinedButton.icon(
-                                onPressed: _loading
-                                    ? null
-                                    : () => _handleSocialAuth(_signInWithApple),
-                                icon: const Icon(Icons.apple),
-                                label: Text(l10n.loginContinueWithApple),
-                                style: OutlinedButton.styleFrom(
-                                  padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
                                 ),
                               ),
                             ],

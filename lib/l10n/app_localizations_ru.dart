@@ -1303,6 +1303,20 @@ class AppLocalizationsRu extends AppLocalizations {
   String get paymentFailedMessage => 'Не удалось завершить оплату.';
 
   @override
+  String get paymentSuccessMessage => 'Платёж успешно получен';
+
+  @override
+  String get paymentCardNumberInvalidMessage =>
+      'Номер карты должен содержать 16 цифр.';
+
+  @override
+  String get paymentExpiryInvalidMessage =>
+      'Срок действия должен быть в формате ММ/ГГ.';
+
+  @override
+  String get paymentCvvInvalidMessage => 'CVV должен быть 3 или 4 цифры.';
+
+  @override
   String get paymentPayAtHotelTitle => 'Оплата в отеле';
 
   @override
