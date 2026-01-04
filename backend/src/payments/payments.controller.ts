@@ -1,9 +1,12 @@
 import { BadRequestException, Body, Controller, Get, Post, Query } from '@nestjs/common';
 import { calculatePricingQuote } from '../common/utils/pricing-quote.util';
 import { MockPaymentDto } from './dto/mock-payment.dto';
+import { PaymentsService } from './payments.service';
 
 @Controller('payments')
 export class PaymentsController {
+  constructor(private readonly paymentsService: PaymentsService) {}
+
   @Post('checkout')
   checkout(@Body() body: Record<string, unknown>) {
     const sizeClass = body['sizeClass']?.toString();
@@ -27,19 +30,35 @@ export class PaymentsController {
   }
 
   @Get('status')
-  status(@Query('reservationId') reservationId?: string) {
+  async status(@Query('reservationId') reservationId?: string) {
     if (!reservationId?.trim()) {
       throw new BadRequestException({ message: 'reservationId is required' });
     }
-    return { ok: true, reservationId, status: 'unknown' };
+    const status = await this.paymentsService.getStatus(reservationId.trim());
+    const paymentStatus = status.paymentStatus ?? 'unpaid';
+    return {
+      ok: true,
+      reservationId,
+      status: paymentStatus,
+      paymentStatus,
+      totalPrice: status.totalPrice ?? 0,
+      transactionId: status.transactionId ?? null,
+      paidAt: status.paidAt ?? null,
+    };
   }
 
   @Post('mock')
-  mockPayment(@Body() dto: MockPaymentDto) {
+  async mockPayment(@Body() dto: MockPaymentDto) {
+    const paymentId = `MOCK_${Date.now()}`;
+    const reservationId = dto.bookingId?.toString() ?? '';
+    const amount = typeof dto.amount === 'number' ? dto.amount : Number(dto.amount ?? 0);
+    if (reservationId.trim().length > 0) {
+      await this.paymentsService.markMockPaid(reservationId, paymentId, amount);
+    }
     return {
       ok: true,
       status: 'success',
-      paymentId: `MOCK_${Date.now()}`,
+      paymentId,
     };
   }
 }
