@@ -479,7 +479,9 @@ class ApiService {
       'endAt': endAt.toUtc().toIso8601String(),
       if (protectionLevel != null) 'protectionLevel': protectionLevel,
     });
-    final res = await http.get(uri, headers: _jsonHeaders());
+    final res = await http
+        .get(uri, headers: _jsonHeaders())
+        .timeout(const Duration(seconds: 10));
     final body = res.body.isNotEmpty ? jsonDecode(res.body) : null;
     if (res.statusCode >= 200 && res.statusCode < 300) {
       return PricingQuoteResponse.fromJson(body as Map<String, dynamic>);

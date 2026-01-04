@@ -47,6 +47,7 @@ class _PaymentPageState extends State<PaymentPage> {
   bool _loadingQuote = false;
   PricingQuoteResponse? _quote;
   String? _quoteError;
+  Future<PricingQuoteResponse?>? _quoteFuture;
 
   late String _paymentMethod;
   late String _protectionLevel;
@@ -63,10 +64,7 @@ class _PaymentPageState extends State<PaymentPage> {
     _sizeLabel = widget.sizeLabel;
     _dropAt = widget.dropAt;
     _pickupAt = widget.pickupAt;
-    if (_dropAt != null && _pickupAt != null) {
-      setState(() => _loadingQuote = true);
-    }
-    _fetchQuote();
+    _quoteFuture = _fetchQuote();
   }
 
   @override
@@ -82,15 +80,14 @@ class _PaymentPageState extends State<PaymentPage> {
     super.dispose();
   }
 
-  Future<void> _fetchQuote() async {
-    print('QUOTE_DEBUG requesting...');
+  Future<PricingQuoteResponse?> _fetchQuote() async {
     if (_dropAt == null || _pickupAt == null) {
       setState(() {
         _quote = null;
         _quoteError = null;
         _loadingQuote = false;
       });
-      return;
+      return null;
     }
     final loc = AppLocalizations.of(context)!;
     if (!_pickupAt!.isAfter(_dropAt!)) {
@@ -98,7 +95,7 @@ class _PaymentPageState extends State<PaymentPage> {
         _quote = null;
         _quoteError = loc.pricingInvalidRangeMessage;
       });
-      return;
+      return null;
     }
     try {
       setState(() => _loadingQuote = true);
@@ -112,32 +109,35 @@ class _PaymentPageState extends State<PaymentPage> {
               if (_protectionLevel.isNotEmpty) 'protectionLevel': _protectionLevel,
             })
           : null;
+      print('PAY_QUOTE start url=${uri?.toString() ?? 'unset'}');
       final quote = await ApiService.getPricingQuote(
         sizeClass: sizeClass,
         startAt: _dropAt!,
         endAt: _pickupAt!,
         protectionLevel: _protectionLevel,
       );
-      if (!mounted) return;
+      if (!mounted) return null;
       setState(() {
         _quote = quote;
         _quoteError = null;
-        _loadingQuote = false;
       });
       final basePrice = _basePriceFromQuote(quote);
-      print('QUOTE_DEBUG response basePrice=$basePrice');
-      if (uri != null) {
-        print(
-          '[QUOTE] url=$uri response={priceTry:${quote.priceTry}, tier:${quote.tier}}',
-        );
-      }
+      print(
+        'PAY_QUOTE done status=200 body={priceTry:${quote.priceTry}, tier:${quote.tier}, base:$basePrice}',
+      );
+      return quote;
     } catch (e) {
-      if (!mounted) return;
+      if (!mounted) return null;
       setState(() {
         _quote = null;
-        _quoteError = loc.pricingQuoteFailedMessage;
-        _loadingQuote = false;
+        _quoteError = 'Fiyat hesaplanamadı, tekrar dene';
       });
+      print('PAY_QUOTE error $e');
+      return null;
+    } finally {
+      if (mounted) {
+        setState(() => _loadingQuote = false);
+      }
     }
   }
 
@@ -428,11 +428,13 @@ class _PaymentPageState extends State<PaymentPage> {
           value: 'standard',
           groupValue: _protectionLevel,
           onChanged: (value) {
-            setState(() => _protectionLevel = value ?? 'standard');
+            setState(() {
+              _protectionLevel = value ?? 'standard';
+              _quoteFuture = _fetchQuote();
+            });
             print(
               'PRICE_DEBUG level=$_protectionLevel base=${_basePrice()} premiumFee=${_premiumFeeValue()} total=${_totalPrice()}',
             );
-            _fetchQuote();
           },
           title: Text(loc.protectionStandard),
           contentPadding: EdgeInsets.zero,
@@ -441,11 +443,13 @@ class _PaymentPageState extends State<PaymentPage> {
           value: 'premium',
           groupValue: _protectionLevel,
           onChanged: (value) {
-            setState(() => _protectionLevel = value ?? 'premium');
+            setState(() {
+              _protectionLevel = value ?? 'premium';
+              _quoteFuture = _fetchQuote();
+            });
             print(
               'PRICE_DEBUG level=$_protectionLevel base=${_basePrice()} premiumFee=${_premiumFeeValue()} total=${_totalPrice()}',
             );
-            _fetchQuote();
           },
           title: Text(loc.protectionPremium),
           contentPadding: EdgeInsets.zero,
@@ -581,42 +585,71 @@ class _PaymentPageState extends State<PaymentPage> {
               ],
             ),
             const SizedBox(height: 8),
-            if (_loadingQuote ||
-                (_quote == null && _quoteError == null && _dropAt != null && _pickupAt != null))
-              Padding(
-                padding: const EdgeInsets.only(top: 6),
-                child: Row(
+            FutureBuilder<PricingQuoteResponse?>(
+              future: _quoteFuture,
+              builder: (context, snapshot) {
+                final waiting = _loadingQuote ||
+                    snapshot.connectionState == ConnectionState.waiting;
+                if (waiting) {
+                  return Padding(
+                    padding: const EdgeInsets.only(top: 6),
+                    child: Row(
+                      children: [
+                        const SizedBox(
+                          height: 16,
+                          width: 16,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        ),
+                        const SizedBox(width: 8),
+                        Text(loc.pricingEstimateLoading),
+                      ],
+                    ),
+                  );
+                }
+                if (_quoteError != null) {
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        _quoteError!,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.error,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      TextButton.icon(
+                        onPressed: () {
+                          setState(() => _quoteFuture = _fetchQuote());
+                        },
+                        icon: const Icon(Icons.refresh),
+                        label: const Text('Yenile'),
+                      ),
+                    ],
+                  );
+                }
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const SizedBox(
-                      height: 16,
-                      width: 16,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    ),
-                    const SizedBox(width: 8),
-                    Text(loc.pricingEstimateLoading),
-                  ],
-                ),
-              )
-            else
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('${loc.pricingSummarySizeLabel}: $sizeLabel'),
-                  Text('${loc.pricingSummaryDurationLabel}: $tierLabel'),
-                  const SizedBox(height: 6),
-                  Text('${loc.pricingBasePriceLabel}: ${_formatPrice(basePrice)} ₺'),
-                  if (premiumFee > 0)
+                    Text('${loc.pricingSummarySizeLabel}: $sizeLabel'),
+                    Text('${loc.pricingSummaryDurationLabel}: $tierLabel'),
+                    const SizedBox(height: 6),
                     Text(
-                      '${loc.pricingPremiumFeeLabel}: +${_formatPrice(premiumFee)} ₺',
+                      '${loc.pricingBasePriceLabel}: ${_formatPrice(basePrice)} ₺',
                     ),
-                  Text(
-                    '${loc.pricingSummaryAmountLabel}: ${_formatPrice(total)} ₺',
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w700,
+                    if (premiumFee > 0)
+                      Text(
+                        '${loc.pricingPremiumFeeLabel}: +${_formatPrice(premiumFee)} ₺',
+                      ),
+                    Text(
+                      '${loc.pricingSummaryAmountLabel}: ${_formatPrice(total)} ₺',
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
-                  ),
-                ],
-              ),
+                  ],
+                );
+              },
+            ),
           ],
         ),
       ),
