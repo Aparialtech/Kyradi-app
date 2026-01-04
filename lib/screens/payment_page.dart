@@ -48,6 +48,8 @@ class _PaymentPageState extends State<PaymentPage> {
   PricingQuoteResponse? _quote;
   String? _quoteError;
   Future<PricingQuoteResponse?>? _quoteFuture;
+  int? _basePriceValue;
+  int? _totalPriceValue;
 
   late String _paymentMethod;
   late String _protectionLevel;
@@ -61,10 +63,14 @@ class _PaymentPageState extends State<PaymentPage> {
     super.initState();
     _paymentMethod = widget.paymentMethod.isNotEmpty ? widget.paymentMethod : 'card';
     _protectionLevel = 'standard';
-    _sizeLabel = widget.sizeLabel;
+    _sizeLabel = widget.sizeLabel.isNotEmpty ? widget.sizeLabel : 'Orta';
     _dropAt = widget.dropAt;
     _pickupAt = widget.pickupAt;
-    _quoteFuture = _fetchQuote();
+    if (_dropAt != null && _pickupAt != null) {
+      _loadingQuote = true;
+      _quoteError = null;
+      _quoteFuture = _fetchQuote();
+    }
   }
 
   @override
@@ -120,6 +126,9 @@ class _PaymentPageState extends State<PaymentPage> {
       setState(() {
         _quote = quote;
         _quoteError = null;
+        _basePriceValue = _basePriceFromQuote(quote);
+        _totalPriceValue =
+            (_basePriceValue ?? 0) + (_protectionLevel == 'premium' ? _premiumFee : 0);
       });
       final basePrice = _basePriceFromQuote(quote);
       print(
@@ -431,6 +440,8 @@ class _PaymentPageState extends State<PaymentPage> {
             setState(() {
               _protectionLevel = value ?? 'standard';
               _quoteFuture = _fetchQuote();
+              _totalPriceValue =
+                  _basePrice() + (_protectionLevel == 'premium' ? _premiumFee : 0);
             });
             print(
               'PRICE_DEBUG level=$_protectionLevel base=${_basePrice()} premiumFee=${_premiumFeeValue()} total=${_totalPrice()}',
@@ -446,6 +457,8 @@ class _PaymentPageState extends State<PaymentPage> {
             setState(() {
               _protectionLevel = value ?? 'premium';
               _quoteFuture = _fetchQuote();
+              _totalPriceValue =
+                  _basePrice() + (_protectionLevel == 'premium' ? _premiumFee : 0);
             });
             print(
               'PRICE_DEBUG level=$_protectionLevel base=${_basePrice()} premiumFee=${_premiumFeeValue()} total=${_totalPrice()}',
@@ -535,9 +548,8 @@ class _PaymentPageState extends State<PaymentPage> {
   }
 
   int _basePrice() {
-    if (_quote != null) {
-      return _basePriceFromQuote(_quote!);
-    }
+    if (_basePriceValue != null) return _basePriceValue!;
+    if (_quote != null) return _basePriceFromQuote(_quote!);
     return widget.totalPrice;
   }
 
@@ -546,6 +558,7 @@ class _PaymentPageState extends State<PaymentPage> {
   }
 
   int _totalPrice() {
+    if (_totalPriceValue != null) return _totalPriceValue!;
     return _basePrice() + _premiumFeeValue();
   }
 
