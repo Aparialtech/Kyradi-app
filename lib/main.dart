@@ -1,4 +1,7 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'l10n/app_localizations.dart';
 import 'core/app_locale.dart';
 import 'screens/login_page.dart';
@@ -21,8 +24,37 @@ const _textColor = Color(0xFF2E2E2E);
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await ApiService.ensureInitialized();
-  runApp(const MyApp());
+  
+  // Global error handlers
+  FlutterError.onError = (FlutterErrorDetails details) {
+    FlutterError.presentError(details);
+    if (kDebugMode) {
+      print('Flutter Error: ${details.exception}');
+      print('Stack: ${details.stack}');
+    }
+  };
+
+  PlatformDispatcher.instance.onError = (error, stack) {
+    if (kDebugMode) {
+      print('Platform Error: $error');
+      print('Stack: $stack');
+    }
+    return true;
+  };
+
+  // Run app with error zone
+  runZonedGuarded(
+    () async {
+      await ApiService.ensureInitialized();
+      runApp(const MyApp());
+    },
+    (error, stack) {
+      if (kDebugMode) {
+        print('Uncaught Error: $error');
+        print('Stack: $stack');
+      }
+    },
+  );
 }
 
 class MyApp extends StatelessWidget {
@@ -183,6 +215,35 @@ class MyApp extends StatelessWidget {
           supportedLocales: AppLocalizations.supportedLocales,
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           builder: (context, child) {
+            // Error widget builder
+            ErrorWidget.builder = (FlutterErrorDetails details) {
+              if (kDebugMode) {
+                return ErrorWidget(details.exception);
+              }
+              return Scaffold(
+                body: Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(Icons.error_outline, size: 64, color: Colors.red),
+                      const SizedBox(height: 16),
+                      const Text('Bir hata oluştu'),
+                      const SizedBox(height: 8),
+                      TextButton(
+                        onPressed: () {
+                          Navigator.of(context).pushAndRemoveUntil(
+                            MaterialPageRoute(builder: (_) => const HomePage()),
+                            (route) => false,
+                          );
+                        },
+                        child: const Text('Ana Sayfaya Dön'),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            };
+            
             final content = child ?? const SizedBox.shrink();
             return Localizations.override(
               context: context,
