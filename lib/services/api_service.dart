@@ -177,12 +177,19 @@ class ApiService {
 
   // Ortak GET helper
   static Future<Map<String, dynamic>> _get(
-    String path, {
+    String pathOrUri, {
     Duration timeout = const Duration(seconds: 12),
   }) async {
-    final uri = _buildUri(path);
-    if (uri == null) {
-      return _missingBaseUrlError();
+    Uri uri;
+    // Eğer tam URL ise direkt parse et, değilse _buildUri kullan
+    if (pathOrUri.startsWith('http://') || pathOrUri.startsWith('https://')) {
+      uri = Uri.parse(pathOrUri);
+    } else {
+      final builtUri = _buildUri(pathOrUri);
+      if (builtUri == null) {
+        return _missingBaseUrlError();
+      }
+      uri = builtUri;
     }
     debugPrint('[HTTP GET]  $uri');
     try {
