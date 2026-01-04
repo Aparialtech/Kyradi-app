@@ -33,6 +33,8 @@ class PaymentPage extends StatefulWidget {
 }
 
 class _PaymentPageState extends State<PaymentPage> {
+  static const int _premiumFee = 15;
+
   final _cardNumberCtrl = TextEditingController();
   final _nameCtrl = TextEditingController();
   final _expiryCtrl = TextEditingController();
@@ -61,6 +63,9 @@ class _PaymentPageState extends State<PaymentPage> {
     _sizeLabel = widget.sizeLabel;
     _dropAt = widget.dropAt;
     _pickupAt = widget.pickupAt;
+    if (_dropAt != null && _pickupAt != null) {
+      setState(() => _loadingQuote = true);
+    }
     _fetchQuote();
   }
 
@@ -78,6 +83,7 @@ class _PaymentPageState extends State<PaymentPage> {
   }
 
   Future<void> _fetchQuote() async {
+    print('QUOTE_DEBUG requesting...');
     if (_dropAt == null || _pickupAt == null) {
       setState(() {
         _quote = null;
@@ -118,6 +124,8 @@ class _PaymentPageState extends State<PaymentPage> {
         _quoteError = null;
         _loadingQuote = false;
       });
+      final basePrice = _basePriceFromQuote(quote);
+      print('QUOTE_DEBUG response basePrice=$basePrice');
       if (uri != null) {
         print(
           '[QUOTE] url=$uri response={priceTry:${quote.priceTry}, tier:${quote.tier}}',
@@ -158,7 +166,7 @@ class _PaymentPageState extends State<PaymentPage> {
         return;
       }
     }
-    final amount = _quote?.priceTry ?? widget.totalPrice;
+    final amount = _totalPrice();
     if (amount <= 0) {
       _showError(loc.paymentFailedMessage);
       return;
@@ -232,7 +240,7 @@ class _PaymentPageState extends State<PaymentPage> {
   Widget build(BuildContext context) {
     final loc = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
-    final quotePrice = _quote?.priceTry ?? widget.totalPrice;
+    final quotePrice = _totalPrice();
     final priceLabel = _quoteError != null
         ? loc.pricingQuoteFailedMessage
         : loc.paymentTotalLabel(_formatPrice(quotePrice));
@@ -421,6 +429,9 @@ class _PaymentPageState extends State<PaymentPage> {
           groupValue: _protectionLevel,
           onChanged: (value) {
             setState(() => _protectionLevel = value ?? 'standard');
+            print(
+              'PRICE_DEBUG level=$_protectionLevel base=${_basePrice()} premiumFee=${_premiumFeeValue()} total=${_totalPrice()}',
+            );
             _fetchQuote();
           },
           title: Text(loc.protectionStandard),
@@ -431,6 +442,9 @@ class _PaymentPageState extends State<PaymentPage> {
           groupValue: _protectionLevel,
           onChanged: (value) {
             setState(() => _protectionLevel = value ?? 'premium');
+            print(
+              'PRICE_DEBUG level=$_protectionLevel base=${_basePrice()} premiumFee=${_premiumFeeValue()} total=${_totalPrice()}',
+            );
             _fetchQuote();
           },
           title: Text(loc.protectionPremium),
@@ -508,6 +522,29 @@ class _PaymentPageState extends State<PaymentPage> {
     return NumberFormat.decimalPattern().format(value);
   }
 
+  int _basePriceFromQuote(PricingQuoteResponse quote) {
+    final unit = quote.breakdown['unitPrice'];
+    final days = quote.breakdown['daysCharged'];
+    final unitPrice = unit is num ? unit.round() : quote.priceTry;
+    final daysCharged = days is num ? days.round() : 1;
+    return unitPrice * (daysCharged <= 0 ? 1 : daysCharged);
+  }
+
+  int _basePrice() {
+    if (_quote != null) {
+      return _basePriceFromQuote(_quote!);
+    }
+    return widget.totalPrice;
+  }
+
+  int _premiumFeeValue() {
+    return _protectionLevel == 'premium' ? _premiumFee : 0;
+  }
+
+  int _totalPrice() {
+    return _basePrice() + _premiumFeeValue();
+  }
+
   Widget _buildQuoteSummaryCard(
     ThemeData theme,
     AppLocalizations loc,
@@ -517,6 +554,9 @@ class _PaymentPageState extends State<PaymentPage> {
     final tierLabel = _quote != null
         ? _formatTierLabel(_quote!, loc)
         : _formatSelectedTimes(loc);
+    final basePrice = _basePrice();
+    final premiumFee = _premiumFeeValue();
+    final total = _totalPrice();
 
     return Card(
       child: Padding(
@@ -541,16 +581,36 @@ class _PaymentPageState extends State<PaymentPage> {
               ],
             ),
             const SizedBox(height: 8),
-            if (_loadingQuote)
-              const LinearProgressIndicator(minHeight: 4)
+            if (_loadingQuote ||
+                (_quote == null && _quoteError == null && _dropAt != null && _pickupAt != null))
+              Padding(
+                padding: const EdgeInsets.only(top: 6),
+                child: Row(
+                  children: [
+                    const SizedBox(
+                      height: 16,
+                      width: 16,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    ),
+                    const SizedBox(width: 8),
+                    Text(loc.pricingEstimateLoading),
+                  ],
+                ),
+              )
             else
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text('${loc.pricingSummarySizeLabel}: $sizeLabel'),
                   Text('${loc.pricingSummaryDurationLabel}: $tierLabel'),
+                  const SizedBox(height: 6),
+                  Text('${loc.pricingBasePriceLabel}: ${_formatPrice(basePrice)} ₺'),
+                  if (premiumFee > 0)
+                    Text(
+                      '${loc.pricingPremiumFeeLabel}: +${_formatPrice(premiumFee)} ₺',
+                    ),
                   Text(
-                    '${loc.pricingSummaryAmountLabel}: ${_formatPrice(quotePrice)} ₺',
+                    '${loc.pricingSummaryAmountLabel}: ${_formatPrice(total)} ₺',
                     style: theme.textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.w700,
                     ),

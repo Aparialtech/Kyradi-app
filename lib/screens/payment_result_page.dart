@@ -66,10 +66,7 @@ class PaymentResultPage extends StatelessWidget {
               GradientButton(
                 text: 'Ana sayfaya dön',
                 onPressed: () {
-                  Navigator.of(context).pushNamedAndRemoveUntil(
-                    '/home',
-                    (route) => false,
-                  );
+                  Navigator.of(context).pop(true);
                 },
               ),
             ],

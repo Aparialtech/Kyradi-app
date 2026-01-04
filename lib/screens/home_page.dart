@@ -67,6 +67,7 @@ class _HomePageState extends State<HomePage> {
   final _userAddressCtrl = TextEditingController();
   String? _gender;
   String? _identityDocUrl;
+  bool _isPaid = false;
 
   final _emNameCtrl = TextEditingController();
   final _emSurnameCtrl = TextEditingController();
@@ -919,7 +920,7 @@ class _HomePageState extends State<HomePage> {
                 onPressed: () => _showQrDialog(luggage),
               ),
                 if (luggage.status == LuggageStatus.awaitingDrop)
-                  if (luggage.isPaymentPaid)
+                  if (_isPaid)
                     _ActionFilledButton(
                       icon: Icons.inventory_2_outlined,
                       label: loc.luggageDropAction,
@@ -942,7 +943,7 @@ class _HomePageState extends State<HomePage> {
                   _ActionTextButton(
                     icon: Icons.person_outline,
                     label: loc.luggageDelegateAction,
-                    onPressed: luggage.isPaymentPaid
+                    onPressed: _isPaid
                         ? () => _handleDelegateDelivery(luggage)
                         : () => _snack(
                               loc.paymentRequiredBeforeDropMessage,
@@ -1233,7 +1234,7 @@ class _HomePageState extends State<HomePage> {
       if (!mounted) return;
       setState(() => _replaceLuggage(updated));
 
-      final result = await Navigator.of(context).push<Map<String, dynamic>>(
+      final result = await Navigator.of(context).push<dynamic>(
         MaterialPageRoute(
           builder: (_) => PaymentPage(
             userId: _userId ?? '',
@@ -1247,6 +1248,11 @@ class _HomePageState extends State<HomePage> {
           ),
         ),
       );
+      if (result == true) {
+        if (!mounted) return;
+        setState(() => _isPaid = true);
+        return;
+      }
       if (result?['action'] == 'edit') {
         return;
       }
