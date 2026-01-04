@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import '../services/api_service.dart';
 import '../models/pricing_models.dart';
 import '../l10n/app_localizations.dart';
+import 'payment_result_page.dart';
 
 class PaymentPage extends StatefulWidget {
   const PaymentPage({
@@ -157,25 +158,43 @@ class _PaymentPageState extends State<PaymentPage> {
         return;
       }
     }
+    final amount = _quote?.priceTry ?? widget.totalPrice;
+    if (amount <= 0) {
+      _showError(loc.paymentFailedMessage);
+      return;
+    }
     setState(() => _loading = true);
     try {
+      final result = await ApiService.mockPayment(
+        amount: amount,
+        currency: 'TRY',
+        protectionLevel: _protectionLevel,
+        bookingId: widget.reservationId,
+      );
       if (!mounted) return;
       setState(() => _loading = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(loc.paymentSuccessMessage)),
-      );
+      final ok = result['ok'] == true || result['status'] == 'success';
+      if (!ok) {
+        _showError(loc.paymentFailedMessage);
+        return;
+      }
       _cardNumberCtrl.clear();
       _nameCtrl.clear();
       _expiryCtrl.clear();
       _cvcCtrl.clear();
-      Navigator.of(context).pop({
-        'completed': true,
-        'paymentMethod': _paymentMethod,
-      });
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(
+          builder: (_) => PaymentResultPage(
+            success: true,
+            amount: amount,
+            paymentId: result['paymentId']?.toString(),
+          ),
+        ),
+      );
     } catch (e) {
       if (!mounted) return;
       setState(() => _loading = false);
-      _showError(loc.paymentFailedMessage);
+      _showError('Bağlantı hatası');
     }
   }
 

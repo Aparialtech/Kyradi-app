@@ -18,6 +18,7 @@ class _IntroSplashPageState extends State<IntroSplashPage>
   late final AnimationController _controller;
   late final Animation<double> _scale;
   bool _showButton = false;
+  bool _showAuthChoices = false;
   Timer? _timer;
 
   @override
@@ -50,7 +51,15 @@ class _IntroSplashPageState extends State<IntroSplashPage>
   }
 
   void _goLogin() {
-    Navigator.pushReplacementNamed(context, '/landing');
+    Navigator.pushReplacementNamed(context, '/login');
+  }
+
+  void _goRegister() {
+    Navigator.pushReplacementNamed(context, '/register');
+  }
+
+  void _showAuthButtons() {
+    setState(() => _showAuthChoices = true);
   }
 
   @override
@@ -124,11 +133,52 @@ class _IntroSplashPageState extends State<IntroSplashPage>
                     child: AnimatedOpacity(
                       duration: const Duration(milliseconds: 400),
                       opacity: _showButton ? 1 : 0,
-                      child: GradientButton(
-                        text: l10n.introTrackButton,
-                        onPressed: _goLogin,
-                        leading: const Icon(Icons.flight_takeoff_rounded),
-                      ),
+                      child: _showAuthChoices
+                          ? LayoutBuilder(
+                              builder: (context, constraints) {
+                                final width = constraints.maxWidth > 560
+                                    ? 560.0
+                                    : constraints.maxWidth;
+                                return Align(
+                                  child: SizedBox(
+                                    width: width,
+                                    child: Row(
+                                      children: [
+                                        Expanded(
+                                          child: GradientButton(
+                                            text: l10n.loginButtonLabel,
+                                            onPressed: _goLogin,
+                                            leading:
+                                                const Icon(Icons.login_rounded),
+                                            padding: const EdgeInsets.symmetric(
+                                              vertical: 14,
+                                            ),
+                                          ),
+                                        ),
+                                        const SizedBox(width: 12),
+                                        Expanded(
+                                          child: GradientButton(
+                                            text: l10n.registerButtonLabel,
+                                            onPressed: _goRegister,
+                                            leading: const Icon(
+                                              Icons.person_add_alt_1_rounded,
+                                            ),
+                                            padding: const EdgeInsets.symmetric(
+                                              vertical: 14,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                );
+                              },
+                            )
+                          : GradientButton(
+                              text: l10n.introTrackButton,
+                              onPressed: _showAuthButtons,
+                              leading: const Icon(Icons.flight_takeoff_rounded),
+                            ),
                     ),
                   ),
                 ],

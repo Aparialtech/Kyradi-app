@@ -1,5 +1,6 @@
 import { BadRequestException, Body, Controller, Get, Post, Query } from '@nestjs/common';
 import { calculatePricingQuote } from '../common/utils/pricing-quote.util';
+import { MockPaymentDto } from './dto/mock-payment.dto';
 
 @Controller('payments')
 export class PaymentsController {
@@ -31,5 +32,14 @@ export class PaymentsController {
       throw new BadRequestException({ message: 'reservationId is required' });
     }
     return { ok: true, reservationId, status: 'unknown' };
+  }
+
+  @Post('mock')
+  mockPayment(@Body() dto: MockPaymentDto) {
+    return {
+      ok: true,
+      status: 'success',
+      paymentId: `MOCK_${Date.now()}`,
+    };
   }
 }

@@ -9,7 +9,6 @@ import 'screens/home_page.dart';
 import 'services/api_service.dart';
 import 'screens/notifications_page.dart';
 import 'screens/intro_splash_page.dart';
-import 'screens/landing_locations_page.dart';
 import 'screens/location_reservation_page.dart';
 
 const _primaryColor = Color(0xFF005C99);
@@ -203,7 +202,6 @@ class MyApp extends StatelessWidget {
           initialRoute: '/',
           routes: {
             '/': (_) => const IntroSplashPage(),
-            '/landing': (_) => const LandingLocationsPage(),
             '/login': (_) => const LoginPage(),
             '/register': (_) => const RegisterPage(),
             '/verify': (_) => const VerifyCodePage(),

@@ -221,15 +221,6 @@ class _RegisterPageState extends State<RegisterPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Align(
-                  alignment: Alignment.centerRight,
-                  child: QuickActionTile(
-                    label: l10n.serverButtonLabel,
-                    icon: Icons.settings_ethernet,
-                    onTap: _openServerSettings,
-                  ),
-                ),
-                const SizedBox(height: 16),
                 SectionCard(
                   child: Column(
                     children: [
@@ -445,13 +436,6 @@ class _RegisterPageState extends State<RegisterPage> {
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 6),
-                Text(
-                  l10n.serverStatus(_baseUrlLabel),
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
-                  ),
-                    textAlign: TextAlign.center,
-                  ),
                 ],
               ),
             ),

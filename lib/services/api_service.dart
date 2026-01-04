@@ -591,6 +591,35 @@ class ApiService {
     return result;
   }
 
+  static Future<Map<String, dynamic>> mockPayment({
+    required int amount,
+    String currency = 'TRY',
+    String? protectionLevel,
+    String? bookingId,
+  }) async {
+    if (_usingMockBackend) {
+      return MockServer.mockPayment(
+        amount: amount,
+        currency: currency,
+        protectionLevel: protectionLevel,
+        bookingId: bookingId,
+      );
+    }
+    final body = <String, dynamic>{
+      'amount': amount,
+      'currency': currency,
+    };
+    if (protectionLevel != null) {
+      body['protectionLevel'] = protectionLevel;
+    }
+    if (bookingId != null && bookingId.trim().isNotEmpty) {
+      body['bookingId'] = bookingId;
+    }
+    final result = await _post('/payments/mock', body);
+    result['statusCode'] ??= result['_httpStatus'];
+    return result;
+  }
+
   static Future<Map<String, dynamic>> getPaymentStatus(String reservationId) async {
     if (_usingMockBackend) {
       return MockServer.getPaymentStatus(reservationId);

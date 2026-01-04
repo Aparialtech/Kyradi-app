@@ -737,6 +737,24 @@ class MockServer {
     };
   }
 
+  static Future<Map<String, dynamic>> mockPayment({
+    required int amount,
+    String currency = 'TRY',
+    String? protectionLevel,
+    String? bookingId,
+  }) async {
+    return {
+      'ok': true,
+      'statusCode': 200,
+      'status': 'success',
+      'paymentId': 'MOCK_${DateTime.now().millisecondsSinceEpoch}',
+      'redirect': '/payment/success',
+      'currency': currency,
+      'protectionLevel': protectionLevel ?? 'standard',
+      'bookingId': bookingId,
+    };
+  }
+
   static PricingQuoteResponse getPricingQuote({
     required String sizeClass,
     required DateTime startAt,
