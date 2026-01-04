@@ -67,7 +67,6 @@ class _HomePageState extends State<HomePage> {
   final _userAddressCtrl = TextEditingController();
   String? _gender;
   String? _identityDocUrl;
-  bool _isPaid = false;
 
   final _emNameCtrl = TextEditingController();
   final _emSurnameCtrl = TextEditingController();
@@ -920,7 +919,7 @@ class _HomePageState extends State<HomePage> {
                 onPressed: () => _showQrDialog(luggage),
               ),
                 if (luggage.status == LuggageStatus.awaitingDrop)
-                  if (_isPaid)
+                  if (luggage.isPaymentPaid)
                     _ActionFilledButton(
                       icon: Icons.inventory_2_outlined,
                       label: loc.luggageDropAction,
@@ -943,7 +942,7 @@ class _HomePageState extends State<HomePage> {
                   _ActionTextButton(
                     icon: Icons.person_outline,
                     label: loc.luggageDelegateAction,
-                    onPressed: _isPaid
+                    onPressed: luggage.isPaymentPaid
                         ? () => _handleDelegateDelivery(luggage)
                         : () => _snack(
                               loc.paymentRequiredBeforeDropMessage,
@@ -1250,7 +1249,14 @@ class _HomePageState extends State<HomePage> {
       );
       if (result == true) {
         if (!mounted) return;
-        setState(() => _isPaid = true);
+        final paid = luggage.copyWith(
+          paymentStatus: paymentStatusPaid,
+          paidAt: DateTime.now(),
+        );
+        setState(() => _replaceLuggage(paid));
+        if (_userId != null) {
+          await _loadUserLuggages(_userId!);
+        }
         return;
       }
       if (result?['action'] == 'edit') {
