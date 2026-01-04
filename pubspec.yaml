@@ -59,7 +59,7 @@ package_rename_config:
   ios:
     app_name: "KYRADI"
     bundle_name: "KYRADI"
-    package_name: "com.kyradi.app"
+    package_name: "com.dilan.bavulgooappp"
   web:
     app_name: "KYRADI"
   macos:
