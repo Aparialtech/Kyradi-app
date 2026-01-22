@@ -1,6 +1,8 @@
 import { Controller, Get, Param } from '@nestjs/common';
+import { Public } from '../common/decorators/public.decorator';
 import { LocationsService } from './locations.service';
 
+@Public()
 @Controller('locations')
 export class LocationsController {
   constructor(private readonly locationsService: LocationsService) {}
