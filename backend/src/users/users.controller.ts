@@ -1,7 +1,9 @@
-import { Body, Controller, Get, Param, Put, ForbiddenException, Req } from '@nestjs/common';
+import { Body, Controller, Get, Param, Put, ForbiddenException, Req, UseGuards } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { AuthGuard } from '../common/guards/auth.guard';
 
+@UseGuards(AuthGuard)
 @Controller('users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
