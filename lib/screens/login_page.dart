@@ -1,6 +1,6 @@
 // lib/screens/login_page.dart
 import 'package:flutter/material.dart';
-import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/foundation.dart' show kIsWeb, kDebugMode, debugPrint;
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:google_sign_in/google_sign_in.dart';
@@ -10,7 +10,7 @@ import '../widgets/section_card.dart';
 import '../services/api_service.dart';
 import '../widgets/app_notification.dart';
 import '../l10n/app_localizations.dart';
-import 'home_page.dart';
+import 'superapp_shell.dart';
 import 'register_page.dart';
 import 'forgot_password_page.dart'; // ✅ eklendi
 
@@ -48,6 +48,7 @@ class _LoginPageState extends State<LoginPage> {
       final ok = res['ok'] == true;
       final status = res['statusCode'] ?? 0;
       final msg = (res['message'] ?? res['error'] ?? '').toString();
+      if (!mounted) return;
       if (ok) {
         final profile = res["profile"];
         final userId = profile?["id"];
@@ -55,12 +56,13 @@ class _LoginPageState extends State<LoginPage> {
           final prefs = await SharedPreferences.getInstance();
           if (!mounted) return;
           await prefs.setString('userId', userId.toString());
+          if (!mounted) return;
         }
         _notify(AppLocalizations.of(context)!.loginSuccess,
             type: AppNotificationType.success);
         if (!mounted) return;
         Navigator.of(context).pushAndRemoveUntil(
-          MaterialPageRoute(builder: (_) => const HomePage()),
+          MaterialPageRoute(builder: (_) => const SuperAppShell()),
           (route) => false,
         );
       } else if (msg.toLowerCase().contains('popup_closed') ||
@@ -98,7 +100,11 @@ class _LoginPageState extends State<LoginPage> {
         return {'ok': false, 'error': 'Login cancelled', 'statusCode': 400};
       }
       final auth = await account.authentication;
-      print("idToken len: ${auth.idToken?.length}  accessToken len: ${auth.accessToken?.length}");
+      if (kDebugMode) {
+        debugPrint(
+          "idToken len: ${auth.idToken?.length}  accessToken len: ${auth.accessToken?.length}",
+        );
+      }
       final idToken = auth.idToken;
       final accessToken = auth.accessToken;
       if ((idToken == null || idToken.isEmpty) &&
@@ -172,12 +178,13 @@ class _LoginPageState extends State<LoginPage> {
           final prefs = await SharedPreferences.getInstance();
           if (!mounted) return;
           await prefs.setString('userId', userId.toString());
+          if (!mounted) return;
         }
 
         _notify(l10n.loginSuccess, type: AppNotificationType.success);
         if (!mounted) return;
         Navigator.of(context).pushAndRemoveUntil(
-          MaterialPageRoute(builder: (_) => const HomePage()),
+          MaterialPageRoute(builder: (_) => const SuperAppShell()),
           (route) => false,
         );
       } else if (status == 401) {
@@ -217,6 +224,7 @@ class _LoginPageState extends State<LoginPage> {
     setState(() => _loading = true);
     try {
       final res = await ApiService.resendVerify(normalized);
+      if (!mounted) return;
       final ok = res['ok'] == true;
       final info = (res['message'] ?? res['error'] ?? '').toString();
       if (info.isNotEmpty) {

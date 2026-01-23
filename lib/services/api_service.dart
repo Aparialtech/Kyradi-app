@@ -55,6 +55,13 @@ class ApiService {
 
   static Future<void> clearCustomBaseUrl() => setCustomBaseUrl(null);
 
+  static Future<void> clearSession() async {
+    await ensureInitialized();
+    await _storeAuthToken(null);
+    await clearCustomBaseUrl();
+    await _prefs?.remove('userId');
+  }
+
   static Future<void> _storeAuthToken(String? value) async {
     await ensureInitialized();
     _authToken = value;
@@ -81,6 +88,9 @@ class ApiService {
   }
 
   static bool get hasResolvedBaseUrl => _resolveBaseUrl() != null;
+
+  static bool get hasExplicitBaseUrl =>
+      hasCustomBaseUrl || _normalizeBaseUrl(_envBase) != null;
 
   static String get baseUrl {
     return _resolveBaseUrl() ?? '';
@@ -531,7 +541,7 @@ class ApiService {
     }
     final path = '/users/$userId/luggages';
     final uri = _buildUri(path);
-    print(
+    debugPrint(
       '[PIN_FLOW] sending request: ${{
         'method': 'POST',
         'url': uri?.toString(),
@@ -541,14 +551,14 @@ class ApiService {
     Map<String, dynamic> result;
     try {
       result = await _post(path, body);
-      print(
+      debugPrint(
         '[PIN_FLOW] response: ${{
           'status': result['statusCode'],
           'body': result,
         }}',
       );
     } catch (e) {
-      print('[PIN_FLOW] error: $e');
+      debugPrint('[PIN_FLOW] error: $e');
       rethrow;
     }
     result['statusCode'] ??= result['_httpStatus'];

@@ -43,8 +43,13 @@ class _VerifyCodePageState extends State<VerifyCodePage> {
 
   void _startCountdown([int sec = 60]) {
     _timer?.cancel();
+    if (!mounted) return;
     setState(() => _seconds = sec);
     _timer = Timer.periodic(const Duration(seconds: 1), (t) {
+      if (!mounted) {
+        t.cancel();
+        return;
+      }
       if (_seconds <= 1) {
         t.cancel();
         setState(() => _seconds = 0);

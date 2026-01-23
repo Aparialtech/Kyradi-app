@@ -31,7 +31,6 @@ class _RegisterPageState extends State<RegisterPage> {
   bool _loading = false;
   bool _kvkkAccepted = false;
   bool _restrictedItemsAccepted = false;
-  String _baseUrlLabel = ApiService.baseUrl;
 
   void _notify(String message, {AppNotificationType type = AppNotificationType.info}) {
     if (!mounted) return;
@@ -64,14 +63,15 @@ class _RegisterPageState extends State<RegisterPage> {
     if (picked != null) setState(() => _birthDate = picked);
   }
 
+  // ignore: unused_element
   Future<void> _openServerSettings() async {
     final outcome = await showApiSettingsDialog(context);
     if (outcome == null) return;
     if (!mounted) return;
-    setState(() => _baseUrlLabel = ApiService.baseUrl);
     _notify(outcome.message, type: AppNotificationType.info);
   }
 
+  // ignore: unused_element
   Future<void> _showAgreementDialog({
     required String title,
     required String body,

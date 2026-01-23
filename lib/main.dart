@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter/services.dart';
 import 'l10n/app_localizations.dart';
 import 'core/app_locale.dart';
 import 'screens/login_page.dart';
@@ -9,10 +8,12 @@ import 'screens/register_page.dart';
 import 'screens/verify_code_page.dart';
 import 'screens/forgot_password_page.dart';
 import 'screens/home_page.dart';
+import 'screens/superapp_shell.dart';
 import 'services/api_service.dart';
 import 'screens/notifications_page.dart';
 import 'screens/intro_splash_page.dart';
 import 'screens/location_reservation_page.dart';
+import 'ui/components/config_missing_page.dart';
 
 const _primaryColor = Color(0xFF005C99);
 const _secondaryColor = Color(0xFF166866);
@@ -29,15 +30,15 @@ Future<void> main() async {
   FlutterError.onError = (FlutterErrorDetails details) {
     FlutterError.presentError(details);
     if (kDebugMode) {
-      print('Flutter Error: ${details.exception}');
-      print('Stack: ${details.stack}');
+      debugPrint('Flutter Error: ${details.exception}');
+      debugPrint('Stack: ${details.stack}');
     }
   };
 
   PlatformDispatcher.instance.onError = (error, stack) {
     if (kDebugMode) {
-      print('Platform Error: $error');
-      print('Stack: $stack');
+      debugPrint('Platform Error: $error');
+      debugPrint('Stack: $stack');
     }
     return true;
   };
@@ -50,8 +51,8 @@ Future<void> main() async {
     },
     (error, stack) {
       if (kDebugMode) {
-        print('Uncaught Error: $error');
-        print('Stack: $stack');
+        debugPrint('Uncaught Error: $error');
+        debugPrint('Stack: $stack');
       }
     },
   );
@@ -215,6 +216,9 @@ class MyApp extends StatelessWidget {
           supportedLocales: AppLocalizations.supportedLocales,
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           builder: (context, child) {
+            if (kReleaseMode && !ApiService.hasExplicitBaseUrl) {
+              return const ConfigMissingPage();
+            }
             // Error widget builder
             ErrorWidget.builder = (FlutterErrorDetails details) {
               if (kDebugMode) {
@@ -232,7 +236,9 @@ class MyApp extends StatelessWidget {
                       TextButton(
                         onPressed: () {
                           Navigator.of(context).pushAndRemoveUntil(
-                            MaterialPageRoute(builder: (_) => const HomePage()),
+                            MaterialPageRoute(
+                              builder: (_) => const SuperAppShell(),
+                            ),
                             (route) => false,
                           );
                         },
@@ -268,6 +274,7 @@ class MyApp extends StatelessWidget {
             '/verify': (_) => const VerifyCodePage(),
             '/forgot': (_) => const ForgotPasswordPage(),
             '/home': (_) => const HomePage(),
+            '/app': (_) => const SuperAppShell(),
             '/notifications': (_) => const NotificationsPage(),
             '/location-detail': (context) {
               final args = ModalRoute.of(context)?.settings.arguments as String?;

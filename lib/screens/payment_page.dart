@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter/foundation.dart' show kDebugMode, debugPrint;
 import 'package:intl/intl.dart';
 import '../services/api_service.dart';
 import '../models/pricing_models.dart';
@@ -87,6 +88,7 @@ class _PaymentPageState extends State<PaymentPage> {
   }
 
   Future<PricingQuoteResponse?> _fetchQuote() async {
+    if (!mounted) return null;
     if (_dropAt == null || _pickupAt == null) {
       setState(() {
         _quote = null;
@@ -115,7 +117,9 @@ class _PaymentPageState extends State<PaymentPage> {
               if (_protectionLevel.isNotEmpty) 'protectionLevel': _protectionLevel,
             })
           : null;
-      print('PAY_QUOTE start url=${uri?.toString() ?? 'unset'}');
+      if (kDebugMode) {
+        debugPrint('PAY_QUOTE start url=${uri?.toString() ?? 'unset'}');
+      }
       final quote = await ApiService.getPricingQuote(
         sizeClass: sizeClass,
         startAt: _dropAt!,
@@ -131,9 +135,11 @@ class _PaymentPageState extends State<PaymentPage> {
             (_basePriceValue ?? 0) + (_protectionLevel == 'premium' ? _premiumFee : 0);
       });
       final basePrice = _basePriceFromQuote(quote);
-      print(
-        'PAY_QUOTE done status=200 body={priceTry:${quote.priceTry}, tier:${quote.tier}, base:$basePrice}',
-      );
+      if (kDebugMode) {
+        debugPrint(
+          'PAY_QUOTE done status=200 body={priceTry:${quote.priceTry}, tier:${quote.tier}, base:$basePrice}',
+        );
+      }
       return quote;
     } catch (e) {
       if (!mounted) return null;
@@ -141,7 +147,7 @@ class _PaymentPageState extends State<PaymentPage> {
         _quote = null;
         _quoteError = 'Fiyat hesaplanamadı, tekrar dene';
       });
-      print('PAY_QUOTE error $e');
+      if (kDebugMode) debugPrint('PAY_QUOTE error $e');
       return null;
     } finally {
       if (mounted) {
@@ -235,11 +241,13 @@ class _PaymentPageState extends State<PaymentPage> {
       _dropAt = result['dropAt'] as DateTime?;
       _pickupAt = result['pickupAt'] as DateTime?;
       await _fetchQuote();
+      if (!mounted) return;
       setState(() {});
     }
   }
 
   void _showError(String message) {
+    if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(message)),
     );
@@ -443,9 +451,11 @@ class _PaymentPageState extends State<PaymentPage> {
               _totalPriceValue =
                   _basePrice() + (_protectionLevel == 'premium' ? _premiumFee : 0);
             });
-            print(
-              'PRICE_DEBUG level=$_protectionLevel base=${_basePrice()} premiumFee=${_premiumFeeValue()} total=${_totalPrice()}',
-            );
+            if (kDebugMode) {
+              debugPrint(
+                'PRICE_DEBUG level=$_protectionLevel base=${_basePrice()} premiumFee=${_premiumFeeValue()} total=${_totalPrice()}',
+              );
+            }
           },
           title: Text(loc.protectionStandard),
           contentPadding: EdgeInsets.zero,
@@ -460,9 +470,11 @@ class _PaymentPageState extends State<PaymentPage> {
               _totalPriceValue =
                   _basePrice() + (_protectionLevel == 'premium' ? _premiumFee : 0);
             });
-            print(
-              'PRICE_DEBUG level=$_protectionLevel base=${_basePrice()} premiumFee=${_premiumFeeValue()} total=${_totalPrice()}',
-            );
+            if (kDebugMode) {
+              debugPrint(
+                'PRICE_DEBUG level=$_protectionLevel base=${_basePrice()} premiumFee=${_premiumFeeValue()} total=${_totalPrice()}',
+              );
+            }
           },
           title: Text(loc.protectionPremium),
           contentPadding: EdgeInsets.zero,
@@ -873,11 +885,13 @@ class _ReservationEditPageState extends State<ReservationEditPage> {
       helpText: helpText,
     );
     if (date == null) return null;
+    if (!mounted) return null;
     final time = await showTimePicker(
       context: context,
       initialTime: TimeOfDay.fromDateTime((initial ?? now).toLocal()),
     );
     if (time == null) return null;
+    if (!mounted) return null;
     return DateTime(date.year, date.month, date.day, time.hour, time.minute);
   }
 
@@ -926,7 +940,6 @@ class _ReservationEditPageState extends State<ReservationEditPage> {
   @override
   Widget build(BuildContext context) {
     final loc = AppLocalizations.of(context)!;
-    final theme = Theme.of(context);
     final dropLabel = _dropAt == null
         ? loc.dropTimePending
         : loc.dropTimeLabel(_formatDateTime(_dropAt));
@@ -968,6 +981,7 @@ class _ReservationEditPageState extends State<ReservationEditPage> {
                     : () async {
                         final selected =
                             await _pickDateTime(_dropAt, loc.dropDatePickerHelp);
+                        if (!mounted) return;
                         if (selected != null) {
                           setState(() => _dropAt = selected);
                         }
@@ -984,6 +998,7 @@ class _ReservationEditPageState extends State<ReservationEditPage> {
                           _pickupAt,
                           loc.pickupDatePickerHelp,
                         );
+                        if (!mounted) return;
                         if (selected != null) {
                           setState(() => _pickupAt = selected);
                         }
