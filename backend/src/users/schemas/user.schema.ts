@@ -61,6 +61,12 @@ export class User extends Document {
   @Prop()
   identityDocumentUrl?: string;
 
+  @Prop()
+  birthDate?: Date;
+
+  @Prop()
+  nationalId?: string;
+
   @Prop({ type: EmergencyContactSchema })
   emergencyContact?: EmergencyContact;
 
@@ -72,6 +78,15 @@ export class User extends Document {
 
   @Prop({ default: false })
   verified: boolean;
+
+  @Prop({ default: 'unverified' })
+  verificationStatus: 'unverified' | 'pending' | 'verified';
+
+  @Prop()
+  verificationRequestedAt?: Date;
+
+  @Prop()
+  verifiedAt?: Date;
 
   @Prop({ type: [OAuthAccountSchema], default: [] })
   oauthAccounts: OAuthAccount[];

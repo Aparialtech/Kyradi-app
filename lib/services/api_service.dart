@@ -332,7 +332,8 @@ class ApiService {
     if (_usingMockBackend) {
       return MockServer.socialLogin(provider, idToken ?? accessToken ?? '');
     }
-    final result = await _post('/auth/social/$provider', {
+    final result = await _post('/auth/social', {
+      'provider': provider,
       if (idToken != null && idToken.isNotEmpty) 'idToken': idToken,
       if (accessToken != null && accessToken.isNotEmpty) 'accessToken': accessToken,
       if (authorizationCode != null) 'authorizationCode': authorizationCode,
@@ -453,6 +454,56 @@ class ApiService {
             _normalizeProfile(Map<String, dynamic>.from(raw));
       }
     }
+    return response;
+  }
+
+  static Future<Map<String, dynamic>> getMe() async {
+    if (_usingMockBackend) return MockServer.getProfile('me');
+    final response = await _get('/me');
+    response['statusCode'] ??= response['_httpStatus'];
+    if (response['ok'] == true) {
+      final raw = response['profile'] ?? response['data'] ?? _stripMeta(response);
+      if (raw is Map<String, dynamic>) {
+        response['profile'] =
+            _normalizeProfile(Map<String, dynamic>.from(raw));
+      }
+    }
+    return response;
+  }
+
+  static Future<Map<String, dynamic>> updateMyProfile(
+    Map<String, dynamic> body,
+  ) async {
+    if (_usingMockBackend) return MockServer.updateProfile('me', body);
+    final response = await _put('/me/profile', body);
+    response['statusCode'] ??= response['_httpStatus'];
+    if (response['ok'] == true) {
+      final raw = response['profile'] ?? response['data'] ?? _stripMeta(response);
+      if (raw is Map<String, dynamic>) {
+        response['profile'] =
+            _normalizeProfile(Map<String, dynamic>.from(raw));
+      }
+    }
+    return response;
+  }
+
+  static Future<Map<String, dynamic>> startEmailVerification() async {
+    if (_usingMockBackend) {
+      return {'ok': true, 'message': 'Mock verify start', '_httpStatus': 200};
+    }
+    final response = await _post('/me/verification/email/start', {});
+    response['statusCode'] ??= response['_httpStatus'];
+    return response;
+  }
+
+  static Future<Map<String, dynamic>> verifyEmailCode(String code) async {
+    if (_usingMockBackend) {
+      return {'ok': true, 'message': 'Mock verify ok', '_httpStatus': 200};
+    }
+    final response = await _post('/me/verification/email/verify', {
+      'code': code,
+    });
+    response['statusCode'] ??= response['_httpStatus'];
     return response;
   }
 
@@ -744,6 +795,18 @@ class ApiService {
     } else if (result['ok'] == null && result['success'] == true) {
       result['ok'] = true;
     }
+    return result;
+  }
+
+  static Future<Map<String, dynamic>> cancelLuggage(
+    String userId,
+    String luggageId,
+  ) async {
+    if (_usingMockBackend) {
+      return MockServer.updateLuggageStatus(userId, luggageId, 'cancelled');
+    }
+    final result = await _post('/users/$userId/luggages/$luggageId/cancel', {});
+    result['statusCode'] ??= result['_httpStatus'];
     return result;
   }
 

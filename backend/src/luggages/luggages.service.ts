@@ -302,6 +302,17 @@ export class LuggagesService {
     }
   }
 
+  async cancelReservation(userId: string, luggageId: string) {
+    const existing = await this.luggageModel.findOne({ _id: luggageId, userId }).exec();
+    if (!existing) throw new NotFoundException('Luggage not found');
+    if ([LuggageStatus.DROPPED, LuggageStatus.PICKED].includes(existing.status)) {
+      throw new BadRequestException('CANCEL_NOT_ALLOWED');
+    }
+    existing.status = LuggageStatus.CANCELLED;
+    await existing.save();
+    return { luggage: this._decorateLuggage(existing.toObject()) };
+  }
+
   private generateQrCode(): string {
     const stamp = Date.now().toString(36).toUpperCase();
     const random = Math.floor(1000 + Math.random() * 9000);

@@ -22,9 +22,24 @@ import '../models/luggage.dart';
 final rootNavigatorKey = GlobalKey<NavigatorState>();
 
 GoRouter buildAppRouter() {
+  final legacyPaths = <String>{
+    '/home_page',
+    '/home-page',
+    '/main_home',
+    '/legacy',
+    '/classic',
+    '/kyradi',
+  };
   return GoRouter(
     navigatorKey: rootNavigatorKey,
     initialLocation: '/intro',
+    redirect: (context, state) {
+      final path = state.uri.path;
+      if (legacyPaths.contains(path)) {
+        return '/home';
+      }
+      return null;
+    },
     routes: [
       GoRoute(
         path: '/',

@@ -91,6 +91,49 @@ class _BookingsPageState extends State<BookingsPage> {
     );
   }
 
+  Future<void> _cancelLuggage(LuggageModel luggage) async {
+    if (_userId == null) return;
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text('Rezervasyonu iptal et'),
+        content: const Text('Bu rezervasyonu iptal etmek istiyor musunuz?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Vazgeç'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('İptal Et'),
+          ),
+        ],
+      ),
+    );
+    if (confirm != true) return;
+    final res = await LuggageService.cancel(_userId!, luggage.id);
+    if (!mounted) return;
+    if (res['ok'] == true && res['luggage'] is Map) {
+      final updated =
+          LuggageModel.fromJson(Map<String, dynamic>.from(res['luggage'] as Map));
+      setState(() {
+        _luggages = _luggages.map((e) => e.id == updated.id ? updated : e).toList();
+      });
+      AppNotification.show(
+        context,
+        message: 'Rezervasyon iptal edildi',
+        type: AppNotificationType.success,
+      );
+    } else {
+      final msg = (res['error'] ?? res['message'] ?? 'CANCEL_FAILED').toString();
+      AppNotification.show(
+        context,
+        message: msg,
+        type: AppNotificationType.error,
+      );
+    }
+  }
+
   void _scanQr() {
     AppNotification.show(
       context,
@@ -181,6 +224,7 @@ class _BookingsPageState extends State<BookingsPage> {
                                 onScanQr: _scanQr,
                                 onDetails: () => _showTimeline(luggage),
                                 onSupport: _showSupport,
+                                onCancel: () => _cancelLuggage(luggage),
                               );
                             },
                           ),

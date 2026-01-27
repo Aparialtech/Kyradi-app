@@ -13,6 +13,8 @@ export class UpdateUserDto {
   phone?: string;
   address?: string;
   gender?: string;
+  birthDate?: string;
+  nationalId?: string;
   pushReminderEnabled?: boolean;
   emailReminderEnabled?: boolean;
   identityDocumentUrl?: string;

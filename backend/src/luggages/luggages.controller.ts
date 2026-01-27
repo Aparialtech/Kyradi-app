@@ -60,4 +60,16 @@ export class LuggagesController {
       dto.delegateCode,
     );
   }
+
+  @Post(':luggageId/cancel')
+  cancel(
+    @Param('userId') userId: string,
+    @Param('luggageId') luggageId: string,
+    @Req() req: any,
+  ) {
+    if (req?.user?.id !== userId) {
+      throw new ForbiddenException('FORBIDDEN');
+    }
+    return this.luggagesService.cancelReservation(userId, luggageId);
+  }
 }

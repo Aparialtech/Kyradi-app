@@ -16,6 +16,7 @@ import 'widgets/settings_section.dart';
 import 'widgets/support_section.dart';
 import 'widgets/verification_section.dart';
 import '../../screens/crash_log_page.dart';
+import 'pages/verification_form_page.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -89,6 +90,17 @@ class _ProfilePageState extends State<ProfilePage> {
     context.go('/luggage');
   }
 
+  Future<void> _openVerification() async {
+    if (_user == null) return;
+    await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => VerificationFormPage(user: _user!),
+      ),
+    );
+    if (!mounted) return;
+    await _loadProfile();
+  }
+
   Future<void> _confirmLogout() async {
     final loc = AppLocalizations.of(context)!;
     final result = await showDialog<bool>(
@@ -158,9 +170,8 @@ class _ProfilePageState extends State<ProfilePage> {
                       ),
                     const SizedBox(height: 16),
                     VerificationSection(
-                      isVerified:
-                          _user?.identityDocumentUrl?.isNotEmpty ?? false,
-                      onManage: _openLuggageCenter,
+                      status: _user?.verificationStatus ?? 'unverified',
+                      onManage: _openVerification,
                     ),
                     const SizedBox(height: 16),
                     SettingsSection(

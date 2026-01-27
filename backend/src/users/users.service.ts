@@ -100,6 +100,8 @@ export class UsersService {
             ...(dto.phone && { phone: dto.phone }),
             ...(dto.address && { address: dto.address }),
             ...(dto.gender && { gender: dto.gender }),
+            ...(dto.birthDate && { birthDate: new Date(dto.birthDate) }),
+            ...(dto.nationalId && { nationalId: dto.nationalId }),
             ...(dto.pushReminderEnabled !== undefined && {
               pushReminderEnabled: dto.pushReminderEnabled,
             }),

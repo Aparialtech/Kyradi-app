@@ -57,6 +57,10 @@ class UserModel {
   final String phone;
   final String address;
   final String gender;
+  final String? birthDate;
+  final String? nationalId;
+  final String verificationStatus;
+  final String? verifiedAt;
   final String? identityDocumentUrl;
   final bool pushReminderEnabled;
   final bool emailReminderEnabled;
@@ -70,6 +74,10 @@ class UserModel {
     this.phone = '',
     this.address = '',
     this.gender = 'none',
+    this.birthDate,
+    this.nationalId,
+    this.verificationStatus = 'unverified',
+    this.verifiedAt,
     this.identityDocumentUrl,
     this.pushReminderEnabled = true,
     this.emailReminderEnabled = true,
@@ -91,6 +99,10 @@ class UserModel {
         if (gender.isEmpty) return 'none';
         return gender;
       })(),
+      birthDate: json['birthDate']?.toString(),
+      nationalId: (json['nationalId'] ?? '').toString(),
+      verificationStatus: (json['verificationStatus'] ?? 'unverified').toString(),
+      verifiedAt: json['verifiedAt']?.toString(),
       identityDocumentUrl: identityRaw.isEmpty ? null : identityRaw,
       pushReminderEnabled: (json['pushReminderEnabled'] ?? true) == true,
       emailReminderEnabled: (json['emailReminderEnabled'] ?? true) == true,
@@ -110,6 +122,10 @@ class UserModel {
         'phone': phone,
         'address': address,
         'gender': gender,
+        'birthDate': birthDate,
+        'nationalId': nationalId,
+        'verificationStatus': verificationStatus,
+        'verifiedAt': verifiedAt,
         'identityDocumentUrl': identityDocumentUrl,
         'pushReminderEnabled': pushReminderEnabled,
         'emailReminderEnabled': emailReminderEnabled,

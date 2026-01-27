@@ -46,4 +46,11 @@ class LuggageRepository {
       delegateCode,
     );
   }
+
+  Future<Map<String, dynamic>> cancel(
+    String userId,
+    String luggageId,
+  ) {
+    return ApiService.cancelLuggage(userId, luggageId);
+  }
 }

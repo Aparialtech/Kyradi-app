@@ -23,6 +23,7 @@ class _LuggageListPageState extends State<LuggageListPage> {
   bool _loading = true;
   String? _error;
   List<LuggageModel> _items = [];
+  String? _userId;
 
   @override
   void initState() {
@@ -38,6 +39,7 @@ class _LuggageListPageState extends State<LuggageListPage> {
     try {
       final prefs = await SharedPreferences.getInstance();
       final id = prefs.getString('userId');
+      _userId = id;
       if (id == null || id.isEmpty) {
         setState(() {
           _loading = false;
@@ -83,6 +85,48 @@ class _LuggageListPageState extends State<LuggageListPage> {
       message: 'QR tarama yakında.',
       type: AppNotificationType.info,
     );
+  }
+
+  Future<void> _cancelLuggage(LuggageModel luggage) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text('Rezervasyonu iptal et'),
+        content: const Text('Bu rezervasyonu iptal etmek istiyor musunuz?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Vazgeç'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('İptal Et'),
+          ),
+        ],
+      ),
+    );
+    if (confirm != true) return;
+    final res = await _repo.cancel(_userId!, luggage.id);
+    if (!mounted) return;
+    if (res['ok'] == true && res['luggage'] is Map) {
+      final updated =
+          LuggageModel.fromJson(Map<String, dynamic>.from(res['luggage'] as Map));
+      setState(() {
+        _items = _items.map((e) => e.id == updated.id ? updated : e).toList();
+      });
+      AppNotification.show(
+        context,
+        message: 'Rezervasyon iptal edildi',
+        type: AppNotificationType.success,
+      );
+    } else {
+      final msg = (res['error'] ?? res['message'] ?? 'CANCEL_FAILED').toString();
+      AppNotification.show(
+        context,
+        message: msg,
+        type: AppNotificationType.error,
+      );
+    }
   }
 
   @override
@@ -132,6 +176,7 @@ class _LuggageListPageState extends State<LuggageListPage> {
                     onScanQr: _showScanInfo,
                     onDetails: () => _openDetail(luggage),
                     onSupport: _showSupport,
+                    onCancel: () => _cancelLuggage(luggage),
                   ),
                 ),
               ),

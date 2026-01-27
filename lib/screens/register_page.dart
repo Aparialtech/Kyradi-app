@@ -1,13 +1,20 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter/services.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../utils/validators.dart';
 import '../widgets/gradient_button.dart';
 import '../widgets/api_settings_dialog.dart';
 import '../widgets/section_card.dart';
 import '../services/api_service.dart';
+import '../services/auth_service.dart';
 import '../widgets/app_notification.dart';
 import '../l10n/app_localizations.dart';
+import '../core/ios/ios_config_service.dart';
+import '../core/firebase/firebase_bootstrap.dart';
+import '../core/auth/google_oauth_config.dart';
+import '../utils/crash_log.dart';
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
@@ -30,6 +37,10 @@ class _RegisterPageState extends State<RegisterPage> {
 
   String _gender = 'none';
   bool _loading = false;
+  bool _googleConfigOk = true;
+  bool _appleConfigOk = true;
+  bool _firebaseReady = true;
+  bool _googleBusy = false;
   bool _kvkkAccepted = false;
   bool _restrictedItemsAccepted = false;
 
@@ -48,6 +59,192 @@ class _RegisterPageState extends State<RegisterPage> {
     _passCtrl.dispose();
     _pass2Ctrl.dispose();
     super.dispose();
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _checkAuthConfig();
+  }
+
+  Future<void> _checkAuthConfig() async {
+    if (!Platform.isIOS) {
+      setState(() => _firebaseReady = FirebaseBootstrap.isReady);
+      return;
+    }
+    final clientIdOk = isValidIosGoogleClientId(kIosGoogleClientId);
+    final hasScheme = clientIdOk
+        ? await IosConfigService.hasUrlScheme(kIosReversedScheme)
+        : false;
+    final appleAvailable = await AuthService.isAppleAvailable();
+    if (!mounted) return;
+    setState(() {
+      _firebaseReady = FirebaseBootstrap.isReady;
+      _googleConfigOk = clientIdOk && hasScheme;
+      _appleConfigOk = appleAvailable;
+    });
+    appLog(
+      'auth',
+      'IOS_CONFIG_REGISTER firebase_ok=$_firebaseReady google_ok=$_googleConfigOk apple_ok=$_appleConfigOk clientIdPresent=$clientIdOk schemePresent=$hasScheme',
+      level: AppLogLevel.info,
+    );
+  }
+
+  Future<AuthResult> _signInWithGoogle() async {
+    appLog('auth', 'AUTH_GOOGLE_TAP', level: AppLogLevel.info);
+    if (_googleBusy) {
+      return AuthResult(ok: false, error: 'BUSY', statusCode: 429);
+    }
+    if (Platform.isIOS) {
+      final clientIdOk = isValidIosGoogleClientId(kIosGoogleClientId);
+      final hasScheme = clientIdOk
+          ? await IosConfigService.hasUrlScheme(kIosReversedScheme)
+          : false;
+      if (!clientIdOk || !hasScheme) {
+        appLog(
+          'auth',
+          'AUTH_GOOGLE_PREFLIGHT_FAIL clientIdPresent=$clientIdOk schemePresent=$hasScheme',
+          level: AppLogLevel.error,
+        );
+        return AuthResult(
+          ok: false,
+          error: 'Google giriş yapılandırması eksik.',
+          statusCode: 500,
+        );
+      }
+    }
+    appLog('auth', 'AUTH_GOOGLE_PREFLIGHT_OK', level: AppLogLevel.info);
+    appLog('auth', 'AUTH_GOOGLE_START', level: AppLogLevel.info);
+    _googleBusy = true;
+    try {
+      final result = await AuthService.signInWithGoogle();
+      return result;
+    } catch (e) {
+      appLog('auth', 'AUTH_GOOGLE_ERROR $e', level: AppLogLevel.error);
+      return AuthResult(ok: false, error: e.toString(), statusCode: 500);
+    } finally {
+      _googleBusy = false;
+    }
+  }
+
+  Future<AuthResult> _signInWithApple() async {
+    appLog('auth', 'AUTH_APPLE_TAP', level: AppLogLevel.info);
+    if (!await AuthService.isAppleAvailable()) {
+      appLog('auth', 'AUTH_APPLE_ERROR not_available', level: AppLogLevel.warn);
+      return AuthResult(ok: false, error: 'Apple Sign-In unavailable', statusCode: 400);
+    }
+    appLog('auth', 'AUTH_APPLE_START', level: AppLogLevel.info);
+    final result = await AuthService.signInWithApple();
+    if (result.ok) {
+      appLog('auth', 'AUTH_APPLE_RESULT ok', level: AppLogLevel.info);
+    }
+    return result;
+  }
+
+  Future<void> _handleSocialAuth(
+    Future<AuthResult> Function() handler, {
+    required String provider,
+  }) async {
+    if (_loading) return;
+    if (!_firebaseReady) {
+      _notify(
+        'Firebase yapılandırması eksik.',
+        type: AppNotificationType.warning,
+      );
+      return;
+    }
+    appLog('auth', 'AUTH_${provider.toUpperCase()}_START', level: AppLogLevel.info);
+    setState(() => _loading = true);
+    try {
+      final authResult = await handler();
+      if (!authResult.ok) {
+        if (!mounted) return;
+        setState(() => _loading = false);
+        final err = authResult.error ?? 'Login failed';
+        final message = err == 'invalid-credential'
+            ? 'Google token doğrulanamadı. Lütfen tekrar deneyin.'
+            : err;
+        _notify(message, type: AppNotificationType.error);
+        return;
+      }
+      final firebaseIdToken = authResult.firebaseIdToken;
+      final idToken = authResult.providerIdToken;
+      final accessToken = authResult.accessToken;
+      final authorizationCode = authResult.authorizationCode;
+      final effectiveToken =
+          firebaseIdToken?.isNotEmpty == true ? firebaseIdToken : idToken;
+      final tokenTrimmed = effectiveToken?.trim() ?? '';
+      final tokenSegments = tokenTrimmed.isEmpty ? 0 : tokenTrimmed.split('.').length;
+      final startsWithEyJ = tokenTrimmed.startsWith('eyJ');
+      if (tokenTrimmed.isEmpty) {
+        if (!mounted) return;
+        setState(() => _loading = false);
+        _notify('TOKEN_INVALID', type: AppNotificationType.error);
+        return;
+      }
+      appLog(
+        'auth',
+        'AUTH_GOOGLE_TOKEN_FORMAT tokenLen=${tokenTrimmed.length} segments=$tokenSegments startsWithEyJ=$startsWithEyJ',
+        level: AppLogLevel.info,
+      );
+      if (tokenSegments != 3 || !startsWithEyJ) {
+        if (!mounted) return;
+        setState(() => _loading = false);
+        _notify('Google token doğrulanamadı, tekrar deneyin.',
+            type: AppNotificationType.error);
+        return;
+      }
+      final res = await ApiService.socialLogin(
+        provider: provider,
+        idToken: effectiveToken,
+        accessToken: idToken == null || idToken.isEmpty ? accessToken : null,
+        authorizationCode: authorizationCode,
+        platform: Platform.isIOS ? 'ios' : 'android',
+      );
+      if (!mounted) return;
+      setState(() => _loading = false);
+      final ok = res['ok'] == true;
+      final status = res['statusCode'] ?? 0;
+      final msg = (res['message'] ?? res['error'] ?? '').toString();
+      if (ok) {
+        final profile = res["profile"];
+        final userId = profile?["id"];
+        if (userId != null) {
+          final prefs = await SharedPreferences.getInstance();
+          if (!mounted) return;
+          await prefs.setString('userId', userId.toString());
+          if (!mounted) return;
+        }
+        _notify(
+          AppLocalizations.of(context)!.loginSuccess,
+          type: AppNotificationType.success,
+        );
+        if (!mounted) return;
+        context.go('/home');
+      } else if (status == 400 || status == 401) {
+        final mapped = msg == 'SOCIAL_TOKEN_FORMAT_INVALID'
+            ? 'Google token formatı geçersiz.'
+            : msg == 'SOCIAL_TOKEN_INVALID'
+                ? 'Google oturumu doğrulanamadı, tekrar deneyin.'
+                : msg == 'WRONG_AUTH_FLOW'
+                    ? 'Yanlış giriş akışı.'
+                    : (msg.isNotEmpty ? msg : 'TOKEN_INVALID');
+        _notify(mapped, type: AppNotificationType.error);
+      } else {
+        _notify(
+          msg.isNotEmpty ? msg : AppLocalizations.of(context)!.loginFailed,
+          type: AppNotificationType.error,
+        );
+      }
+    } catch (e) {
+      appLog('auth', 'AUTH_${provider.toUpperCase()}_ERROR $e', level: AppLogLevel.error);
+      if (!mounted) return;
+      setState(() => _loading = false);
+      _notify(
+        AppLocalizations.of(context)!.genericErrorWithDetails('$e'),
+        type: AppNotificationType.error,
+      );
+    }
   }
 
   Future<void> _pickBirth() async {
@@ -423,6 +620,102 @@ class _RegisterPageState extends State<RegisterPage> {
                         ),
                       ],
                     ),
+                ),
+                const SizedBox(height: 18),
+                SectionCard(
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                  child: Column(
+                    children: [
+                      Row(
+                        children: [
+                          const Expanded(child: Divider()),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 12),
+                            child: Text(
+                              l10n.loginSocialDivider,
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                              ),
+                            ),
+                          ),
+                          const Expanded(child: Divider()),
+                        ],
+                      ),
+                      const SizedBox(height: 14),
+                      Align(
+                        alignment: Alignment.center,
+                        child: ConstrainedBox(
+                          constraints: const BoxConstraints(maxWidth: 360),
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: OutlinedButton.icon(
+                                  onPressed: _loading || !_googleConfigOk || !_firebaseReady
+                                      ? null
+                                      : () => _handleSocialAuth(
+                                            _signInWithGoogle,
+                                            provider: 'google',
+                                          ),
+                                  icon: const CircleAvatar(
+                                    radius: 10,
+                                    backgroundColor: Color(0xFFEA4335),
+                                    child: Text(
+                                      'G',
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w700,
+                                      ),
+                                    ),
+                                  ),
+                                  label: Text(l10n.loginContinueWithGoogle),
+                                  style: OutlinedButton.styleFrom(
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 12,
+                                      horizontal: 10,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: OutlinedButton.icon(
+                                  onPressed: _loading || !_appleConfigOk || !_firebaseReady
+                                      ? null
+                                      : () => _handleSocialAuth(
+                                            _signInWithApple,
+                                            provider: 'apple',
+                                          ),
+                                  icon: const Icon(Icons.apple),
+                                  label: Text(l10n.loginContinueWithApple),
+                                  style: OutlinedButton.styleFrom(
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 12,
+                                      horizontal: 10,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      if (!_firebaseReady || !_googleConfigOk || !_appleConfigOk) ...[
+                        const SizedBox(height: 10),
+                        Text(
+                          !_firebaseReady
+                              ? 'Firebase yapılandırması eksik.'
+                              : (!_googleConfigOk
+                                  ? 'Google giriş yapılandırması eksik (iOS URL scheme).'
+                                  : 'Apple giriş yapılandırması eksik.'),
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.colorScheme.error,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ],
+                    ],
+                  ),
                 ),
                 const SizedBox(height: 18),
                 Text(
