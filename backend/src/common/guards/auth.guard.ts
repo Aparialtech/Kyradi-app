@@ -31,7 +31,11 @@ export class AuthGuard implements CanActivate {
 
     const request = context.switchToHttp().getRequest<Request>();
     const token = this.extractToken(request);
+    const headerPresent = !!request.headers.authorization;
+    const bearerPresent = headerPresent && request.headers.authorization?.toLowerCase().startsWith('bearer ');
+    const tokenLen = token?.length ?? 0;
     if (!token) {
+      console.log('AUTH_GUARD', `headerPresent=${headerPresent}`, `bearerPresent=${bearerPresent}`, `tokenLen=${tokenLen}`, 'verifyOk=false');
       throw new UnauthorizedException('UNAUTHORIZED');
     }
 
@@ -41,9 +45,11 @@ export class AuthGuard implements CanActivate {
       null;
 
     if (!user) {
+      console.log('AUTH_GUARD', `headerPresent=${headerPresent}`, `bearerPresent=${bearerPresent}`, `tokenLen=${tokenLen}`, 'verifyOk=false');
       throw new UnauthorizedException('UNAUTHORIZED');
     }
 
+    console.log('AUTH_GUARD', `headerPresent=${headerPresent}`, `bearerPresent=${bearerPresent}`, `tokenLen=${tokenLen}`, 'verifyOk=true');
     (request as any).user = user;
     return true;
   }

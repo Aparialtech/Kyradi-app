@@ -15,7 +15,8 @@ import { VerificationCode } from './schemas/verification-code.schema';
 import { VerifyCodeDto } from './dto/verify-code.dto';
 import { ResendVerifyDto } from './dto/resend-verify.dto';
 import { SocialLoginDto } from './dto/social-login.dto';
-import { createRemoteJWKSet, jwtVerify, JWTPayload } from 'jose';
+import { createRemoteJWKSet, decodeJwt, jwtVerify, JWTPayload } from 'jose';
+import * as admin from 'firebase-admin';
 
 @Injectable()
 export class AuthService {
@@ -26,6 +27,7 @@ export class AuthService {
   private readonly appleJwks = createRemoteJWKSet(
     new URL('https://appleid.apple.com/auth/keys'),
   );
+  private firebaseApp: admin.app.App | null = null;
 
   constructor(
     private readonly usersService: UsersService,
@@ -49,6 +51,17 @@ export class AuthService {
   }
 
   async login(dto: LoginDto) {
+    const hasEmail = !!dto.email;
+    const hasPassword = !!dto.password;
+    console.log(
+      'LOGIN_REQ',
+      `hasEmail=${hasEmail}`,
+      `hasPassword=${hasPassword}`,
+      `email=${this.maskEmail(dto.email)}`,
+    );
+    if (!dto.email || !dto.password) {
+      throw new BadRequestException('EMAIL_PASSWORD_REQUIRED');
+    }
     const userDoc = await this.usersService.findByEmail(dto.email);
     if (!userDoc) {
       throw new UnauthorizedException('Invalid credentials');
@@ -66,6 +79,49 @@ export class AuthService {
 
   private generateToken(userId: string, email: string) {
     return generateToken({ sub: userId, email }, this.secret);
+  }
+
+  private maskEmail(email?: string) {
+    if (!email) return 'EMPTY';
+    const [name, domain] = email.toLowerCase().split('@');
+    if (!domain) return 'INVALID';
+    const maskedName = name.length <= 2 ? `${name[0] ?? ''}*` : `${name[0]}***${name.slice(-1)}`;
+    return `${maskedName}@${domain}`;
+  }
+
+  private initFirebase() {
+    if (this.firebaseApp) return this.firebaseApp;
+    const raw = process.env.FIREBASE_SERVICE_ACCOUNT_JSON;
+    if (!raw) return null;
+    try {
+      const creds = JSON.parse(raw);
+      this.firebaseApp = admin.initializeApp({
+        credential: admin.credential.cert(creds),
+      });
+      return this.firebaseApp;
+    } catch (e) {
+      console.log('FIREBASE_ADMIN_INIT_FAIL', e?.toString?.() ?? e);
+      return null;
+    }
+  }
+
+  private async verifyFirebaseIdToken(idToken: string) {
+    const app = this.initFirebase();
+    if (!app) {
+      throw new BadRequestException('FIREBASE_ADMIN_NOT_CONFIGURED');
+    }
+    const decoded = await admin.auth(app).verifyIdToken(idToken);
+    return decoded;
+  }
+
+  private looksLikeFirebaseToken(idToken: string) {
+    try {
+      const payload = decodeJwt(idToken);
+      const issuer = payload.iss?.toString() ?? '';
+      return issuer.startsWith('https://securetoken.google.com/');
+    } catch {
+      return false;
+    }
   }
 
   private async verifyGoogleIdToken(idToken: string) {
@@ -127,17 +183,28 @@ export class AuthService {
       throw new BadRequestException('PROVIDER_UNSUPPORTED');
     }
     console.log(
-      'SOCIAL',
-      dto.provider,
-      !!dto.idToken,
-      !!dto.accessToken,
-      dto.accessToken?.length,
+      'SOCIAL_REQ',
+      `provider=${dto.provider}`,
+      `hasIdToken=${!!dto.idToken}`,
+      `idTokenLen=${dto.idToken?.length ?? 0}`,
+      `hasAccessToken=${!!dto.accessToken}`,
+      `accessTokenLen=${dto.accessToken?.length ?? 0}`,
+      `hasAuthCode=${!!dto.authorizationCode}`,
     );
     let payload: JWTPayload;
     try {
       if (dto.provider === 'google') {
         if (dto.idToken && dto.idToken.trim().length > 0) {
-          payload = await this.verifyGoogleIdToken(dto.idToken);
+          if (this.looksLikeFirebaseToken(dto.idToken)) {
+            const decoded = await this.verifyFirebaseIdToken(dto.idToken);
+            payload = {
+              sub: decoded.uid,
+              email: decoded.email,
+              name: decoded.name,
+            } as JWTPayload;
+          } else {
+            payload = await this.verifyGoogleIdToken(dto.idToken);
+          }
         } else if (dto.accessToken && dto.accessToken.trim().length > 0) {
           payload = await this.fetchGoogleUserInfo(dto.accessToken);
         } else {
@@ -147,7 +214,8 @@ export class AuthService {
         if (!dto.idToken) throw new BadRequestException('TOKEN_INVALID');
         payload = await this.verifyAppleIdToken(dto.idToken);
       }
-    } catch (_) {
+    } catch (e) {
+      if (e instanceof BadRequestException) throw e;
       throw new BadRequestException('TOKEN_INVALID');
     }
     const profile = this.extractProfile(payload);

@@ -15,6 +15,7 @@ import '../utils/crash_log.dart';
 import '../core/ios/ios_config_service.dart';
 import '../core/firebase/firebase_bootstrap.dart';
 import '../core/auth/google_oauth_config.dart';
+import '../ui/components/app_back_app_bar.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -311,6 +312,7 @@ class _LoginPageState extends State<LoginPage> {
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context)!;
     return Scaffold(
+      appBar: buildBackAppBar(context),
       body: DecoratedBox(
         decoration: const BoxDecoration(
           gradient: LinearGradient(

@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 
 import '../widgets/gradient_button.dart';
 import '../l10n/app_localizations.dart';
+import '../ui/components/app_back_app_bar.dart';
 
 class IntroSplashPage extends StatefulWidget {
   const IntroSplashPage({super.key});
@@ -68,6 +69,7 @@ class _IntroSplashPageState extends State<IntroSplashPage>
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context)!;
     return Scaffold(
+      appBar: buildBackAppBar(context),
       body: DecoratedBox(
         decoration: const BoxDecoration(
           gradient: RadialGradient(

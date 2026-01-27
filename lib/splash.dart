@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'ui/components/app_back_app_bar.dart';
 
 class SplashPage extends StatefulWidget {
   const SplashPage({super.key});
@@ -47,6 +48,7 @@ class _SplashPageState extends State<SplashPage> with SingleTickerProviderStateM
     final theme = Theme.of(context);
 
     return Scaffold(
+      appBar: buildBackAppBar(context),
       backgroundColor: Colors.white, // 🔹 Arka plan BEYAZ
       body: SafeArea(
         child: Column(

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../utils/crash_log.dart';
+import 'app_back_app_bar.dart';
 
 class ErrorFallbackPage extends StatelessWidget {
   const ErrorFallbackPage({
@@ -14,6 +15,7 @@ class ErrorFallbackPage extends StatelessWidget {
     final timestamp = entry?.timestamp ?? DateTime.now();
     final code = entry?.id ?? timestamp.millisecondsSinceEpoch.toString();
     return Scaffold(
+      appBar: buildBackAppBar(context),
       body: SafeArea(
         child: Center(
           child: Padding(

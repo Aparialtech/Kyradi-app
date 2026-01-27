@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import '../ui/components/app_back_app_bar.dart';
 
 class SplashPage extends StatefulWidget {
   const SplashPage({super.key});
@@ -50,6 +51,7 @@ class _SplashPageState extends State<SplashPage>
     final theme = Theme.of(context);
 
     return Scaffold(
+      appBar: buildBackAppBar(context),
       backgroundColor: const Color(0xFF2C3E50), // koyu arka plan
       body: SafeArea(
         child: Column(

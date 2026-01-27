@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'app_back_app_bar.dart';
 
 class ConfigMissingPage extends StatelessWidget {
   const ConfigMissingPage({super.key});
@@ -6,6 +7,7 @@ class ConfigMissingPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: buildBackAppBar(context),
       body: Center(
         child: Padding(
           padding: const EdgeInsets.all(24),
