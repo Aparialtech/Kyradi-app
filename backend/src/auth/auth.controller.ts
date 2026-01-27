@@ -1,4 +1,4 @@
-import { Body, Controller, Post } from '@nestjs/common';
+import { Body, Controller, Post, BadRequestException } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { CreateUserDto } from '../users/dto/create-user.dto';
 import { LoginDto } from './dto/login.dto';
@@ -66,6 +66,9 @@ export class AuthController {
   @Post('social/google')
   @Public()
   socialGoogle(@Body() dto: SocialProviderLoginDto) {
+    if (!dto.idToken) {
+      throw new BadRequestException('SOCIAL_TOKEN_INVALID');
+    }
     return this.authService.socialLogin({
       provider: 'google',
       idToken: dto.idToken,

@@ -157,6 +157,7 @@
 				1E3F2B1431C27DDD5B229801 /* [CP] Check Pods Manifest.lock */,
 				AAAABBBBCCCCDDDDEEEEFFFF /* Verify Firebase Config */,
 				FEDCBA9876543210FEDCBA98 /* Verify iOS Auth Config */,
+				0F0F0F0F0F0F0F0F0F0F0F0F /* Verify iOS Maps Config */,
 				A1B2C3D4E5F60718293A4B5C /* Verify Dart Defines */,
 				9740EEB61CF901F6004384FC /* Run Script */,
 				97C146EA1CF9000F007C117D /* Sources */,
@@ -337,6 +338,20 @@
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
 			shellScript = "\"${PROJECT_DIR}/scripts/verify_ios_auth_config.sh\"\n";
+		};
+		0F0F0F0F0F0F0F0F0F0F0F0F /* Verify iOS Maps Config */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			name = "Verify iOS Maps Config";
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${PROJECT_DIR}/scripts/verify_ios_maps_config.sh\"\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 
