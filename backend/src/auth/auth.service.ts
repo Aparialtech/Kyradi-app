@@ -197,6 +197,12 @@ export class AuthService {
         if (dto.idToken && dto.idToken.trim().length > 0) {
           if (this.looksLikeFirebaseToken(dto.idToken)) {
             const decoded = await this.verifyFirebaseIdToken(dto.idToken);
+            console.log(
+              'SOCIAL_GOOGLE_VERIFY',
+              'firebase=true',
+              `uid=${decoded.uid}`,
+              `email=${this.maskEmail(decoded.email)}`,
+            );
             payload = {
               sub: decoded.uid,
               email: decoded.email,
@@ -204,15 +210,32 @@ export class AuthService {
             } as JWTPayload;
           } else {
             payload = await this.verifyGoogleIdToken(dto.idToken);
+            console.log(
+              'SOCIAL_GOOGLE_VERIFY',
+              'firebase=false',
+              `sub=${payload.sub ?? ''}`,
+              `email=${this.maskEmail(payload.email?.toString())}`,
+            );
           }
         } else if (dto.accessToken && dto.accessToken.trim().length > 0) {
           payload = await this.fetchGoogleUserInfo(dto.accessToken);
+          console.log(
+            'SOCIAL_GOOGLE_VERIFY',
+            'accessToken=true',
+            `sub=${payload.sub ?? ''}`,
+            `email=${this.maskEmail(payload.email?.toString())}`,
+          );
         } else {
           throw new BadRequestException('TOKEN_INVALID');
         }
       } else {
         if (!dto.idToken) throw new BadRequestException('TOKEN_INVALID');
         payload = await this.verifyAppleIdToken(dto.idToken);
+        console.log(
+          'SOCIAL_APPLE_VERIFY',
+          `sub=${payload.sub ?? ''}`,
+          `email=${this.maskEmail(payload.email?.toString())}`,
+        );
       }
     } catch (e) {
       if (e instanceof BadRequestException) throw e;

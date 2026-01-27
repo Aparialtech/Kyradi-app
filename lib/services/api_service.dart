@@ -326,15 +326,18 @@ class ApiService {
     String? idToken,
     String? accessToken,
     String? authorizationCode,
+    String? platform,
+    String? deviceId,
   }) async {
     if (_usingMockBackend) {
       return MockServer.socialLogin(provider, idToken ?? accessToken ?? '');
     }
-    final result = await _post('/auth/social', {
-      'provider': provider,
+    final result = await _post('/auth/social/$provider', {
       if (idToken != null && idToken.isNotEmpty) 'idToken': idToken,
       if (accessToken != null && accessToken.isNotEmpty) 'accessToken': accessToken,
       if (authorizationCode != null) 'authorizationCode': authorizationCode,
+      if (platform != null) 'platform': platform,
+      if (deviceId != null) 'deviceId': deviceId,
     });
     result['statusCode'] ??= result['_httpStatus'];
     if (result['ok'] == true) {

@@ -8,6 +8,7 @@ import { ChangePasswordDto } from './dto/change-password.dto';
 import { VerifyCodeDto } from './dto/verify-code.dto';
 import { ResendVerifyDto } from './dto/resend-verify.dto';
 import { SocialLoginDto } from './dto/social-login.dto';
+import { SocialProviderLoginDto } from './dto/social-provider-login.dto';
 import { Public } from '../common/decorators/public.decorator';
 
 @Controller('auth')
@@ -60,5 +61,27 @@ export class AuthController {
   socialLogin(@Body() dto: SocialLoginDto) {
     console.log('AUTH_SOCIAL_HIT_FROM_NEW_CODE');
     return this.authService.socialLogin(dto);
+  }
+
+  @Post('social/google')
+  @Public()
+  socialGoogle(@Body() dto: SocialProviderLoginDto) {
+    return this.authService.socialLogin({
+      provider: 'google',
+      idToken: dto.idToken,
+      accessToken: dto.accessToken,
+      authorizationCode: dto.authorizationCode,
+    });
+  }
+
+  @Post('social/apple')
+  @Public()
+  socialApple(@Body() dto: SocialProviderLoginDto) {
+    return this.authService.socialLogin({
+      provider: 'apple',
+      idToken: dto.idToken,
+      accessToken: dto.accessToken,
+      authorizationCode: dto.authorizationCode,
+    });
   }
 }

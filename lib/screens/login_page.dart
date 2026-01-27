@@ -96,20 +96,28 @@ class _LoginPageState extends State<LoginPage> {
         return;
       }
       final idToken = authResult.providerIdToken;
+      final firebaseIdToken = authResult.firebaseIdToken;
       final accessToken = authResult.accessToken;
       final authorizationCode = authResult.authorizationCode;
-      if ((idToken == null || idToken.isEmpty) &&
+      if ((firebaseIdToken == null || firebaseIdToken.isEmpty) &&
+          (idToken == null || idToken.isEmpty) &&
           (accessToken == null || accessToken.isEmpty)) {
         if (!mounted) return;
         setState(() => _loading = false);
         _notify('TOKEN_INVALID', type: AppNotificationType.error);
         return;
       }
+      appLog(
+        'auth',
+        'AUTH_GOOGLE_TOKEN firebaseLen=${firebaseIdToken?.length ?? 0} idTokenLen=${idToken?.length ?? 0}',
+        level: AppLogLevel.debug,
+      );
       final res = await ApiService.socialLogin(
         provider: provider,
-        idToken: idToken,
+        idToken: firebaseIdToken?.isNotEmpty == true ? firebaseIdToken : idToken,
         accessToken: idToken == null || idToken.isEmpty ? accessToken : null,
         authorizationCode: authorizationCode,
+        platform: Platform.isIOS ? 'ios' : 'android',
       );
       if (!mounted) return;
       setState(() => _loading = false);
