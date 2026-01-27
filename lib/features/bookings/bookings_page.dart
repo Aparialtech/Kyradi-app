@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:go_router/go_router.dart';
 import '../../l10n/app_localizations.dart';
 import '../../models/luggage.dart';
 import '../../services/luggage_service.dart';
 import '../../widgets/app_notification.dart';
-import '../../screens/home_page.dart';
 import '../../ui/components/app_empty_state.dart';
 import '../../ui/components/app_error_state.dart';
 import '../../ui/components/app_skeleton.dart';
@@ -70,19 +70,8 @@ class _BookingsPageState extends State<BookingsPage> {
     }
   }
 
-  void _openClassic() {
-    Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => const HomePage(initialTabIndex: 0)),
-    );
-  }
-
   void _showQr(LuggageModel luggage) {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => QrPreviewPage(luggage: luggage),
-        fullscreenDialog: true,
-      ),
-    );
+    context.push('/luggage/${luggage.id}/qr', extra: luggage);
   }
 
   void _showTimeline(LuggageModel luggage) {
@@ -105,10 +94,10 @@ class _BookingsPageState extends State<BookingsPage> {
   void _scanQr() {
     AppNotification.show(
       context,
-      message: 'QR tarama klasik panelde',
+      message: 'QR tarama yakında bu ekranda.',
       type: AppNotificationType.info,
     );
-    _openClassic();
+    context.go('/luggage');
   }
 
   List<LuggageModel> get _segmentItems {
@@ -150,7 +139,7 @@ class _BookingsPageState extends State<BookingsPage> {
                 BookingsHeader(
                   title: loc.myLuggages,
                   subtitle: loc.luggagesSectionSubtitle,
-                  onOpenClassic: _openClassic,
+                  onOpenClassic: () => context.go('/luggage'),
                 ),
                 const SizedBox(height: 12),
                 BookingsSegmentedControl(
@@ -179,7 +168,7 @@ class _BookingsPageState extends State<BookingsPage> {
                             subtitle:
                                 'Create a new luggage booking to get started.',
                             actionLabel: loc.quickAddLuggage,
-                            onAction: _openClassic,
+                            onAction: () => context.push('/luggage/add'),
                           )
                         : ListView.builder(
                             padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),

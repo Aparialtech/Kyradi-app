@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../l10n/app_localizations.dart';
 import '../../models/user.dart';
 import '../../services/api_service.dart';
 import '../../screens/change_password_page.dart';
-import '../../screens/home_page.dart';
-import '../../screens/intro_splash_page.dart';
 import '../../ui/components/app_error_state.dart';
 import '../../ui/components/app_skeleton.dart';
 import 'pages/about_page.dart';
@@ -86,10 +85,8 @@ class _ProfilePageState extends State<ProfilePage> {
     setState(() => _loading = false);
   }
 
-  void _openClassic() {
-    Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => const HomePage(initialTabIndex: 2)),
-    );
+  void _openLuggageCenter() {
+    context.go('/luggage');
   }
 
   Future<void> _confirmLogout() async {
@@ -115,10 +112,7 @@ class _ProfilePageState extends State<ProfilePage> {
     if (result == true) {
       await ApiService.clearSession();
       if (!mounted) return;
-      Navigator.of(context).pushAndRemoveUntil(
-        MaterialPageRoute(builder: (_) => const IntroSplashPage()),
-        (route) => false,
-      );
+      context.go('/intro');
     }
   }
 
@@ -160,13 +154,13 @@ class _ProfilePageState extends State<ProfilePage> {
                     if (_user != null)
                       ProfileHeaderCard(
                         user: _user!,
-                        onEdit: _openClassic,
+                        onEdit: _openLuggageCenter,
                       ),
                     const SizedBox(height: 16),
                     VerificationSection(
                       isVerified:
                           _user?.identityDocumentUrl?.isNotEmpty ?? false,
-                      onManage: _openClassic,
+                      onManage: _openLuggageCenter,
                     ),
                     const SizedBox(height: 16),
                     SettingsSection(
@@ -206,11 +200,11 @@ class _ProfilePageState extends State<ProfilePage> {
                     ),
                     const SizedBox(height: 16),
                     ListTile(
-                      leading: const Icon(Icons.dashboard_customize_outlined),
-                      title: const Text('Open Classic Panel'),
-                      subtitle: const Text('Profile & identity details'),
+                      leading: const Icon(Icons.luggage_outlined),
+                      title: const Text('Bavullarım'),
+                      subtitle: const Text('SuperApp luggage center'),
                       trailing: const Icon(Icons.chevron_right),
-                      onTap: _openClassic,
+                      onTap: _openLuggageCenter,
                     ),
                   ],
                 ),

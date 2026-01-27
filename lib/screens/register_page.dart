@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:flutter/services.dart';
 import '../utils/validators.dart';
 import '../widgets/gradient_button.dart';
@@ -172,11 +173,7 @@ class _RegisterPageState extends State<RegisterPage> {
           type: AppNotificationType.success,
         );
         if (!mounted) return;
-        Navigator.pushReplacementNamed(
-          context,
-          '/verify',
-          arguments: _emailCtrl.text.trim(),
-        );
+        context.go('/verify', extra: _emailCtrl.text.trim());
       }
       // 🔹 409 veya “email already” gibi durumlar
       else if (status == 409 ||

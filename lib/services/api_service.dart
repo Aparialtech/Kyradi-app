@@ -106,7 +106,7 @@ class ApiService {
   static String describeBaseUrl() {
     final resolved = baseUrl;
     final masked = _maskUrl(resolved);
-    return 'source=$baseUrlSource explicit=${hasExplicitBaseUrl} resolved=$masked';
+    return 'source=$baseUrlSource explicit=$hasExplicitBaseUrl resolved=$masked';
   }
 
   static void logBaseUrlStatus() {

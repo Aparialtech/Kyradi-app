@@ -9,7 +9,7 @@ class FaqPage extends StatelessWidget {
       ['How does Kyradi work?', 'Drop your luggage at a partner location and pick it up later with your QR/PIN.'],
       ['Can I pay on site?', 'Yes, pay at the location or via card checkout.'],
       ['What if a location is full?', 'Choose another location or time slot.'],
-      ['How do I upload identity?', 'Open Classic panel → Profile → Identity.'],
+      ['How do I upload identity?', 'Open Profile → Verification → Identity.'],
     ];
     return Scaffold(
       appBar: AppBar(title: const Text('FAQ')),

@@ -1,5 +1,7 @@
 const String kIosGoogleClientId =
     '257787138037-6deiuvca1572r0a2vi7ou1v1nk00e5kt.apps.googleusercontent.com';
+const String kAndroidGoogleClientId = '';
+const String kWebGoogleClientId = '';
 
 String reversedClientIdFromClientId(String clientId) {
   final prefix = clientId.split('.apps.googleusercontent.com').first;
@@ -13,4 +15,10 @@ bool isValidIosGoogleClientId(String clientId) {
   return clientId.isNotEmpty &&
       clientId.endsWith('.apps.googleusercontent.com') &&
       clientId.length > '.apps.googleusercontent.com'.length;
+}
+
+String maskClientId(String clientId) {
+  if (clientId.isEmpty) return 'EMPTY';
+  final tail = clientId.length <= 8 ? clientId : clientId.substring(clientId.length - 8);
+  return '***$tail';
 }

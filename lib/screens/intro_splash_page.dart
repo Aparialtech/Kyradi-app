@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:flutter/services.dart';
 
 import '../widgets/gradient_button.dart';
@@ -51,11 +52,11 @@ class _IntroSplashPageState extends State<IntroSplashPage>
   }
 
   void _goLogin() {
-    Navigator.pushReplacementNamed(context, '/login');
+    context.go('/login');
   }
 
   void _goRegister() {
-    Navigator.pushReplacementNamed(context, '/register');
+    context.go('/register');
   }
 
   void _showAuthButtons() {

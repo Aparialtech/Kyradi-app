@@ -1,10 +1,12 @@
+import 'dart:convert';
 import 'dart:io';
+import 'package:flutter/foundation.dart' show kDebugMode, kProfileMode, kIsWeb;
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
-import '../utils/crash_log.dart';
 import '../core/firebase/firebase_bootstrap.dart';
 import '../core/auth/google_oauth_config.dart';
+import '../utils/crash_log.dart';
 
 class AuthResult {
   AuthResult({
@@ -30,6 +32,29 @@ class AuthService {
   AuthService._();
 
   static bool get _firebaseReady => FirebaseBootstrap.isReady;
+  static bool get _isDebugLike => kDebugMode || kProfileMode;
+
+  static String _platformLabel() {
+    if (kIsWeb) return 'web';
+    if (Platform.isIOS) return 'ios';
+    if (Platform.isAndroid) return 'android';
+    return 'other';
+  }
+
+  static String? _extractAud(String idToken) {
+    try {
+      final parts = idToken.split('.');
+      if (parts.length < 2) return null;
+      final payload = utf8.decode(base64Url.decode(base64Url.normalize(parts[1])));
+      final jsonMap = jsonDecode(payload);
+      if (jsonMap is Map && jsonMap['aud'] is String) {
+        return jsonMap['aud'] as String;
+      }
+      return null;
+    } catch (_) {
+      return null;
+    }
+  }
 
   static Future<bool> isAppleAvailable() async {
     if (!Platform.isIOS) return false;
@@ -45,9 +70,18 @@ class AuthService {
       return AuthResult(ok: false, error: 'Firebase yapılandırması eksik.', statusCode: 500);
     }
     try {
-      final clientId = Platform.isIOS && isValidIosGoogleClientId(kIosGoogleClientId)
-          ? kIosGoogleClientId
-          : null;
+      final clientId = kIsWeb
+          ? (kWebGoogleClientId.isNotEmpty ? kWebGoogleClientId : null)
+          : (Platform.isIOS && isValidIosGoogleClientId(kIosGoogleClientId)
+              ? kIosGoogleClientId
+              : (Platform.isAndroid && kAndroidGoogleClientId.isNotEmpty
+                  ? kAndroidGoogleClientId
+                  : null));
+      appLog(
+        'auth',
+        'AUTH_GOOGLE_CLIENT platform=${_platformLabel()} clientId_used=${maskClientId(clientId ?? '')}',
+        level: AppLogLevel.info,
+      );
       final googleSignIn = GoogleSignIn(
         clientId: clientId,
         scopes: ['email', 'profile', 'openid'],
@@ -59,10 +93,33 @@ class AuthService {
       final auth = await account.authentication;
       final idToken = auth.idToken;
       final accessToken = auth.accessToken;
+      final serverAuthCode = account.serverAuthCode;
+      appLog(
+        'auth',
+        'AUTH_GOOGLE_TOKEN idToken_present=${idToken != null && idToken.isNotEmpty} accessToken_present=${accessToken != null && accessToken.isNotEmpty} serverAuthCode_present=${serverAuthCode != null && serverAuthCode.isNotEmpty}',
+        level: AppLogLevel.info,
+      );
       if ((idToken == null || idToken.isEmpty) &&
           (accessToken == null || accessToken.isEmpty)) {
         return AuthResult(ok: false, error: 'TOKEN_INVALID', statusCode: 400);
       }
+      if (_isDebugLike && Platform.isIOS && idToken != null && idToken.isNotEmpty) {
+        final aud = _extractAud(idToken);
+        if (aud != null && aud != kIosGoogleClientId) {
+          appLog(
+            'auth',
+            'AUTH_GOOGLE_AUD_MISMATCH aud=$aud expected=$kIosGoogleClientId',
+            level: AppLogLevel.warn,
+          );
+          return AuthResult(
+            ok: false,
+            error:
+                'Google token audience uyuşmuyor: iOS clientId yerine başka clientId ile token üretildi.',
+            statusCode: 400,
+          );
+        }
+      }
+      appLog('auth', 'AUTH_GOOGLE_FIREBASE_SIGNIN_START', level: AppLogLevel.info);
       final credential = GoogleAuthProvider.credential(
         idToken: idToken,
         accessToken: accessToken,
@@ -75,7 +132,15 @@ class AuthService {
         accessToken: accessToken,
         firebaseIdToken: firebaseToken,
       );
+    } on FirebaseAuthException catch (e) {
+      appLog(
+        'auth',
+        'AUTH_GOOGLE_FIREBASE_SIGNIN_ERROR code=${e.code} message=${e.message}',
+        level: AppLogLevel.error,
+      );
+      return AuthResult(ok: false, error: e.code, statusCode: 401);
     } catch (e) {
+      appLog('auth', 'AUTH_GOOGLE_FIREBASE_SIGNIN_ERROR code=$e', level: AppLogLevel.error);
       return AuthResult(ok: false, error: e.toString(), statusCode: 500);
     }
   }

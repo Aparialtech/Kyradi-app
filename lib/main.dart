@@ -3,20 +3,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'l10n/app_localizations.dart';
 import 'core/app_locale.dart';
-import 'screens/login_page.dart';
-import 'screens/register_page.dart';
-import 'screens/verify_code_page.dart';
-import 'screens/forgot_password_page.dart';
-import 'screens/home_page.dart';
-import 'screens/superapp_shell.dart';
 import 'services/api_service.dart';
-import 'screens/notifications_page.dart';
-import 'screens/intro_splash_page.dart';
-import 'screens/location_reservation_page.dart';
 import 'ui/components/config_missing_page.dart';
 import 'ui/components/error_fallback_page.dart';
 import 'utils/crash_log.dart';
 import 'core/firebase/firebase_bootstrap.dart';
+import 'router/app_router.dart';
 
 const _primaryColor = Color(0xFF005C99);
 const _secondaryColor = Color(0xFF166866);
@@ -95,10 +87,11 @@ class MyApp extends StatelessWidget {
           inversePrimary: const Color(0xFFA9D2F4),
         );
 
-        return MaterialApp(
+        return MaterialApp.router(
           key: ValueKey(currentLocale?.languageCode ?? 'tr'),
           title: 'KYRADI',
           debugShowCheckedModeBanner: false,
+          routerConfig: buildAppRouter(),
           theme: ThemeData(
             useMaterial3: true,
             colorScheme: baseScheme,
@@ -264,21 +257,6 @@ class MyApp extends StatelessWidget {
               }
             }
             return supportedLocales.first;
-          },
-          initialRoute: '/',
-          routes: {
-            '/': (_) => const IntroSplashPage(),
-            '/login': (_) => const LoginPage(),
-            '/register': (_) => const RegisterPage(),
-            '/verify': (_) => const VerifyCodePage(),
-            '/forgot': (_) => const ForgotPasswordPage(),
-            '/home': (_) => const HomePage(),
-            '/app': (_) => const SuperAppShell(),
-            '/notifications': (_) => const NotificationsPage(),
-            '/location-detail': (context) {
-              final args = ModalRoute.of(context)?.settings.arguments as String?;
-              return LocationReservationPage(locationId: args ?? '');
-            },
           },
         );
       },

@@ -1,25 +1,20 @@
 // lib/screens/login_page.dart
 import 'package:flutter/material.dart';
-import 'package:flutter/foundation.dart' show kIsWeb, kDebugMode;
+import 'package:flutter/foundation.dart' show kDebugMode;
 import 'dart:io';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:go_router/go_router.dart';
 import '../services/auth_service.dart';
 import '../widgets/gradient_button.dart';
 import '../widgets/section_card.dart';
 import '../services/api_service.dart';
 import '../widgets/app_notification.dart';
 import '../l10n/app_localizations.dart';
-import 'superapp_shell.dart';
-import 'register_page.dart';
-import 'forgot_password_page.dart'; // ✅ eklendi
 import '../utils/crash_log.dart';
 import '../core/ios/ios_config_service.dart';
 import '../core/firebase/firebase_bootstrap.dart';
 import '../core/auth/google_oauth_config.dart';
-
-const _webGoogleClientId =
-    '183178163952-gg63pl5lqvo15hkcpp8vmigpeu7jsb91.apps.googleusercontent.com';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -92,7 +87,10 @@ class _LoginPageState extends State<LoginPage> {
       if (!authResult.ok) {
         if (!mounted) return;
         setState(() => _loading = false);
-        final message = authResult.error ?? 'Login failed';
+        final err = authResult.error ?? 'Login failed';
+        final message = err == 'invalid-credential'
+            ? 'Google token doğrulanamadı. Lütfen tekrar deneyin.'
+            : err;
         _notify(message, type: AppNotificationType.error);
         return;
       }
@@ -131,10 +129,7 @@ class _LoginPageState extends State<LoginPage> {
         _notify(AppLocalizations.of(context)!.loginSuccess,
             type: AppNotificationType.success);
         if (!mounted) return;
-        Navigator.of(context).pushAndRemoveUntil(
-          MaterialPageRoute(builder: (_) => const SuperAppShell()),
-          (route) => false,
-        );
+        context.go('/home');
       } else if (msg.toLowerCase().contains('popup_closed') ||
           msg.toLowerCase().contains('login cancelled')) {
         appLog('auth', 'AUTH_${provider.toUpperCase()}_RESULT cancelled', level: AppLogLevel.info);
@@ -255,10 +250,7 @@ class _LoginPageState extends State<LoginPage> {
 
         _notify(l10n.loginSuccess, type: AppNotificationType.success);
         if (!mounted) return;
-        Navigator.of(context).pushAndRemoveUntil(
-          MaterialPageRoute(builder: (_) => const SuperAppShell()),
-          (route) => false,
-        );
+        context.go('/home');
       } else if (status == 401) {
         _notify(l10n.loginInvalidCredentials, type: AppNotificationType.error);
       } else if (status == 403) {
@@ -311,7 +303,7 @@ class _LoginPageState extends State<LoginPage> {
     }
     if (!mounted) return;
     setState(() => _loading = false);
-    Navigator.pushNamed(context, '/verify', arguments: normalized);
+    context.push('/verify', extra: normalized);
   }
 
   @override
@@ -458,12 +450,7 @@ class _LoginPageState extends State<LoginPage> {
                                 children: [
                                   TextButton(
                                     onPressed: () {
-                                      Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (_) => const ForgotPasswordPage(),
-                                        ),
-                                      );
+                                      context.push('/forgot');
                                     },
                                     child: Text(l10n.loginForgotPassword),
                                   ),
@@ -588,12 +575,7 @@ class _LoginPageState extends State<LoginPage> {
                             const SizedBox(width: 8),
                             TextButton(
                               onPressed: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (_) => const RegisterPage(),
-                                  ),
-                                );
+                                context.push('/register');
                               },
                               child: Text(l10n.registerButtonLabel),
                             ),

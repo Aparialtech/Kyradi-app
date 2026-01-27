@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 class SplashPage extends StatefulWidget {
   const SplashPage({super.key});
@@ -41,8 +42,7 @@ class _SplashPageState extends State<SplashPage>
   }
 
   void _goLogin() {
-    // rotanı burada ayarlıyorsun (örn: '/login' ya da '/home')
-    Navigator.of(context).pushReplacementNamed('/login');
+    context.go('/login');
   }
 
   @override

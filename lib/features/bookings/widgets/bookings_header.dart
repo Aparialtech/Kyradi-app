@@ -40,8 +40,8 @@ class BookingsHeader extends StatelessWidget {
         if (onOpenClassic != null)
           TextButton.icon(
             onPressed: onOpenClassic,
-            icon: const Icon(Icons.dashboard_customize_outlined),
-            label: const Text('Classic'),
+            icon: const Icon(Icons.list_alt_outlined),
+            label: const Text('Tümü'),
           ),
       ],
     );

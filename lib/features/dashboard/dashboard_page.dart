@@ -1,7 +1,6 @@
-import 'dart:math';
 import 'package:flutter/material.dart';
-import '../../core/drop_locations.dart';
 import '../../features/home/controllers/home_controller.dart';
+import '../../core/drop_locations.dart';
 import '../../l10n/app_localizations.dart';
 import '../../models/luggage.dart';
 import '../../services/reminder_service.dart';
@@ -9,14 +8,13 @@ import '../../widgets/app_notification.dart';
 import '../../widgets/section_card.dart';
 import '../../ui/components/app_section_header.dart';
 import '../../ui/components/app_error_state.dart';
+import 'package:go_router/go_router.dart';
 import '../dashboard/widgets/active_trip_card.dart';
 import '../dashboard/widgets/campaign_carousel.dart';
 import '../dashboard/widgets/dashboard_search_bar.dart';
 import '../dashboard/widgets/dashboard_top_bar.dart';
 import '../dashboard/widgets/nearby_locations_carousel.dart';
 import '../dashboard/widgets/quick_actions_grid.dart';
-import '../../screens/home_page.dart';
-import '../../screens/location_reservation_page.dart';
 import '../wallet/wallet_page.dart';
 
 class DashboardPage extends StatefulWidget {
@@ -27,7 +25,6 @@ class DashboardPage extends StatefulWidget {
 }
 
 class _DashboardPageState extends State<DashboardPage> {
-  final Random _random = Random();
   late final HomeController _controller;
 
   String? _profileError;
@@ -119,38 +116,13 @@ class _DashboardPageState extends State<DashboardPage> {
     AppNotification.show(context, message: message, type: type);
   }
 
-  String _generateQrCode() {
-    final stamp =
-        DateTime.now().millisecondsSinceEpoch.toRadixString(36).toUpperCase();
-    final suffix = (_random.nextInt(9000) + 1000).toString();
-    return 'BGO-$stamp-$suffix';
-  }
-
-  String _generatePickupPin() {
-    return (_random.nextInt(9000) + 1000).toString();
-  }
-
   Future<void> _openAddLuggage() async {
     if (_controller.userId == null || _controller.userId!.isEmpty) {
       final loc = AppLocalizations.of(context)!;
       _snack(loc.loginRequired, type: AppNotificationType.warning);
       return;
     }
-    final newLuggage = await Navigator.push<LuggageModel?>(
-      context,
-      MaterialPageRoute(
-        builder: (_) => AddLuggagePage(
-          userId: _controller.userId!,
-          qrGenerator: _generateQrCode,
-          pickupPinGenerator: _generatePickupPin,
-          ownerName:
-              '${_controller.currentUser?.name ?? ''} ${_controller.currentUser?.surname ?? ''}'
-                  .trim(),
-          ownerPhone: _controller.currentUser?.phone,
-          ownerEmail: _controller.currentUser?.email,
-        ),
-      ),
-    );
+    final newLuggage = await context.push<LuggageModel>('/luggage/add');
 
     if (newLuggage != null) {
       if (!mounted) return;
@@ -167,29 +139,16 @@ class _DashboardPageState extends State<DashboardPage> {
     }
   }
 
-  void _openClassicPanel() {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => const HomePage(),
-      ),
-    );
+  void _openLuggageCenter() {
+    context.go('/luggage');
   }
 
   void _openQrPreview(LuggageModel luggage) {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => QrPreviewPage(luggage: luggage),
-        fullscreenDialog: true,
-      ),
-    );
+    context.push('/luggage/${luggage.id}/qr', extra: luggage);
   }
 
   void _openLocationDetails(DropLocation location) {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => LocationReservationPage(locationId: location.id),
-      ),
-    );
+    context.push('/location/${location.id}');
   }
 
   List<QuickActionItem> _buildQuickActions(AppLocalizations loc) {
@@ -202,7 +161,7 @@ class _DashboardPageState extends State<DashboardPage> {
       QuickActionItem(
         label: 'Scan QR',
         icon: Icons.qr_code_scanner,
-        onTap: _openClassicPanel,
+        onTap: () => context.go('/luggage'),
       ),
       QuickActionItem(
         label: 'Cashback',
@@ -215,10 +174,7 @@ class _DashboardPageState extends State<DashboardPage> {
         label: 'Reservation',
         icon: Icons.event_available_outlined,
         onTap: () {
-          final location = _controller.locations.isNotEmpty
-              ? _controller.locations.first
-              : DropLocationsRepository.locations.first;
-          _openLocationDetails(location);
+          context.go('/explore');
         },
       ),
       QuickActionItem(
@@ -285,12 +241,12 @@ class _DashboardPageState extends State<DashboardPage> {
               DashboardTopBar(
                 title: loc.dashboardGreeting(displayName),
                 subtitle: loc.dashboardSubtitle,
-                onAvatarTap: _openClassicPanel,
+                onAvatarTap: () => context.go('/profile'),
               ),
               const SizedBox(height: 16),
               DashboardSearchBar(
                 hintText: loc.findLocation,
-                onTap: _openClassicPanel,
+                onTap: () => context.go('/explore'),
               ),
               const SizedBox(height: 18),
               QuickActionsGrid(actions: _buildQuickActions(loc)),
@@ -298,7 +254,7 @@ class _DashboardPageState extends State<DashboardPage> {
               AppSectionHeader(
                 title: 'Active trip',
                 actionLabel: 'See all',
-                onAction: _openClassicPanel,
+                onAction: () => context.go('/luggage'),
               ),
               const SizedBox(height: 12),
               ActiveTripCard(
@@ -314,7 +270,7 @@ class _DashboardPageState extends State<DashboardPage> {
                 onShowQr: () {
                   if (latestLuggage != null) _openQrPreview(latestLuggage);
                 },
-                onDetails: _openClassicPanel,
+                onDetails: _openLuggageCenter,
                 emptyLabel: loc.luggageEmptyStateNoItems,
                 emptyActionLabel: loc.quickAddLuggage,
                 onEmptyAction: _openAddLuggage,
@@ -323,7 +279,7 @@ class _DashboardPageState extends State<DashboardPage> {
               AppSectionHeader(
                 title: loc.nearbyLocationsTitle,
                 actionLabel: 'See all',
-                onAction: _openClassicPanel,
+                onAction: () => context.go('/explore'),
               ),
               const SizedBox(height: 12),
               NearbyLocationsCarousel(
@@ -355,11 +311,11 @@ class _DashboardPageState extends State<DashboardPage> {
               const SizedBox(height: 20),
               SectionCard(
                 child: ListTile(
-                  leading: const Icon(Icons.dashboard_customize_outlined),
-                  title: const Text('Kyradi Classic'),
-                  subtitle: const Text('Open the detailed panel'),
+                  leading: const Icon(Icons.luggage_outlined),
+                  title: Text(loc.myLuggages),
+                  subtitle: Text(loc.luggagesSectionSubtitle),
                   trailing: const Icon(Icons.chevron_right),
-                  onTap: _openClassicPanel,
+                  onTap: _openLuggageCenter,
                 ),
               ),
               if (_profileLoading)

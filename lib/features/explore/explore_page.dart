@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:go_router/go_router.dart';
 import '../../core/drop_locations.dart';
 import '../../l10n/app_localizations.dart';
 import '../../services/locations_service.dart';
-import '../../screens/location_reservation_page.dart';
 import '../../ui/components/app_empty_state.dart';
 import '../../ui/components/app_error_state.dart';
 import '../../ui/components/app_skeleton.dart';
@@ -180,11 +180,7 @@ class _ExplorePageState extends State<ExplorePage> {
   }
 
   void _openLocationDetail(DropLocation location) {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => LocationReservationPage(locationId: location.id),
-      ),
-    );
+    context.push('/location/${location.id}');
   }
 
   Widget _buildErrorState() {

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import '../widgets/app_notification.dart';
 import '../widgets/gradient_button.dart';
 import '../services/api_service.dart';
@@ -55,7 +56,7 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
 
     if (ok) {
       if (!mounted) return;
-      Navigator.pushReplacementNamed(context, "/login");
+      context.go('/login');
     }
   }
 

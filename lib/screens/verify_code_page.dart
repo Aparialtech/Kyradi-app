@@ -1,12 +1,15 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import '../services/api_service.dart';
 import '../widgets/app_notification.dart';
 import '../widgets/gradient_button.dart';
 import '../l10n/app_localizations.dart';
 
 class VerifyCodePage extends StatefulWidget {
-  const VerifyCodePage({super.key});
+  const VerifyCodePage({super.key, this.email});
+
+  final String? email;
 
   @override
   State<VerifyCodePage> createState() => _VerifyCodePageState();
@@ -28,10 +31,12 @@ class _VerifyCodePageState extends State<VerifyCodePage> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    final args = ModalRoute.of(context)?.settings.arguments;
-    if (args is String) {
-      _email = args;
+    if (widget.email != null && widget.email!.isNotEmpty) {
+      _email = widget.email!;
+      return;
     }
+    final args = ModalRoute.of(context)?.settings.arguments;
+    if (args is String) _email = args;
   }
 
   @override
@@ -72,7 +77,7 @@ class _VerifyCodePageState extends State<VerifyCodePage> {
       if (res['ok'] == true) {
         _notify(l10n.verificationSuccessMessage, type: AppNotificationType.success);
         if (!mounted) return;
-        Navigator.pushReplacementNamed(context, '/login');
+        context.go('/login');
       } else {
         _notify(
           res['error']?.toString() ?? l10n.verificationErrorMessage,
