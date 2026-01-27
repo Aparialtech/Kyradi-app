@@ -8,10 +8,17 @@ buildscript {
     }
 }
 
-allprojects {
-    repositories {
-        google()
-        mavenCentral()
+subprojects {
+    afterEvaluate {
+        if (name == "qr_code_scanner") {
+            extensions.findByName("android")?.let { ext ->
+                @Suppress("UNCHECKED_CAST")
+                val androidExt = ext as com.android.build.gradle.LibraryExtension
+                if (androidExt.namespace == null || androidExt.namespace!!.isBlank()) {
+                    androidExt.namespace = "com.example.qr_code_scanner"
+                }
+            }
+        }
     }
 }
 

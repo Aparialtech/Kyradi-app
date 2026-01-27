@@ -6,6 +6,13 @@ if [ "${CONFIGURATION:-}" != "Release" ]; then
 fi
 
 if [ -z "${DART_DEFINES:-}" ]; then
+  if [ -f "${PROJECT_DIR}/Flutter/flutter_export_environment.sh" ]; then
+    # shellcheck disable=SC1091
+    . "${PROJECT_DIR}/Flutter/flutter_export_environment.sh"
+  fi
+fi
+
+if [ -z "${DART_DEFINES:-}" ]; then
   echo "ERROR: DART_DEFINES is empty in Release. Pass --dart-define=API_BASE_URL=..." 1>&2
   exit 1
 fi
