@@ -1,4 +1,5 @@
 import Flutter
+import GoogleSignIn
 import UIKit
 
 @available(iOS 13.0, *)
@@ -35,5 +36,15 @@ import UIKit
 
   func sceneDidBecomeActive(_ scene: UIScene) {
     NSLog("SceneDelegate.sceneDidBecomeActive")
+  }
+
+  func scene(_ scene: UIScene, openURLContexts URLContexts: Set<UIOpenURLContext>) {
+    for context in URLContexts {
+      let url = context.url
+      let handled = GIDSignIn.sharedInstance.handle(url)
+      if handled {
+        NSLog("GIDSignIn handled URL (scene): %@", url.absoluteString)
+      }
+    }
   }
 }

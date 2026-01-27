@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import '../widgets/app_notification.dart';
+import '../utils/crash_log.dart';
 
 class ReminderService {
   ReminderService._();
@@ -71,7 +72,11 @@ class ReminderService {
     }
 
     if (emailEnabled) {
-      debugPrint('[ReminderService] Email scheduled: $emailSubject at $time');
+      appLog(
+        'reminder',
+        'Email scheduled: $emailSubject at $time',
+        level: AppLogLevel.debug,
+      );
     }
   }
 

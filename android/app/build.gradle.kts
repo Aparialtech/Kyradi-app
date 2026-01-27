@@ -5,6 +5,10 @@ plugins {
     id("dev.flutter.flutter-gradle-plugin")
 }
 
+if (file("google-services.json").exists()) {
+    apply(plugin = "com.google.gms.google-services")
+}
+
 android {
     namespace = "com.dilan.kyradi_app"
     compileSdk = flutter.compileSdkVersion
@@ -45,4 +49,19 @@ android {
 
 flutter {
     source = "../.."
+}
+
+val verifyFirebaseConfig by tasks.registering(Exec::class) {
+    commandLine(
+        "bash",
+        "${project.rootDir}/scripts/verify_firebase_config.sh",
+        "release",
+    )
+}
+
+afterEvaluate {
+    tasks.matching { it.name == "assembleRelease" || it.name == "bundleRelease" }
+        .configureEach {
+            dependsOn(verifyFirebaseConfig)
+        }
 }

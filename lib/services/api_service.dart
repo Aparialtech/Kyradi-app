@@ -1,13 +1,14 @@
 import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/foundation.dart'
-    show kIsWeb, defaultTargetPlatform, TargetPlatform, debugPrint;
+    show kIsWeb, defaultTargetPlatform, TargetPlatform;
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 import 'mock_server.dart';
 import '../models/pricing_models.dart';
+import '../utils/crash_log.dart';
 
 const String kApiBaseUrl = 'https://kyradi-app-production.up.railway.app';
 
@@ -92,11 +93,25 @@ class ApiService {
   static bool get hasExplicitBaseUrl =>
       hasCustomBaseUrl || _normalizeBaseUrl(_envBase) != null;
 
+  static String get explicitBaseUrl {
+    return _normalizeBaseUrl(_envBase) ?? _customBaseUrl ?? '';
+  }
+
   static String get baseUrl {
     return _resolveBaseUrl() ?? '';
   }
 
   static String get apiBaseUrl => baseUrl;
+
+  static String describeBaseUrl() {
+    final resolved = baseUrl;
+    final masked = _maskUrl(resolved);
+    return 'source=$baseUrlSource explicit=${hasExplicitBaseUrl} resolved=$masked';
+  }
+
+  static void logBaseUrlStatus() {
+    appLog('config', describeBaseUrl(), level: AppLogLevel.info);
+  }
 
   static bool get _usingMockBackend => baseUrl.startsWith('demo://');
 
@@ -127,7 +142,8 @@ class ApiService {
     if (uri == null) {
       return _missingBaseUrlError();
     }
-    debugPrint('[HTTP POST] $uri  body=${jsonEncode(body)}');
+    appLog('http', 'POST $uri  body=${jsonEncode(body)}',
+        level: AppLogLevel.debug);
     try {
       final res = await http
           .post(uri, headers: _jsonHeaders(), body: jsonEncode(body))
@@ -161,7 +177,8 @@ class ApiService {
     if (uri == null) {
       return _missingBaseUrlError();
     }
-    debugPrint('[HTTP PUT] $uri  body=${jsonEncode(body)}');
+    appLog('http', 'PUT $uri  body=${jsonEncode(body)}',
+        level: AppLogLevel.debug);
     try {
       final res = await http
           .put(uri, headers: _jsonHeaders(), body: jsonEncode(body))
@@ -201,7 +218,7 @@ class ApiService {
       }
       uri = builtUri;
     }
-    debugPrint('[HTTP GET]  $uri');
+    appLog('http', 'GET $uri', level: AppLogLevel.debug);
     try {
       final res = await http.get(uri, headers: _jsonHeaders()).timeout(timeout);
       return _handleResponse(res, uri);
@@ -226,7 +243,11 @@ class ApiService {
   // ───────────────────────────────────────────────────────────────────────────
   // Sunucu yanıtını tek yerden ele al
   static Map<String, dynamic> _handleResponse(http.Response res, Uri uri) {
-    debugPrint('[HTTP RES]  ${res.statusCode} <- $uri  body=${res.body}');
+    appLog(
+      'http',
+      'RES ${res.statusCode} <- $uri  body=${res.body}',
+      level: AppLogLevel.debug,
+    );
     dynamic decoded;
     if (res.body.isNotEmpty) {
       try {
@@ -519,7 +540,8 @@ class ApiService {
     if (_usingMockBackend) return MockServer.updateProfile(userId, body);
     final payload = Map<String, dynamic>.from(body)
       ..removeWhere((key, value) => value == null);
-    debugPrint('[HTTP PUT] /users/$userId body=${jsonEncode(payload)}');
+    appLog('http', 'PUT /users/$userId body=${jsonEncode(payload)}',
+        level: AppLogLevel.debug);
     final result = await _put('/users/$userId', payload);
     result['statusCode'] ??= result['_httpStatus'];
     return result;
@@ -541,24 +563,28 @@ class ApiService {
     }
     final path = '/users/$userId/luggages';
     final uri = _buildUri(path);
-    debugPrint(
-      '[PIN_FLOW] sending request: ${{
+    appLog(
+      'pin_flow',
+      'sending request: ${{
         'method': 'POST',
         'url': uri?.toString(),
         'body': body,
       }}',
+      level: AppLogLevel.debug,
     );
     Map<String, dynamic> result;
     try {
       result = await _post(path, body);
-      debugPrint(
-        '[PIN_FLOW] response: ${{
+      appLog(
+        'pin_flow',
+        'response: ${{
           'status': result['statusCode'],
           'body': result,
         }}',
+        level: AppLogLevel.debug,
       );
     } catch (e) {
-      debugPrint('[PIN_FLOW] error: $e');
+      appLog('pin_flow', 'error: $e', level: AppLogLevel.warn);
       rethrow;
     }
     result['statusCode'] ??= result['_httpStatus'];
@@ -836,6 +862,22 @@ class ApiService {
       'statusCode': 400,
       '_configurationError': true,
     };
+  }
+
+  static String _maskUrl(String url) {
+    if (url.isEmpty) return 'unset';
+    final uri = Uri.tryParse(url);
+    if (uri == null || uri.host.isEmpty) {
+      return url.length <= 12
+          ? url
+          : '${url.substring(0, 6)}…${url.substring(url.length - 4)}';
+    }
+    final host = uri.host;
+    final maskedHost = host.length <= 8
+        ? host
+        : '${host.substring(0, 4)}…${host.substring(host.length - 4)}';
+    final scheme = uri.scheme.isNotEmpty ? '${uri.scheme}://' : '';
+    return '$scheme$maskedHost';
   }
 
   static String? get _fallbackBaseUrl {

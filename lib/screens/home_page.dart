@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:math';
-import 'package:flutter/foundation.dart' show kIsWeb, kDebugMode, debugPrint;
+import 'package:flutter/foundation.dart' show kIsWeb, kDebugMode;
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:http/http.dart' as http;
@@ -38,6 +38,7 @@ import '../services/locations_service.dart';
 import '../core/app_locale.dart';
 import '../core/drop_locations.dart';
 import '../l10n/app_localizations.dart';
+import '../utils/crash_log.dart';
 import '../widgets/app_notification.dart';
 import '../widgets/gradient_button.dart';
 import '../widgets/section_card.dart';
@@ -291,7 +292,8 @@ class _HomePageState extends State<HomePage> {
         "relation": _emRelationCtrl.text.trim(),
       },
     };
-    debugPrint('[PROFILE] sending body => ${jsonEncode(body)}');
+    appLog('profile', 'sending body => ${jsonEncode(body)}',
+        level: AppLogLevel.debug);
     try {
       final result = await _controller.saveProfile(_userId!, body);
       if (!mounted) return;
@@ -399,6 +401,7 @@ class _HomePageState extends State<HomePage> {
       });
       if (!mounted) return false;
       if (_googleMapController != null) {
+        // Prevent iOS crash by skipping map calls after dispose.
         await _googleMapController!.animateCamera(
           CameraUpdate.newLatLngZoom(LatLng(pos.latitude, pos.longitude), 14.5),
         );
@@ -619,49 +622,75 @@ class _HomePageState extends State<HomePage> {
     });
 
     if (kDebugMode) {
-      debugPrint("ROUTE_DEBUG başladı");
+      appLog('route', 'başladı', level: AppLogLevel.debug);
     }
     if (kDebugMode) {
-      debugPrint(
-        "ROUTE_DEBUG origin=${origin.latitude},${origin.longitude} "
+      appLog(
+        'route',
+        "origin=${origin.latitude},${origin.longitude} "
         "dest=${destination.latitude},${destination.longitude} "
         "mode=$mode "
         "locationId=${locationId ?? '-'}",
+        level: AppLogLevel.debug,
       );
     }
     if (kDebugMode) {
-      debugPrint("ROUTE_DEBUG URL: $uri");
+      appLog('route', "URL: $uri", level: AppLogLevel.debug);
     }
     final resp = await http.get(uri);
     final snippet =
         resp.body.length > 300 ? resp.body.substring(0, 300) : resp.body;
-    if (kDebugMode) debugPrint("ROUTE_DEBUG HTTP ${resp.statusCode} BODY: $snippet");
+    if (kDebugMode) {
+      appLog(
+        'route',
+        "HTTP ${resp.statusCode} BODY: $snippet",
+        level: AppLogLevel.debug,
+      );
+    }
     if (resp.body.isEmpty) {
       throw Exception('Directions failed: empty response');
     }
-    final data = jsonDecode(resp.body);
-    if (data is! Map) {
-      throw Exception('Directions failed: invalid response');
+    Map<String, dynamic> data;
+    try {
+      final decoded = jsonDecode(resp.body);
+      if (decoded is! Map<String, dynamic>) {
+        throw const FormatException('Directions response is not a map');
+      }
+      data = decoded;
+    } catch (_) {
+      // Avoid hard crash on malformed JSON from directions endpoint.
+      throw Exception('Directions failed: invalid JSON response');
     }
     if (data["routes"] == null && data["status"] == null) {
-      if (kDebugMode) debugPrint("ROUTE_DEBUG unexpected response: $snippet");
+      if (kDebugMode) {
+        appLog('route', "unexpected response: $snippet",
+            level: AppLogLevel.debug);
+      }
       throw Exception("Directions failed: unexpected response");
     }
 
     if (data["status"] != "OK") {
       if (kDebugMode) {
-        debugPrint(
-          "ROUTE_DEBUG status: ${data["status"]} error: ${data["error_message"] ?? ""}",
+        appLog(
+          'route',
+          "status: ${data["status"]} error: ${data["error_message"] ?? ""}",
+          level: AppLogLevel.debug,
         );
       }
       throw Exception(
         "Directions failed: ${data["status"]} ${data["error_message"] ?? ""}",
       );
     }
-    if (kDebugMode) debugPrint("ROUTE_DEBUG status: ${data["status"]}");
+    if (kDebugMode) {
+      appLog('route', "status: ${data["status"]}",
+          level: AppLogLevel.debug);
+    }
 
     final String encoded = data["routes"][0]["overview_polyline"]["points"];
-    if (kDebugMode) debugPrint("ROUTE_DEBUG points length: ${encoded.length}");
+    if (kDebugMode) {
+      appLog('route', "points length: ${encoded.length}",
+          level: AppLogLevel.debug);
+    }
     final decoded = PolylinePoints().decodePolyline(encoded);
 
     final points = decoded
@@ -682,6 +711,7 @@ class _HomePageState extends State<HomePage> {
 
     if (!mounted) return;
     if (_googleMapController != null && points.isNotEmpty) {
+      // Prevent iOS crash by guarding map camera updates.
       final bounds = _boundsFromPoints(points);
       await _googleMapController!.animateCamera(
         CameraUpdate.newLatLngBounds(bounds, 48),
@@ -1618,6 +1648,7 @@ class _HomePageState extends State<HomePage> {
     if (!mounted) return;
     final controller = _googleMapController;
     if (controller == null) return;
+    // Prevent iOS crash by guarding map camera updates after navigation.
     await controller.animateCamera(
       CameraUpdate.newLatLngZoom(location.position, 14.5),
     );
@@ -4065,7 +4096,8 @@ class _QrScanPage extends StatefulWidget {
   State<_QrScanPage> createState() => _QrScanPageState();
 }
 
-class _QrScanPageState extends State<_QrScanPage> {
+class _QrScanPageState extends State<_QrScanPage>
+    with WidgetsBindingObserver {
   bool _processing = false;
   final TextEditingController _manualController = TextEditingController();
   String? _manualError;
@@ -4073,7 +4105,30 @@ class _QrScanPageState extends State<_QrScanPage> {
       MobileScannerController(returnImage: false);
 
   @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    // Prevent iOS crash by stopping camera on background transitions.
+    try {
+      if (state == AppLifecycleState.paused ||
+          state == AppLifecycleState.inactive ||
+          state == AppLifecycleState.detached) {
+        _scannerController.stop();
+      } else if (state == AppLifecycleState.resumed) {
+        _scannerController.start();
+      }
+    } catch (_) {
+      // Ignore lifecycle races to avoid iOS camera crashes.
+    }
+  }
+
+  @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _manualController.dispose();
     _scannerController.dispose();
     super.dispose();

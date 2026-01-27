@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../l10n/app_localizations.dart';
 import '../../models/user.dart';
@@ -15,6 +16,7 @@ import 'widgets/security_section.dart';
 import 'widgets/settings_section.dart';
 import 'widgets/support_section.dart';
 import 'widgets/verification_section.dart';
+import '../../screens/crash_log_page.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -124,7 +126,19 @@ class _ProfilePageState extends State<ProfilePage> {
   Widget build(BuildContext context) {
     final loc = AppLocalizations.of(context)!;
     return Scaffold(
-      appBar: AppBar(title: Text(loc.profile)),
+      appBar: AppBar(
+        title: GestureDetector(
+          onLongPress: kDebugMode
+              ? () {
+                  // Debug-only log viewer for TestFlight crash triage.
+                  Navigator.of(context).push(
+                    MaterialPageRoute(builder: (_) => const CrashLogPage()),
+                  );
+                }
+              : null,
+          child: Text(loc.profile),
+        ),
+      ),
       body: _loading
           ? ListView(
               padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),

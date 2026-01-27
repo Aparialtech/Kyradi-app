@@ -121,6 +121,10 @@ class _ExplorePageState extends State<ExplorePage> {
       if (lat == 0 && lng == 0) {
         continue;
       }
+      if (!lat.isFinite || !lng.isFinite) {
+        // Prevent iOS crash by skipping invalid coordinates.
+        continue;
+      }
       _markerCache.putIfAbsent(
         location.id,
         () => Marker(

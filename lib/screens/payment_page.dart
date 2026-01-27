@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter/foundation.dart' show kDebugMode, debugPrint;
+import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:intl/intl.dart';
 import '../services/api_service.dart';
 import '../models/pricing_models.dart';
 import '../l10n/app_localizations.dart';
 import 'payment_result_page.dart';
+import '../utils/crash_log.dart';
 
 class PaymentPage extends StatefulWidget {
   const PaymentPage({
@@ -118,7 +119,8 @@ class _PaymentPageState extends State<PaymentPage> {
             })
           : null;
       if (kDebugMode) {
-        debugPrint('PAY_QUOTE start url=${uri?.toString() ?? 'unset'}');
+        appLog('pay_quote', 'start url=${uri?.toString() ?? 'unset'}',
+            level: AppLogLevel.debug);
       }
       final quote = await ApiService.getPricingQuote(
         sizeClass: sizeClass,
@@ -136,8 +138,10 @@ class _PaymentPageState extends State<PaymentPage> {
       });
       final basePrice = _basePriceFromQuote(quote);
       if (kDebugMode) {
-        debugPrint(
-          'PAY_QUOTE done status=200 body={priceTry:${quote.priceTry}, tier:${quote.tier}, base:$basePrice}',
+        appLog(
+          'pay_quote',
+          'done status=200 body={priceTry:${quote.priceTry}, tier:${quote.tier}, base:$basePrice}',
+          level: AppLogLevel.debug,
         );
       }
       return quote;
@@ -147,7 +151,9 @@ class _PaymentPageState extends State<PaymentPage> {
         _quote = null;
         _quoteError = 'Fiyat hesaplanamadı, tekrar dene';
       });
-      if (kDebugMode) debugPrint('PAY_QUOTE error $e');
+      if (kDebugMode) {
+        appLog('pay_quote', 'error $e', level: AppLogLevel.debug);
+      }
       return null;
     } finally {
       if (mounted) {
@@ -452,8 +458,10 @@ class _PaymentPageState extends State<PaymentPage> {
                   _basePrice() + (_protectionLevel == 'premium' ? _premiumFee : 0);
             });
             if (kDebugMode) {
-              debugPrint(
-                'PRICE_DEBUG level=$_protectionLevel base=${_basePrice()} premiumFee=${_premiumFeeValue()} total=${_totalPrice()}',
+              appLog(
+                'price',
+                'level=$_protectionLevel base=${_basePrice()} premiumFee=${_premiumFeeValue()} total=${_totalPrice()}',
+                level: AppLogLevel.debug,
               );
             }
           },
@@ -471,8 +479,10 @@ class _PaymentPageState extends State<PaymentPage> {
                   _basePrice() + (_protectionLevel == 'premium' ? _premiumFee : 0);
             });
             if (kDebugMode) {
-              debugPrint(
-                'PRICE_DEBUG level=$_protectionLevel base=${_basePrice()} premiumFee=${_premiumFeeValue()} total=${_totalPrice()}',
+              appLog(
+                'price',
+                'level=$_protectionLevel base=${_basePrice()} premiumFee=${_premiumFeeValue()} total=${_totalPrice()}',
+                level: AppLogLevel.debug,
               );
             }
           },

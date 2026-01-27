@@ -14,6 +14,9 @@ import 'screens/notifications_page.dart';
 import 'screens/intro_splash_page.dart';
 import 'screens/location_reservation_page.dart';
 import 'ui/components/config_missing_page.dart';
+import 'ui/components/error_fallback_page.dart';
+import 'utils/crash_log.dart';
+import 'core/firebase/firebase_bootstrap.dart';
 
 const _primaryColor = Color(0xFF005C99);
 const _secondaryColor = Color(0xFF166866);
@@ -24,36 +27,33 @@ const _surfaceColor = Colors.white;
 const _textColor = Color(0xFF2E2E2E);
 
 Future<void> main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-  
-  // Global error handlers
-  FlutterError.onError = (FlutterErrorDetails details) {
-    FlutterError.presentError(details);
-    if (kDebugMode) {
-      debugPrint('Flutter Error: ${details.exception}');
-      debugPrint('Stack: ${details.stack}');
-    }
-  };
-
-  PlatformDispatcher.instance.onError = (error, stack) {
-    if (kDebugMode) {
-      debugPrint('Platform Error: $error');
-      debugPrint('Stack: $stack');
-    }
-    return true;
-  };
-
-  // Run app with error zone
+  // Run app with error zone to keep crash diagnostics.
   runZonedGuarded(
     () async {
+      WidgetsFlutterBinding.ensureInitialized();
+
+      // Global error handlers to surface iOS/TestFlight crashes with context.
+      FlutterError.onError = (FlutterErrorDetails details) {
+        FlutterError.presentError(details);
+        appLog(
+          'flutter',
+          '${details.exception}\n${details.stack ?? ''}',
+          level: AppLogLevel.fatal,
+        );
+      };
+
+      PlatformDispatcher.instance.onError = (error, stack) {
+        appLog('platform', '$error\n$stack', level: AppLogLevel.fatal);
+        return true;
+      };
+
+      await FirebaseBootstrap.initFirebase();
       await ApiService.ensureInitialized();
+      ApiService.logBaseUrlStatus();
       runApp(const MyApp());
     },
     (error, stack) {
-      if (kDebugMode) {
-        debugPrint('Uncaught Error: $error');
-        debugPrint('Stack: $stack');
-      }
+      appLog('zone', '$error\n$stack', level: AppLogLevel.fatal);
     },
   );
 }
@@ -217,44 +217,43 @@ class MyApp extends StatelessWidget {
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           builder: (context, child) {
             if (kReleaseMode && !ApiService.hasExplicitBaseUrl) {
+              appLog(
+                'config',
+                'Release build missing API_BASE_URL. Showing setup error page.',
+                level: AppLogLevel.error,
+              );
               return const ConfigMissingPage();
             }
-            // Error widget builder
+            // Error widget builder to avoid silent crashes on iOS/TestFlight.
             ErrorWidget.builder = (FlutterErrorDetails details) {
+              appLog(
+                'flutter',
+                '${details.exception}\n${details.stack ?? ''}',
+                level: AppLogLevel.fatal,
+              );
               if (kDebugMode) {
                 return ErrorWidget(details.exception);
               }
-              return Scaffold(
-                body: Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Icon(Icons.error_outline, size: 64, color: Colors.red),
-                      const SizedBox(height: 16),
-                      const Text('Bir hata oluştu'),
-                      const SizedBox(height: 8),
-                      TextButton(
-                        onPressed: () {
-                          Navigator.of(context).pushAndRemoveUntil(
-                            MaterialPageRoute(
-                              builder: (_) => const SuperAppShell(),
-                            ),
-                            (route) => false,
-                          );
-                        },
-                        child: const Text('Ana Sayfaya Dön'),
-                      ),
-                    ],
-                  ),
-                ),
+              final entry = CrashLogBuffer.recordFatal(
+                'flutter',
+                details.exceptionAsString(),
               );
+              return ErrorFallbackPage(entry: entry);
             };
-            
+
             final content = child ?? const SizedBox.shrink();
-            return Localizations.override(
-              context: context,
-              locale: currentLocale,
-              child: content,
+            return ValueListenableBuilder<CrashLogEntry?>(
+              valueListenable: CrashLogBuffer.fatalNotifier,
+              builder: (context, fatalEntry, _) {
+                if (fatalEntry != null && !kDebugMode) {
+                  return ErrorFallbackPage(entry: fatalEntry);
+                }
+                return Localizations.override(
+                  context: context,
+                  locale: currentLocale,
+                  child: content,
+                );
+              },
             );
           },
           localeResolutionCallback: (deviceLocale, supportedLocales) {

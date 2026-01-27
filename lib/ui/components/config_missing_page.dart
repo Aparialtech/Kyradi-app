@@ -15,7 +15,7 @@ class ConfigMissingPage extends StatelessWidget {
               const Icon(Icons.warning_amber_outlined, size: 48),
               const SizedBox(height: 12),
               Text(
-                'API configuration missing',
+                'Uygulama kurulumu eksik',
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.w700,
                     ),
@@ -23,7 +23,7 @@ class ConfigMissingPage extends StatelessWidget {
               ),
               const SizedBox(height: 8),
               Text(
-                'Set API_BASE_URL for release builds before running the app.',
+                'Bu sürüm yanlış yapılandırılmış. Lütfen uygulamayı yeniden yükleyin.',
                 textAlign: TextAlign.center,
                 style: Theme.of(context).textTheme.bodySmall,
               ),

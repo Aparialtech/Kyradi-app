@@ -1,10 +1,10 @@
 // lib/screens/login_page.dart
 import 'package:flutter/material.dart';
-import 'package:flutter/foundation.dart' show kIsWeb, kDebugMode, debugPrint;
+import 'package:flutter/foundation.dart' show kIsWeb, kDebugMode;
+import 'dart:io';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:google_sign_in/google_sign_in.dart';
-import 'package:sign_in_with_apple/sign_in_with_apple.dart';
+import '../services/auth_service.dart';
 import '../widgets/gradient_button.dart';
 import '../widgets/section_card.dart';
 import '../services/api_service.dart';
@@ -13,6 +13,10 @@ import '../l10n/app_localizations.dart';
 import 'superapp_shell.dart';
 import 'register_page.dart';
 import 'forgot_password_page.dart'; // ✅ eklendi
+import '../utils/crash_log.dart';
+import '../core/ios/ios_config_service.dart';
+import '../core/firebase/firebase_bootstrap.dart';
+import '../core/auth/google_oauth_config.dart';
 
 const _webGoogleClientId =
     '183178163952-gg63pl5lqvo15hkcpp8vmigpeu7jsb91.apps.googleusercontent.com';
@@ -30,6 +34,39 @@ class _LoginPageState extends State<LoginPage> {
   bool _obscure = true;
   bool _loading = false;
   bool _googleBusy = false;
+  bool _googleConfigOk = true;
+  bool _appleConfigOk = true;
+  bool _firebaseReady = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkAuthConfig();
+  }
+
+  Future<void> _checkAuthConfig() async {
+    if (!Platform.isIOS) {
+      setState(() => _firebaseReady = FirebaseBootstrap.isReady);
+      return;
+    }
+    final hasFirebasePlist = await IosConfigService.hasFirebasePlist();
+    final clientIdOk = isValidIosGoogleClientId(kIosGoogleClientId);
+    final hasScheme = clientIdOk
+        ? await IosConfigService.hasUrlScheme(kIosReversedScheme)
+        : false;
+    final appleAvailable = await AuthService.isAppleAvailable();
+    if (!mounted) return;
+    setState(() {
+      _firebaseReady = FirebaseBootstrap.isReady;
+      _googleConfigOk = clientIdOk && hasScheme;
+      _appleConfigOk = appleAvailable;
+    });
+    appLog(
+      'auth',
+      'IOS_CONFIG firebase_plist=$hasFirebasePlist google_ok=$_googleConfigOk apple_ok=$_appleConfigOk clientIdPresent=$clientIdOk schemePresent=$hasScheme',
+      level: AppLogLevel.info,
+    );
+  }
 
   void _notify(String message, {AppNotificationType type = AppNotificationType.info}) {
     if (!mounted) return;
@@ -37,12 +74,44 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   Future<void> _handleSocialAuth(
-    Future<Map<String, dynamic>> Function() handler,
-  ) async {
+    Future<AuthResult> Function() handler, {
+    required String provider,
+  }) async {
     if (_loading) return;
+    if (!_firebaseReady) {
+      _notify(
+        'Firebase yapılandırması eksik.',
+        type: AppNotificationType.warning,
+      );
+      return;
+    }
+    appLog('auth', 'AUTH_${provider.toUpperCase()}_START', level: AppLogLevel.info);
     setState(() => _loading = true);
     try {
-      final res = await handler();
+      final authResult = await handler();
+      if (!authResult.ok) {
+        if (!mounted) return;
+        setState(() => _loading = false);
+        final message = authResult.error ?? 'Login failed';
+        _notify(message, type: AppNotificationType.error);
+        return;
+      }
+      final idToken = authResult.providerIdToken;
+      final accessToken = authResult.accessToken;
+      final authorizationCode = authResult.authorizationCode;
+      if ((idToken == null || idToken.isEmpty) &&
+          (accessToken == null || accessToken.isEmpty)) {
+        if (!mounted) return;
+        setState(() => _loading = false);
+        _notify('TOKEN_INVALID', type: AppNotificationType.error);
+        return;
+      }
+      final res = await ApiService.socialLogin(
+        provider: provider,
+        idToken: idToken,
+        accessToken: idToken == null || idToken.isEmpty ? accessToken : null,
+        authorizationCode: authorizationCode,
+      );
       if (!mounted) return;
       setState(() => _loading = false);
       final ok = res['ok'] == true;
@@ -50,6 +119,7 @@ class _LoginPageState extends State<LoginPage> {
       final msg = (res['message'] ?? res['error'] ?? '').toString();
       if (!mounted) return;
       if (ok) {
+        appLog('auth', 'AUTH_${provider.toUpperCase()}_RESULT ok', level: AppLogLevel.info);
         final profile = res["profile"];
         final userId = profile?["id"];
         if (userId != null) {
@@ -67,15 +137,19 @@ class _LoginPageState extends State<LoginPage> {
         );
       } else if (msg.toLowerCase().contains('popup_closed') ||
           msg.toLowerCase().contains('login cancelled')) {
+        appLog('auth', 'AUTH_${provider.toUpperCase()}_RESULT cancelled', level: AppLogLevel.info);
         return;
       } else if (status == 400 || status == 401) {
+        appLog('auth', 'AUTH_${provider.toUpperCase()}_ERROR invalid', level: AppLogLevel.warn);
         _notify(msg.isNotEmpty ? msg : 'TOKEN_INVALID',
             type: AppNotificationType.error);
       } else {
+        appLog('auth', 'AUTH_${provider.toUpperCase()}_ERROR', level: AppLogLevel.warn);
         _notify(msg.isNotEmpty ? msg : AppLocalizations.of(context)!.loginFailed,
             type: AppNotificationType.error);
       }
     } catch (e) {
+      appLog('auth', 'AUTH_${provider.toUpperCase()}_ERROR $e', level: AppLogLevel.error);
       if (!mounted) return;
       setState(() => _loading = false);
       _notify(
@@ -85,64 +159,62 @@ class _LoginPageState extends State<LoginPage> {
     }
   }
 
-  Future<Map<String, dynamic>> _signInWithGoogle() async {
+  Future<AuthResult> _signInWithGoogle() async {
+    appLog('auth', 'AUTH_GOOGLE_TAP', level: AppLogLevel.info);
     if (_googleBusy) {
-      return {'ok': false, 'error': 'BUSY', 'statusCode': 429};
+      return AuthResult(ok: false, error: 'BUSY', statusCode: 429);
     }
-    _googleBusy = true;
-    try {
-      final googleSignIn = GoogleSignIn(
-        scopes: ['email', 'profile', 'openid'],
-        clientId: kIsWeb ? _webGoogleClientId : null,
-      );
-      final account = await googleSignIn.signIn();
-      if (account == null) {
-        return {'ok': false, 'error': 'Login cancelled', 'statusCode': 400};
-      }
-      final auth = await account.authentication;
-      if (kDebugMode) {
-        debugPrint(
-          "idToken len: ${auth.idToken?.length}  accessToken len: ${auth.accessToken?.length}",
+    if (Platform.isIOS) {
+      final clientIdOk = isValidIosGoogleClientId(kIosGoogleClientId);
+      final hasScheme = clientIdOk
+          ? await IosConfigService.hasUrlScheme(kIosReversedScheme)
+          : false;
+      if (!clientIdOk || !hasScheme) {
+        appLog(
+          'auth',
+          'AUTH_GOOGLE_PREFLIGHT_FAIL clientIdPresent=$clientIdOk schemePresent=$hasScheme',
+          level: AppLogLevel.error,
+        );
+        return AuthResult(
+          ok: false,
+          error: 'Google giriş yapılandırması eksik.',
+          statusCode: 500,
         );
       }
-      final idToken = auth.idToken;
-      final accessToken = auth.accessToken;
-      if ((idToken == null || idToken.isEmpty) &&
-          (accessToken == null || accessToken.isEmpty)) {
-        return {'ok': false, 'error': 'TOKEN_INVALID', 'statusCode': 400};
+    }
+    appLog('auth', 'AUTH_GOOGLE_PREFLIGHT_OK', level: AppLogLevel.info);
+    appLog('auth', 'AUTH_GOOGLE_START', level: AppLogLevel.info);
+    _googleBusy = true;
+    try {
+      final result = await AuthService.signInWithGoogle();
+      if (result.ok && kDebugMode) {
+        appLog(
+          'auth',
+          "firebaseToken len: ${result.firebaseIdToken?.length ?? 0}",
+          level: AppLogLevel.debug,
+        );
       }
-      return ApiService.socialLogin(
-        provider: 'google',
-        idToken: idToken,
-        accessToken: idToken == null || idToken.isEmpty ? accessToken : null,
-      );
+      return result;
     } catch (e) {
-      final message = e.toString().toLowerCase();
-      if (message.contains('popup_closed')) {
-        return {'ok': false, 'error': 'popup_closed', 'statusCode': 400};
-      }
-      rethrow;
+      appLog('auth', 'AUTH_GOOGLE_ERROR $e', level: AppLogLevel.error);
+      return AuthResult(ok: false, error: e.toString(), statusCode: 500);
     } finally {
       _googleBusy = false;
     }
   }
 
-  Future<Map<String, dynamic>> _signInWithApple() async {
-    if (!await SignInWithApple.isAvailable()) {
-      return {'ok': false, 'error': 'Apple Sign-In unavailable', 'statusCode': 400};
+  Future<AuthResult> _signInWithApple() async {
+    appLog('auth', 'AUTH_APPLE_TAP', level: AppLogLevel.info);
+    if (!await AuthService.isAppleAvailable()) {
+      appLog('auth', 'AUTH_APPLE_ERROR not_available', level: AppLogLevel.warn);
+      return AuthResult(ok: false, error: 'Apple Sign-In unavailable', statusCode: 400);
     }
-    final credential = await SignInWithApple.getAppleIDCredential(
-      scopes: [AppleIDAuthorizationScopes.email, AppleIDAuthorizationScopes.fullName],
-    );
-    final idToken = credential.identityToken;
-    if (idToken == null || idToken.isEmpty) {
-      return {'ok': false, 'error': 'TOKEN_INVALID', 'statusCode': 400};
+    appLog('auth', 'AUTH_APPLE_START', level: AppLogLevel.info);
+    final result = await AuthService.signInWithApple();
+    if (result.ok) {
+      appLog('auth', 'AUTH_APPLE_RESULT ok', level: AppLogLevel.info);
     }
-    return ApiService.socialLogin(
-      provider: 'apple',
-      idToken: idToken,
-      authorizationCode: credential.authorizationCode,
-    );
+    return result;
   }
 
   @override
@@ -435,9 +507,12 @@ class _LoginPageState extends State<LoginPage> {
                                     children: [
                                       Expanded(
                                         child: OutlinedButton.icon(
-                                          onPressed: _loading
+                                          onPressed: _loading || !_googleConfigOk || !_firebaseReady
                                               ? null
-                                              : () => _handleSocialAuth(_signInWithGoogle),
+                                              : () => _handleSocialAuth(
+                                                    _signInWithGoogle,
+                                                    provider: 'google',
+                                                  ),
                                           icon: const CircleAvatar(
                                             radius: 10,
                                             backgroundColor: Color(0xFFEA4335),
@@ -462,9 +537,12 @@ class _LoginPageState extends State<LoginPage> {
                                       const SizedBox(width: 12),
                                       Expanded(
                                         child: OutlinedButton.icon(
-                                          onPressed: _loading
+                                          onPressed: _loading || !_appleConfigOk || !_firebaseReady
                                               ? null
-                                              : () => _handleSocialAuth(_signInWithApple),
+                                              : () => _handleSocialAuth(
+                                                    _signInWithApple,
+                                                    provider: 'apple',
+                                                  ),
                                           icon: const Icon(Icons.apple),
                                           label: Text(l10n.loginContinueWithApple),
                                           style: OutlinedButton.styleFrom(
@@ -479,6 +557,20 @@ class _LoginPageState extends State<LoginPage> {
                                   ),
                                 ),
                               ),
+                              if (!_firebaseReady || !_googleConfigOk || !_appleConfigOk) ...[
+                                const SizedBox(height: 10),
+                                Text(
+                                  !_firebaseReady
+                                      ? 'Firebase yapılandırması eksik.'
+                                      : (!_googleConfigOk
+                                          ? 'Google giriş yapılandırması eksik (iOS URL scheme).'
+                                          : 'Apple giriş yapılandırması eksik.'),
+                                  style: theme.textTheme.bodySmall?.copyWith(
+                                    color: theme.colorScheme.error,
+                                  ),
+                                  textAlign: TextAlign.center,
+                                ),
+                              ],
                             ],
                           ),
                         ),

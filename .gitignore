@@ -55,6 +55,9 @@ untranslated.txt
 ios/Flutter/Generated*.xcconfig
 ios/Flutter/flutter_export_environment*.sh
 ios/Runner/Secrets.xcconfig
+ios/DART_DEFINES
+ios/Runner/GoogleService-Info.plist
+android/app/google-services.json
 .env.local
 .env.local
 ios/Runner/Secrets.xcconfig
