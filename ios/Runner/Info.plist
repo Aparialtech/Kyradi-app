@@ -49,6 +49,8 @@
 	<string>QR kod okutmak için kamera izni gereklidir.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>Konum tabanlı hizmetler için konum izni gereklidir.</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>Konum tabanlı hizmetler için konum izni gereklidir.</string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>Mikrofon erişimi gerekli.</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>

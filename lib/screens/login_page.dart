@@ -99,12 +99,26 @@ class _LoginPageState extends State<LoginPage> {
       final firebaseIdToken = authResult.firebaseIdToken;
       final accessToken = authResult.accessToken;
       final authorizationCode = authResult.authorizationCode;
-      if ((firebaseIdToken == null || firebaseIdToken.isEmpty) &&
-          (idToken == null || idToken.isEmpty) &&
-          (accessToken == null || accessToken.isEmpty)) {
+      final effectiveToken = firebaseIdToken?.isNotEmpty == true ? firebaseIdToken : idToken;
+      final tokenTrimmed = effectiveToken?.trim() ?? '';
+      final tokenSegments = tokenTrimmed.isEmpty ? 0 : tokenTrimmed.split('.').length;
+      final startsWithEyJ = tokenTrimmed.startsWith('eyJ');
+      if (tokenTrimmed.isEmpty) {
         if (!mounted) return;
         setState(() => _loading = false);
         _notify('TOKEN_INVALID', type: AppNotificationType.error);
+        return;
+      }
+      appLog(
+        'auth',
+        'AUTH_GOOGLE_TOKEN_FORMAT tokenLen=${tokenTrimmed.length} segments=$tokenSegments startsWithEyJ=$startsWithEyJ',
+        level: AppLogLevel.info,
+      );
+      if (tokenSegments != 3 || !startsWithEyJ) {
+        if (!mounted) return;
+        setState(() => _loading = false);
+        _notify('Google token doğrulanamadı, tekrar deneyin.',
+            type: AppNotificationType.error);
         return;
       }
       appLog(
@@ -114,7 +128,7 @@ class _LoginPageState extends State<LoginPage> {
       );
       final res = await ApiService.socialLogin(
         provider: provider,
-        idToken: firebaseIdToken?.isNotEmpty == true ? firebaseIdToken : idToken,
+        idToken: effectiveToken,
         accessToken: idToken == null || idToken.isEmpty ? accessToken : null,
         authorizationCode: authorizationCode,
         platform: Platform.isIOS ? 'ios' : 'android',
@@ -145,8 +159,14 @@ class _LoginPageState extends State<LoginPage> {
         return;
       } else if (status == 400 || status == 401) {
         appLog('auth', 'AUTH_${provider.toUpperCase()}_ERROR invalid', level: AppLogLevel.warn);
-        _notify(msg.isNotEmpty ? msg : 'TOKEN_INVALID',
-            type: AppNotificationType.error);
+        final mapped = msg == 'SOCIAL_TOKEN_FORMAT_INVALID'
+            ? 'Google token formatı geçersiz.'
+            : msg == 'SOCIAL_TOKEN_INVALID'
+                ? 'Google oturumu doğrulanamadı, tekrar deneyin.'
+                : msg == 'WRONG_AUTH_FLOW'
+                    ? 'Yanlış giriş akışı.'
+                    : (msg.isNotEmpty ? msg : 'TOKEN_INVALID');
+        _notify(mapped, type: AppNotificationType.error);
       } else {
         appLog('auth', 'AUTH_${provider.toUpperCase()}_ERROR', level: AppLogLevel.warn);
         _notify(msg.isNotEmpty ? msg : AppLocalizations.of(context)!.loginFailed,

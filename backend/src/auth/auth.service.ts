@@ -53,12 +53,21 @@ export class AuthService {
   async login(dto: LoginDto) {
     const hasEmail = !!dto.email;
     const hasPassword = !!dto.password;
+    const hasSocialFields =
+      !!(dto as any)?.provider ||
+      !!(dto as any)?.idToken ||
+      !!(dto as any)?.accessToken ||
+      !!(dto as any)?.authorizationCode;
     console.log(
       'LOGIN_REQ',
       `hasEmail=${hasEmail}`,
       `hasPassword=${hasPassword}`,
       `email=${this.maskEmail(dto.email)}`,
+      `hasSocialFields=${hasSocialFields}`,
     );
+    if (hasSocialFields) {
+      throw new BadRequestException('WRONG_AUTH_FLOW');
+    }
     if (!dto.email || !dto.password) {
       throw new BadRequestException('EMAIL_PASSWORD_REQUIRED');
     }
@@ -111,6 +120,13 @@ export class AuthService {
       throw new BadRequestException('FIREBASE_ADMIN_NOT_CONFIGURED');
     }
     const decoded = await admin.auth(app).verifyIdToken(idToken);
+    const projectId = process.env.FIREBASE_PROJECT_ID || 'kyradi';
+    const expectedIss = `https://securetoken.google.com/${projectId}`;
+    const aud = (decoded.aud ?? '').toString();
+    const iss = (decoded.iss ?? '').toString();
+    if (aud !== projectId || iss !== expectedIss) {
+      throw new BadRequestException('SOCIAL_TOKEN_INVALID');
+    }
     return decoded;
   }
 
@@ -122,6 +138,13 @@ export class AuthService {
     } catch {
       return false;
     }
+  }
+
+  private looksLikeJwt(idToken: string) {
+    if (!idToken) return false;
+    const trimmed = idToken.trim();
+    if (!trimmed.startsWith('eyJ')) return false;
+    return trimmed.split('.').length === 3;
   }
 
   private async verifyGoogleIdToken(idToken: string) {
@@ -195,6 +218,9 @@ export class AuthService {
     try {
       if (dto.provider === 'google') {
         if (dto.idToken && dto.idToken.trim().length > 0) {
+          if (!this.looksLikeJwt(dto.idToken)) {
+            throw new BadRequestException('SOCIAL_TOKEN_FORMAT_INVALID');
+          }
           if (this.looksLikeFirebaseToken(dto.idToken)) {
             const decoded = await this.verifyFirebaseIdToken(dto.idToken);
             console.log(
@@ -230,6 +256,9 @@ export class AuthService {
         }
       } else {
         if (!dto.idToken) throw new BadRequestException('TOKEN_INVALID');
+        if (!this.looksLikeJwt(dto.idToken)) {
+          throw new BadRequestException('SOCIAL_TOKEN_FORMAT_INVALID');
+        }
         payload = await this.verifyAppleIdToken(dto.idToken);
         console.log(
           'SOCIAL_APPLE_VERIFY',
