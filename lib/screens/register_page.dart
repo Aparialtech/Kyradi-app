@@ -173,7 +173,7 @@ class _RegisterPageState extends State<RegisterPage> {
           type: AppNotificationType.success,
         );
         if (!mounted) return;
-        context.go('/verify', extra: _emailCtrl.text.trim());
+        context.push('/verify', extra: _emailCtrl.text.trim());
       }
       // 🔹 409 veya “email already” gibi durumlar
       else if (status == 409 ||

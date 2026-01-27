@@ -53,11 +53,11 @@ class _IntroSplashPageState extends State<IntroSplashPage>
   }
 
   void _goLogin() {
-    context.go('/login');
+    context.push('/login');
   }
 
   void _goRegister() {
-    context.go('/register');
+    context.push('/register');
   }
 
   void _showAuthButtons() {

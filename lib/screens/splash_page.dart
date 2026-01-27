@@ -43,7 +43,7 @@ class _SplashPageState extends State<SplashPage>
   }
 
   void _goLogin() {
-    context.go('/login');
+    context.push('/login');
   }
 
   @override

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import '../../../core/drop_locations.dart';
+import '../../../utils/crash_log.dart';
 
 class LocationMapView extends StatefulWidget {
   const LocationMapView({
@@ -11,6 +12,7 @@ class LocationMapView extends StatefulWidget {
     required this.onDetailsTap,
     required this.center,
     required this.showMyLocation,
+    this.onMapCreated,
   });
 
   final Set<Marker> markers;
@@ -19,6 +21,7 @@ class LocationMapView extends StatefulWidget {
   final VoidCallback onDetailsTap;
   final LatLng center;
   final bool showMyLocation;
+  final ValueChanged<GoogleMapController>? onMapCreated;
 
   @override
   State<LocationMapView> createState() => _LocationMapViewState();
@@ -38,7 +41,15 @@ class _LocationMapViewState extends State<LocationMapView> {
           markers: widget.markers,
           myLocationEnabled: widget.showMyLocation,
           myLocationButtonEnabled: false,
-          onMapCreated: (_) {},
+          onMapCreated: (controller) {
+            try {
+              widget.onMapCreated?.call(controller);
+              appLog('map', 'MAP_WIDGET_CREATED', level: AppLogLevel.info);
+            } catch (e) {
+              appLog('map', 'MAP_ERROR onMapCreated $e',
+                  level: AppLogLevel.error);
+            }
+          },
           compassEnabled: false,
           mapToolbarEnabled: false,
         ),

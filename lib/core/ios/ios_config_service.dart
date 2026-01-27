@@ -45,6 +45,18 @@ class IosConfigService {
     }
   }
 
+  static Future<bool> hasGmsApiKey() async {
+    if (!Platform.isIOS) return false;
+    try {
+      final value = await _channel.invokeMethod<bool>('hasGmsApiKey');
+      return value == true;
+    } catch (e) {
+      appLog('ios_config', 'hasGmsApiKey failed: $e',
+          level: AppLogLevel.warn);
+      return false;
+    }
+  }
+
   static Future<String> getGoogleReversedClientId() async {
     if (!Platform.isIOS) return '';
     try {

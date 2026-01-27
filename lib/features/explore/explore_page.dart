@@ -8,6 +8,9 @@ import '../../services/locations_service.dart';
 import '../../ui/components/app_empty_state.dart';
 import '../../ui/components/app_error_state.dart';
 import '../../ui/components/app_skeleton.dart';
+import '../../widgets/app_notification.dart';
+import '../../utils/crash_log.dart';
+import '../../core/ios/ios_config_service.dart';
 import 'widgets/explore_filter_sheet.dart';
 import 'widgets/explore_toggle_bar.dart';
 import 'widgets/explore_top_bar.dart';
@@ -179,6 +182,31 @@ class _ExplorePageState extends State<ExplorePage> {
     );
   }
 
+  Future<void> _handleMapToggle(bool value) async {
+    appLog('map', 'MAP_TAP', level: AppLogLevel.info);
+    if (!value) {
+      setState(() => _showMap = false);
+      return;
+    }
+    if (Theme.of(context).platform == TargetPlatform.iOS) {
+      final hasKey = await IosConfigService.hasGmsApiKey();
+      if (!mounted) return;
+      if (!hasKey) {
+        appLog('map', 'MAP_PREFLIGHT_FAIL missing_api_key',
+            level: AppLogLevel.warn);
+        AppNotification.show(
+          context,
+          message: AppLocalizations.of(context)!.mapsMissingApiKey,
+          type: AppNotificationType.warning,
+        );
+        setState(() => _showMap = false);
+        return;
+      }
+    }
+    appLog('map', 'MAP_PREFLIGHT_OK', level: AppLogLevel.info);
+    setState(() => _showMap = true);
+  }
+
   void _openLocationDetail(DropLocation location) {
     context.push('/location/${location.id}');
   }
@@ -263,6 +291,9 @@ class _ExplorePageState extends State<ExplorePage> {
       },
       center: center,
       showMyLocation: _currentPosition != null,
+      onMapCreated: (_) {
+        appLog('map', 'MAP_OPEN_START', level: AppLogLevel.info);
+      },
     );
   }
 
@@ -289,7 +320,7 @@ class _ExplorePageState extends State<ExplorePage> {
                 const SizedBox(height: 12),
                 ExploreToggleBar(
                   showMap: _showMap,
-                  onChanged: (value) => setState(() => _showMap = value),
+                  onChanged: _handleMapToggle,
                   listLabel: 'List',
                   mapLabel: 'Map',
                 ),

@@ -12,7 +12,11 @@ import UIKit
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
   ) -> Bool {
     let key = Bundle.main.object(forInfoDictionaryKey: "GOOGLE_MAPS_API_KEY") as? String ?? ""
-    GMSServices.provideAPIKey(key)
+    if !key.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+      GMSServices.provideAPIKey(key)
+    } else {
+      NSLog("GMSApiKey missing in Info.plist")
+    }
     if engine == nil {
       let newEngine = FlutterEngine(name: "default_engine")
       newEngine.run()
@@ -38,6 +42,9 @@ import UIKit
         case "hasFirebasePlist":
           let path = Bundle.main.path(forResource: "GoogleService-Info", ofType: "plist")
           result(path != nil)
+        case "hasGmsApiKey":
+          let key = Bundle.main.object(forInfoDictionaryKey: "GOOGLE_MAPS_API_KEY") as? String ?? ""
+          result(!key.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
         case "getGoogleReversedClientId":
           if let path = Bundle.main.path(forResource: "GoogleService-Info", ofType: "plist"),
              let dict = NSDictionary(contentsOfFile: path),

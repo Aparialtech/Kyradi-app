@@ -172,13 +172,13 @@ class LocationReservationPage extends StatelessWidget {
                 ),
                 const SizedBox(height: 12),
                 FilledButton.icon(
-                  onPressed: () => context.go('/login'),
+                  onPressed: () => context.push('/login'),
                   icon: const Icon(Icons.lock_open),
                   label: Text(loc.loginButtonLabel),
                 ),
                 const SizedBox(height: 10),
                 OutlinedButton.icon(
-                  onPressed: () => context.go('/register'),
+                  onPressed: () => context.push('/register'),
                   icon: const Icon(Icons.person_add_alt_1),
                   label: Text(loc.registerButtonLabel),
                 ),
