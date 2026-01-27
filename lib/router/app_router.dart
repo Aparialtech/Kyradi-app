@@ -17,6 +17,7 @@ import '../features/luggage/luggage_list_page.dart';
 import '../features/luggage/luggage_add_page.dart';
 import '../features/luggage/luggage_detail_page.dart';
 import '../features/luggage/qr_preview_page.dart';
+import '../features/luggage/qr_scan_page.dart';
 import '../models/luggage.dart';
 
 final rootNavigatorKey = GlobalKey<NavigatorState>();
@@ -145,6 +146,10 @@ GoRouter buildAppRouter() {
         builder: (context, state) => QrPreviewPage(
           luggage: state.extra as LuggageModel,
         ),
+      ),
+      GoRoute(
+        path: '/qr/scan',
+        builder: (_, __) => const QrScanPage(),
       ),
     ],
   );

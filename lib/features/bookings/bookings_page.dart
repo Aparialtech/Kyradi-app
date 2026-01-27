@@ -134,13 +134,15 @@ class _BookingsPageState extends State<BookingsPage> {
     }
   }
 
-  void _scanQr() {
+  Future<void> _scanQr() async {
+    final code = await context.push<String>('/qr/scan');
+    if (!mounted || code == null || code.isEmpty) return;
+    final loc = AppLocalizations.of(context)!;
     AppNotification.show(
       context,
-      message: 'QR tarama yakında bu ekranda.',
-      type: AppNotificationType.info,
+      message: '${loc.qrCode}: $code',
+      type: AppNotificationType.success,
     );
-    context.go('/luggage');
   }
 
   List<LuggageModel> get _segmentItems {

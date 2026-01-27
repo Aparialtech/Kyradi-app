@@ -1,6 +1,11 @@
 #!/bin/sh
 set -euo pipefail
 
+if [ "${ACTION:-}" = "install" ]; then
+  echo "Archive build detected — skipping Verify Dart Defines"
+  exit 0
+fi
+
 if [ "${CONFIGURATION:-}" != "Release" ]; then
   exit 0
 fi
@@ -9,6 +14,12 @@ if [ -z "${DART_DEFINES:-}" ]; then
   if [ -f "${PROJECT_DIR}/Flutter/flutter_export_environment.sh" ]; then
     # shellcheck disable=SC1091
     . "${PROJECT_DIR}/Flutter/flutter_export_environment.sh"
+  fi
+fi
+
+if [ -z "${DART_DEFINES:-}" ]; then
+  if [ -f "${PROJECT_DIR}/Flutter/Generated.xcconfig" ]; then
+    DART_DEFINES="$(grep -E '^DART_DEFINES=' "${PROJECT_DIR}/Flutter/Generated.xcconfig" | sed 's/^DART_DEFINES=//')"
   fi
 fi
 
@@ -22,8 +33,11 @@ decode_base64() {
 }
 
 found=0
-IFS=',' read -r -a parts <<< "$DART_DEFINES"
-for part in "${parts[@]}"; do
+old_ifs=$IFS
+IFS=,
+set -- $DART_DEFINES
+IFS=$old_ifs
+for part in "$@"; do
   decoded="$(decode_base64 "$part")"
   case "$decoded" in
     API_BASE_URL=*)
