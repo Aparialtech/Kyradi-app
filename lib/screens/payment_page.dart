@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:intl/intl.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:go_router/go_router.dart';
 import '../services/api_service.dart';
 import '../models/pricing_models.dart';
 import '../l10n/app_localizations.dart';
@@ -53,6 +55,7 @@ class _PaymentPageState extends State<PaymentPage> {
   Future<PricingQuoteResponse?>? _quoteFuture;
   int? _basePriceValue;
   int? _totalPriceValue;
+  double _walletBalance = 0;
 
   late String _paymentMethod;
   late String _protectionLevel;
@@ -74,6 +77,7 @@ class _PaymentPageState extends State<PaymentPage> {
       _quoteError = null;
       _quoteFuture = _fetchQuote();
     }
+    _loadWalletBalance();
   }
 
   @override
@@ -87,6 +91,13 @@ class _PaymentPageState extends State<PaymentPage> {
     _expiryFocus.dispose();
     _cvcFocus.dispose();
     super.dispose();
+  }
+
+  Future<void> _loadWalletBalance() async {
+    final prefs = await SharedPreferences.getInstance();
+    final balance = prefs.getDouble('wallet_balance') ?? 0;
+    if (!mounted) return;
+    setState(() => _walletBalance = balance);
   }
 
   Future<PricingQuoteResponse?> _fetchQuote() async {
@@ -165,7 +176,7 @@ class _PaymentPageState extends State<PaymentPage> {
 
   Future<void> _completePayment() async {
     final loc = AppLocalizations.of(context)!;
-    if (_paymentMethod != 'pay_at_hotel') {
+    if (_paymentMethod != 'pay_at_hotel' && _paymentMethod != 'wallet') {
       final cardDigits = _digitsOnly(_cardNumberCtrl.text);
       final name = _nameCtrl.text.trim();
       final expiry = _expiryCtrl.text.trim();
@@ -192,6 +203,12 @@ class _PaymentPageState extends State<PaymentPage> {
     if (amount <= 0) {
       _showError(loc.paymentFailedMessage);
       return;
+    }
+    if (_paymentMethod == 'wallet') {
+      if (_walletBalance < amount) {
+        _showWalletInsufficient(loc, amount);
+        return;
+      }
     }
     setState(() => _loading = true);
     try {
@@ -331,6 +348,7 @@ class _PaymentPageState extends State<PaymentPage> {
                           decoration: InputDecoration(
                             labelText: loc.paymentCardNumberLabel,
                             hintText: '1234 5678 9012 3456',
+                            prefixIcon: const Icon(Icons.credit_card_outlined),
                           ),
                           onSubmitted: (_) => _nameFocus.requestFocus(),
                         ),
@@ -349,6 +367,7 @@ class _PaymentPageState extends State<PaymentPage> {
                           decoration: InputDecoration(
                             labelText: loc.paymentCardNameLabel,
                             hintText: 'AD SOYAD',
+                            prefixIcon: const Icon(Icons.person_outline),
                           ),
                           onSubmitted: (_) => _expiryFocus.requestFocus(),
                         ),
@@ -369,6 +388,7 @@ class _PaymentPageState extends State<PaymentPage> {
                                 decoration: InputDecoration(
                                   labelText: loc.paymentExpiryLabel,
                                   hintText: 'MM/YY',
+                                  prefixIcon: const Icon(Icons.calendar_today_outlined),
                                 ),
                                 onSubmitted: (_) => _cvcFocus.requestFocus(),
                               ),
@@ -388,6 +408,7 @@ class _PaymentPageState extends State<PaymentPage> {
                                 decoration: InputDecoration(
                                   labelText: loc.paymentCvcLabel,
                                   hintText: 'CVV',
+                                  prefixIcon: const Icon(Icons.lock_outline),
                                 ),
                                 onSubmitted: (_) => _completePayment(),
                               ),
@@ -429,15 +450,38 @@ class _PaymentPageState extends State<PaymentPage> {
       ),
       bottomNavigationBar: SafeArea(
         minimum: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-        child: FilledButton(
-          onPressed: canSubmit ? _completePayment : null,
-          child: _loading
-              ? const SizedBox(
-                  height: 18,
-                  width: 18,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                )
-              : Text(loc.paymentCompleteAction),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Align(
+              alignment: Alignment.centerLeft,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(999),
+                ),
+                child: Text(
+                  loc.paymentDemoBadge,
+                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                        color: Theme.of(context).colorScheme.primary,
+                        fontWeight: FontWeight.w700,
+                      ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 10),
+            FilledButton(
+              onPressed: canSubmit ? _completePayment : null,
+              child: _loading
+                  ? const SizedBox(
+                      height: 18,
+                      width: 18,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : Text(loc.paymentCompleteAction),
+            ),
+          ],
         ),
       ),
     );
@@ -500,6 +544,19 @@ class _PaymentPageState extends State<PaymentPage> {
       children: [
         Text(loc.paymentMethodTitle, style: theme.textTheme.titleSmall),
         RadioListTile<String>(
+          value: 'wallet',
+          groupValue: _paymentMethod,
+          onChanged: (value) {
+            setState(() => _paymentMethod = value ?? 'wallet');
+          },
+          title: Text(
+            loc.paymentMethodWallet(
+              _walletBalance.toStringAsFixed(2),
+            ),
+          ),
+          contentPadding: EdgeInsets.zero,
+        ),
+        RadioListTile<String>(
           value: 'card',
           groupValue: _paymentMethod,
           onChanged: (value) {
@@ -555,6 +612,64 @@ class _PaymentPageState extends State<PaymentPage> {
             ),
           ),
       ],
+    );
+  }
+
+  void _showWalletInsufficient(AppLocalizations loc, int amount) {
+    showModalBottomSheet(
+      context: context,
+      showDragHandle: true,
+      builder: (context) {
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                loc.paymentWalletInsufficientTitle,
+                style: Theme.of(context)
+                    .textTheme
+                    .titleMedium
+                    ?.copyWith(fontWeight: FontWeight.w700),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                loc.paymentWalletInsufficientMessage(
+                  _walletBalance.toStringAsFixed(2),
+                  amount.toString(),
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () {
+                        Navigator.pop(context);
+                        setState(() => _paymentMethod = 'card');
+                      },
+                      child: Text(loc.paymentWalletUseCardAction),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: FilledButton(
+                      onPressed: () {
+                        Navigator.pop(context);
+                        if (context.mounted) {
+                          context.go('/wallet');
+                        }
+                      },
+                      child: Text(loc.paymentWalletTopUpAction),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 
@@ -658,7 +773,7 @@ class _PaymentPageState extends State<PaymentPage> {
                           setState(() => _quoteFuture = _fetchQuote());
                         },
                         icon: const Icon(Icons.refresh),
-                        label: const Text('Yenile'),
+                        label: Text(loc.refreshAction),
                       ),
                     ],
                   );

@@ -14,11 +14,11 @@ import '../features/bookings/bookings_page.dart';
 import '../features/wallet/wallet_page.dart';
 import '../features/profile/profile_page.dart';
 import '../features/luggage/luggage_list_page.dart';
-import '../features/luggage/luggage_add_page.dart';
 import '../features/luggage/luggage_detail_page.dart';
 import '../features/luggage/qr_preview_page.dart';
 import '../features/luggage/qr_scan_page.dart';
 import '../models/luggage.dart';
+import '../ui/add_bag_flow/stepper_shell.dart';
 
 final rootNavigatorKey = GlobalKey<NavigatorState>();
 
@@ -90,6 +90,12 @@ GoRouter buildAppRouter() {
                 path: '/home',
                 builder: (_, __) => const DashboardPage(),
               ),
+              GoRoute(
+                path: '/home/location/:id',
+                builder: (context, state) => LocationReservationPage(
+                  locationId: state.pathParameters['id'] ?? '',
+                ),
+              ),
             ],
           ),
           StatefulShellBranch(
@@ -98,6 +104,12 @@ GoRouter buildAppRouter() {
                 path: '/explore',
                 builder: (_, __) => const ExplorePage(),
               ),
+              GoRoute(
+                path: '/explore/location/:id',
+                builder: (context, state) => LocationReservationPage(
+                  locationId: state.pathParameters['id'] ?? '',
+                ),
+              ),
             ],
           ),
           StatefulShellBranch(
@@ -105,6 +117,27 @@ GoRouter buildAppRouter() {
               GoRoute(
                 path: '/bookings',
                 builder: (_, __) => const BookingsPage(),
+              ),
+              GoRoute(
+                path: '/luggage',
+                builder: (_, __) => const LuggageListPage(),
+              ),
+              GoRoute(
+                path: '/luggage/add',
+                builder: (_, __) => const ReservationStepperShell(),
+              ),
+              GoRoute(
+                path: '/luggage/:id',
+                builder: (context, state) => LuggageDetailPage(
+                  luggageId: state.pathParameters['id'] ?? '',
+                  initial: state.extra as LuggageModel?,
+                ),
+              ),
+              GoRoute(
+                path: '/luggage/:id/qr',
+                builder: (context, state) => QrPreviewPage(
+                  luggage: state.extra as LuggageModel,
+                ),
               ),
             ],
           ),
@@ -127,29 +160,10 @@ GoRouter buildAppRouter() {
         ],
       ),
       GoRoute(
-        path: '/luggage',
-        builder: (_, __) => const LuggageListPage(),
-      ),
-      GoRoute(
-        path: '/luggage/add',
-        builder: (_, __) => const LuggageAddPage(),
-      ),
-      GoRoute(
-        path: '/luggage/:id',
-        builder: (context, state) => LuggageDetailPage(
-          luggageId: state.pathParameters['id'] ?? '',
-          initial: state.extra as LuggageModel?,
-        ),
-      ),
-      GoRoute(
-        path: '/luggage/:id/qr',
-        builder: (context, state) => QrPreviewPage(
-          luggage: state.extra as LuggageModel,
-        ),
-      ),
-      GoRoute(
         path: '/qr/scan',
-        builder: (_, __) => const QrScanPage(),
+        builder: (_, state) => QrScanPage(
+          autoReturn: state.extra is bool ? state.extra as bool : false,
+        ),
       ),
     ],
   );

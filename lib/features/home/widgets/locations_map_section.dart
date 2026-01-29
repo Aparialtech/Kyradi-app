@@ -119,11 +119,14 @@ class LocationsMapSection extends StatelessWidget {
               left: 0,
               right: 0,
               child: SafeArea(
-                child: LinearProgressIndicator(
-                  minHeight: 3,
-                  color: theme.colorScheme.primary,
-                  backgroundColor:
-                      theme.colorScheme.primary.withValues(alpha: 0.2),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(999),
+                  child: LinearProgressIndicator(
+                    minHeight: 3,
+                    color: theme.colorScheme.primary,
+                    backgroundColor:
+                        theme.colorScheme.primary.withValues(alpha: 0.2),
+                  ),
                 ),
               ),
             ),

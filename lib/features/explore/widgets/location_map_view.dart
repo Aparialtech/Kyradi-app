@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import '../../../l10n/app_localizations.dart';
 import '../../../core/drop_locations.dart';
 import '../../../utils/crash_log.dart';
 
@@ -98,7 +99,7 @@ class _LocationMapViewState extends State<LocationMapView> {
                     const SizedBox(width: 12),
                     FilledButton(
                       onPressed: widget.onDetailsTap,
-                      child: const Text('Detay'),
+                      child: Text(AppLocalizations.of(context)!.detailsAction),
                     ),
                   ],
                 ),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import '../l10n/app_localizations.dart';
 import '../utils/crash_log.dart';
 
 class CrashLogPage extends StatelessWidget {
@@ -7,10 +8,11 @@ class CrashLogPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final loc = AppLocalizations.of(context)!;
     final entries = CrashLogBuffer.entries;
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Crash Logs'),
+        title: Text(loc.crashLogsTitle),
         actions: [
           IconButton(
             onPressed: entries.isEmpty
@@ -21,7 +23,7 @@ class CrashLogPage extends StatelessWidget {
                     );
                     if (!context.mounted) return;
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Logs copied')),
+                      SnackBar(content: Text(loc.crashLogsCopied)),
                     );
                   },
             icon: const Icon(Icons.copy_all_outlined),
@@ -29,7 +31,7 @@ class CrashLogPage extends StatelessWidget {
         ],
       ),
       body: entries.isEmpty
-          ? const Center(child: Text('No logs captured yet.'))
+          ? Center(child: Text(loc.crashLogsEmpty))
           : ListView.separated(
               padding: const EdgeInsets.all(16),
               itemCount: entries.length,

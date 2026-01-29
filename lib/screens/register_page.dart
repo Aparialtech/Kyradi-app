@@ -15,6 +15,7 @@ import '../core/ios/ios_config_service.dart';
 import '../core/firebase/firebase_bootstrap.dart';
 import '../core/auth/google_oauth_config.dart';
 import '../utils/crash_log.dart';
+import '../ui/components/rainbow_bar.dart';
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
@@ -47,6 +48,33 @@ class _RegisterPageState extends State<RegisterPage> {
   void _notify(String message, {AppNotificationType type = AppNotificationType.info}) {
     if (!mounted) return;
     AppNotification.show(context, message: message, type: type);
+  }
+
+  String _mapSocialAuthError(AppLocalizations l10n, String err) {
+    switch (err) {
+      case 'BUSY':
+        return l10n.authBusyMessage;
+      case 'TOKEN_INVALID':
+        return l10n.tokenInvalidMessage;
+      case 'SOCIAL_TOKEN_FORMAT_INVALID':
+        return l10n.socialTokenFormatInvalid;
+      case 'SOCIAL_TOKEN_INVALID':
+        return l10n.socialTokenInvalid;
+      case 'WRONG_AUTH_FLOW':
+        return l10n.authFlowWrong;
+      case 'invalid-credential':
+        return l10n.googleTokenInvalid;
+      default:
+        if (err.contains('popup_closed') || err.contains('login cancelled')) {
+          return l10n.socialLoginCancelled;
+        }
+        if (err == l10n.googleConfigMissing ||
+            err == l10n.appleSignInUnavailable ||
+            err == l10n.firebaseConfigMissing) {
+          return err;
+        }
+        return err.isNotEmpty ? err : l10n.loginFailed;
+    }
   }
 
   @override
@@ -108,7 +136,7 @@ class _RegisterPageState extends State<RegisterPage> {
         );
         return AuthResult(
           ok: false,
-          error: 'Google giriş yapılandırması eksik.',
+          error: AppLocalizations.of(context)!.googleConfigMissing,
           statusCode: 500,
         );
       }
@@ -131,7 +159,11 @@ class _RegisterPageState extends State<RegisterPage> {
     appLog('auth', 'AUTH_APPLE_TAP', level: AppLogLevel.info);
     if (!await AuthService.isAppleAvailable()) {
       appLog('auth', 'AUTH_APPLE_ERROR not_available', level: AppLogLevel.warn);
-      return AuthResult(ok: false, error: 'Apple Sign-In unavailable', statusCode: 400);
+      return AuthResult(
+        ok: false,
+        error: AppLocalizations.of(context)!.appleSignInUnavailable,
+        statusCode: 400,
+      );
     }
     appLog('auth', 'AUTH_APPLE_START', level: AppLogLevel.info);
     final result = await AuthService.signInWithApple();
@@ -146,9 +178,10 @@ class _RegisterPageState extends State<RegisterPage> {
     required String provider,
   }) async {
     if (_loading) return;
+    final l10n = AppLocalizations.of(context)!;
     if (!_firebaseReady) {
       _notify(
-        'Firebase yapılandırması eksik.',
+        l10n.firebaseConfigMissing,
         type: AppNotificationType.warning,
       );
       return;
@@ -161,9 +194,7 @@ class _RegisterPageState extends State<RegisterPage> {
         if (!mounted) return;
         setState(() => _loading = false);
         final err = authResult.error ?? 'Login failed';
-        final message = err == 'invalid-credential'
-            ? 'Google token doğrulanamadı. Lütfen tekrar deneyin.'
-            : err;
+        final message = _mapSocialAuthError(l10n, err);
         _notify(message, type: AppNotificationType.error);
         return;
       }
@@ -179,7 +210,7 @@ class _RegisterPageState extends State<RegisterPage> {
       if (tokenTrimmed.isEmpty) {
         if (!mounted) return;
         setState(() => _loading = false);
-        _notify('TOKEN_INVALID', type: AppNotificationType.error);
+        _notify(l10n.tokenInvalidMessage, type: AppNotificationType.error);
         return;
       }
       appLog(
@@ -190,8 +221,7 @@ class _RegisterPageState extends State<RegisterPage> {
       if (tokenSegments != 3 || !startsWithEyJ) {
         if (!mounted) return;
         setState(() => _loading = false);
-        _notify('Google token doğrulanamadı, tekrar deneyin.',
-            type: AppNotificationType.error);
+        _notify(l10n.googleTokenInvalid, type: AppNotificationType.error);
         return;
       }
       final res = await ApiService.socialLogin(
@@ -200,6 +230,7 @@ class _RegisterPageState extends State<RegisterPage> {
         accessToken: idToken == null || idToken.isEmpty ? accessToken : null,
         authorizationCode: authorizationCode,
         platform: Platform.isIOS ? 'ios' : 'android',
+        flow: 'register',
       );
       if (!mounted) return;
       setState(() => _loading = false);
@@ -222,13 +253,7 @@ class _RegisterPageState extends State<RegisterPage> {
         if (!mounted) return;
         context.go('/home');
       } else if (status == 400 || status == 401) {
-        final mapped = msg == 'SOCIAL_TOKEN_FORMAT_INVALID'
-            ? 'Google token formatı geçersiz.'
-            : msg == 'SOCIAL_TOKEN_INVALID'
-                ? 'Google oturumu doğrulanamadı, tekrar deneyin.'
-                : msg == 'WRONG_AUTH_FLOW'
-                    ? 'Yanlış giriş akışı.'
-                    : (msg.isNotEmpty ? msg : 'TOKEN_INVALID');
+        final mapped = _mapSocialAuthError(l10n, msg.isNotEmpty ? msg : 'TOKEN_INVALID');
         _notify(mapped, type: AppNotificationType.error);
       } else {
         _notify(
@@ -408,13 +433,16 @@ class _RegisterPageState extends State<RegisterPage> {
         ),
         child: SafeArea(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
             child: Form(
               key: _formKey,
               autovalidateMode: AutovalidateMode.onUserInteraction,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
+                const SizedBox(height: 16),
+                const RainbowBar(height: 4),
+                const SizedBox(height: 12),
                 SectionCard(
                   child: Column(
                     children: [
@@ -704,10 +732,10 @@ class _RegisterPageState extends State<RegisterPage> {
                         const SizedBox(height: 10),
                         Text(
                           !_firebaseReady
-                              ? 'Firebase yapılandırması eksik.'
+                              ? l10n.firebaseConfigMissing
                               : (!_googleConfigOk
-                                  ? 'Google giriş yapılandırması eksik (iOS URL scheme).'
-                                  : 'Apple giriş yapılandırması eksik.'),
+                                  ? l10n.googleConfigMissingIosScheme
+                                  : l10n.appleConfigMissing),
                           style: theme.textTheme.bodySmall?.copyWith(
                             color: theme.colorScheme.error,
                           ),

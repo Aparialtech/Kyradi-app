@@ -1,18 +1,20 @@
 import 'package:flutter/material.dart';
+import '../../../l10n/app_localizations.dart';
 
 class FaqPage extends StatelessWidget {
   const FaqPage({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final items = const [
-      ['How does Kyradi work?', 'Drop your luggage at a partner location and pick it up later with your QR/PIN.'],
-      ['Can I pay on site?', 'Yes, pay at the location or via card checkout.'],
-      ['What if a location is full?', 'Choose another location or time slot.'],
-      ['How do I upload identity?', 'Open Profile → Verification → Identity.'],
+    final loc = AppLocalizations.of(context)!;
+    final items = [
+      [loc.faqQ1, loc.faqA1],
+      [loc.faqQ2, loc.faqA2],
+      [loc.faqQ3, loc.faqA3],
+      [loc.faqQ4, loc.faqA4],
     ];
     return Scaffold(
-      appBar: AppBar(title: const Text('FAQ')),
+      appBar: AppBar(title: Text(loc.faqTitle)),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
         children: items.map((item) {

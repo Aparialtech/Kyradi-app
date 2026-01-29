@@ -1,55 +1,91 @@
 import 'package:flutter/material.dart';
 import '../../../ui/haptics/app_haptics.dart';
+import '../../../l10n/app_localizations.dart';
 
 class WalletQuickActions extends StatelessWidget {
   const WalletQuickActions({
     super.key,
-    required this.onUseCashback,
+    required this.onTopUp,
+    required this.onTransactions,
+    required this.onCashback,
     required this.onCoupons,
-    required this.onInvite,
+    required this.onCards,
   });
 
-  final VoidCallback onUseCashback;
+  final VoidCallback onTopUp;
+  final VoidCallback onTransactions;
+  final VoidCallback onCashback;
   final VoidCallback onCoupons;
-  final VoidCallback onInvite;
+  final VoidCallback onCards;
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Expanded(
-      child: _ActionTile(
-        label: 'Use cashback',
-        icon: Icons.redeem_outlined,
-        onTap: () {
-          AppHaptics.light();
-          onUseCashback();
-        },
-      ),
-    ),
-        const SizedBox(width: 12),
-        Expanded(
-      child: _ActionTile(
-        label: 'Coupons',
-        icon: Icons.discount_outlined,
-        onTap: () {
-          AppHaptics.light();
-          onCoupons();
-        },
-      ),
-    ),
-        const SizedBox(width: 12),
-        Expanded(
-      child: _ActionTile(
-        label: 'Invite',
-        icon: Icons.group_add_outlined,
-        onTap: () {
-          AppHaptics.light();
-          onInvite();
-        },
-      ),
-    ),
-      ],
+    final loc = AppLocalizations.of(context)!;
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final tileWidth = (constraints.maxWidth - 12) / 2;
+        return Wrap(
+          spacing: 12,
+          runSpacing: 12,
+          children: [
+            SizedBox(
+              width: tileWidth,
+              child: _ActionTile(
+                label: loc.topUpSectionTitle,
+                icon: Icons.account_balance_wallet_outlined,
+                onTap: () {
+                  AppHaptics.light();
+                  onTopUp();
+                },
+              ),
+            ),
+            SizedBox(
+              width: tileWidth,
+              child: _ActionTile(
+                label: loc.walletTransactionsTitle,
+                icon: Icons.receipt_long_outlined,
+                onTap: () {
+                  AppHaptics.light();
+                  onTransactions();
+                },
+              ),
+            ),
+            SizedBox(
+              width: tileWidth,
+              child: _ActionTile(
+                label: loc.walletCashbackTitle,
+                icon: Icons.redeem_outlined,
+                onTap: () {
+                  AppHaptics.light();
+                  onCashback();
+                },
+              ),
+            ),
+            SizedBox(
+              width: tileWidth,
+              child: _ActionTile(
+                label: loc.walletCouponsAction,
+                icon: Icons.discount_outlined,
+                onTap: () {
+                  AppHaptics.light();
+                  onCoupons();
+                },
+              ),
+            ),
+            SizedBox(
+              width: tileWidth,
+              child: _ActionTile(
+                label: loc.walletCardsTitle,
+                icon: Icons.credit_card_outlined,
+                onTap: () {
+                  AppHaptics.light();
+                  onCards();
+                },
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 }
@@ -71,6 +107,8 @@ class _ActionTile extends StatelessWidget {
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(18),
+      splashColor: theme.colorScheme.primary.withValues(alpha: 0.08),
+      highlightColor: theme.colorScheme.primary.withValues(alpha: 0.04),
       child: Ink(
         padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
         decoration: BoxDecoration(
@@ -83,10 +121,28 @@ class _ActionTile extends StatelessWidget {
               offset: const Offset(0, 6),
             ),
           ],
+          border: Border.all(
+            color: theme.colorScheme.outlineVariant.withValues(alpha: 0.6),
+          ),
         ),
         child: Column(
           children: [
-            Icon(icon, color: theme.colorScheme.primary),
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: LinearGradient(
+                  colors: [
+                    theme.colorScheme.primary.withValues(alpha: 0.14),
+                    theme.colorScheme.secondary.withValues(alpha: 0.12),
+                  ],
+                ),
+                border: Border.all(
+                  color: theme.colorScheme.outlineVariant.withValues(alpha: 0.6),
+                ),
+              ),
+              child: Icon(icon, color: theme.colorScheme.primary),
+            ),
             const SizedBox(height: 8),
             Text(
               label,

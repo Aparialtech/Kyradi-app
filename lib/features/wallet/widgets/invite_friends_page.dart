@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import '../../../l10n/app_localizations.dart';
 import '../../../widgets/app_notification.dart';
 
 class InviteFriendsPage extends StatelessWidget {
@@ -8,22 +9,23 @@ class InviteFriendsPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     const inviteCode = 'KYRADI-TRAVEL';
+    final loc = AppLocalizations.of(context)!;
     return Scaffold(
-      appBar: AppBar(title: const Text('Invite Friends')),
+      appBar: AppBar(title: Text(loc.inviteFriendsTitle)),
       body: Padding(
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Share your invite code',
+              loc.inviteFriendsHeadline,
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.w700,
                   ),
             ),
             const SizedBox(height: 8),
             Text(
-              'Invite friends and earn cashback when they book.',
+              loc.inviteFriendsSubtitle,
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
                     color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
@@ -60,7 +62,7 @@ class InviteFriendsPage extends StatelessWidget {
                       if (!context.mounted) return;
                       AppNotification.show(
                         context,
-                        message: 'Invite code copied',
+                        message: loc.inviteCodeCopied,
                         type: AppNotificationType.success,
                       );
                     },
@@ -74,12 +76,12 @@ class InviteFriendsPage extends StatelessWidget {
               onPressed: () {
                 AppNotification.show(
                   context,
-                  message: 'Share is coming soon.',
+                  message: loc.shareComingSoon,
                   type: AppNotificationType.info,
                 );
               },
               icon: const Icon(Icons.share_outlined),
-              label: const Text('Share'),
+              label: Text(loc.shareAction),
             ),
           ],
         ),

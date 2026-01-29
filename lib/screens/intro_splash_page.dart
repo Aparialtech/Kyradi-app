@@ -19,6 +19,8 @@ class _IntroSplashPageState extends State<IntroSplashPage>
     with SingleTickerProviderStateMixin {
   late final AnimationController _controller;
   late final Animation<double> _scale;
+  late final Animation<double> _glow;
+  late final Animation<double> _fade;
   bool _showButton = false;
   bool _showAuthChoices = false;
   Timer? _timer;
@@ -31,6 +33,8 @@ class _IntroSplashPageState extends State<IntroSplashPage>
       duration: const Duration(milliseconds: 1200),
     );
     _scale = CurvedAnimation(parent: _controller, curve: Curves.easeOutBack);
+    _glow = CurvedAnimation(parent: _controller, curve: Curves.easeOut);
+    _fade = CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic);
     _controller.forward();
     _timer = Timer(const Duration(seconds: 2), () {
       if (mounted) {
@@ -89,24 +93,52 @@ class _IntroSplashPageState extends State<IntroSplashPage>
                     scale: _scale,
                     child: Column(
                       children: [
-                        Container(
-                          height: 150,
-                          width: 150,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: Colors.white.withValues(alpha: 0.08),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withValues(alpha: 0.15),
-                                blurRadius: 24,
-                                offset: const Offset(0, 12),
+                        AnimatedBuilder(
+                          animation: _glow,
+                          builder: (context, child) {
+                            final glow = 0.6 + (_glow.value * 0.4);
+                            return Stack(
+                              alignment: Alignment.center,
+                              children: [
+                                Container(
+                                  height: 190,
+                                  width: 190,
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    gradient: RadialGradient(
+                                      colors: [
+                                        Colors.white.withValues(alpha: 0.16 * glow),
+                                        Colors.transparent,
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                                child!,
+                              ],
+                            );
+                          },
+                          child: FadeTransition(
+                            opacity: _fade,
+                            child: Container(
+                              height: 150,
+                              width: 150,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: Colors.white.withValues(alpha: 0.08),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withValues(alpha: 0.15),
+                                    blurRadius: 24,
+                                    offset: const Offset(0, 12),
+                                  ),
+                                ],
                               ),
-                            ],
-                          ),
-                          padding: const EdgeInsets.all(30),
-                          child: Image.asset(
-                            'assets/images/kyradi_logo.png',
-                            fit: BoxFit.contain,
+                              padding: const EdgeInsets.all(30),
+                              child: Image.asset(
+                                'assets/images/kyradi_logo.png',
+                                fit: BoxFit.contain,
+                              ),
+                            ),
                           ),
                         ),
                         const SizedBox(height: 24),
@@ -184,6 +216,21 @@ class _IntroSplashPageState extends State<IntroSplashPage>
                             ),
                     ),
                   ),
+                  const Spacer(),
+                  AnimatedOpacity(
+                    duration: const Duration(milliseconds: 500),
+                    opacity: _showButton ? 1 : 0,
+                    child: Text(
+                      l10n.splashSlogan,
+                      textAlign: TextAlign.center,
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: Colors.white.withValues(alpha: 0.85),
+                        letterSpacing: 0.6,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 18),
                 ],
               ),
             ),

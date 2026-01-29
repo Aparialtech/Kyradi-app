@@ -8,7 +8,12 @@ PreferredSizeWidget buildBackAppBar(
   return AppBar(
     title: title != null && canPop ? Text(title) : null,
     automaticallyImplyLeading: false,
-    leading: canPop ? const BackButton() : null,
+    leading: canPop
+        ? IconButton(
+            icon: const Icon(Icons.arrow_back_ios_new_rounded),
+            onPressed: () => Navigator.of(context).maybePop(),
+          )
+        : null,
     toolbarHeight: canPop ? kToolbarHeight : 0,
   );
 }

@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 
 class DashboardTopBar extends StatelessWidget {
@@ -6,15 +7,19 @@ class DashboardTopBar extends StatelessWidget {
     required this.title,
     required this.subtitle,
     this.onAvatarTap,
+    this.avatarPath,
   });
 
   final String title;
   final String subtitle;
   final VoidCallback? onAvatarTap;
+  final String? avatarPath;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final resolvedPath = avatarPath?.trim() ?? '';
+    final hasAvatar = resolvedPath.isNotEmpty && File(resolvedPath).existsSync();
     return Row(
       children: [
         Expanded(
@@ -40,12 +45,31 @@ class DashboardTopBar extends StatelessWidget {
         InkWell(
           onTap: onAvatarTap,
           borderRadius: BorderRadius.circular(24),
-          child: CircleAvatar(
-            radius: 22,
-            backgroundColor: theme.colorScheme.primary.withValues(alpha: 0.12),
-            child: Icon(
-              Icons.person,
-              color: theme.colorScheme.primary,
+          splashColor: theme.colorScheme.primary.withValues(alpha: 0.08),
+          highlightColor: theme.colorScheme.primary.withValues(alpha: 0.04),
+          child: Container(
+            padding: const EdgeInsets.all(2),
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: LinearGradient(
+                colors: [
+                  theme.colorScheme.primary.withValues(alpha: 0.9),
+                  theme.colorScheme.secondary.withValues(alpha: 0.8),
+                ],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+            ),
+            child: CircleAvatar(
+              radius: 22,
+              backgroundColor: theme.colorScheme.primary.withValues(alpha: 0.12),
+              backgroundImage: hasAvatar ? FileImage(File(resolvedPath)) : null,
+              child: !hasAvatar
+                  ? Icon(
+                      Icons.person,
+                      color: theme.colorScheme.primary,
+                    )
+                  : null,
             ),
           ),
         ),

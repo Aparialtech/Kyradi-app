@@ -37,6 +37,9 @@ class _ExplorePageState extends State<ExplorePage> {
   String _query = '';
   DropLocation? _selectedLocation;
   final Map<String, Marker> _markerCache = {};
+  int _page = 1;
+  static const int _pageSize = 6;
+  ExploreSort _sort = ExploreSort.nearby;
 
   @override
   void initState() {
@@ -105,16 +108,33 @@ class _ExplorePageState extends State<ExplorePage> {
           location.address.toLowerCase().contains(normalized);
     }).toList();
 
-    if (_currentPosition != null) {
-      filtered.sort((a, b) {
-        final distA = _distanceFor(a) ?? 0;
-        final distB = _distanceFor(b) ?? 0;
-        return distA.compareTo(distB);
-      });
-    } else {
-      filtered.sort((a, b) => a.name.compareTo(b.name));
-    }
     return filtered;
+  }
+
+  List<DropLocation> _sortedLocations(List<DropLocation> items) {
+    final list = List<DropLocation>.from(items);
+    switch (_sort) {
+      case ExploreSort.nearby:
+        list.sort((a, b) {
+          final distA = _distanceFor(a) ?? double.infinity;
+          final distB = _distanceFor(b) ?? double.infinity;
+          return distA.compareTo(distB);
+        });
+        break;
+      case ExploreSort.name:
+        list.sort((a, b) => a.name.compareTo(b.name));
+        break;
+      case ExploreSort.availability:
+        list.sort((a, b) => b.availableSlots.compareTo(a.availableSlots));
+        break;
+    }
+    return list;
+  }
+
+  List<DropLocation> _pagedLocations(List<DropLocation> items) {
+    final max = _page * _pageSize;
+    if (items.length <= max) return items;
+    return items.take(max).toList();
   }
 
   void _syncMarkers(List<DropLocation> locations) {
@@ -167,6 +187,7 @@ class _ExplorePageState extends State<ExplorePage> {
               _openNow = openNow;
               _availableOnly = availableOnly;
               _activeOnly = activeOnly;
+              _page = 1;
             });
           },
           onClear: () {
@@ -175,6 +196,7 @@ class _ExplorePageState extends State<ExplorePage> {
               _openNow = false;
               _availableOnly = false;
               _activeOnly = true;
+              _page = 1;
             });
           },
         );
@@ -208,24 +230,27 @@ class _ExplorePageState extends State<ExplorePage> {
   }
 
   void _openLocationDetail(DropLocation location) {
-    context.push('/location/${location.id}');
+    context.push('/explore/location/${location.id}');
   }
 
   Widget _buildErrorState() {
+    final loc = AppLocalizations.of(context)!;
     return AppErrorState(
-      message: _errorMessage ?? 'Error',
+      message: _errorMessage ?? loc.genericErrorMessage,
       onRetry: _fetchLocations,
     );
   }
 
   Widget _buildEmptyState(String message) {
+    final loc = AppLocalizations.of(context)!;
     return AppEmptyState(
       title: message,
-      subtitle: 'Try adjusting filters.',
+      subtitle: loc.exploreEmptySubtitle,
     );
   }
 
-  Widget _buildListView(List<DropLocation> locations) {
+  Widget _buildListView(List<DropLocation> locations, int totalCount) {
+    final loc = AppLocalizations.of(context)!;
     if (_loading) {
       return ListView.builder(
         padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
@@ -240,12 +265,25 @@ class _ExplorePageState extends State<ExplorePage> {
       return _buildErrorState();
     }
     if (locations.isEmpty) {
-      return _buildEmptyState('No locations found.');
+      return _buildEmptyState(loc.exploreEmptyTitle);
     }
+    final hasMore = locations.length < totalCount;
     return ListView.builder(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
-      itemCount: locations.length,
+      itemCount: locations.length + (hasMore ? 1 : 0),
       itemBuilder: (context, index) {
+        if (hasMore && index == locations.length) {
+          return Padding(
+            padding: const EdgeInsets.only(top: 8, bottom: 20),
+            child: Center(
+              child: OutlinedButton.icon(
+                onPressed: () => setState(() => _page += 1),
+                icon: const Icon(Icons.expand_more),
+                label: Text(loc.exploreShowMore),
+              ),
+            ),
+          );
+        }
         final location = locations[index];
         return LocationListCard(
           location: location,
@@ -257,6 +295,7 @@ class _ExplorePageState extends State<ExplorePage> {
   }
 
   Widget _buildMapView(List<DropLocation> locations) {
+    final loc = AppLocalizations.of(context)!;
     if (_loading) {
       return const AppSkeleton(radius: 0);
     }
@@ -264,7 +303,7 @@ class _ExplorePageState extends State<ExplorePage> {
       return _buildErrorState();
     }
     if (locations.isEmpty) {
-      return _buildEmptyState('No locations found.');
+      return _buildEmptyState(loc.exploreEmptyTitle);
     }
 
     final center = _currentPosition == null
@@ -300,7 +339,9 @@ class _ExplorePageState extends State<ExplorePage> {
   @override
   Widget build(BuildContext context) {
     final loc = AppLocalizations.of(context)!;
-    final locations = _filteredLocations;
+    final filtered = _filteredLocations;
+    final sorted = _sortedLocations(filtered);
+    final paged = _pagedLocations(sorted);
     return Scaffold(
       appBar: AppBar(
         title: Text(loc.findLocation),
@@ -315,7 +356,10 @@ class _ExplorePageState extends State<ExplorePage> {
                   controller: _searchCtrl,
                   hintText: loc.findLocation,
                   onFilterTap: _openFilterSheet,
-                  onChanged: (value) => setState(() => _query = value),
+                  onChanged: (value) => setState(() {
+                    _query = value;
+                    _page = 1;
+                  }),
                 ),
                 const SizedBox(height: 12),
                 ExploreToggleBar(
@@ -323,6 +367,15 @@ class _ExplorePageState extends State<ExplorePage> {
                   onChanged: _handleMapToggle,
                   listLabel: 'List',
                   mapLabel: 'Map',
+                ),
+                const SizedBox(height: 12),
+                _SortBar(
+                  selected: _sort,
+                  totalCount: filtered.length,
+                  onChanged: (value) => setState(() {
+                    _sort = value;
+                    _page = 1;
+                  }),
                 ),
               ],
             ),
@@ -332,12 +385,61 @@ class _ExplorePageState extends State<ExplorePage> {
             child: AnimatedSwitcher(
               duration: const Duration(milliseconds: 250),
               child: _showMap
-                  ? _buildMapView(locations)
-                  : _buildListView(locations),
+                  ? _buildMapView(sorted)
+                  : _buildListView(paged, filtered.length),
             ),
           ),
         ],
       ),
+    );
+  }
+}
+
+enum ExploreSort { nearby, name, availability }
+
+class _SortBar extends StatelessWidget {
+  const _SortBar({
+    required this.selected,
+    required this.totalCount,
+    required this.onChanged,
+  });
+
+  final ExploreSort selected;
+  final int totalCount;
+  final ValueChanged<ExploreSort> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final loc = AppLocalizations.of(context)!;
+    return Row(
+      children: [
+        Text(
+          loc.exploreResultsCount(totalCount),
+          style: Theme.of(context).textTheme.bodySmall,
+        ),
+        const Spacer(),
+        DropdownButton<ExploreSort>(
+          value: selected,
+          underline: const SizedBox.shrink(),
+          onChanged: (value) {
+            if (value != null) onChanged(value);
+          },
+          items: [
+            DropdownMenuItem(
+              value: ExploreSort.nearby,
+              child: Text(loc.exploreSortNearby),
+            ),
+            DropdownMenuItem(
+              value: ExploreSort.name,
+              child: Text(loc.exploreSortName),
+            ),
+            DropdownMenuItem(
+              value: ExploreSort.availability,
+              child: Text(loc.exploreSortAvailability),
+            ),
+          ],
+        ),
+      ],
     );
   }
 }

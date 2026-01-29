@@ -24,6 +24,23 @@ class AppLocalizationsDe extends AppLocalizations {
   String get findLocation => 'Meinen Standort finden';
 
   @override
+  String exploreResultsCount(Object count) {
+    return '$count locations';
+  }
+
+  @override
+  String get exploreSortNearby => 'Nearby';
+
+  @override
+  String get exploreSortName => 'A-Z';
+
+  @override
+  String get exploreSortAvailability => 'Availability';
+
+  @override
+  String get exploreShowMore => 'Show More';
+
+  @override
   String get destination => 'Ziel';
 
   @override
@@ -110,6 +127,9 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get locationPermission => 'Standortzugriff';
+
+  @override
+  String get locationLabel => 'Location';
 
   @override
   String get locationPermissionDesc =>
@@ -301,6 +321,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String get introTagline => 'Globales Gepäcksystem';
 
   @override
+  String get splashSlogan => 'Leave your luggage, explore the city';
+
+  @override
   String get introTrackButton => 'Verfolgen';
 
   @override
@@ -390,6 +413,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String genericErrorWithDetails(Object details) {
     return 'Es ist ein Fehler aufgetreten: $details';
   }
+
+  @override
+  String get genericErrorMessage => 'Es ist ein Fehler aufgetreten.';
 
   @override
   String get loginVerificationRequired => 'Bitte bestätige dein Konto 📨';
@@ -604,7 +630,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get unknownError => 'Unbekannter Fehler';
 
   @override
-  String get verificationTitle => 'E-Mail-Bestätigung';
+  String get verificationTitle => 'Verifizierung';
 
   @override
   String verificationInstructions(Object email) {
@@ -748,6 +774,66 @@ class AppLocalizationsDe extends AppLocalizations {
       'Noch kein Gepäck. Füge jetzt eines hinzu!';
 
   @override
+  String get luggageSearchHint => 'Search by name, QR, or location';
+
+  @override
+  String get luggageSortLabel => 'Sort';
+
+  @override
+  String get luggageSortDate => 'By Date';
+
+  @override
+  String get luggageSortStatus => 'By Status';
+
+  @override
+  String get luggageSortLocation => 'By Location';
+
+  @override
+  String get luggageSortPayment => 'By Payment';
+
+  @override
+  String get luggageViewList => 'List';
+
+  @override
+  String get luggageViewCards => 'Cards';
+
+  @override
+  String get luggageViewCalendar => 'Calendar';
+
+  @override
+  String get luggageShowMore => 'Load More';
+
+  @override
+  String get luggageNoResultsTitle => 'No results';
+
+  @override
+  String get luggageNoResultsSubtitle => 'Try changing your search or filters.';
+
+  @override
+  String get luggageFilterTitle => 'Filters';
+
+  @override
+  String get luggageFilterStatus => 'Status';
+
+  @override
+  String get luggageFilterPayment => 'Payment';
+
+  @override
+  String get luggageFilterLocation => 'Location';
+
+  @override
+  String get luggageFilterSize => 'Size';
+
+  @override
+  String get luggageFilterReset => 'Reset';
+
+  @override
+  String get luggageFilterApply => 'Apply';
+
+  @override
+  String get comingSoonMessage => 'Coming soon.';
+
+  @override
   String get luggageEmptyStateFiltered =>
       'Für diesen Filter wurde kein Gepäck gefunden.';
 
@@ -840,6 +926,24 @@ class AppLocalizationsDe extends AppLocalizations {
   String luggageInfoWeight(Object value) {
     return 'Gewicht: $value kg';
   }
+
+  @override
+  String get luggageInfoSectionTitle => 'Luggage Details';
+
+  @override
+  String get luggageInfoLabelSize => 'Size';
+
+  @override
+  String get luggageInfoLabelWeight => 'Weight';
+
+  @override
+  String get luggageInfoLabelColor => 'Color';
+
+  @override
+  String get luggageInfoLabelPayment => 'Payment';
+
+  @override
+  String get luggageInfoLabelTotal => 'Total';
 
   @override
   String luggageInfoColor(Object value) {
@@ -1102,6 +1206,16 @@ class AppLocalizationsDe extends AppLocalizations {
       'Wenn du bereits ein Konto hast, melde dich an – ansonsten registriere dich schnell.';
 
   @override
+  String get locationAuthReadyMessage =>
+      'Du bist angemeldet und kannst mit der Reservierung fortfahren.';
+
+  @override
+  String get exploreEmptyTitle => 'Keine Standorte gefunden.';
+
+  @override
+  String get exploreEmptySubtitle => 'Versuche, die Filter anzupassen.';
+
+  @override
   String get accountSectionSubtitle =>
       'Ändere dein Passwort oder melde dich ab.';
 
@@ -1196,6 +1310,53 @@ class AppLocalizationsDe extends AppLocalizations {
       'Achte darauf, dass der Code scharf innerhalb des Rahmens sichtbar ist.';
 
   @override
+  String get qrScanTitle => 'Scan QR';
+
+  @override
+  String get qrScanGuide =>
+      'Scan a QR or enter the code manually to see reservation details.';
+
+  @override
+  String get qrManualEntry => 'Manual Entry';
+
+  @override
+  String get qrManualHint => 'Enter QR or reservation code';
+
+  @override
+  String get qrManualSearchAction => 'Lookup Code';
+
+  @override
+  String get qrAwaitingScan =>
+      'Reservation details will appear here after scanning.';
+
+  @override
+  String get qrNotFound => 'No record found for this QR code.';
+
+  @override
+  String get qrLookupFailed => 'QR lookup failed. Please try again.';
+
+  @override
+  String get qrReservationInfoTitle => 'Reservation Details';
+
+  @override
+  String get qrScanAgain => 'Scan Again';
+
+  @override
+  String get qrDropConfirmAction => 'Confirm Drop';
+
+  @override
+  String get qrConfirmDropTitle => 'Luggage Drop';
+
+  @override
+  String get qrConfirmDropMessage => 'Confirm that you received this luggage?';
+
+  @override
+  String get qrDropSuccess => 'Luggage drop confirmed.';
+
+  @override
+  String get qrDropFailed => 'Luggage drop failed.';
+
+  @override
   String get locationFetching => 'Standort wird ermittelt...';
 
   @override
@@ -1260,6 +1421,25 @@ class AppLocalizationsDe extends AppLocalizations {
   String get paymentMethodTitle => 'Zahlungsmethode';
 
   @override
+  String paymentMethodWallet(Object balance) {
+    return 'Pay with Kyradi Wallet (Balance: ₺$balance)';
+  }
+
+  @override
+  String get paymentWalletInsufficientTitle => 'Insufficient Balance';
+
+  @override
+  String paymentWalletInsufficientMessage(Object balance, Object amount) {
+    return 'Your wallet balance is ₺$balance. Total is ₺$amount. Please top up or pay by card.';
+  }
+
+  @override
+  String get paymentWalletTopUpAction => 'Top Up';
+
+  @override
+  String get paymentWalletUseCardAction => 'Pay by Card';
+
+  @override
   String get paymentMethodCard => 'Karte';
 
   @override
@@ -1267,6 +1447,299 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get paymentMethodPayAtHotel => 'Im Hotel zahlen';
+
+  @override
+  String get paymentMethodUnknown => 'Unbekannt';
+
+  @override
+  String get paymentStatusLabel => 'Zahlungsstatus';
+
+  @override
+  String get paymentStatusUnknown => 'Unbekannt';
+
+  @override
+  String get luggageDetailsTitle => 'Gepäckdetails';
+
+  @override
+  String get luggageDetailsSubtitle =>
+      'Reservierungs- und Zahlungsinformationen anzeigen.';
+
+  @override
+  String get luggageIdLabel => 'Gepäck-ID';
+
+  @override
+  String get createdAtTitle => 'Erstellt am';
+
+  @override
+  String get statusUpdateFailed =>
+      'Status konnte nicht aktualisiert werden. Bitte erneut versuchen.';
+
+  @override
+  String get inviteFriendsTitle => 'Freunde einladen';
+
+  @override
+  String get inviteFriendsHeadline => 'Teile deinen Einladungscode';
+
+  @override
+  String get inviteFriendsSubtitle =>
+      'Lade Freunde ein und erhalte Cashback, wenn sie buchen.';
+
+  @override
+  String get inviteCodeCopied => 'Einladungscode kopiert';
+
+  @override
+  String get shareComingSoon => 'Teilen folgt bald.';
+
+  @override
+  String get shareAction => 'Teilen';
+
+  @override
+  String get cashbackRulesTitle => 'Cashback-Regeln';
+
+  @override
+  String get cashbackRuleEarnTitle => 'Cashback verdienen';
+
+  @override
+  String get cashbackRuleEarnSubtitle =>
+      'Cashback für berechtigte Buchungen und Kampagnen.';
+
+  @override
+  String get cashbackRuleUseTitle => 'Cashback nutzen';
+
+  @override
+  String get cashbackRuleUseSubtitle =>
+      'Cashback beim Checkout für unterstützte Standorte anwenden.';
+
+  @override
+  String get cashbackRuleExpireTitle => 'Ablauf';
+
+  @override
+  String get cashbackRuleExpireSubtitle =>
+      'Cashback verfällt nach 12 Monaten, wenn es nicht genutzt wird.';
+
+  @override
+  String get couponsTitle => 'Gutscheine';
+
+  @override
+  String get couponWelcomeSubtitle => '10 % Rabatt auf deine nächste Buchung.';
+
+  @override
+  String get couponCitySubtitle =>
+      '5 ₺ Cashback für Standorte im Stadtzentrum.';
+
+  @override
+  String get couponWeekendSubtitle => '15 % Rabatt auf Wochenend-Abgabe.';
+
+  @override
+  String get crashLogsTitle => 'Absturzprotokolle';
+
+  @override
+  String get crashLogsCopied => 'Protokolle kopiert';
+
+  @override
+  String get crashLogsEmpty => 'Noch keine Protokolle erfasst.';
+
+  @override
+  String get allLabel => 'Alle';
+
+  @override
+  String get bookingUpcomingLabel => 'Bevorstehend';
+
+  @override
+  String get bookingActiveLabel => 'Aktiv';
+
+  @override
+  String get bookingPastLabel => 'Vergangen';
+
+  @override
+  String get supportSectionTitle => 'Support';
+
+  @override
+  String get faqTitle => 'FAQ';
+
+  @override
+  String get aboutKyradiTitle => 'Über Kyradi';
+
+  @override
+  String get whatsappLabel => 'WhatsApp';
+
+  @override
+  String get callLabel => 'Anrufen';
+
+  @override
+  String get emailLabel => 'E-Mail';
+
+  @override
+  String get securitySectionTitle => 'Sicherheit';
+
+  @override
+  String get changePasswordTitle => 'Passwort ändern';
+
+  @override
+  String get languageTurkish => 'Türkçe';
+
+  @override
+  String get languageEnglish => 'English';
+
+  @override
+  String get languageGerman => 'Deutsch';
+
+  @override
+  String get languageSpanish => 'Español';
+
+  @override
+  String get languageRussian => 'Русский';
+
+  @override
+  String get filtersTitle => 'Filter';
+
+  @override
+  String get resetAction => 'Zurücksetzen';
+
+  @override
+  String get filterOpenNow => 'Jetzt geöffnet';
+
+  @override
+  String get filterAvailableSlots => 'Verfügbare Slots';
+
+  @override
+  String get filterActiveLocations => 'Aktive Standorte';
+
+  @override
+  String get applyAction => 'Anwenden';
+
+  @override
+  String get refreshAction => 'Aktualisieren';
+
+  @override
+  String get faqQ1 => 'Wie funktioniert Kyradi?';
+
+  @override
+  String get faqA1 =>
+      'Gib dein Gepäck an einem Partnerstandort ab und hole es später mit QR/PIN ab.';
+
+  @override
+  String get faqQ2 => 'Kann ich vor Ort bezahlen?';
+
+  @override
+  String get faqA2 => 'Ja, vor Ort oder per Karte bezahlen.';
+
+  @override
+  String get faqQ3 => 'Was, wenn ein Standort voll ist?';
+
+  @override
+  String get faqA3 => 'Wähle einen anderen Standort oder eine andere Zeit.';
+
+  @override
+  String get faqQ4 => 'Wie lade ich einen Ausweis hoch?';
+
+  @override
+  String get faqA4 => 'Profil → Verifizierung → Ausweis öffnen.';
+
+  @override
+  String get aboutKyradiDescription =>
+      'Kyradi ist eine Gepäckaufbewahrungs-Superapp, die Reisende mit vertrauenswürdigen Partnerstandorten verbindet.';
+
+  @override
+  String get versionLabel => 'Version';
+
+  @override
+  String get accountVerificationTitle => 'Kontoverifizierung';
+
+  @override
+  String get requiredFieldLabel => 'Pflichtfeld';
+
+  @override
+  String get birthDateSelectLabel => 'Geburtsdatum auswählen';
+
+  @override
+  String get birthDateRequiredMessage => 'Geburtsdatum ist erforderlich';
+
+  @override
+  String get firebaseConfigMissing => 'Firebase-Konfiguration fehlt.';
+
+  @override
+  String get googleTokenInvalid =>
+      'Google-Token konnte nicht verifiziert werden. Bitte erneut versuchen.';
+
+  @override
+  String get tokenInvalidMessage => 'Ungültiges Token.';
+
+  @override
+  String get socialTokenFormatInvalid => 'Google-Token-Format ist ungültig.';
+
+  @override
+  String get socialTokenInvalid =>
+      'Google-Sitzung konnte nicht verifiziert werden. Bitte erneut versuchen.';
+
+  @override
+  String get authFlowWrong => 'Falscher Anmeldeablauf.';
+
+  @override
+  String get socialLoginCancelled => 'Anmeldung abgebrochen.';
+
+  @override
+  String get authBusyMessage => 'Vorgang läuft, bitte warten.';
+
+  @override
+  String get googleConfigMissing => 'Google-Anmeldekonfiguration fehlt.';
+
+  @override
+  String get googleConfigMissingIosScheme =>
+      'Google-Anmeldekonfiguration fehlt (iOS-URL-Scheme).';
+
+  @override
+  String get appleSignInUnavailable => 'Apple Sign-In ist nicht verfügbar.';
+
+  @override
+  String get appleConfigMissing => 'Apple-Anmeldekonfiguration fehlt.';
+
+  @override
+  String get retryAction => 'Erneut versuchen';
+
+  @override
+  String get verificationStatusVerified => 'Konto verifiziert';
+
+  @override
+  String get verificationStatusPending => 'Verifizierung ausstehend';
+
+  @override
+  String get verificationStatusRequired => 'Verifizierung erforderlich';
+
+  @override
+  String get verificationBadgeVerified => 'Verifiziert';
+
+  @override
+  String get verificationBadgePending => 'Ausstehend';
+
+  @override
+  String get verificationBadgeNew => 'Neu';
+
+  @override
+  String get viewAction => 'Ansehen';
+
+  @override
+  String get manageAction => 'Verwalten';
+
+  @override
+  String locationSlotsLabel(Object available, Object total) {
+    return '$available/$total Plätze';
+  }
+
+  @override
+  String get quickActionScanQr => 'QR scannen';
+
+  @override
+  String get quickActionCashback => 'Cashback';
+
+  @override
+  String get quickActionReservation => 'Reservierung';
+
+  @override
+  String get quickActionSupport => 'Support';
+
+  @override
+  String get quickActionCampaigns => 'Kampagnen';
 
   @override
   String get paymentHotelCommissionNote =>
@@ -1308,6 +1781,9 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get paymentCompleteAction => 'Zahlung abschließen';
+
+  @override
+  String get paymentDemoBadge => 'Demo payment (gateway not connected)';
 
   @override
   String get paymentFormIncompleteMessage =>
@@ -1768,4 +2244,739 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get apiSettingsUpdatedSuccess => 'Sunucu adresi güncellendi.';
+
+  @override
+  String get rememberMeLabel => 'Remember me';
+
+  @override
+  String get qrShowAction => 'Show QR';
+
+  @override
+  String get qrScanAction => 'Scan QR';
+
+  @override
+  String get detailsAction => 'Details';
+
+  @override
+  String get supportAction => 'Support';
+
+  @override
+  String get luggageStatusAwaitingDrop => 'Awaiting drop';
+
+  @override
+  String get luggageStatusDropped => 'Stored';
+
+  @override
+  String get luggageStatusPickedUp => 'Picked up';
+
+  @override
+  String get luggageStatusCancelled => 'Cancelled';
+
+  @override
+  String get paymentStatusPaid => 'Paid';
+
+  @override
+  String get paymentStatusPending => 'Pending';
+
+  @override
+  String get paymentStatusFailed => 'Failed';
+
+  @override
+  String get paymentStatusUnpaid => 'Unpaid';
+
+  @override
+  String get luggageTimelineCreated => 'Created';
+
+  @override
+  String get luggageTimelineScheduledDrop => 'Scheduled drop';
+
+  @override
+  String get luggageTimelineDropped => 'Dropped';
+
+  @override
+  String get luggageTimelineScheduledPickup => 'Scheduled pickup';
+
+  @override
+  String get luggageTimelinePickedUp => 'Picked up';
+
+  @override
+  String get luggageTimelineLastUpdate => 'Last update';
+
+  @override
+  String get luggageTimelineScheduled => 'Scheduled';
+
+  @override
+  String get activeTripTitle => 'Active trip';
+
+  @override
+  String get seeAllAction => 'See all';
+
+  @override
+  String get campaignsTitle => 'Campaigns';
+
+  @override
+  String get campaignsEmptyState => 'No campaigns available.';
+
+  @override
+  String get campaignsComingSoon => 'Campaigns are coming soon.';
+
+  @override
+  String get campaignCityWelcomeTitle => 'City Welcome';
+
+  @override
+  String get campaignCityWelcomeSubtitle =>
+      'Get 10% back on your first booking.';
+
+  @override
+  String get campaignWeekendTitle => 'Weekend Storage';
+
+  @override
+  String get campaignWeekendSubtitle => 'Save on weekend drop-offs.';
+
+  @override
+  String get campaignAirportTitle => 'Airport Drop';
+
+  @override
+  String get campaignAirportSubtitle => 'Extra points for airport locations.';
+
+  @override
+  String get campaignNewTag => 'NEW';
+
+  @override
+  String get campaignHotTag => 'HOT';
+
+  @override
+  String get campaignBonusTag => 'BONUS';
+
+  @override
+  String get profileVerifiedLabel => 'Verified';
+
+  @override
+  String get profileEditTitle => 'Edit Profile';
+
+  @override
+  String get profileSaveAction => 'Save';
+
+  @override
+  String get profilePhotoSectionTitle => 'Profile photo';
+
+  @override
+  String get profilePhotoSectionSubtitle =>
+      'Personalize your profile and build trust.';
+
+  @override
+  String get profilePhotoUploadTitle => 'Upload a photo';
+
+  @override
+  String get profilePhotoUploadHint =>
+      'PNG or JPG, a clear face photo is recommended.';
+
+  @override
+  String get profilePhotoSelectAction => 'Choose photo';
+
+  @override
+  String get profilePersonalSectionTitle => 'Personal details';
+
+  @override
+  String get profilePersonalSectionSubtitle =>
+      'Update your name and identity details.';
+
+  @override
+  String get profileFirstNameLabel => 'First name';
+
+  @override
+  String get profileLastNameLabel => 'Last name';
+
+  @override
+  String get profileBirthDateLabel => 'Birth date';
+
+  @override
+  String get profileNationalIdLabel => 'National ID';
+
+  @override
+  String get profileContactSectionTitle => 'Contact';
+
+  @override
+  String get profileContactSectionSubtitle => 'Update your phone and address.';
+
+  @override
+  String get profilePhoneLabel => 'Phone';
+
+  @override
+  String get profileAddressLabel => 'Address';
+
+  @override
+  String get profileSavedMessage => 'Profile updated.';
+
+  @override
+  String get profileSaveFailed => 'Profile update failed.';
+
+  @override
+  String profileSaveFailedWithDetails(Object details) {
+    return 'Profile update failed: $details';
+  }
+
+  @override
+  String get settingsTitle => 'Settings';
+
+  @override
+  String get settingsInAppNotifications => 'In-app notifications';
+
+  @override
+  String get settingsEmailReminders => 'Email reminders';
+
+  @override
+  String get settingsLanguage => 'Language';
+
+  @override
+  String get settingsTheme => 'Theme';
+
+  @override
+  String get settingsThemeLight => 'Light';
+
+  @override
+  String get settingsThemeDark => 'Dark';
+
+  @override
+  String get settingsThemeSystem => 'System';
+
+  @override
+  String get profileDetailsTitle => 'Profile Details';
+
+  @override
+  String get profileDetailsSubtitle => 'Your account and contact info';
+
+  @override
+  String get profileEmailLabel => 'Email';
+
+  @override
+  String get profileGenderLabel => 'Gender';
+
+  @override
+  String get profileGenderFemale => 'Female';
+
+  @override
+  String get profileGenderMale => 'Male';
+
+  @override
+  String get profileGenderUnspecified => 'Not specified';
+
+  @override
+  String get profileVerificationStatus => 'Verification Status';
+
+  @override
+  String get profileVerificationPending => 'Pending Review';
+
+  @override
+  String get profileVerificationMissing => 'Not Verified';
+
+  @override
+  String get walletTitle => 'Wallet';
+
+  @override
+  String get walletHeaderTitle => 'Cashback';
+
+  @override
+  String get walletHeaderSubtitle => 'Earn rewards as you travel.';
+
+  @override
+  String get walletCashbackTitle => 'Cashback';
+
+  @override
+  String get walletCashbackTotalLabel => 'Total Cashback';
+
+  @override
+  String get walletCardsTitle => 'My Cards';
+
+  @override
+  String get walletAddCardTitle => 'Add Card';
+
+  @override
+  String get walletAddCardSubtitle => 'Save your card for faster payments.';
+
+  @override
+  String get walletCardNumberLabel => 'Card Number';
+
+  @override
+  String get walletCardNameLabel => 'Cardholder Name';
+
+  @override
+  String get walletCardExpiryLabel => 'Expiry';
+
+  @override
+  String get walletCardCvvLabel => 'CVV';
+
+  @override
+  String get walletAddCardAction => 'Save Card';
+
+  @override
+  String get walletCardsEmptyTitle => 'No cards yet';
+
+  @override
+  String get walletCardsEmptySubtitle => 'You can add your cards here.';
+
+  @override
+  String get walletTabTopUps => 'Top-ups';
+
+  @override
+  String get walletTabSpends => 'Spends';
+
+  @override
+  String get walletTabCashback => 'Cashback';
+
+  @override
+  String get walletFilterDateLabel => 'Date Range';
+
+  @override
+  String get walletFilterLast7 => 'Last 7 days';
+
+  @override
+  String get walletFilterLast30 => 'Last 30 days';
+
+  @override
+  String get walletFilterLast90 => 'Last 90 days';
+
+  @override
+  String get walletRulesAction => 'Rules';
+
+  @override
+  String get walletBalanceLabel => 'Cashback balance';
+
+  @override
+  String walletMonthlyEarnedLabel(Object amount) {
+    return '+$amount ₺ this month';
+  }
+
+  @override
+  String get walletUseCashbackAction => 'Use cashback';
+
+  @override
+  String get walletCouponsAction => 'Coupons';
+
+  @override
+  String get walletInviteAction => 'Invite';
+
+  @override
+  String get couponSectionTitle => 'Coupon code';
+
+  @override
+  String get couponSectionSubtitle => 'Apply a code for benefits or discounts.';
+
+  @override
+  String get couponInputLabel => 'Coupon code';
+
+  @override
+  String get couponApplyAction => 'Apply';
+
+  @override
+  String get couponAppliedMessage => 'Coupon applied.';
+
+  @override
+  String get couponInvalidMessage => 'Invalid coupon code.';
+
+  @override
+  String get couponFailedMessage => 'Coupon could not be applied.';
+
+  @override
+  String get topUpSectionTitle => 'Top up';
+
+  @override
+  String get topUpSectionSubtitle => 'Add money to your wallet securely.';
+
+  @override
+  String get topUpAmountLabel => 'Top-up amount (₺)';
+
+  @override
+  String get cardNumberLabel => 'Card number';
+
+  @override
+  String get cardHolderNameLabel => 'Cardholder name';
+
+  @override
+  String get cardExpiryLabel => 'Expiry (MM/YY)';
+
+  @override
+  String get cardCvvLabel => 'CVV';
+
+  @override
+  String get topUpPayAction => 'Pay';
+
+  @override
+  String get topUpConfirmTitle => 'Payment Confirmation';
+
+  @override
+  String topUpConfirmMessage(Object amount, Object card) {
+    return 'Confirm adding ₺$amount. Card: $card';
+  }
+
+  @override
+  String get topUpProcessingTitle => 'Processing Payment';
+
+  @override
+  String get topUpProcessingSubtitle => 'Verifying payment details securely.';
+
+  @override
+  String get topUpInvalidAmountMessage => 'Enter a valid amount.';
+
+  @override
+  String get topUpInvalidCardMessage => 'Enter valid card details.';
+
+  @override
+  String get topUpSuccessMessage => 'Top-up successful.';
+
+  @override
+  String get topUpFailedMessage => 'Top-up failed. Please try again.';
+
+  @override
+  String get topUpTransactionTitle => 'Wallet top-up';
+
+  @override
+  String get topUpTransactionCategory => 'Top-up';
+
+  @override
+  String get transferSectionTitle => 'Transfer';
+
+  @override
+  String get walletActionsTitle => 'Schnellaktionen';
+
+  @override
+  String get walletActionsSubtitle =>
+      'Coupon-, Auflade- oder Transfer-Schritte öffnen.';
+
+  @override
+  String get transferSectionSubtitle => 'Send money to another user.';
+
+  @override
+  String get transferTargetLabel => 'Recipient (phone/email/ID)';
+
+  @override
+  String get transferAmountLabel => 'Amount';
+
+  @override
+  String get transferNoteLabel => 'Note (optional)';
+
+  @override
+  String get transferAction => 'Transfer';
+
+  @override
+  String get transferInvalidMessage => 'Enter recipient and amount.';
+
+  @override
+  String get transferInsufficientBalanceMessage => 'Insufficient balance.';
+
+  @override
+  String get transferConfirmTitle => 'Confirm transfer';
+
+  @override
+  String transferConfirmMessage(Object target, Object amount) {
+    return 'Send $amount ₺ to $target?';
+  }
+
+  @override
+  String get transferSuccessMessage => 'Transfer successful.';
+
+  @override
+  String get transferFailedMessage => 'Transfer failed.';
+
+  @override
+  String transferTransactionTitle(Object target) {
+    return 'Transfer to $target';
+  }
+
+  @override
+  String get transferTransactionCategory => 'Transfer';
+
+  @override
+  String get walletMissionsTitle => 'Missions';
+
+  @override
+  String get walletTransactionsTitle => 'Transactions';
+
+  @override
+  String get walletEmptyTransactionsTitle => 'No transactions yet';
+
+  @override
+  String get walletEmptyTransactionsSubtitle =>
+      'Your cashback activity will appear here.';
+
+  @override
+  String get walletMockLocationTitle => 'Taksim KYRADI';
+
+  @override
+  String get walletMockPaymentTitle => 'Booking payment';
+
+  @override
+  String get walletMockCampaignTitle => 'Weekend campaign';
+
+  @override
+  String get walletMockAdjustmentTitle => 'Manual adjustment';
+
+  @override
+  String get walletTransactionCategoryCashback => 'Cashback';
+
+  @override
+  String get walletTransactionCategoryUsage => 'Usage';
+
+  @override
+  String get walletTransactionCategoryCampaign => 'Campaign';
+
+  @override
+  String get walletTransactionCategoryAdjustment => 'Adjustment';
+
+  @override
+  String get walletMissionExploreTitle => 'Explore 3 locations';
+
+  @override
+  String get walletMissionExploreSubtitle =>
+      'Visit or reserve any 3 partner locations.';
+
+  @override
+  String get walletMissionWeekendTitle => 'Weekend traveler';
+
+  @override
+  String get walletMissionWeekendSubtitle => 'Complete 2 weekend bookings.';
+
+  @override
+  String get walletMissionInviteTitle => 'Invite friends';
+
+  @override
+  String get walletMissionInviteSubtitle => 'Invite 3 friends to earn rewards.';
+
+  @override
+  String get supportSoonMessage => 'Support is coming soon.';
+
+  @override
+  String get supportChatTitle => 'Kyradi Support';
+
+  @override
+  String get supportChatGreeting =>
+      'Hi! Welcome to Kyradi Virtual Support. How can I help you?';
+
+  @override
+  String get supportChatHint => 'Type your message...';
+
+  @override
+  String get supportChatTyping => 'Typing...';
+
+  @override
+  String get supportChatFallback =>
+      'I couldn\'t fully understand. Could you share a bit more detail?';
+
+  @override
+  String get supportChatHelpCancel =>
+      'To cancel luggage: My Luggages > Details > Cancel.';
+
+  @override
+  String get supportChatHelpPayment =>
+      'If you see a payment error, share the error message and card activity so we can help.';
+
+  @override
+  String get supportChatHelpReservation =>
+      'You can create a reservation by choosing a location and date range.';
+
+  @override
+  String get supportChatHelpPickup =>
+      'You\'ll receive reminders near pickup time. If there is a delay, let support know.';
+
+  @override
+  String get supportChatHelpLocation =>
+      'You can view location availability on the Explore/Map screen.';
+
+  @override
+  String get supportChatHelpWallet => 'To top up, go to Wallet > Top Up.';
+
+  @override
+  String get qrScanSoonMessage => 'QR scanning is coming soon.';
+
+  @override
+  String get stepBagInfoTitle => 'Bavul Bilgileri';
+
+  @override
+  String get stepScheduleTitle => 'Lokasyon & Zaman';
+
+  @override
+  String get stepPricingTitle => 'Ücret & Opsiyonlar';
+
+  @override
+  String get stepPaymentTitle => 'Ödeme';
+
+  @override
+  String get stepSuccessTitle => 'Başarılı';
+
+  @override
+  String get continueAction => 'Devam Et';
+
+  @override
+  String get pricingDurationLabel => 'Süre';
+
+  @override
+  String pricingDurationValue(Object hours, Object days) {
+    return '$hours saat ($days gün)';
+  }
+
+  @override
+  String get pricingHourlyLabel => 'Saatlik hesap';
+
+  @override
+  String pricingHourlyValue(Object amount) {
+    return '$amount ₺';
+  }
+
+  @override
+  String get pricingDailyLabel => 'Günlük hesap';
+
+  @override
+  String pricingDailyValue(Object amount) {
+    return '$amount ₺';
+  }
+
+  @override
+  String get pricingBestPriceLabel => 'En iyi fiyat';
+
+  @override
+  String pricingBestValue(Object amount) {
+    return '$amount ₺';
+  }
+
+  @override
+  String get insuranceOptionTitle => 'Sigorta paketi';
+
+  @override
+  String get insuranceOptionSubtitle => 'Opsiyonel koruma (+99 ₺)';
+
+  @override
+  String get paymentMethodTransfer => 'Havale / EFT';
+
+  @override
+  String get paymentTransferNote => 'Dekont yükleyerek ödeme tamamlanır.';
+
+  @override
+  String get paymentHotelFeeNote =>
+      'Otelde ödeme seçilirse +%10 hizmet bedeli eklenir.';
+
+  @override
+  String get reservationSuccessTitle => 'Rezervasyon oluşturuldu';
+
+  @override
+  String get reservationSuccessSubtitle =>
+      'Bavulunuz için rezervasyon oluşturduk. Detayları Bavullarım’da görebilirsiniz.';
+
+  @override
+  String get reservationSuccessGoLuggages => 'Bavullarım’a git';
+
+  @override
+  String get reservationSuccessViewDetails => 'Detayları gör';
+
+  @override
+  String get reservationSuccessClose => 'Kapat';
+
+  @override
+  String get dropTimeTitle => 'Bırakma zamanı';
+
+  @override
+  String get pickupTimeTitle => 'Teslim alma zamanı';
+
+  @override
+  String get dropTimePlaceholder => 'Tarih ve saat seçin';
+
+  @override
+  String get pickupTimePlaceholder => 'Tarih ve saat seçin';
+
+  @override
+  String get paymentMethodWalletShort => 'Kyradi Cüzdan';
+
+  @override
+  String get invoiceSectionTitle => 'Fatura';
+
+  @override
+  String get invoiceSectionSubtitle => 'Ödeme özeti ve e-fatura görüntüle.';
+
+  @override
+  String get invoiceShowAction => 'Faturayı Göster';
+
+  @override
+  String get invoiceTitle => 'E-Fatura';
+
+  @override
+  String get invoiceNumberLabel => 'Fatura No';
+
+  @override
+  String get invoiceDateLabel => 'Tarih';
+
+  @override
+  String get invoiceCustomerLabel => 'Müşteri';
+
+  @override
+  String get invoiceCustomerFallback => 'Kyradi Misafiri';
+
+  @override
+  String get invoiceEmailLabel => 'E-posta';
+
+  @override
+  String get invoiceLocationLabel => 'Lokasyon';
+
+  @override
+  String get invoiceItemLabel => 'Hizmet';
+
+  @override
+  String get invoiceItemTitle => 'Bavul Rezervasyonu';
+
+  @override
+  String get invoiceItemDesc => 'Açıklama';
+
+  @override
+  String get invoiceItemSubtitle => 'Kyradi teslim-atma ve saklama hizmeti';
+
+  @override
+  String get invoicePaymentMethodLabel => 'Ödeme Yöntemi';
+
+  @override
+  String get invoicePaymentStatusLabel => 'Ödeme Durumu';
+
+  @override
+  String get invoiceAmountLabel => 'Tutar';
+
+  @override
+  String get invoiceVatLabel => 'KDV';
+
+  @override
+  String get invoiceVatValue => 'Dahil';
+
+  @override
+  String get invoiceTotalLabel => 'Genel Toplam';
+
+  @override
+  String get invoiceFooterNote =>
+      'Bu e-fatura Kyradi tarafından dijital olarak oluşturulmuştur.';
+
+  @override
+  String get luggageInfoSectionSubtitle =>
+      'Bavul bilgileri ve planlanan zamanlar.';
+
+  @override
+  String get closeAction => 'Kapat';
+
+  @override
+  String get reservationInfoTitle => 'Rezervasyon Bilgileri';
+
+  @override
+  String get reservationInfoSubtitle =>
+      'Rezervasyon süreci ve ödeme bilgileri.';
+
+  @override
+  String get luggageTimelinePayment => 'Ödeme';
+
+  @override
+  String get luggageTimelineTimeUnknown => 'Zaman bilgisi yok';
+
+  @override
+  String get invoiceDownloadAction => 'Faturayı İndir';
+
+  @override
+  String invoiceSavedMessage(Object file) {
+    return 'Fatura kaydedildi: $file';
+  }
+
+  @override
+  String get invoiceSaveFailedMessage => 'Fatura kaydedilemedi.';
 }

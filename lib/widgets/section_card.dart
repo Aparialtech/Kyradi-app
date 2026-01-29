@@ -49,7 +49,12 @@ class SectionCard extends StatelessWidget {
             ),
           ],
         ),
-        child: Padding(padding: padding, child: child),
+        child: Material(
+          color: Colors.transparent,
+          borderRadius: BorderRadius.circular(radius),
+          clipBehavior: Clip.antiAlias,
+          child: Padding(padding: padding, child: child),
+        ),
       ),
     );
   }
@@ -86,6 +91,20 @@ class SectionHeader extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              Container(
+                height: 4,
+                width: 28,
+                margin: const EdgeInsets.only(bottom: 8),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(999),
+                  gradient: LinearGradient(
+                    colors: [
+                      theme.colorScheme.primary.withValues(alpha: 0.9),
+                      theme.colorScheme.secondary.withValues(alpha: 0.8),
+                    ],
+                  ),
+                ),
+              ),
               Text(
                 title,
                 style: theme.textTheme.titleMedium?.copyWith(

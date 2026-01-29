@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 
 import '../core/drop_locations.dart';
 import '../l10n/app_localizations.dart';
+import '../services/api_service.dart';
 import '../widgets/section_card.dart';
 
 class LocationReservationPage extends StatelessWidget {
@@ -97,9 +98,13 @@ class LocationReservationPage extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 8),
-                LinearProgressIndicator(
-                  value: location.occupancyRate,
-                  backgroundColor: theme.colorScheme.primary.withValues(alpha: 0.08),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(999),
+                  child: LinearProgressIndicator(
+                    value: location.occupancyRate,
+                    backgroundColor:
+                        theme.colorScheme.primary.withValues(alpha: 0.08),
+                  ),
                 ),
               ],
             ),
@@ -171,16 +176,35 @@ class LocationReservationPage extends StatelessWidget {
                   icon: Icons.person_outline,
                 ),
                 const SizedBox(height: 12),
-                FilledButton.icon(
-                  onPressed: () => context.push('/login'),
-                  icon: const Icon(Icons.lock_open),
-                  label: Text(loc.loginButtonLabel),
-                ),
-                const SizedBox(height: 10),
-                OutlinedButton.icon(
-                  onPressed: () => context.push('/register'),
-                  icon: const Icon(Icons.person_add_alt_1),
-                  label: Text(loc.registerButtonLabel),
+                FutureBuilder<bool>(
+                  future: ApiService.isAuthenticatedAsync(),
+                  builder: (context, snapshot) {
+                    final authed = snapshot.data == true;
+                    if (authed) {
+                      return Text(
+                        loc.locationAuthReadyMessage,
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                      );
+                    }
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        FilledButton.icon(
+                          onPressed: () => context.push('/login'),
+                          icon: const Icon(Icons.lock_open),
+                          label: Text(loc.loginButtonLabel),
+                        ),
+                        const SizedBox(height: 10),
+                        OutlinedButton.icon(
+                          onPressed: () => context.push('/register'),
+                          icon: const Icon(Icons.person_add_alt_1),
+                          label: Text(loc.registerButtonLabel),
+                        ),
+                      ],
+                    );
+                  },
                 ),
               ],
             ),

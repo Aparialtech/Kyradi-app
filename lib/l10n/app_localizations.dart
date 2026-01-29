@@ -134,6 +134,36 @@ abstract class AppLocalizations {
   /// **'Konumumu Bul'**
   String get findLocation;
 
+  /// No description provided for @exploreResultsCount.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count} lokasyon'**
+  String exploreResultsCount(Object count);
+
+  /// No description provided for @exploreSortNearby.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yakına Göre'**
+  String get exploreSortNearby;
+
+  /// No description provided for @exploreSortName.
+  ///
+  /// In tr, this message translates to:
+  /// **'A-Z'**
+  String get exploreSortName;
+
+  /// No description provided for @exploreSortAvailability.
+  ///
+  /// In tr, this message translates to:
+  /// **'Müsaitliğe Göre'**
+  String get exploreSortAvailability;
+
+  /// No description provided for @exploreShowMore.
+  ///
+  /// In tr, this message translates to:
+  /// **'Daha Fazla Göster'**
+  String get exploreShowMore;
+
   /// No description provided for @destination.
   ///
   /// In tr, this message translates to:
@@ -307,6 +337,12 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Konum İzni'**
   String get locationPermission;
+
+  /// No description provided for @locationLabel.
+  ///
+  /// In tr, this message translates to:
+  /// **'Lokasyon'**
+  String get locationLabel;
 
   /// No description provided for @locationPermissionDesc.
   ///
@@ -656,6 +692,12 @@ abstract class AppLocalizations {
   /// **'Global Bavul Sistemi'**
   String get introTagline;
 
+  /// No description provided for @splashSlogan.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bavulunu bırak, şehri keşfet'**
+  String get splashSlogan;
+
   /// No description provided for @introTrackButton.
   ///
   /// In tr, this message translates to:
@@ -817,6 +859,12 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Bir hata oluştu: {details}'**
   String genericErrorWithDetails(Object details);
+
+  /// No description provided for @genericErrorMessage.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bir hata oluştu.'**
+  String get genericErrorMessage;
 
   /// No description provided for @loginVerificationRequired.
   ///
@@ -1199,7 +1247,7 @@ abstract class AppLocalizations {
   /// No description provided for @verificationTitle.
   ///
   /// In tr, this message translates to:
-  /// **'E-posta Doğrulama'**
+  /// **'Doğrulama'**
   String get verificationTitle;
 
   /// No description provided for @verificationInstructions.
@@ -1448,6 +1496,126 @@ abstract class AppLocalizations {
   /// **'Henüz kayıtlı bavul yok. Hemen yeni bir bavul ekleyin.'**
   String get luggageEmptyStateNoItems;
 
+  /// No description provided for @luggageSearchHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bavul adı, QR veya lokasyon ara'**
+  String get luggageSearchHint;
+
+  /// No description provided for @luggageSortLabel.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sırala'**
+  String get luggageSortLabel;
+
+  /// No description provided for @luggageSortDate.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tarihe Göre'**
+  String get luggageSortDate;
+
+  /// No description provided for @luggageSortStatus.
+  ///
+  /// In tr, this message translates to:
+  /// **'Duruma Göre'**
+  String get luggageSortStatus;
+
+  /// No description provided for @luggageSortLocation.
+  ///
+  /// In tr, this message translates to:
+  /// **'Lokasyona Göre'**
+  String get luggageSortLocation;
+
+  /// No description provided for @luggageSortPayment.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ödeme Durumu'**
+  String get luggageSortPayment;
+
+  /// No description provided for @luggageViewList.
+  ///
+  /// In tr, this message translates to:
+  /// **'Liste'**
+  String get luggageViewList;
+
+  /// No description provided for @luggageViewCards.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kart'**
+  String get luggageViewCards;
+
+  /// No description provided for @luggageViewCalendar.
+  ///
+  /// In tr, this message translates to:
+  /// **'Takvim'**
+  String get luggageViewCalendar;
+
+  /// No description provided for @luggageShowMore.
+  ///
+  /// In tr, this message translates to:
+  /// **'Daha Fazla Yükle'**
+  String get luggageShowMore;
+
+  /// No description provided for @luggageNoResultsTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sonuç bulunamadı'**
+  String get luggageNoResultsTitle;
+
+  /// No description provided for @luggageNoResultsSubtitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Aramanı veya filtrelerini değiştir.'**
+  String get luggageNoResultsSubtitle;
+
+  /// No description provided for @luggageFilterTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Filtreler'**
+  String get luggageFilterTitle;
+
+  /// No description provided for @luggageFilterStatus.
+  ///
+  /// In tr, this message translates to:
+  /// **'Durum'**
+  String get luggageFilterStatus;
+
+  /// No description provided for @luggageFilterPayment.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ödeme'**
+  String get luggageFilterPayment;
+
+  /// No description provided for @luggageFilterLocation.
+  ///
+  /// In tr, this message translates to:
+  /// **'Lokasyon'**
+  String get luggageFilterLocation;
+
+  /// No description provided for @luggageFilterSize.
+  ///
+  /// In tr, this message translates to:
+  /// **'Boyut'**
+  String get luggageFilterSize;
+
+  /// No description provided for @luggageFilterReset.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sıfırla'**
+  String get luggageFilterReset;
+
+  /// No description provided for @luggageFilterApply.
+  ///
+  /// In tr, this message translates to:
+  /// **'Uygula'**
+  String get luggageFilterApply;
+
+  /// No description provided for @comingSoonMessage.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu özellik yakında.'**
+  String get comingSoonMessage;
+
   /// No description provided for @luggageEmptyStateFiltered.
   ///
   /// In tr, this message translates to:
@@ -1597,6 +1765,42 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Ağırlık: {value} kg'**
   String luggageInfoWeight(Object value);
+
+  /// No description provided for @luggageInfoSectionTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bavul Bilgileri'**
+  String get luggageInfoSectionTitle;
+
+  /// No description provided for @luggageInfoLabelSize.
+  ///
+  /// In tr, this message translates to:
+  /// **'Boyut'**
+  String get luggageInfoLabelSize;
+
+  /// No description provided for @luggageInfoLabelWeight.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ağırlık'**
+  String get luggageInfoLabelWeight;
+
+  /// No description provided for @luggageInfoLabelColor.
+  ///
+  /// In tr, this message translates to:
+  /// **'Renk'**
+  String get luggageInfoLabelColor;
+
+  /// No description provided for @luggageInfoLabelPayment.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ödeme'**
+  String get luggageInfoLabelPayment;
+
+  /// No description provided for @luggageInfoLabelTotal.
+  ///
+  /// In tr, this message translates to:
+  /// **'Toplam'**
+  String get luggageInfoLabelTotal;
 
   /// No description provided for @luggageInfoColor.
   ///
@@ -2024,6 +2228,24 @@ abstract class AppLocalizations {
   /// **'Üyeysen giriş yap, değilsen hızlıca kayıt ol.'**
   String get continueSectionSubtitle;
 
+  /// No description provided for @locationAuthReadyMessage.
+  ///
+  /// In tr, this message translates to:
+  /// **'Devam etmek için hesabın hazır. Hemen rezervasyona geçebilirsin.'**
+  String get locationAuthReadyMessage;
+
+  /// No description provided for @exploreEmptyTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Konum bulunamadı.'**
+  String get exploreEmptyTitle;
+
+  /// No description provided for @exploreEmptySubtitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Filtreleri değiştirmeyi deneyin.'**
+  String get exploreEmptySubtitle;
+
   /// No description provided for @accountSectionSubtitle.
   ///
   /// In tr, this message translates to:
@@ -2180,6 +2402,96 @@ abstract class AppLocalizations {
   /// **'Kodun çerçeve içinde net görünmesine dikkat et.'**
   String get qrScanTip;
 
+  /// No description provided for @qrScanTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'QR Tara'**
+  String get qrScanTitle;
+
+  /// No description provided for @qrScanGuide.
+  ///
+  /// In tr, this message translates to:
+  /// **'QR okut veya manuel kod girerek rezervasyon detaylarına ulaş.'**
+  String get qrScanGuide;
+
+  /// No description provided for @qrManualEntry.
+  ///
+  /// In tr, this message translates to:
+  /// **'Manuel Giriş'**
+  String get qrManualEntry;
+
+  /// No description provided for @qrManualHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'QR kodunu veya rezervasyon kodunu gir'**
+  String get qrManualHint;
+
+  /// No description provided for @qrManualSearchAction.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kodu Sorgula'**
+  String get qrManualSearchAction;
+
+  /// No description provided for @qrAwaitingScan.
+  ///
+  /// In tr, this message translates to:
+  /// **'QR okutulduğunda rezervasyon bilgileri burada görünecek.'**
+  String get qrAwaitingScan;
+
+  /// No description provided for @qrNotFound.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu QR kodu için kayıt bulunamadı.'**
+  String get qrNotFound;
+
+  /// No description provided for @qrLookupFailed.
+  ///
+  /// In tr, this message translates to:
+  /// **'QR doğrulama başarısız. Lütfen tekrar deneyin.'**
+  String get qrLookupFailed;
+
+  /// No description provided for @qrReservationInfoTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Rezervasyon Bilgileri'**
+  String get qrReservationInfoTitle;
+
+  /// No description provided for @qrScanAgain.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tekrar Tara'**
+  String get qrScanAgain;
+
+  /// No description provided for @qrDropConfirmAction.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bavulu Bırak'**
+  String get qrDropConfirmAction;
+
+  /// No description provided for @qrConfirmDropTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bavul Bırakma'**
+  String get qrConfirmDropTitle;
+
+  /// No description provided for @qrConfirmDropMessage.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu bavulu teslim aldığınızı onaylıyor musunuz?'**
+  String get qrConfirmDropMessage;
+
+  /// No description provided for @qrDropSuccess.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bavul başarıyla teslim alındı.'**
+  String get qrDropSuccess;
+
+  /// No description provided for @qrDropFailed.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bavul teslim işlemi başarısız.'**
+  String get qrDropFailed;
+
   /// No description provided for @locationFetching.
   ///
   /// In tr, this message translates to:
@@ -2300,6 +2612,36 @@ abstract class AppLocalizations {
   /// **'Ödeme Yöntemi'**
   String get paymentMethodTitle;
 
+  /// No description provided for @paymentMethodWallet.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kyradi Cüzdan ile Öde (Bakiye: {balance} ₺)'**
+  String paymentMethodWallet(Object balance);
+
+  /// No description provided for @paymentWalletInsufficientTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bakiye Yetersiz'**
+  String get paymentWalletInsufficientTitle;
+
+  /// No description provided for @paymentWalletInsufficientMessage.
+  ///
+  /// In tr, this message translates to:
+  /// **'Cüzdan bakiyen {balance} ₺. Toplam tutar {amount} ₺. Para yükleyin veya kart ile ödeyin.'**
+  String paymentWalletInsufficientMessage(Object balance, Object amount);
+
+  /// No description provided for @paymentWalletTopUpAction.
+  ///
+  /// In tr, this message translates to:
+  /// **'Para Yükle'**
+  String get paymentWalletTopUpAction;
+
+  /// No description provided for @paymentWalletUseCardAction.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kart ile Öde'**
+  String get paymentWalletUseCardAction;
+
   /// No description provided for @paymentMethodCard.
   ///
   /// In tr, this message translates to:
@@ -2317,6 +2659,564 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Otelde öde'**
   String get paymentMethodPayAtHotel;
+
+  /// No description provided for @paymentMethodUnknown.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bilinmiyor'**
+  String get paymentMethodUnknown;
+
+  /// No description provided for @paymentStatusLabel.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ödeme Durumu'**
+  String get paymentStatusLabel;
+
+  /// No description provided for @paymentStatusUnknown.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bilinmiyor'**
+  String get paymentStatusUnknown;
+
+  /// No description provided for @luggageDetailsTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bavul Detayları'**
+  String get luggageDetailsTitle;
+
+  /// No description provided for @luggageDetailsSubtitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Rezervasyon ve ödeme bilgilerini görüntüleyin.'**
+  String get luggageDetailsSubtitle;
+
+  /// No description provided for @luggageIdLabel.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bavul ID'**
+  String get luggageIdLabel;
+
+  /// No description provided for @createdAtTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Oluşturulma'**
+  String get createdAtTitle;
+
+  /// No description provided for @statusUpdateFailed.
+  ///
+  /// In tr, this message translates to:
+  /// **'Durum güncellenemedi. Lütfen tekrar deneyin.'**
+  String get statusUpdateFailed;
+
+  /// No description provided for @inviteFriendsTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Arkadaş Davet Et'**
+  String get inviteFriendsTitle;
+
+  /// No description provided for @inviteFriendsHeadline.
+  ///
+  /// In tr, this message translates to:
+  /// **'Davet kodunu paylaş'**
+  String get inviteFriendsHeadline;
+
+  /// No description provided for @inviteFriendsSubtitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Arkadaşlarını davet et, rezervasyon yaptıkça cashback kazan.'**
+  String get inviteFriendsSubtitle;
+
+  /// No description provided for @inviteCodeCopied.
+  ///
+  /// In tr, this message translates to:
+  /// **'Davet kodu kopyalandı'**
+  String get inviteCodeCopied;
+
+  /// No description provided for @shareComingSoon.
+  ///
+  /// In tr, this message translates to:
+  /// **'Paylaşım yakında.'**
+  String get shareComingSoon;
+
+  /// No description provided for @shareAction.
+  ///
+  /// In tr, this message translates to:
+  /// **'Paylaş'**
+  String get shareAction;
+
+  /// No description provided for @cashbackRulesTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Cashback Kuralları'**
+  String get cashbackRulesTitle;
+
+  /// No description provided for @cashbackRuleEarnTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Cashback kazan'**
+  String get cashbackRuleEarnTitle;
+
+  /// No description provided for @cashbackRuleEarnSubtitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Uygun rezervasyon ve kampanyalardan cashback kazan.'**
+  String get cashbackRuleEarnSubtitle;
+
+  /// No description provided for @cashbackRuleUseTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Cashback kullan'**
+  String get cashbackRuleUseTitle;
+
+  /// No description provided for @cashbackRuleUseSubtitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Desteklenen lokasyonlarda ödeme sırasında cashback uygula.'**
+  String get cashbackRuleUseSubtitle;
+
+  /// No description provided for @cashbackRuleExpireTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Süre dolumu'**
+  String get cashbackRuleExpireTitle;
+
+  /// No description provided for @cashbackRuleExpireSubtitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Cashback kullanılmazsa 12 ay sonra sona erer.'**
+  String get cashbackRuleExpireSubtitle;
+
+  /// No description provided for @couponsTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kuponlar'**
+  String get couponsTitle;
+
+  /// No description provided for @couponWelcomeSubtitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bir sonraki rezervasyonunda %10 indirim.'**
+  String get couponWelcomeSubtitle;
+
+  /// No description provided for @couponCitySubtitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Şehir merkezi noktalarında 5 ₺ cashback.'**
+  String get couponCitySubtitle;
+
+  /// No description provided for @couponWeekendSubtitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Hafta sonu teslimde %15 indirim.'**
+  String get couponWeekendSubtitle;
+
+  /// No description provided for @crashLogsTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Çökme Kayıtları'**
+  String get crashLogsTitle;
+
+  /// No description provided for @crashLogsCopied.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kayıtlar kopyalandı'**
+  String get crashLogsCopied;
+
+  /// No description provided for @crashLogsEmpty.
+  ///
+  /// In tr, this message translates to:
+  /// **'Henüz kayıt yok.'**
+  String get crashLogsEmpty;
+
+  /// No description provided for @allLabel.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tümü'**
+  String get allLabel;
+
+  /// No description provided for @bookingUpcomingLabel.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yaklaşan'**
+  String get bookingUpcomingLabel;
+
+  /// No description provided for @bookingActiveLabel.
+  ///
+  /// In tr, this message translates to:
+  /// **'Aktif'**
+  String get bookingActiveLabel;
+
+  /// No description provided for @bookingPastLabel.
+  ///
+  /// In tr, this message translates to:
+  /// **'Geçmiş'**
+  String get bookingPastLabel;
+
+  /// No description provided for @supportSectionTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Destek'**
+  String get supportSectionTitle;
+
+  /// No description provided for @faqTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'SSS'**
+  String get faqTitle;
+
+  /// No description provided for @aboutKyradiTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kyradi Hakkında'**
+  String get aboutKyradiTitle;
+
+  /// No description provided for @whatsappLabel.
+  ///
+  /// In tr, this message translates to:
+  /// **'WhatsApp'**
+  String get whatsappLabel;
+
+  /// No description provided for @callLabel.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ara'**
+  String get callLabel;
+
+  /// No description provided for @emailLabel.
+  ///
+  /// In tr, this message translates to:
+  /// **'E-posta'**
+  String get emailLabel;
+
+  /// No description provided for @securitySectionTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Güvenlik'**
+  String get securitySectionTitle;
+
+  /// No description provided for @changePasswordTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Şifre değiştir'**
+  String get changePasswordTitle;
+
+  /// No description provided for @languageTurkish.
+  ///
+  /// In tr, this message translates to:
+  /// **'Türkçe'**
+  String get languageTurkish;
+
+  /// No description provided for @languageEnglish.
+  ///
+  /// In tr, this message translates to:
+  /// **'English'**
+  String get languageEnglish;
+
+  /// No description provided for @languageGerman.
+  ///
+  /// In tr, this message translates to:
+  /// **'Deutsch'**
+  String get languageGerman;
+
+  /// No description provided for @languageSpanish.
+  ///
+  /// In tr, this message translates to:
+  /// **'Español'**
+  String get languageSpanish;
+
+  /// No description provided for @languageRussian.
+  ///
+  /// In tr, this message translates to:
+  /// **'Русский'**
+  String get languageRussian;
+
+  /// No description provided for @filtersTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Filtreler'**
+  String get filtersTitle;
+
+  /// No description provided for @resetAction.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sıfırla'**
+  String get resetAction;
+
+  /// No description provided for @filterOpenNow.
+  ///
+  /// In tr, this message translates to:
+  /// **'Şu an açık'**
+  String get filterOpenNow;
+
+  /// No description provided for @filterAvailableSlots.
+  ///
+  /// In tr, this message translates to:
+  /// **'Uygun slotlar'**
+  String get filterAvailableSlots;
+
+  /// No description provided for @filterActiveLocations.
+  ///
+  /// In tr, this message translates to:
+  /// **'Aktif lokasyonlar'**
+  String get filterActiveLocations;
+
+  /// No description provided for @applyAction.
+  ///
+  /// In tr, this message translates to:
+  /// **'Uygula'**
+  String get applyAction;
+
+  /// No description provided for @refreshAction.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yenile'**
+  String get refreshAction;
+
+  /// No description provided for @faqQ1.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kyradi nasıl çalışır?'**
+  String get faqQ1;
+
+  /// No description provided for @faqA1.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bavulunu anlaşmalı noktaya bırak, QR/PIN ile teslim al.'**
+  String get faqA1;
+
+  /// No description provided for @faqQ2.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yerinde ödeme yapabilir miyim?'**
+  String get faqQ2;
+
+  /// No description provided for @faqA2.
+  ///
+  /// In tr, this message translates to:
+  /// **'Evet, lokasyonda veya kart ile ödeme yapabilirsin.'**
+  String get faqA2;
+
+  /// No description provided for @faqQ3.
+  ///
+  /// In tr, this message translates to:
+  /// **'Lokasyon doluysa ne olur?'**
+  String get faqQ3;
+
+  /// No description provided for @faqA3.
+  ///
+  /// In tr, this message translates to:
+  /// **'Farklı bir lokasyon veya saat seçebilirsin.'**
+  String get faqA3;
+
+  /// No description provided for @faqQ4.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kimlik nasıl yüklenir?'**
+  String get faqQ4;
+
+  /// No description provided for @faqA4.
+  ///
+  /// In tr, this message translates to:
+  /// **'Profil → Doğrulama → Kimlik adımlarını takip et.'**
+  String get faqA4;
+
+  /// No description provided for @aboutKyradiDescription.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kyradi, gezginleri güvenilir partner noktalarla buluşturan bir bavul depolama superapp’idir.'**
+  String get aboutKyradiDescription;
+
+  /// No description provided for @versionLabel.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sürüm'**
+  String get versionLabel;
+
+  /// No description provided for @accountVerificationTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Hesap Doğrulama'**
+  String get accountVerificationTitle;
+
+  /// No description provided for @requiredFieldLabel.
+  ///
+  /// In tr, this message translates to:
+  /// **'Zorunlu'**
+  String get requiredFieldLabel;
+
+  /// No description provided for @birthDateSelectLabel.
+  ///
+  /// In tr, this message translates to:
+  /// **'Doğum tarihi seç'**
+  String get birthDateSelectLabel;
+
+  /// No description provided for @birthDateRequiredMessage.
+  ///
+  /// In tr, this message translates to:
+  /// **'Doğum tarihi gerekli'**
+  String get birthDateRequiredMessage;
+
+  /// No description provided for @firebaseConfigMissing.
+  ///
+  /// In tr, this message translates to:
+  /// **'Firebase yapılandırması eksik.'**
+  String get firebaseConfigMissing;
+
+  /// No description provided for @googleTokenInvalid.
+  ///
+  /// In tr, this message translates to:
+  /// **'Google token doğrulanamadı. Lütfen tekrar deneyin.'**
+  String get googleTokenInvalid;
+
+  /// No description provided for @tokenInvalidMessage.
+  ///
+  /// In tr, this message translates to:
+  /// **'Geçersiz token.'**
+  String get tokenInvalidMessage;
+
+  /// No description provided for @socialTokenFormatInvalid.
+  ///
+  /// In tr, this message translates to:
+  /// **'Google token formatı geçersiz.'**
+  String get socialTokenFormatInvalid;
+
+  /// No description provided for @socialTokenInvalid.
+  ///
+  /// In tr, this message translates to:
+  /// **'Google oturumu doğrulanamadı, tekrar deneyin.'**
+  String get socialTokenInvalid;
+
+  /// No description provided for @authFlowWrong.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yanlış giriş akışı.'**
+  String get authFlowWrong;
+
+  /// No description provided for @socialLoginCancelled.
+  ///
+  /// In tr, this message translates to:
+  /// **'Giriş iptal edildi.'**
+  String get socialLoginCancelled;
+
+  /// No description provided for @authBusyMessage.
+  ///
+  /// In tr, this message translates to:
+  /// **'İşlem devam ediyor, lütfen bekleyin.'**
+  String get authBusyMessage;
+
+  /// No description provided for @googleConfigMissing.
+  ///
+  /// In tr, this message translates to:
+  /// **'Google giriş yapılandırması eksik.'**
+  String get googleConfigMissing;
+
+  /// No description provided for @googleConfigMissingIosScheme.
+  ///
+  /// In tr, this message translates to:
+  /// **'Google giriş yapılandırması eksik (iOS URL scheme).'**
+  String get googleConfigMissingIosScheme;
+
+  /// No description provided for @appleSignInUnavailable.
+  ///
+  /// In tr, this message translates to:
+  /// **'Apple ile giriş kullanılamıyor.'**
+  String get appleSignInUnavailable;
+
+  /// No description provided for @appleConfigMissing.
+  ///
+  /// In tr, this message translates to:
+  /// **'Apple giriş yapılandırması eksik.'**
+  String get appleConfigMissing;
+
+  /// No description provided for @retryAction.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tekrar Dene'**
+  String get retryAction;
+
+  /// No description provided for @verificationStatusVerified.
+  ///
+  /// In tr, this message translates to:
+  /// **'Hesap onaylı'**
+  String get verificationStatusVerified;
+
+  /// No description provided for @verificationStatusPending.
+  ///
+  /// In tr, this message translates to:
+  /// **'Doğrulama bekliyor'**
+  String get verificationStatusPending;
+
+  /// No description provided for @verificationStatusRequired.
+  ///
+  /// In tr, this message translates to:
+  /// **'Doğrulama gerekli'**
+  String get verificationStatusRequired;
+
+  /// No description provided for @verificationBadgeVerified.
+  ///
+  /// In tr, this message translates to:
+  /// **'Onaylı'**
+  String get verificationBadgeVerified;
+
+  /// No description provided for @verificationBadgePending.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bekliyor'**
+  String get verificationBadgePending;
+
+  /// No description provided for @verificationBadgeNew.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yeni'**
+  String get verificationBadgeNew;
+
+  /// No description provided for @viewAction.
+  ///
+  /// In tr, this message translates to:
+  /// **'Görüntüle'**
+  String get viewAction;
+
+  /// No description provided for @manageAction.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yönet'**
+  String get manageAction;
+
+  /// No description provided for @locationSlotsLabel.
+  ///
+  /// In tr, this message translates to:
+  /// **'{available}/{total} slot'**
+  String locationSlotsLabel(Object available, Object total);
+
+  /// No description provided for @quickActionScanQr.
+  ///
+  /// In tr, this message translates to:
+  /// **'Scan QR'**
+  String get quickActionScanQr;
+
+  /// No description provided for @quickActionCashback.
+  ///
+  /// In tr, this message translates to:
+  /// **'Cashback'**
+  String get quickActionCashback;
+
+  /// No description provided for @quickActionReservation.
+  ///
+  /// In tr, this message translates to:
+  /// **'Rezervasyon'**
+  String get quickActionReservation;
+
+  /// No description provided for @quickActionSupport.
+  ///
+  /// In tr, this message translates to:
+  /// **'Destek'**
+  String get quickActionSupport;
+
+  /// No description provided for @quickActionCampaigns.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kampanyalar'**
+  String get quickActionCampaigns;
 
   /// No description provided for @paymentHotelCommissionNote.
   ///
@@ -2389,6 +3289,12 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Ödemeyi Tamamla'**
   String get paymentCompleteAction;
+
+  /// No description provided for @paymentDemoBadge.
+  ///
+  /// In tr, this message translates to:
+  /// **'Demo Ödeme (Altyapı bağlanacak)'**
+  String get paymentDemoBadge;
 
   /// No description provided for @paymentFormIncompleteMessage.
   ///
@@ -3199,6 +4105,1398 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Sunucu adresi güncellendi.'**
   String get apiSettingsUpdatedSuccess;
+
+  /// No description provided for @rememberMeLabel.
+  ///
+  /// In tr, this message translates to:
+  /// **'Beni Hatırla'**
+  String get rememberMeLabel;
+
+  /// No description provided for @qrShowAction.
+  ///
+  /// In tr, this message translates to:
+  /// **'QR Göster'**
+  String get qrShowAction;
+
+  /// No description provided for @qrScanAction.
+  ///
+  /// In tr, this message translates to:
+  /// **'QR Okut'**
+  String get qrScanAction;
+
+  /// No description provided for @detailsAction.
+  ///
+  /// In tr, this message translates to:
+  /// **'Detay'**
+  String get detailsAction;
+
+  /// No description provided for @supportAction.
+  ///
+  /// In tr, this message translates to:
+  /// **'Destek'**
+  String get supportAction;
+
+  /// No description provided for @luggageStatusAwaitingDrop.
+  ///
+  /// In tr, this message translates to:
+  /// **'Teslim Bekliyor'**
+  String get luggageStatusAwaitingDrop;
+
+  /// No description provided for @luggageStatusDropped.
+  ///
+  /// In tr, this message translates to:
+  /// **'Depoda'**
+  String get luggageStatusDropped;
+
+  /// No description provided for @luggageStatusPickedUp.
+  ///
+  /// In tr, this message translates to:
+  /// **'Teslim Alındı'**
+  String get luggageStatusPickedUp;
+
+  /// No description provided for @luggageStatusCancelled.
+  ///
+  /// In tr, this message translates to:
+  /// **'İptal Edildi'**
+  String get luggageStatusCancelled;
+
+  /// No description provided for @paymentStatusPaid.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ödendi'**
+  String get paymentStatusPaid;
+
+  /// No description provided for @paymentStatusPending.
+  ///
+  /// In tr, this message translates to:
+  /// **'Beklemede'**
+  String get paymentStatusPending;
+
+  /// No description provided for @paymentStatusFailed.
+  ///
+  /// In tr, this message translates to:
+  /// **'Başarısız'**
+  String get paymentStatusFailed;
+
+  /// No description provided for @paymentStatusUnpaid.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ödenmedi'**
+  String get paymentStatusUnpaid;
+
+  /// No description provided for @luggageTimelineCreated.
+  ///
+  /// In tr, this message translates to:
+  /// **'Oluşturuldu'**
+  String get luggageTimelineCreated;
+
+  /// No description provided for @luggageTimelineScheduledDrop.
+  ///
+  /// In tr, this message translates to:
+  /// **'Planlanan bırakma'**
+  String get luggageTimelineScheduledDrop;
+
+  /// No description provided for @luggageTimelineDropped.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bırakıldı'**
+  String get luggageTimelineDropped;
+
+  /// No description provided for @luggageTimelineScheduledPickup.
+  ///
+  /// In tr, this message translates to:
+  /// **'Planlanan teslim alma'**
+  String get luggageTimelineScheduledPickup;
+
+  /// No description provided for @luggageTimelinePickedUp.
+  ///
+  /// In tr, this message translates to:
+  /// **'Teslim alındı'**
+  String get luggageTimelinePickedUp;
+
+  /// No description provided for @luggageTimelineLastUpdate.
+  ///
+  /// In tr, this message translates to:
+  /// **'Son güncelleme'**
+  String get luggageTimelineLastUpdate;
+
+  /// No description provided for @luggageTimelineScheduled.
+  ///
+  /// In tr, this message translates to:
+  /// **'Planlandı'**
+  String get luggageTimelineScheduled;
+
+  /// No description provided for @activeTripTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Aktif yolculuk'**
+  String get activeTripTitle;
+
+  /// No description provided for @seeAllAction.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tümünü gör'**
+  String get seeAllAction;
+
+  /// No description provided for @campaignsTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kampanyalar'**
+  String get campaignsTitle;
+
+  /// No description provided for @campaignsEmptyState.
+  ///
+  /// In tr, this message translates to:
+  /// **'Şu an kampanya yok.'**
+  String get campaignsEmptyState;
+
+  /// No description provided for @campaignsComingSoon.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kampanyalar yakında.'**
+  String get campaignsComingSoon;
+
+  /// No description provided for @campaignCityWelcomeTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Şehre Hoş Geldin'**
+  String get campaignCityWelcomeTitle;
+
+  /// No description provided for @campaignCityWelcomeSubtitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'İlk rezervasyonda %10 geri kazan.'**
+  String get campaignCityWelcomeSubtitle;
+
+  /// No description provided for @campaignWeekendTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Hafta Sonu Depolama'**
+  String get campaignWeekendTitle;
+
+  /// No description provided for @campaignWeekendSubtitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Hafta sonu bırakmalarında tasarruf et.'**
+  String get campaignWeekendSubtitle;
+
+  /// No description provided for @campaignAirportTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Havalimanı Bırakma'**
+  String get campaignAirportTitle;
+
+  /// No description provided for @campaignAirportSubtitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Havalimanı noktalarında ekstra puan.'**
+  String get campaignAirportSubtitle;
+
+  /// No description provided for @campaignNewTag.
+  ///
+  /// In tr, this message translates to:
+  /// **'YENİ'**
+  String get campaignNewTag;
+
+  /// No description provided for @campaignHotTag.
+  ///
+  /// In tr, this message translates to:
+  /// **'POPÜLER'**
+  String get campaignHotTag;
+
+  /// No description provided for @campaignBonusTag.
+  ///
+  /// In tr, this message translates to:
+  /// **'BONUS'**
+  String get campaignBonusTag;
+
+  /// No description provided for @profileVerifiedLabel.
+  ///
+  /// In tr, this message translates to:
+  /// **'Doğrulandı'**
+  String get profileVerifiedLabel;
+
+  /// No description provided for @profileEditTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Profil Düzenle'**
+  String get profileEditTitle;
+
+  /// No description provided for @profileSaveAction.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kaydet'**
+  String get profileSaveAction;
+
+  /// No description provided for @profilePhotoSectionTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Profil fotoğrafı'**
+  String get profilePhotoSectionTitle;
+
+  /// No description provided for @profilePhotoSectionSubtitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Profilini kişiselleştir ve güven ver.'**
+  String get profilePhotoSectionSubtitle;
+
+  /// No description provided for @profilePhotoUploadTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Fotoğraf yükle'**
+  String get profilePhotoUploadTitle;
+
+  /// No description provided for @profilePhotoUploadHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'PNG veya JPG, net bir yüz fotoğrafı önerilir.'**
+  String get profilePhotoUploadHint;
+
+  /// No description provided for @profilePhotoSelectAction.
+  ///
+  /// In tr, this message translates to:
+  /// **'Fotoğraf Seç'**
+  String get profilePhotoSelectAction;
+
+  /// No description provided for @profilePersonalSectionTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kişisel bilgiler'**
+  String get profilePersonalSectionTitle;
+
+  /// No description provided for @profilePersonalSectionSubtitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ad-soyad ve kimlik bilgilerini güncelle.'**
+  String get profilePersonalSectionSubtitle;
+
+  /// No description provided for @profileFirstNameLabel.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ad'**
+  String get profileFirstNameLabel;
+
+  /// No description provided for @profileLastNameLabel.
+  ///
+  /// In tr, this message translates to:
+  /// **'Soyad'**
+  String get profileLastNameLabel;
+
+  /// No description provided for @profileBirthDateLabel.
+  ///
+  /// In tr, this message translates to:
+  /// **'Doğum Tarihi'**
+  String get profileBirthDateLabel;
+
+  /// No description provided for @profileNationalIdLabel.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kimlik No'**
+  String get profileNationalIdLabel;
+
+  /// No description provided for @profileContactSectionTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'İletişim'**
+  String get profileContactSectionTitle;
+
+  /// No description provided for @profileContactSectionSubtitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Telefon ve adres bilgilerini güncelle.'**
+  String get profileContactSectionSubtitle;
+
+  /// No description provided for @profilePhoneLabel.
+  ///
+  /// In tr, this message translates to:
+  /// **'Telefon'**
+  String get profilePhoneLabel;
+
+  /// No description provided for @profileAddressLabel.
+  ///
+  /// In tr, this message translates to:
+  /// **'Adres'**
+  String get profileAddressLabel;
+
+  /// No description provided for @profileSavedMessage.
+  ///
+  /// In tr, this message translates to:
+  /// **'Profil güncellendi.'**
+  String get profileSavedMessage;
+
+  /// No description provided for @profileSaveFailed.
+  ///
+  /// In tr, this message translates to:
+  /// **'Profil güncellenemedi.'**
+  String get profileSaveFailed;
+
+  /// No description provided for @profileSaveFailedWithDetails.
+  ///
+  /// In tr, this message translates to:
+  /// **'Profil güncellenemedi: {details}'**
+  String profileSaveFailedWithDetails(Object details);
+
+  /// No description provided for @settingsTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ayarlar'**
+  String get settingsTitle;
+
+  /// No description provided for @settingsInAppNotifications.
+  ///
+  /// In tr, this message translates to:
+  /// **'Uygulama içi bildirimler'**
+  String get settingsInAppNotifications;
+
+  /// No description provided for @settingsEmailReminders.
+  ///
+  /// In tr, this message translates to:
+  /// **'E-posta hatırlatmaları'**
+  String get settingsEmailReminders;
+
+  /// No description provided for @settingsLanguage.
+  ///
+  /// In tr, this message translates to:
+  /// **'Dil'**
+  String get settingsLanguage;
+
+  /// No description provided for @settingsTheme.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tema'**
+  String get settingsTheme;
+
+  /// No description provided for @settingsThemeLight.
+  ///
+  /// In tr, this message translates to:
+  /// **'Açık'**
+  String get settingsThemeLight;
+
+  /// No description provided for @settingsThemeDark.
+  ///
+  /// In tr, this message translates to:
+  /// **'Koyu'**
+  String get settingsThemeDark;
+
+  /// No description provided for @settingsThemeSystem.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sistem'**
+  String get settingsThemeSystem;
+
+  /// No description provided for @profileDetailsTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Profil Bilgileri'**
+  String get profileDetailsTitle;
+
+  /// No description provided for @profileDetailsSubtitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Hesap ve iletişim bilgilerin'**
+  String get profileDetailsSubtitle;
+
+  /// No description provided for @profileEmailLabel.
+  ///
+  /// In tr, this message translates to:
+  /// **'E-posta'**
+  String get profileEmailLabel;
+
+  /// No description provided for @profileGenderLabel.
+  ///
+  /// In tr, this message translates to:
+  /// **'Cinsiyet'**
+  String get profileGenderLabel;
+
+  /// No description provided for @profileGenderFemale.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kadın'**
+  String get profileGenderFemale;
+
+  /// No description provided for @profileGenderMale.
+  ///
+  /// In tr, this message translates to:
+  /// **'Erkek'**
+  String get profileGenderMale;
+
+  /// No description provided for @profileGenderUnspecified.
+  ///
+  /// In tr, this message translates to:
+  /// **'Belirtilmedi'**
+  String get profileGenderUnspecified;
+
+  /// No description provided for @profileVerificationStatus.
+  ///
+  /// In tr, this message translates to:
+  /// **'Doğrulama Durumu'**
+  String get profileVerificationStatus;
+
+  /// No description provided for @profileVerificationPending.
+  ///
+  /// In tr, this message translates to:
+  /// **'İnceleme Bekliyor'**
+  String get profileVerificationPending;
+
+  /// No description provided for @profileVerificationMissing.
+  ///
+  /// In tr, this message translates to:
+  /// **'Doğrulanmadı'**
+  String get profileVerificationMissing;
+
+  /// No description provided for @walletTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Cüzdan'**
+  String get walletTitle;
+
+  /// No description provided for @walletHeaderTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Cashback'**
+  String get walletHeaderTitle;
+
+  /// No description provided for @walletHeaderSubtitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Seyahat ettikçe ödül kazan.'**
+  String get walletHeaderSubtitle;
+
+  /// No description provided for @walletCashbackTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Cashback'**
+  String get walletCashbackTitle;
+
+  /// No description provided for @walletCashbackTotalLabel.
+  ///
+  /// In tr, this message translates to:
+  /// **'Toplam Cashback'**
+  String get walletCashbackTotalLabel;
+
+  /// No description provided for @walletCardsTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kartlarım'**
+  String get walletCardsTitle;
+
+  /// No description provided for @walletAddCardTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kart Ekle'**
+  String get walletAddCardTitle;
+
+  /// No description provided for @walletAddCardSubtitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Hızlı ödeme için kart bilgilerini kaydet.'**
+  String get walletAddCardSubtitle;
+
+  /// No description provided for @walletCardNumberLabel.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kart Numarası'**
+  String get walletCardNumberLabel;
+
+  /// No description provided for @walletCardNameLabel.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kart Üzerindeki İsim'**
+  String get walletCardNameLabel;
+
+  /// No description provided for @walletCardExpiryLabel.
+  ///
+  /// In tr, this message translates to:
+  /// **'Son Kullanma'**
+  String get walletCardExpiryLabel;
+
+  /// No description provided for @walletCardCvvLabel.
+  ///
+  /// In tr, this message translates to:
+  /// **'CVV'**
+  String get walletCardCvvLabel;
+
+  /// No description provided for @walletAddCardAction.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kartı Kaydet'**
+  String get walletAddCardAction;
+
+  /// No description provided for @walletCardsEmptyTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kart bulunamadı'**
+  String get walletCardsEmptyTitle;
+
+  /// No description provided for @walletCardsEmptySubtitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Güvenli kartlarını buraya ekleyebilirsin.'**
+  String get walletCardsEmptySubtitle;
+
+  /// No description provided for @walletTabTopUps.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yüklemeler'**
+  String get walletTabTopUps;
+
+  /// No description provided for @walletTabSpends.
+  ///
+  /// In tr, this message translates to:
+  /// **'Harcamalar'**
+  String get walletTabSpends;
+
+  /// No description provided for @walletTabCashback.
+  ///
+  /// In tr, this message translates to:
+  /// **'Cashback'**
+  String get walletTabCashback;
+
+  /// No description provided for @walletFilterDateLabel.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tarih Aralığı'**
+  String get walletFilterDateLabel;
+
+  /// No description provided for @walletFilterLast7.
+  ///
+  /// In tr, this message translates to:
+  /// **'Son 7 gün'**
+  String get walletFilterLast7;
+
+  /// No description provided for @walletFilterLast30.
+  ///
+  /// In tr, this message translates to:
+  /// **'Son 30 gün'**
+  String get walletFilterLast30;
+
+  /// No description provided for @walletFilterLast90.
+  ///
+  /// In tr, this message translates to:
+  /// **'Son 90 gün'**
+  String get walletFilterLast90;
+
+  /// No description provided for @walletRulesAction.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kurallar'**
+  String get walletRulesAction;
+
+  /// No description provided for @walletBalanceLabel.
+  ///
+  /// In tr, this message translates to:
+  /// **'Cashback bakiyesi'**
+  String get walletBalanceLabel;
+
+  /// No description provided for @walletMonthlyEarnedLabel.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu ay +{amount} ₺'**
+  String walletMonthlyEarnedLabel(Object amount);
+
+  /// No description provided for @walletUseCashbackAction.
+  ///
+  /// In tr, this message translates to:
+  /// **'Cashback kullan'**
+  String get walletUseCashbackAction;
+
+  /// No description provided for @walletCouponsAction.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kuponlar'**
+  String get walletCouponsAction;
+
+  /// No description provided for @walletInviteAction.
+  ///
+  /// In tr, this message translates to:
+  /// **'Davet et'**
+  String get walletInviteAction;
+
+  /// No description provided for @couponSectionTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kupon kodu'**
+  String get couponSectionTitle;
+
+  /// No description provided for @couponSectionSubtitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Avantaj veya indirim için kod uygula.'**
+  String get couponSectionSubtitle;
+
+  /// No description provided for @couponInputLabel.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kupon kodu'**
+  String get couponInputLabel;
+
+  /// No description provided for @couponApplyAction.
+  ///
+  /// In tr, this message translates to:
+  /// **'Uygula'**
+  String get couponApplyAction;
+
+  /// No description provided for @couponAppliedMessage.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kupon uygulandı.'**
+  String get couponAppliedMessage;
+
+  /// No description provided for @couponInvalidMessage.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kupon geçersiz.'**
+  String get couponInvalidMessage;
+
+  /// No description provided for @couponFailedMessage.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kupon uygulanamadı.'**
+  String get couponFailedMessage;
+
+  /// No description provided for @topUpSectionTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Para yükle'**
+  String get topUpSectionTitle;
+
+  /// No description provided for @topUpSectionSubtitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Cüzdanına güvenle para ekle.'**
+  String get topUpSectionSubtitle;
+
+  /// No description provided for @topUpAmountLabel.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yükleme tutarı (₺)'**
+  String get topUpAmountLabel;
+
+  /// No description provided for @cardNumberLabel.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kart numarası'**
+  String get cardNumberLabel;
+
+  /// No description provided for @cardHolderNameLabel.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kart sahibi'**
+  String get cardHolderNameLabel;
+
+  /// No description provided for @cardExpiryLabel.
+  ///
+  /// In tr, this message translates to:
+  /// **'Son kullanma (AA/YY)'**
+  String get cardExpiryLabel;
+
+  /// No description provided for @cardCvvLabel.
+  ///
+  /// In tr, this message translates to:
+  /// **'CVV'**
+  String get cardCvvLabel;
+
+  /// No description provided for @topUpPayAction.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ödeme Yap'**
+  String get topUpPayAction;
+
+  /// No description provided for @topUpConfirmTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ödeme Onayı'**
+  String get topUpConfirmTitle;
+
+  /// No description provided for @topUpConfirmMessage.
+  ///
+  /// In tr, this message translates to:
+  /// **'{amount} ₺ yüklemek istediğine emin misin? Kart: {card}'**
+  String topUpConfirmMessage(Object amount, Object card);
+
+  /// No description provided for @topUpProcessingTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ödeme İşleniyor'**
+  String get topUpProcessingTitle;
+
+  /// No description provided for @topUpProcessingSubtitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Güvenli ödeme için doğrulama yapılıyor.'**
+  String get topUpProcessingSubtitle;
+
+  /// No description provided for @topUpInvalidAmountMessage.
+  ///
+  /// In tr, this message translates to:
+  /// **'Geçerli bir tutar gir.'**
+  String get topUpInvalidAmountMessage;
+
+  /// No description provided for @topUpInvalidCardMessage.
+  ///
+  /// In tr, this message translates to:
+  /// **'Geçerli kart bilgisi gir.'**
+  String get topUpInvalidCardMessage;
+
+  /// No description provided for @topUpSuccessMessage.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yükleme başarılı.'**
+  String get topUpSuccessMessage;
+
+  /// No description provided for @topUpFailedMessage.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yükleme başarısız. Tekrar dene.'**
+  String get topUpFailedMessage;
+
+  /// No description provided for @topUpTransactionTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Cüzdan yükleme'**
+  String get topUpTransactionTitle;
+
+  /// No description provided for @topUpTransactionCategory.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yükleme'**
+  String get topUpTransactionCategory;
+
+  /// No description provided for @transferSectionTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Transfer'**
+  String get transferSectionTitle;
+
+  /// No description provided for @walletActionsTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Hızlı işlemler'**
+  String get walletActionsTitle;
+
+  /// No description provided for @walletActionsSubtitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kupon, para yükleme ve transfer adımlarını aç.'**
+  String get walletActionsSubtitle;
+
+  /// No description provided for @transferSectionSubtitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Başka kullanıcıya para gönder.'**
+  String get transferSectionSubtitle;
+
+  /// No description provided for @transferTargetLabel.
+  ///
+  /// In tr, this message translates to:
+  /// **'Alıcı (telefon/e-posta/ID)'**
+  String get transferTargetLabel;
+
+  /// No description provided for @transferAmountLabel.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tutar'**
+  String get transferAmountLabel;
+
+  /// No description provided for @transferNoteLabel.
+  ///
+  /// In tr, this message translates to:
+  /// **'Not (opsiyonel)'**
+  String get transferNoteLabel;
+
+  /// No description provided for @transferAction.
+  ///
+  /// In tr, this message translates to:
+  /// **'Transfer Et'**
+  String get transferAction;
+
+  /// No description provided for @transferInvalidMessage.
+  ///
+  /// In tr, this message translates to:
+  /// **'Alıcı ve tutar girin.'**
+  String get transferInvalidMessage;
+
+  /// No description provided for @transferInsufficientBalanceMessage.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yetersiz bakiye.'**
+  String get transferInsufficientBalanceMessage;
+
+  /// No description provided for @transferConfirmTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Transferi onayla'**
+  String get transferConfirmTitle;
+
+  /// No description provided for @transferConfirmMessage.
+  ///
+  /// In tr, this message translates to:
+  /// **'{target} kişisine {amount} ₺ gönderilsin mi?'**
+  String transferConfirmMessage(Object target, Object amount);
+
+  /// No description provided for @transferSuccessMessage.
+  ///
+  /// In tr, this message translates to:
+  /// **'Transfer başarılı.'**
+  String get transferSuccessMessage;
+
+  /// No description provided for @transferFailedMessage.
+  ///
+  /// In tr, this message translates to:
+  /// **'Transfer başarısız.'**
+  String get transferFailedMessage;
+
+  /// No description provided for @transferTransactionTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'{target} kişisine transfer'**
+  String transferTransactionTitle(Object target);
+
+  /// No description provided for @transferTransactionCategory.
+  ///
+  /// In tr, this message translates to:
+  /// **'Transfer'**
+  String get transferTransactionCategory;
+
+  /// No description provided for @walletMissionsTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Görevler'**
+  String get walletMissionsTitle;
+
+  /// No description provided for @walletTransactionsTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'İşlemler'**
+  String get walletTransactionsTitle;
+
+  /// No description provided for @walletEmptyTransactionsTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Henüz işlem yok'**
+  String get walletEmptyTransactionsTitle;
+
+  /// No description provided for @walletEmptyTransactionsSubtitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Cashback hareketlerin burada görünecek.'**
+  String get walletEmptyTransactionsSubtitle;
+
+  /// No description provided for @walletMockLocationTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Taksim KYRADI'**
+  String get walletMockLocationTitle;
+
+  /// No description provided for @walletMockPaymentTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Rezervasyon ödemesi'**
+  String get walletMockPaymentTitle;
+
+  /// No description provided for @walletMockCampaignTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Hafta sonu kampanyası'**
+  String get walletMockCampaignTitle;
+
+  /// No description provided for @walletMockAdjustmentTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Manuel düzeltme'**
+  String get walletMockAdjustmentTitle;
+
+  /// No description provided for @walletTransactionCategoryCashback.
+  ///
+  /// In tr, this message translates to:
+  /// **'Cashback'**
+  String get walletTransactionCategoryCashback;
+
+  /// No description provided for @walletTransactionCategoryUsage.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kullanım'**
+  String get walletTransactionCategoryUsage;
+
+  /// No description provided for @walletTransactionCategoryCampaign.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kampanya'**
+  String get walletTransactionCategoryCampaign;
+
+  /// No description provided for @walletTransactionCategoryAdjustment.
+  ///
+  /// In tr, this message translates to:
+  /// **'Düzeltme'**
+  String get walletTransactionCategoryAdjustment;
+
+  /// No description provided for @walletMissionExploreTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'3 lokasyon keşfet'**
+  String get walletMissionExploreTitle;
+
+  /// No description provided for @walletMissionExploreSubtitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'3 partner lokasyonu ziyaret et veya rezervasyon yap.'**
+  String get walletMissionExploreSubtitle;
+
+  /// No description provided for @walletMissionWeekendTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Hafta sonu gezgini'**
+  String get walletMissionWeekendTitle;
+
+  /// No description provided for @walletMissionWeekendSubtitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'2 hafta sonu rezervasyonu tamamla.'**
+  String get walletMissionWeekendSubtitle;
+
+  /// No description provided for @walletMissionInviteTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Arkadaş daveti'**
+  String get walletMissionInviteTitle;
+
+  /// No description provided for @walletMissionInviteSubtitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'3 arkadaş davet ederek ödül kazan.'**
+  String get walletMissionInviteSubtitle;
+
+  /// No description provided for @supportSoonMessage.
+  ///
+  /// In tr, this message translates to:
+  /// **'Destek yakında.'**
+  String get supportSoonMessage;
+
+  /// No description provided for @supportChatTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kyradi Destek'**
+  String get supportChatTitle;
+
+  /// No description provided for @supportChatGreeting.
+  ///
+  /// In tr, this message translates to:
+  /// **'Merhaba! Kyradi Sanal Destek\'e hoş geldin. Nasıl yardımcı olabilirim?'**
+  String get supportChatGreeting;
+
+  /// No description provided for @supportChatHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Mesajınızı yazın...'**
+  String get supportChatHint;
+
+  /// No description provided for @supportChatTyping.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yazıyor...'**
+  String get supportChatTyping;
+
+  /// No description provided for @supportChatFallback.
+  ///
+  /// In tr, this message translates to:
+  /// **'Şu anda tam anlayamadım. Lütfen biraz daha detay verebilir misiniz?'**
+  String get supportChatFallback;
+
+  /// No description provided for @supportChatHelpCancel.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bavul iptali için: Bavullarım > Detay > İptal Et adımını kullanabilirsiniz.'**
+  String get supportChatHelpCancel;
+
+  /// No description provided for @supportChatHelpPayment.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ödeme konusunda hata alırsanız kart hareketleri ve hata mesajını paylaşın, yardımcı olalım.'**
+  String get supportChatHelpPayment;
+
+  /// No description provided for @supportChatHelpReservation.
+  ///
+  /// In tr, this message translates to:
+  /// **'Rezervasyon için uygun lokasyon ve tarih seçerek devam edebilirsiniz.'**
+  String get supportChatHelpReservation;
+
+  /// No description provided for @supportChatHelpPickup.
+  ///
+  /// In tr, this message translates to:
+  /// **'Teslim alma saati yaklaşınca hatırlatma alırsın. Gecikme varsa destekten bildir.'**
+  String get supportChatHelpPickup;
+
+  /// No description provided for @supportChatHelpLocation.
+  ///
+  /// In tr, this message translates to:
+  /// **'Lokasyonların doluluk bilgisini Keşfet ekranında görebilirsiniz.'**
+  String get supportChatHelpLocation;
+
+  /// No description provided for @supportChatHelpWallet.
+  ///
+  /// In tr, this message translates to:
+  /// **'Cüzdana para yüklemek için Cüzdan > Para Yükle adımını kullanabilirsiniz.'**
+  String get supportChatHelpWallet;
+
+  /// No description provided for @qrScanSoonMessage.
+  ///
+  /// In tr, this message translates to:
+  /// **'QR tarama yakında.'**
+  String get qrScanSoonMessage;
+
+  /// No description provided for @stepBagInfoTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bavul Bilgileri'**
+  String get stepBagInfoTitle;
+
+  /// No description provided for @stepScheduleTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Lokasyon & Zaman'**
+  String get stepScheduleTitle;
+
+  /// No description provided for @stepPricingTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ücret & Opsiyonlar'**
+  String get stepPricingTitle;
+
+  /// No description provided for @stepPaymentTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ödeme'**
+  String get stepPaymentTitle;
+
+  /// No description provided for @stepSuccessTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Başarılı'**
+  String get stepSuccessTitle;
+
+  /// No description provided for @continueAction.
+  ///
+  /// In tr, this message translates to:
+  /// **'Devam Et'**
+  String get continueAction;
+
+  /// No description provided for @pricingDurationLabel.
+  ///
+  /// In tr, this message translates to:
+  /// **'Süre'**
+  String get pricingDurationLabel;
+
+  /// No description provided for @pricingDurationValue.
+  ///
+  /// In tr, this message translates to:
+  /// **'{hours} saat ({days} gün)'**
+  String pricingDurationValue(Object hours, Object days);
+
+  /// No description provided for @pricingHourlyLabel.
+  ///
+  /// In tr, this message translates to:
+  /// **'Saatlik hesap'**
+  String get pricingHourlyLabel;
+
+  /// No description provided for @pricingHourlyValue.
+  ///
+  /// In tr, this message translates to:
+  /// **'{amount} ₺'**
+  String pricingHourlyValue(Object amount);
+
+  /// No description provided for @pricingDailyLabel.
+  ///
+  /// In tr, this message translates to:
+  /// **'Günlük hesap'**
+  String get pricingDailyLabel;
+
+  /// No description provided for @pricingDailyValue.
+  ///
+  /// In tr, this message translates to:
+  /// **'{amount} ₺'**
+  String pricingDailyValue(Object amount);
+
+  /// No description provided for @pricingBestPriceLabel.
+  ///
+  /// In tr, this message translates to:
+  /// **'En iyi fiyat'**
+  String get pricingBestPriceLabel;
+
+  /// No description provided for @pricingBestValue.
+  ///
+  /// In tr, this message translates to:
+  /// **'{amount} ₺'**
+  String pricingBestValue(Object amount);
+
+  /// No description provided for @insuranceOptionTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sigorta paketi'**
+  String get insuranceOptionTitle;
+
+  /// No description provided for @insuranceOptionSubtitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Opsiyonel koruma (+99 ₺)'**
+  String get insuranceOptionSubtitle;
+
+  /// No description provided for @paymentMethodTransfer.
+  ///
+  /// In tr, this message translates to:
+  /// **'Havale / EFT'**
+  String get paymentMethodTransfer;
+
+  /// No description provided for @paymentTransferNote.
+  ///
+  /// In tr, this message translates to:
+  /// **'Dekont yükleyerek ödeme tamamlanır.'**
+  String get paymentTransferNote;
+
+  /// No description provided for @paymentHotelFeeNote.
+  ///
+  /// In tr, this message translates to:
+  /// **'Otelde ödeme seçilirse +%10 hizmet bedeli eklenir.'**
+  String get paymentHotelFeeNote;
+
+  /// No description provided for @reservationSuccessTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Rezervasyon oluşturuldu'**
+  String get reservationSuccessTitle;
+
+  /// No description provided for @reservationSuccessSubtitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bavulunuz için rezervasyon oluşturduk. Detayları Bavullarım’da görebilirsiniz.'**
+  String get reservationSuccessSubtitle;
+
+  /// No description provided for @reservationSuccessGoLuggages.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bavullarım’a git'**
+  String get reservationSuccessGoLuggages;
+
+  /// No description provided for @reservationSuccessViewDetails.
+  ///
+  /// In tr, this message translates to:
+  /// **'Detayları gör'**
+  String get reservationSuccessViewDetails;
+
+  /// No description provided for @reservationSuccessClose.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kapat'**
+  String get reservationSuccessClose;
+
+  /// No description provided for @dropTimeTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bırakma zamanı'**
+  String get dropTimeTitle;
+
+  /// No description provided for @pickupTimeTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Teslim alma zamanı'**
+  String get pickupTimeTitle;
+
+  /// No description provided for @dropTimePlaceholder.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tarih ve saat seçin'**
+  String get dropTimePlaceholder;
+
+  /// No description provided for @pickupTimePlaceholder.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tarih ve saat seçin'**
+  String get pickupTimePlaceholder;
+
+  /// No description provided for @paymentMethodWalletShort.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kyradi Cüzdan'**
+  String get paymentMethodWalletShort;
+
+  /// No description provided for @invoiceSectionTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Fatura'**
+  String get invoiceSectionTitle;
+
+  /// No description provided for @invoiceSectionSubtitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ödeme özeti ve e-fatura görüntüle.'**
+  String get invoiceSectionSubtitle;
+
+  /// No description provided for @invoiceShowAction.
+  ///
+  /// In tr, this message translates to:
+  /// **'Faturayı Göster'**
+  String get invoiceShowAction;
+
+  /// No description provided for @invoiceTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'E-Fatura'**
+  String get invoiceTitle;
+
+  /// No description provided for @invoiceNumberLabel.
+  ///
+  /// In tr, this message translates to:
+  /// **'Fatura No'**
+  String get invoiceNumberLabel;
+
+  /// No description provided for @invoiceDateLabel.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tarih'**
+  String get invoiceDateLabel;
+
+  /// No description provided for @invoiceCustomerLabel.
+  ///
+  /// In tr, this message translates to:
+  /// **'Müşteri'**
+  String get invoiceCustomerLabel;
+
+  /// No description provided for @invoiceCustomerFallback.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kyradi Misafiri'**
+  String get invoiceCustomerFallback;
+
+  /// No description provided for @invoiceEmailLabel.
+  ///
+  /// In tr, this message translates to:
+  /// **'E-posta'**
+  String get invoiceEmailLabel;
+
+  /// No description provided for @invoiceLocationLabel.
+  ///
+  /// In tr, this message translates to:
+  /// **'Lokasyon'**
+  String get invoiceLocationLabel;
+
+  /// No description provided for @invoiceItemLabel.
+  ///
+  /// In tr, this message translates to:
+  /// **'Hizmet'**
+  String get invoiceItemLabel;
+
+  /// No description provided for @invoiceItemTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bavul Rezervasyonu'**
+  String get invoiceItemTitle;
+
+  /// No description provided for @invoiceItemDesc.
+  ///
+  /// In tr, this message translates to:
+  /// **'Açıklama'**
+  String get invoiceItemDesc;
+
+  /// No description provided for @invoiceItemSubtitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kyradi teslim-atma ve saklama hizmeti'**
+  String get invoiceItemSubtitle;
+
+  /// No description provided for @invoicePaymentMethodLabel.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ödeme Yöntemi'**
+  String get invoicePaymentMethodLabel;
+
+  /// No description provided for @invoicePaymentStatusLabel.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ödeme Durumu'**
+  String get invoicePaymentStatusLabel;
+
+  /// No description provided for @invoiceAmountLabel.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tutar'**
+  String get invoiceAmountLabel;
+
+  /// No description provided for @invoiceVatLabel.
+  ///
+  /// In tr, this message translates to:
+  /// **'KDV'**
+  String get invoiceVatLabel;
+
+  /// No description provided for @invoiceVatValue.
+  ///
+  /// In tr, this message translates to:
+  /// **'Dahil'**
+  String get invoiceVatValue;
+
+  /// No description provided for @invoiceTotalLabel.
+  ///
+  /// In tr, this message translates to:
+  /// **'Genel Toplam'**
+  String get invoiceTotalLabel;
+
+  /// No description provided for @invoiceFooterNote.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu e-fatura Kyradi tarafından dijital olarak oluşturulmuştur.'**
+  String get invoiceFooterNote;
+
+  /// No description provided for @luggageInfoSectionSubtitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bavul bilgileri ve planlanan zamanlar.'**
+  String get luggageInfoSectionSubtitle;
+
+  /// No description provided for @closeAction.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kapat'**
+  String get closeAction;
+
+  /// No description provided for @reservationInfoTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Rezervasyon Bilgileri'**
+  String get reservationInfoTitle;
+
+  /// No description provided for @reservationInfoSubtitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Rezervasyon süreci ve ödeme bilgileri.'**
+  String get reservationInfoSubtitle;
+
+  /// No description provided for @luggageTimelinePayment.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ödeme'**
+  String get luggageTimelinePayment;
+
+  /// No description provided for @luggageTimelineTimeUnknown.
+  ///
+  /// In tr, this message translates to:
+  /// **'Zaman bilgisi yok'**
+  String get luggageTimelineTimeUnknown;
+
+  /// No description provided for @invoiceDownloadAction.
+  ///
+  /// In tr, this message translates to:
+  /// **'Faturayı İndir'**
+  String get invoiceDownloadAction;
+
+  /// No description provided for @invoiceSavedMessage.
+  ///
+  /// In tr, this message translates to:
+  /// **'Fatura kaydedildi: {file}'**
+  String invoiceSavedMessage(Object file);
+
+  /// No description provided for @invoiceSaveFailedMessage.
+  ///
+  /// In tr, this message translates to:
+  /// **'Fatura kaydedilemedi.'**
+  String get invoiceSaveFailedMessage;
 }
 
 class _AppLocalizationsDelegate

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../../models/luggage.dart';
+import '../../../l10n/app_localizations.dart';
 
 class TripTimelineSheet extends StatelessWidget {
   const TripTimelineSheet({
@@ -12,6 +13,7 @@ class TripTimelineSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final loc = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
     final fmt = DateFormat('dd MMM HH:mm');
     final items = _buildTimeline(context);
@@ -95,45 +97,56 @@ class TripTimelineSheet extends StatelessWidget {
   }
 
   List<_TimelineItem> _buildTimeline(BuildContext context) {
-    final now = DateTime.now();
+    final loc = AppLocalizations.of(context)!;
     final items = <_TimelineItem>[
       _TimelineItem(
-        title: 'Created',
+        title: loc.luggageTimelineCreated,
         time: luggage.createdAt,
         highlight: true,
       ),
+      if ((luggage.paymentStatus ?? '').isNotEmpty)
+        _TimelineItem(
+          title: loc.luggageTimelinePayment,
+          time: luggage.paidAt,
+          subtitle: _paymentStatusLabel(loc, luggage.paymentStatus),
+          highlight: luggage.paymentStatus == paymentStatusPaid,
+        ),
       if (luggage.scheduledDropTime != null)
         _TimelineItem(
-          title: 'Scheduled drop',
+          title: loc.luggageTimelineScheduledDrop,
           time: luggage.scheduledDropTime,
         ),
-      if (luggage.dropConfirmedAt != null)
+      if (luggage.dropConfirmedAt != null ||
+          luggage.status == LuggageStatus.dropped ||
+          luggage.status == LuggageStatus.pickedUp)
         _TimelineItem(
-          title: 'Dropped',
+          title: loc.luggageTimelineDropped,
           time: luggage.dropConfirmedAt,
+          subtitle: luggage.dropConfirmedAt == null
+              ? loc.luggageTimelineTimeUnknown
+              : '',
+          highlight: luggage.status == LuggageStatus.dropped,
         ),
       if (luggage.scheduledPickupTime != null)
         _TimelineItem(
-          title: 'Scheduled pickup',
+          title: loc.luggageTimelineScheduledPickup,
           time: luggage.scheduledPickupTime,
         ),
-      if (luggage.pickupConfirmedAt != null)
+      if (luggage.pickupConfirmedAt != null ||
+          luggage.status == LuggageStatus.pickedUp)
         _TimelineItem(
-          title: 'Picked up',
+          title: loc.luggageTimelinePickedUp,
           time: luggage.pickupConfirmedAt,
+          subtitle: luggage.pickupConfirmedAt == null
+              ? loc.luggageTimelineTimeUnknown
+              : '',
+          highlight: luggage.status == LuggageStatus.pickedUp,
         ),
       _TimelineItem(
-        title: 'Status',
-        subtitle: luggage.statusLabel,
+        title: loc.statusLabel,
+        subtitle: _statusLabel(loc, luggage.status),
         time: null,
-        highlight: luggage.dropConfirmedAt == null && luggage.pickupConfirmedAt == null
-            ? true
-            : false,
-      ),
-      _TimelineItem(
-        title: now.isAfter(luggage.createdAt) ? 'Last update' : 'Scheduled',
-        subtitle: luggage.statusLabel,
-        highlight: false,
+        highlight: luggage.status != LuggageStatus.awaitingDrop,
       ),
     ];
     for (var i = 0; i < items.length; i++) {
@@ -166,5 +179,33 @@ class _TimelineItem {
       highlight: highlight,
       isLast: isLast ?? this.isLast,
     );
+  }
+}
+
+String _statusLabel(AppLocalizations loc, LuggageStatus status) {
+  switch (status) {
+    case LuggageStatus.awaitingDrop:
+      return loc.luggageStatusAwaitingDrop;
+    case LuggageStatus.dropped:
+      return loc.luggageStatusDropped;
+    case LuggageStatus.pickedUp:
+      return loc.luggageStatusPickedUp;
+    case LuggageStatus.cancelled:
+      return loc.luggageStatusCancelled;
+  }
+}
+
+String _paymentStatusLabel(AppLocalizations loc, String? status) {
+  switch (status) {
+    case paymentStatusPaid:
+      return loc.paymentStatusPaid;
+    case paymentStatusPending:
+      return loc.paymentStatusPending;
+    case paymentStatusFailed:
+      return loc.paymentStatusFailed;
+    case paymentStatusUnpaid:
+      return loc.paymentStatusUnpaid;
+    default:
+      return loc.paymentStatusUnknown;
   }
 }

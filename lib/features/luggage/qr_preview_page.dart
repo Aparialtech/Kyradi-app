@@ -119,7 +119,7 @@ class QrPreviewPage extends StatelessWidget {
               _InfoRow(
                 icon: Icons.info_outline,
                 label: loc.statusLabel,
-                value: luggage.statusLabel,
+                value: _statusLabel(loc, luggage.status),
               ),
               const SizedBox(height: 8),
               Text(
@@ -202,6 +202,19 @@ class _InfoRow extends StatelessWidget {
         ],
       ),
     );
+  }
+}
+
+String _statusLabel(AppLocalizations loc, LuggageStatus status) {
+  switch (status) {
+    case LuggageStatus.awaitingDrop:
+      return loc.luggageStatusAwaitingDrop;
+    case LuggageStatus.dropped:
+      return loc.luggageStatusDropped;
+    case LuggageStatus.pickedUp:
+      return loc.luggageStatusPickedUp;
+    case LuggageStatus.cancelled:
+      return loc.luggageStatusCancelled;
   }
 }
 

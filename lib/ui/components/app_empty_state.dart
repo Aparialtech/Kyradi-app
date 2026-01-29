@@ -23,7 +23,23 @@ class AppEmptyState extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.inbox_outlined, size: 42, color: theme.colorScheme.outline),
+            Container(
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: LinearGradient(
+                  colors: [
+                    theme.colorScheme.primary.withValues(alpha: 0.12),
+                    theme.colorScheme.secondary.withValues(alpha: 0.12),
+                  ],
+                ),
+              ),
+              child: Icon(
+                Icons.inbox_outlined,
+                size: 34,
+                color: theme.colorScheme.primary,
+              ),
+            ),
             const SizedBox(height: 12),
             Text(
               title,
@@ -41,7 +57,7 @@ class AppEmptyState extends StatelessWidget {
             ),
             if (actionLabel != null) ...[
               const SizedBox(height: 16),
-              OutlinedButton.icon(
+              FilledButton.icon(
                 onPressed: onAction,
                 icon: const Icon(Icons.add),
                 label: Text(actionLabel!),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../models/luggage.dart';
+import '../../../l10n/app_localizations.dart';
 import '../../../ui/components/app_empty_state.dart';
 import '../../../ui/components/app_error_state.dart';
 import '../../../ui/components/app_skeleton.dart';
@@ -35,6 +36,7 @@ class ActiveTripCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final loc = AppLocalizations.of(context)!;
     return Card(
       margin: EdgeInsets.zero,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
@@ -43,6 +45,20 @@ class ActiveTripCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            Container(
+              height: 4,
+              width: 26,
+              margin: const EdgeInsets.only(bottom: 10),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(999),
+                gradient: LinearGradient(
+                  colors: [
+                    theme.colorScheme.primary.withValues(alpha: 0.9),
+                    theme.colorScheme.secondary.withValues(alpha: 0.8),
+                  ],
+                ),
+              ),
+            ),
             Text(
               title,
               style: theme.textTheme.titleMedium?.copyWith(
@@ -83,7 +99,7 @@ class ActiveTripCard extends StatelessWidget {
                   ),
                   const SizedBox(height: 6),
                   Text(
-                    luggage!.statusLabel,
+                    _statusLabel(loc, luggage!.status),
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: theme.colorScheme.primary,
                       fontWeight: FontWeight.w600,
@@ -96,12 +112,12 @@ class ActiveTripCard extends StatelessWidget {
                       FilledButton.icon(
                         onPressed: onShowQr,
                         icon: const Icon(Icons.qr_code_2),
-                        label: const Text('QR'),
+                        label: Text(loc.qrShowAction),
                       ),
                       OutlinedButton.icon(
                         onPressed: onDetails,
                         icon: const Icon(Icons.open_in_new),
-                        label: const Text('Details'),
+                        label: Text(loc.detailsAction),
                       ),
                     ],
                   ),
@@ -111,5 +127,18 @@ class ActiveTripCard extends StatelessWidget {
         ),
       ),
     );
+  }
+}
+
+String _statusLabel(AppLocalizations loc, LuggageStatus status) {
+  switch (status) {
+    case LuggageStatus.awaitingDrop:
+      return loc.luggageStatusAwaitingDrop;
+    case LuggageStatus.dropped:
+      return loc.luggageStatusDropped;
+    case LuggageStatus.pickedUp:
+      return loc.luggageStatusPickedUp;
+    case LuggageStatus.cancelled:
+      return loc.luggageStatusCancelled;
   }
 }

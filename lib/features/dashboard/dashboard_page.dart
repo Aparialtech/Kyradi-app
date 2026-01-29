@@ -8,14 +8,20 @@ import '../../widgets/app_notification.dart';
 import '../../widgets/section_card.dart';
 import '../../ui/components/app_section_header.dart';
 import '../../ui/components/app_error_state.dart';
+import '../../core/profile_avatar_cache.dart';
+import '../../core/ios/ios_config_service.dart';
+import 'package:flutter/foundation.dart';
 import 'package:go_router/go_router.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import '../dashboard/widgets/active_trip_card.dart';
 import '../dashboard/widgets/campaign_carousel.dart';
 import '../dashboard/widgets/dashboard_search_bar.dart';
 import '../dashboard/widgets/dashboard_top_bar.dart';
 import '../dashboard/widgets/nearby_locations_carousel.dart';
 import '../dashboard/widgets/quick_actions_grid.dart';
+import '../support/support_chat_page.dart';
 import '../wallet/wallet_page.dart';
+import '../campaigns/campaigns_page.dart';
 
 class DashboardPage extends StatefulWidget {
   const DashboardPage({super.key});
@@ -31,12 +37,19 @@ class _DashboardPageState extends State<DashboardPage> {
   String? _luggageError;
   String? _locationError;
   bool _profileLoading = false;
+  bool _homeMapReady = false;
+  DropLocation? _homeMapSelected;
 
   @override
   void initState() {
     super.initState();
     _controller = HomeController();
     _controller.addListener(_onControllerChanged);
+    if (defaultTargetPlatform != TargetPlatform.iOS) {
+      _homeMapReady = true;
+    } else {
+      _checkHomeMapKey();
+    }
     _loadLocations();
     _restoreUserIdThenLoad();
   }
@@ -74,6 +87,7 @@ class _DashboardPageState extends State<DashboardPage> {
         setState(() => _profileError = 'Missing user id');
         return;
       }
+      await ProfileAvatarCache.load(_controller.userId);
       await _loadProfile(_controller.userId!);
       await _loadLuggages(_controller.userId!);
     } catch (e) {
@@ -140,7 +154,7 @@ class _DashboardPageState extends State<DashboardPage> {
   }
 
   void _openLuggageCenter() {
-    context.go('/luggage');
+    context.push('/luggage');
   }
 
   void _openQrPreview(LuggageModel luggage) {
@@ -148,45 +162,64 @@ class _DashboardPageState extends State<DashboardPage> {
   }
 
   void _openLocationDetails(DropLocation location) {
-    context.push('/location/${location.id}');
+    context.push('/home/location/${location.id}');
+  }
+
+  Future<void> _checkHomeMapKey() async {
+    if (defaultTargetPlatform != TargetPlatform.iOS) return;
+    final hasKey = await IosConfigService.hasGmsApiKey();
+    if (!mounted) return;
+    setState(() => _homeMapReady = hasKey);
+    if (!hasKey) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        AppNotification.show(
+          context,
+          message: AppLocalizations.of(context)!.mapsMissingApiKey,
+          type: AppNotificationType.warning,
+        );
+      });
+    }
   }
 
   List<QuickActionItem> _buildQuickActions(AppLocalizations loc) {
     return [
       QuickActionItem(
         label: loc.quickAddLuggage,
-        icon: Icons.add_box_outlined,
+        icon: Icons.add_box_rounded,
         onTap: _openAddLuggage,
       ),
       QuickActionItem(
-        label: 'Scan QR',
-        icon: Icons.qr_code_scanner,
-        onTap: () => context.go('/luggage'),
+        label: loc.quickActionScanQr,
+        icon: Icons.qr_code_rounded,
+        onTap: () => context.push('/qr/scan'),
       ),
       QuickActionItem(
-        label: 'Cashback',
-        icon: Icons.savings_outlined,
+        label: loc.quickActionCashback,
+        icon: Icons.credit_card_rounded,
         onTap: () => Navigator.of(context).push(
           MaterialPageRoute(builder: (_) => const WalletPage()),
         ),
       ),
       QuickActionItem(
-        label: 'Reservation',
-        icon: Icons.event_available_outlined,
+        label: loc.quickActionReservation,
+        icon: Icons.event_available_rounded,
         onTap: () {
           context.go('/explore');
         },
       ),
       QuickActionItem(
-        label: 'Support',
-        icon: Icons.support_agent_outlined,
+        label: loc.quickActionSupport,
+        icon: Icons.support_agent_rounded,
         onTap: () {
-          _snack('Support is coming soon', type: AppNotificationType.info);
+          Navigator.of(context).push(
+            MaterialPageRoute(builder: (_) => const SupportChatPage()),
+          );
         },
       ),
       QuickActionItem(
-        label: 'Campaigns',
-        icon: Icons.local_offer_outlined,
+        label: loc.quickActionCampaigns,
+        icon: Icons.local_activity_rounded,
         onTap: () {
           Navigator.of(context).push(
             MaterialPageRoute(builder: (_) => const CampaignsPage()),
@@ -208,20 +241,20 @@ class _DashboardPageState extends State<DashboardPage> {
     final nearbyLocations = _controller.locations.take(6).toList();
 
     final campaigns = [
-      const CampaignItem(
-        title: 'City Welcome',
-        subtitle: 'Get 10% back on your first booking.',
-        tag: 'NEW',
+      CampaignItem(
+        title: loc.campaignCityWelcomeTitle,
+        subtitle: loc.campaignCityWelcomeSubtitle,
+        tag: loc.campaignNewTag,
       ),
-      const CampaignItem(
-        title: 'Weekend Storage',
-        subtitle: 'Save on weekend drop-offs.',
-        tag: 'HOT',
+      CampaignItem(
+        title: loc.campaignWeekendTitle,
+        subtitle: loc.campaignWeekendSubtitle,
+        tag: loc.campaignHotTag,
       ),
-      const CampaignItem(
-        title: 'Airport Drop',
-        subtitle: 'Extra points for airport locations.',
-        tag: 'BONUS',
+      CampaignItem(
+        title: loc.campaignAirportTitle,
+        subtitle: loc.campaignAirportSubtitle,
+        tag: loc.campaignBonusTag,
       ),
     ];
 
@@ -238,10 +271,16 @@ class _DashboardPageState extends State<DashboardPage> {
           child: ListView(
             padding: const EdgeInsets.fromLTRB(16, 18, 16, 32),
             children: [
-              DashboardTopBar(
-                title: loc.dashboardGreeting(displayName),
-                subtitle: loc.dashboardSubtitle,
-                onAvatarTap: () => context.go('/profile'),
+              ValueListenableBuilder<String?>(
+                valueListenable: ProfileAvatarCache.notifier,
+                builder: (context, avatarPath, _) {
+                  return DashboardTopBar(
+                    title: loc.dashboardGreeting(displayName),
+                    subtitle: loc.dashboardSubtitle,
+                    onAvatarTap: () => context.go('/profile'),
+                    avatarPath: avatarPath,
+                  );
+                },
               ),
               const SizedBox(height: 16),
               DashboardSearchBar(
@@ -250,11 +289,33 @@ class _DashboardPageState extends State<DashboardPage> {
               ),
               const SizedBox(height: 18),
               QuickActionsGrid(actions: _buildQuickActions(loc)),
+              const SizedBox(height: 18),
+              if (_homeMapReady)
+                _HomeMapCard(
+                  title: loc.map,
+                  subtitle: loc.mapIntro,
+                  locations: _controller.locations,
+                  selected: _homeMapSelected,
+                  onSelect: (location) =>
+                      setState(() => _homeMapSelected = location),
+                  onOpenDetails: _openLocationDetails,
+                  onOpenExplore: () => context.go('/explore'),
+                )
+              else
+                SectionCard(
+                  child: ListTile(
+                    leading: const Icon(Icons.map_outlined),
+                    title: Text(loc.map),
+                    subtitle: Text(loc.mapsMissingApiKey),
+                    trailing: const Icon(Icons.chevron_right),
+                    onTap: () => context.go('/explore'),
+                  ),
+                ),
               const SizedBox(height: 20),
               AppSectionHeader(
-                title: 'Active trip',
-                actionLabel: 'See all',
-                onAction: () => context.go('/luggage'),
+                title: loc.activeTripTitle,
+                actionLabel: loc.seeAllAction,
+                onAction: () => context.push('/luggage'),
               ),
               const SizedBox(height: 12),
               ActiveTripCard(
@@ -278,7 +339,7 @@ class _DashboardPageState extends State<DashboardPage> {
               const SizedBox(height: 20),
               AppSectionHeader(
                 title: loc.nearbyLocationsTitle,
-                actionLabel: 'See all',
+                actionLabel: loc.seeAllAction,
                 onAction: () => context.go('/explore'),
               ),
               const SizedBox(height: 12),
@@ -292,8 +353,8 @@ class _DashboardPageState extends State<DashboardPage> {
               ),
               const SizedBox(height: 20),
               AppSectionHeader(
-                title: 'Campaigns',
-                actionLabel: 'See all',
+                title: loc.campaignsTitle,
+                actionLabel: loc.seeAllAction,
                 onAction: () {
                   Navigator.of(context).push(
                     MaterialPageRoute(builder: (_) => const CampaignsPage()),
@@ -306,15 +367,15 @@ class _DashboardPageState extends State<DashboardPage> {
                 errorMessage: null,
                 items: campaigns,
                 onRetry: () {},
-                emptyLabel: 'No campaigns available.',
+                emptyLabel: loc.campaignsEmptyState,
               ),
               const SizedBox(height: 20),
               SectionCard(
-                child: ListTile(
-                  leading: const Icon(Icons.luggage_outlined),
-                  title: Text(loc.myLuggages),
-                  subtitle: Text(loc.luggagesSectionSubtitle),
-                  trailing: const Icon(Icons.chevron_right),
+                child: _IconActionCard(
+                  title: loc.myLuggages,
+                  subtitle: loc.luggagesSectionSubtitle,
+                  icon: Icons.luggage_outlined,
+                  accent: const Color(0xFF5B7CFA),
                   onTap: _openLuggageCenter,
                 ),
               ),
@@ -339,15 +400,197 @@ class _DashboardPageState extends State<DashboardPage> {
   }
 }
 
-class CampaignsPage extends StatelessWidget {
-  const CampaignsPage({super.key});
+class _HomeMapCard extends StatelessWidget {
+  const _HomeMapCard({
+    required this.title,
+    required this.subtitle,
+    required this.locations,
+    required this.selected,
+    required this.onSelect,
+    required this.onOpenDetails,
+    required this.onOpenExplore,
+  });
+
+  final String title;
+  final String subtitle;
+  final List<DropLocation> locations;
+  final DropLocation? selected;
+  final ValueChanged<DropLocation> onSelect;
+  final ValueChanged<DropLocation> onOpenDetails;
+  final VoidCallback onOpenExplore;
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Campaigns')),
-      body: const Center(
-        child: Text('Campaigns are coming soon.'),
+    final theme = Theme.of(context);
+    if (locations.isEmpty) {
+      return SectionCard(
+        child: ListTile(
+          leading: const Icon(Icons.map_outlined),
+          title: Text(title),
+          subtitle: Text(AppLocalizations.of(context)!.mapNoLocations),
+          trailing: const Icon(Icons.chevron_right),
+          onTap: onOpenExplore,
+        ),
+      );
+    }
+    final initial = selected?.position ?? locations.first.position;
+    final markers = locations.map((location) {
+      return Marker(
+        markerId: MarkerId(location.id),
+        position: location.position,
+        infoWindow: InfoWindow(
+          title: location.name,
+          snippet: location.address,
+          onTap: () => onOpenDetails(location),
+        ),
+        onTap: () => onSelect(location),
+      );
+    }).toSet();
+
+    return SectionCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SectionHeader(
+            title: title,
+            subtitle: subtitle,
+            icon: Icons.map_outlined,
+            action: TextButton(
+              onPressed: onOpenExplore,
+              child: Text(AppLocalizations.of(context)!.seeAllAction),
+            ),
+          ),
+          const SizedBox(height: 12),
+          SizedBox(
+            height: 220,
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(20),
+              child: GoogleMap(
+                initialCameraPosition: CameraPosition(
+                  target: initial,
+                  zoom: 12.2,
+                ),
+                markers: markers,
+                zoomControlsEnabled: false,
+                myLocationButtonEnabled: false,
+                onTap: (_) => onSelect(locations.first),
+                onLongPress: (_) => onOpenExplore(),
+                mapToolbarEnabled: false,
+              ),
+            ),
+          ),
+          if (selected != null) ...[
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: theme.colorScheme.surfaceContainerHighest,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color: theme.colorScheme.outlineVariant.withValues(alpha: 0.6),
+                ),
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          selected!.name,
+                          style: theme.textTheme.titleSmall?.copyWith(
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          selected!.address,
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  IconButton(
+                    onPressed: () => onOpenDetails(selected!),
+                    icon: const Icon(Icons.chevron_right),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _IconActionCard extends StatelessWidget {
+  const _IconActionCard({
+    required this.title,
+    required this.subtitle,
+    required this.icon,
+    required this.accent,
+    required this.onTap,
+  });
+
+  final String title;
+  final String subtitle;
+  final IconData icon;
+  final Color accent;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(20),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+        child: Row(
+          children: [
+            Container(
+              height: 52,
+              width: 52,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: LinearGradient(
+                  colors: [
+                    accent.withValues(alpha: 0.2),
+                    accent.withValues(alpha: 0.05),
+                  ],
+                ),
+              ),
+              child: Icon(icon, color: accent, size: 26),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: theme.textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    subtitle,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 8),
+            const Icon(Icons.chevron_right),
+          ],
+        ),
       ),
     );
   }

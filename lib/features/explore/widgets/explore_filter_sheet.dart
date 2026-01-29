@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../l10n/app_localizations.dart';
 
 class ExploreFilterSheet extends StatefulWidget {
   const ExploreFilterSheet({
@@ -39,6 +40,7 @@ class _ExploreFilterSheetState extends State<ExploreFilterSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final loc = AppLocalizations.of(context)!;
     return SafeArea(
       child: Padding(
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
@@ -49,7 +51,7 @@ class _ExploreFilterSheetState extends State<ExploreFilterSheet> {
             Row(
               children: [
                 Text(
-                  'Filters',
+                  loc.filtersTitle,
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.w700,
                       ),
@@ -57,7 +59,7 @@ class _ExploreFilterSheetState extends State<ExploreFilterSheet> {
                 const Spacer(),
                 TextButton(
                   onPressed: widget.onClear,
-                  child: const Text('Reset'),
+                  child: Text(loc.resetAction),
                 ),
               ],
             ),
@@ -65,19 +67,19 @@ class _ExploreFilterSheetState extends State<ExploreFilterSheet> {
             SwitchListTile(
               value: _openNow,
               contentPadding: EdgeInsets.zero,
-              title: const Text('Open now'),
+              title: Text(loc.filterOpenNow),
               onChanged: (value) => setState(() => _openNow = value),
             ),
             SwitchListTile(
               value: _availableOnly,
               contentPadding: EdgeInsets.zero,
-              title: const Text('Available slots'),
+              title: Text(loc.filterAvailableSlots),
               onChanged: (value) => setState(() => _availableOnly = value),
             ),
             SwitchListTile(
               value: _activeOnly,
               contentPadding: EdgeInsets.zero,
-              title: const Text('Active locations'),
+              title: Text(loc.filterActiveLocations),
               onChanged: (value) => setState(() => _activeOnly = value),
             ),
             const SizedBox(height: 12),
@@ -91,7 +93,7 @@ class _ExploreFilterSheetState extends State<ExploreFilterSheet> {
                     activeOnly: _activeOnly,
                   );
                 },
-                child: const Text('Apply'),
+                child: Text(loc.applyAction),
               ),
             ),
           ],

@@ -37,6 +37,7 @@ class LuggageModel {
   final bool delegateActive;
   final String? paymentMethod;
   final String? paymentStatus;
+  final bool walletPayment;
   final int? totalPrice;
   final String? providerPaymentId;
   final String? checkoutUrl;
@@ -68,6 +69,7 @@ class LuggageModel {
     this.delegateActive = false,
     this.paymentMethod,
     this.paymentStatus,
+    this.walletPayment = false,
     this.totalPrice,
     this.providerPaymentId,
     this.checkoutUrl,
@@ -111,6 +113,7 @@ class LuggageModel {
       delegateActive: (json['delegateActive'] ?? false) == true,
       paymentMethod: json['paymentMethod']?.toString(),
       paymentStatus: json['paymentStatus']?.toString(),
+      walletPayment: (json['walletPayment'] ?? false) == true,
       totalPrice: _parseInt(json['totalPrice']),
       providerPaymentId: json['providerPaymentId']?.toString(),
       checkoutUrl: json['checkoutUrl']?.toString(),
@@ -144,6 +147,7 @@ class LuggageModel {
         'delegateActive': delegateActive,
         'paymentMethod': paymentMethod,
         'paymentStatus': paymentStatus,
+        'walletPayment': walletPayment,
         'totalPrice': totalPrice,
         'providerPaymentId': providerPaymentId,
         'checkoutUrl': checkoutUrl,
@@ -174,6 +178,7 @@ class LuggageModel {
     bool? delegateActive,
     String? paymentMethod,
     String? paymentStatus,
+    bool? walletPayment,
     int? totalPrice,
     String? providerPaymentId,
     String? checkoutUrl,
@@ -205,6 +210,7 @@ class LuggageModel {
       delegateActive: delegateActive ?? this.delegateActive,
       paymentMethod: paymentMethod ?? this.paymentMethod,
       paymentStatus: paymentStatus ?? this.paymentStatus,
+      walletPayment: walletPayment ?? this.walletPayment,
       totalPrice: totalPrice ?? this.totalPrice,
       providerPaymentId: providerPaymentId ?? this.providerPaymentId,
       checkoutUrl: checkoutUrl ?? this.checkoutUrl,

@@ -1,26 +1,28 @@
 import 'package:flutter/material.dart';
+import '../../../l10n/app_localizations.dart';
 
 class CouponsPage extends StatelessWidget {
   const CouponsPage({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final loc = AppLocalizations.of(context)!;
     return Scaffold(
-      appBar: AppBar(title: const Text('Coupons')),
+      appBar: AppBar(title: Text(loc.couponsTitle)),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
-        children: const [
+        children: [
           _CouponTile(
             title: 'WELCOME10',
-            subtitle: '10% off on your next booking.',
+            subtitle: loc.couponWelcomeSubtitle,
           ),
           _CouponTile(
             title: 'CITY5',
-            subtitle: '5 ₺ cashback on city center locations.',
+            subtitle: loc.couponCitySubtitle,
           ),
           _CouponTile(
             title: 'WEEKEND15',
-            subtitle: '15% off weekend drop-off.',
+            subtitle: loc.couponWeekendSubtitle,
           ),
         ],
       ),

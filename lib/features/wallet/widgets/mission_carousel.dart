@@ -33,10 +33,30 @@ class MissionCarousel extends StatelessWidget {
                   offset: const Offset(0, 6),
                 ),
               ],
+              border: Border.all(
+                color: Theme.of(context)
+                    .colorScheme
+                    .outlineVariant
+                    .withValues(alpha: 0.6),
+              ),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                Container(
+                  height: 4,
+                  width: 26,
+                  margin: const EdgeInsets.only(bottom: 8),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(999),
+                    gradient: LinearGradient(
+                      colors: [
+                        Theme.of(context).colorScheme.primary.withValues(alpha: 0.9),
+                        Theme.of(context).colorScheme.secondary.withValues(alpha: 0.8),
+                      ],
+                    ),
+                  ),
+                ),
                 Text(
                   item.title,
                   style: Theme.of(context)
@@ -55,10 +75,13 @@ class MissionCarousel extends StatelessWidget {
                       ),
                 ),
                 const Spacer(),
-                LinearProgressIndicator(
-                  value: progress,
-                  backgroundColor:
-                      Theme.of(context).colorScheme.surfaceContainerHighest,
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(999),
+                  child: LinearProgressIndicator(
+                    value: progress,
+                    backgroundColor:
+                        Theme.of(context).colorScheme.surfaceContainerHighest,
+                  ),
                 ),
                 const SizedBox(height: 8),
                 Text(

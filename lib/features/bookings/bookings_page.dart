@@ -9,6 +9,7 @@ import '../../widgets/app_notification.dart';
 import '../../ui/components/app_empty_state.dart';
 import '../../ui/components/app_error_state.dart';
 import '../../ui/components/app_skeleton.dart';
+import '../../utils/crash_log.dart';
 import '../bookings/widgets/bookings_header.dart';
 import '../bookings/widgets/bookings_segmented_control.dart';
 import '../bookings/widgets/trip_card.dart';
@@ -27,6 +28,7 @@ class _BookingsPageState extends State<BookingsPage> {
   String? _error;
   String? _userId;
   List<LuggageModel> _luggages = [];
+  bool _canceling = false;
 
   @override
   void initState() {
@@ -93,49 +95,78 @@ class _BookingsPageState extends State<BookingsPage> {
 
   Future<void> _cancelLuggage(LuggageModel luggage) async {
     if (_userId == null) return;
+    final loc = AppLocalizations.of(context)!;
+    appLog('luggage', 'LUGGAGE_CANCEL_TAP id=${luggage.id}', level: AppLogLevel.info);
     final confirm = await showDialog<bool>(
       context: context,
-      builder: (_) => AlertDialog(
-        title: const Text('Rezervasyonu iptal et'),
-        content: const Text('Bu rezervasyonu iptal etmek istiyor musunuz?'),
+      builder: (dialogContext) => AlertDialog(
+        title: Text(loc.cancelReservationTitle),
+        content: Text(loc.cancelReservationMessage(luggage.displayLabel)),
         actions: [
           TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Vazgeç'),
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: Text(loc.dialogDismiss),
           ),
           TextButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('İptal Et'),
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            child: Text(loc.dialogConfirmCancel),
           ),
         ],
       ),
     );
     if (confirm != true) return;
-    final res = await LuggageService.cancel(_userId!, luggage.id);
-    if (!mounted) return;
-    if (res['ok'] == true && res['luggage'] is Map) {
-      final updated =
-          LuggageModel.fromJson(Map<String, dynamic>.from(res['luggage'] as Map));
-      setState(() {
-        _luggages = _luggages.map((e) => e.id == updated.id ? updated : e).toList();
-      });
+    if (!mounted || _canceling) return;
+    setState(() => _canceling = true);
+    appLog('luggage', 'LUGGAGE_CANCEL_START id=${luggage.id}', level: AppLogLevel.info);
+    try {
+      final res = await LuggageService.cancel(_userId!, luggage.id)
+          .timeout(const Duration(seconds: 20));
+      if (!mounted) return;
+      if (res['ok'] == true && res['luggage'] is Map) {
+        final updated =
+            LuggageModel.fromJson(Map<String, dynamic>.from(res['luggage'] as Map));
+        setState(() {
+          _luggages =
+              _luggages.map((e) => e.id == updated.id ? updated : e).toList();
+        });
+        AppNotification.show(
+          context,
+          message: loc.reservationCancelledMessage,
+          type: AppNotificationType.success,
+        );
+        appLog('luggage', 'LUGGAGE_CANCEL_OK id=${luggage.id}', level: AppLogLevel.info);
+      } else {
+        final msg = (res['error'] ?? res['message'] ?? 'CANCEL_FAILED').toString();
+        AppNotification.show(
+          context,
+          message: msg.isNotEmpty ? msg : loc.cancelFailed,
+          type: AppNotificationType.error,
+        );
+        appLog(
+          'luggage',
+          'LUGGAGE_CANCEL_ERR id=${luggage.id} msg=$msg',
+          level: AppLogLevel.error,
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
       AppNotification.show(
         context,
-        message: 'Rezervasyon iptal edildi',
-        type: AppNotificationType.success,
-      );
-    } else {
-      final msg = (res['error'] ?? res['message'] ?? 'CANCEL_FAILED').toString();
-      AppNotification.show(
-        context,
-        message: msg,
+        message: loc.cancelFailed,
         type: AppNotificationType.error,
       );
+      appLog(
+        'luggage',
+        'LUGGAGE_CANCEL_ERR id=${luggage.id} err=$e',
+        level: AppLogLevel.error,
+      );
+    } finally {
+      if (mounted) setState(() => _canceling = false);
     }
   }
 
   Future<void> _scanQr() async {
-    final code = await context.push<String>('/qr/scan');
+    final code = await context.push<String>('/qr/scan', extra: true);
     if (!mounted || code == null || code.isEmpty) return;
     final loc = AppLocalizations.of(context)!;
     AppNotification.show(
@@ -175,16 +206,18 @@ class _BookingsPageState extends State<BookingsPage> {
       appBar: AppBar(
         title: Text(loc.myLuggages),
       ),
-      body: Column(
+      body: Stack(
         children: [
-          Padding(
+          Column(
+            children: [
+              Padding(
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
             child: Column(
               children: [
                 BookingsHeader(
                   title: loc.myLuggages,
                   subtitle: loc.luggagesSectionSubtitle,
-                  onOpenClassic: () => context.go('/luggage'),
+                  onOpenClassic: () => context.push('/luggage'),
                 ),
                 const SizedBox(height: 12),
                 BookingsSegmentedControl(
@@ -194,43 +227,54 @@ class _BookingsPageState extends State<BookingsPage> {
               ],
             ),
           ),
-          const Divider(height: 1),
-          Expanded(
-            child: _loading
-                ? ListView.builder(
-                    padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
-                    itemCount: 6,
-                    itemBuilder: (context, index) => const Padding(
-                      padding: EdgeInsets.symmetric(vertical: 8),
-                      child: AppSkeleton(height: 140, radius: 20),
-                    ),
-                  )
-                : _error != null
-                    ? AppErrorState(message: _error!, onRetry: _restoreUser)
-                    : items.isEmpty
-                        ? AppEmptyState(
-                            title: 'No trips yet',
-                            subtitle:
-                                'Create a new luggage booking to get started.',
-                            actionLabel: loc.quickAddLuggage,
-                            onAction: () => context.push('/luggage/add'),
-                          )
-                        : ListView.builder(
-                            padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
-                            itemCount: items.length,
-                            itemBuilder: (context, index) {
-                              final luggage = items[index];
-                              return TripCard(
-                                luggage: luggage,
-                                onShowQr: () => _showQr(luggage),
-                                onScanQr: _scanQr,
-                                onDetails: () => _showTimeline(luggage),
-                                onSupport: _showSupport,
-                                onCancel: () => _cancelLuggage(luggage),
-                              );
-                            },
-                          ),
+              const Divider(height: 1),
+              Expanded(
+                child: _loading
+                    ? ListView.builder(
+                        padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
+                        itemCount: 6,
+                        itemBuilder: (context, index) => const Padding(
+                          padding: EdgeInsets.symmetric(vertical: 8),
+                          child: AppSkeleton(height: 140, radius: 20),
+                        ),
+                      )
+                    : _error != null
+                        ? AppErrorState(message: _error!, onRetry: _restoreUser)
+                        : items.isEmpty
+                            ? AppEmptyState(
+                                title: loc.myLuggages,
+                                subtitle: loc.luggageEmptyStateNoItems,
+                                actionLabel: loc.quickAddLuggage,
+                                onAction: () => context.push('/luggage/add'),
+                              )
+                            : ListView.builder(
+                                padding:
+                                    const EdgeInsets.fromLTRB(16, 12, 16, 24),
+                                itemCount: items.length,
+                                itemBuilder: (context, index) {
+                                  final luggage = items[index];
+                                  return TripCard(
+                                    luggage: luggage,
+                                    onShowQr: () => _showQr(luggage),
+                                    onScanQr: _scanQr,
+                                    onDetails: () => _showTimeline(luggage),
+                                    onSupport: _showSupport,
+                                    onCancel: () => _cancelLuggage(luggage),
+                                  );
+                                },
+                              ),
+              ),
+            ],
           ),
+          if (_canceling)
+            Positioned.fill(
+              child: Container(
+                color: Colors.black.withValues(alpha: 0.15),
+                child: const Center(
+                  child: CircularProgressIndicator(),
+                ),
+              ),
+            ),
         ],
       ),
     );
@@ -246,6 +290,7 @@ class _SupportSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final loc = AppLocalizations.of(context)!;
     return SafeArea(
       child: Padding(
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
@@ -254,7 +299,7 @@ class _SupportSheet extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Support',
+              loc.supportSectionTitle,
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.w700,
                   ),
@@ -263,19 +308,19 @@ class _SupportSheet extends StatelessWidget {
             ListTile(
               contentPadding: EdgeInsets.zero,
               leading: const Icon(Icons.chat_bubble_outline),
-              title: const Text('WhatsApp'),
+              title: Text(loc.whatsappLabel),
               onTap: () => _launch(Uri.parse('https://wa.me/905000000000')),
             ),
             ListTile(
               contentPadding: EdgeInsets.zero,
               leading: const Icon(Icons.phone_outlined),
-              title: const Text('Call'),
+              title: Text(loc.callLabel),
               onTap: () => _launch(Uri.parse('tel:+905000000000')),
             ),
             ListTile(
               contentPadding: EdgeInsets.zero,
               leading: const Icon(Icons.email_outlined),
-              title: const Text('Email'),
+              title: Text(loc.emailLabel),
               onTap: () => _launch(Uri.parse('mailto:support@kyradi.com')),
             ),
           ],

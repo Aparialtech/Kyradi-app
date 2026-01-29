@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../l10n/app_localizations.dart';
 
 class BookingsHeader extends StatelessWidget {
   const BookingsHeader({
@@ -15,6 +16,7 @@ class BookingsHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final loc = AppLocalizations.of(context)!;
     return Row(
       children: [
         Expanded(
@@ -41,7 +43,7 @@ class BookingsHeader extends StatelessWidget {
           TextButton.icon(
             onPressed: onOpenClassic,
             icon: const Icon(Icons.list_alt_outlined),
-            label: const Text('Tümü'),
+            label: Text(loc.allLabel),
           ),
       ],
     );

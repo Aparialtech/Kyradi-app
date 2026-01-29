@@ -1,26 +1,28 @@
 import 'package:flutter/material.dart';
+import '../../../l10n/app_localizations.dart';
 
 class CashbackRulesPage extends StatelessWidget {
   const CashbackRulesPage({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final loc = AppLocalizations.of(context)!;
     return Scaffold(
-      appBar: AppBar(title: const Text('Cashback Rules')),
+      appBar: AppBar(title: Text(loc.cashbackRulesTitle)),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
-        children: const [
+        children: [
           _RuleTile(
-            title: 'Earn cashback',
-            subtitle: 'Earn cashback on eligible bookings and campaigns.',
+            title: loc.cashbackRuleEarnTitle,
+            subtitle: loc.cashbackRuleEarnSubtitle,
           ),
           _RuleTile(
-            title: 'Use cashback',
-            subtitle: 'Apply cashback on checkout for supported locations.',
+            title: loc.cashbackRuleUseTitle,
+            subtitle: loc.cashbackRuleUseSubtitle,
           ),
           _RuleTile(
-            title: 'Expiration',
-            subtitle: 'Cashback expires after 12 months if unused.',
+            title: loc.cashbackRuleExpireTitle,
+            subtitle: loc.cashbackRuleExpireSubtitle,
           ),
         ],
       ),

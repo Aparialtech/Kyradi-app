@@ -12,6 +12,31 @@ class MockServer {
   static const _statusDropped = 'dropped';
   static const _statusPickedUp = 'picked_up';
 
+  static String supportChatReply(String message) {
+    final text = message.toLowerCase();
+    if (text.contains('iptal') || text.contains('cancel')) {
+      return 'Bavul iptali için: Bavullarım > Detay > İptal Et adımını kullanabilirsiniz.';
+    }
+    if (text.contains('odeme') ||
+        text.contains('ödeme') ||
+        text.contains('payment') ||
+        text.contains('kart')) {
+      return 'Ödeme konusunda hata alırsanız kart hareketleri ve hata mesajını paylaşın, yardımcı olalım.';
+    }
+    if (text.contains('rezervasyon') || text.contains('booking')) {
+      return 'Rezervasyon için uygun lokasyon ve tarih seçerek devam edebilirsiniz.';
+    }
+    if (text.contains('cuzdan') ||
+        text.contains('cüzdan') ||
+        text.contains('wallet')) {
+      return 'Cüzdan üzerinden para yükleme ve transfer işlemleri yapılabilir.';
+    }
+    if (text.contains('lokasyon') || text.contains('konum')) {
+      return 'Lokasyonların doluluk bilgisini Keşfet ekranında görebilirsiniz.';
+    }
+    return 'Size daha iyi yardımcı olabilmem için biraz daha detay paylaşabilir misiniz?';
+  }
+
   static Future<Map<String, dynamic>> _loadState() async {
     final prefs = await SharedPreferences.getInstance();
     final raw = prefs.getString(_storageKey);

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import '../../../l10n/app_localizations.dart';
 import '../../../core/app_locale.dart';
+import '../../../core/app_theme_mode.dart';
 import '../../../widgets/section_card.dart';
 
 class SettingsSection extends StatelessWidget {
@@ -11,6 +13,8 @@ class SettingsSection extends StatelessWidget {
     required this.onEmailChanged,
     required this.languageCode,
     required this.onLanguageChanged,
+    required this.themeMode,
+    required this.onThemeChanged,
   });
 
   final bool inAppNotifications;
@@ -19,27 +23,30 @@ class SettingsSection extends StatelessWidget {
   final ValueChanged<bool> onEmailChanged;
   final String languageCode;
   final ValueChanged<String> onLanguageChanged;
+  final ThemeMode themeMode;
+  final ValueChanged<ThemeMode> onThemeChanged;
 
   @override
   Widget build(BuildContext context) {
+    final loc = AppLocalizations.of(context)!;
     return SectionCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Settings',
-            style: TextStyle(fontWeight: FontWeight.w700),
+          Text(
+            loc.settingsTitle,
+            style: const TextStyle(fontWeight: FontWeight.w700),
           ),
           const SizedBox(height: 8),
           SwitchListTile(
             contentPadding: EdgeInsets.zero,
-            title: const Text('In-app notifications'),
+            title: Text(loc.settingsInAppNotifications),
             value: inAppNotifications,
             onChanged: onInAppChanged,
           ),
           SwitchListTile(
             contentPadding: EdgeInsets.zero,
-            title: const Text('Email reminders'),
+            title: Text(loc.settingsEmailReminders),
             value: emailNotifications,
             onChanged: onEmailChanged,
           ),
@@ -47,16 +54,16 @@ class SettingsSection extends StatelessWidget {
           ListTile(
             contentPadding: EdgeInsets.zero,
             leading: const Icon(Icons.translate_outlined),
-            title: const Text('Language'),
+            title: Text(loc.settingsLanguage),
             trailing: DropdownButton<String>(
               value: languageCode,
               underline: const SizedBox.shrink(),
-              items: const [
-                DropdownMenuItem(value: 'tr', child: Text('Türkçe')),
-                DropdownMenuItem(value: 'en', child: Text('English')),
-                DropdownMenuItem(value: 'de', child: Text('Deutsch')),
-                DropdownMenuItem(value: 'es', child: Text('Español')),
-                DropdownMenuItem(value: 'ru', child: Text('Русский')),
+              items: [
+                DropdownMenuItem(value: 'tr', child: Text(loc.languageTurkish)),
+                DropdownMenuItem(value: 'en', child: Text(loc.languageEnglish)),
+                DropdownMenuItem(value: 'de', child: Text(loc.languageGerman)),
+                DropdownMenuItem(value: 'es', child: Text(loc.languageSpanish)),
+                DropdownMenuItem(value: 'ru', child: Text(loc.languageRussian)),
               ],
               onChanged: (value) {
                 if (value == null) return;
@@ -68,9 +75,30 @@ class SettingsSection extends StatelessWidget {
           ListTile(
             contentPadding: EdgeInsets.zero,
             leading: const Icon(Icons.dark_mode_outlined),
-            title: const Text('Theme'),
-            trailing: const Text('Light'),
-            onTap: () {},
+            title: Text(loc.settingsTheme),
+            trailing: DropdownButton<ThemeMode>(
+              value: themeMode,
+              underline: const SizedBox.shrink(),
+              items: [
+                DropdownMenuItem(
+                  value: ThemeMode.system,
+                  child: Text(loc.settingsThemeSystem),
+                ),
+                DropdownMenuItem(
+                  value: ThemeMode.light,
+                  child: Text(loc.settingsThemeLight),
+                ),
+                DropdownMenuItem(
+                  value: ThemeMode.dark,
+                  child: Text(loc.settingsThemeDark),
+                ),
+              ],
+              onChanged: (value) {
+                if (value == null) return;
+                onThemeChanged(value);
+                AppThemeMode.set(value);
+              },
+            ),
           ),
         ],
       ),

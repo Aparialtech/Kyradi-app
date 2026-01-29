@@ -182,23 +182,33 @@ class _LuggageAddPageState extends State<LuggageAddPage> {
                     : (value) => setState(() => _selectedLocation = value),
                 decoration: InputDecoration(
                   labelText: loc.findLocation,
+                  prefixIcon: const Icon(Icons.location_on_outlined),
                 ),
               ),
             if (!_locationsReady)
-              const Padding(
-                padding: EdgeInsets.only(bottom: 12),
-                child: LinearProgressIndicator(minHeight: 2),
+              Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(999),
+                  child: const LinearProgressIndicator(minHeight: 2),
+                ),
               ),
             const SizedBox(height: 12),
             TextFormField(
               controller: _labelCtrl,
-              decoration: InputDecoration(labelText: loc.luggageNameHint),
+              decoration: InputDecoration(
+                labelText: loc.luggageNameHint,
+                prefixIcon: const Icon(Icons.badge_outlined),
+              ),
             ),
             const SizedBox(height: 12),
             TextFormField(
               controller: _weightCtrl,
               keyboardType: TextInputType.number,
-              decoration: InputDecoration(labelText: loc.luggageInfoWeight('')),
+              decoration: InputDecoration(
+                labelText: loc.luggageInfoWeight(''),
+                prefixIcon: const Icon(Icons.scale_outlined),
+              ),
             ),
             const SizedBox(height: 12),
             DropdownButtonFormField<String>(
@@ -210,7 +220,10 @@ class _LuggageAddPageState extends State<LuggageAddPage> {
                 DropdownMenuItem(value: 'large', child: Text(loc.large)),
               ],
               onChanged: (value) => setState(() => _size = value ?? _size),
-              decoration: InputDecoration(labelText: loc.luggageInfoSize('')),
+              decoration: InputDecoration(
+                labelText: loc.luggageInfoSize(''),
+                prefixIcon: const Icon(Icons.straighten_outlined),
+              ),
             ),
             const SizedBox(height: 12),
             DropdownButtonFormField<String>(
@@ -225,17 +238,24 @@ class _LuggageAddPageState extends State<LuggageAddPage> {
                 DropdownMenuItem(value: 'other', child: Text(loc.other)),
               ],
               onChanged: (value) => setState(() => _color = value ?? _color),
-              decoration: InputDecoration(labelText: loc.luggageInfoColor('')),
+              decoration: InputDecoration(
+                labelText: loc.luggageInfoColor(''),
+                prefixIcon: const Icon(Icons.palette_outlined),
+              ),
             ),
             const SizedBox(height: 12),
             TextFormField(
               controller: _noteCtrl,
               maxLines: 3,
-              decoration: InputDecoration(labelText: loc.noteLabel('')),
+              decoration: InputDecoration(
+                labelText: loc.noteLabel(''),
+                prefixIcon: const Icon(Icons.edit_note_outlined),
+              ),
             ),
             const SizedBox(height: 16),
             ListTile(
               contentPadding: EdgeInsets.zero,
+              leading: const Icon(Icons.login_rounded),
               title: Text(loc.howItWorksStep5Title),
               subtitle: Text(
                 _dropTime == null
@@ -247,6 +267,7 @@ class _LuggageAddPageState extends State<LuggageAddPage> {
             ),
             ListTile(
               contentPadding: EdgeInsets.zero,
+              leading: const Icon(Icons.logout_rounded),
               title: Text(loc.luggagePickupAction),
               subtitle: Text(
                 _pickupTime == null

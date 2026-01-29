@@ -64,9 +64,10 @@ class _VerificationFormPageState extends State<VerificationFormPage> {
   }
 
   Future<void> _submit() async {
+    final loc = AppLocalizations.of(context)!;
     if (!_formKey.currentState!.validate()) return;
     if (_birthDate == null) {
-      _notify('Doğum tarihi gerekli', type: AppNotificationType.warning);
+      _notify(loc.birthDateRequiredMessage, type: AppNotificationType.warning);
       return;
     }
     setState(() => _loading = true);
@@ -89,7 +90,7 @@ class _VerificationFormPageState extends State<VerificationFormPage> {
           MaterialPageRoute(builder: (_) => const EmailOtpVerifyPage()),
         );
       } else {
-        final msg = (res['message'] ?? res['error'] ?? 'Güncelleme başarısız')
+        final msg = (res['message'] ?? res['error'] ?? loc.saveProfileError)
             .toString();
         setState(() => _loading = false);
         _notify(msg, type: AppNotificationType.error);
@@ -97,7 +98,7 @@ class _VerificationFormPageState extends State<VerificationFormPage> {
     } catch (e) {
       if (!mounted) return;
       setState(() => _loading = false);
-      _notify('Hata: $e', type: AppNotificationType.error);
+      _notify(loc.genericErrorWithDetails('$e'), type: AppNotificationType.error);
     }
   }
 
@@ -105,7 +106,7 @@ class _VerificationFormPageState extends State<VerificationFormPage> {
   Widget build(BuildContext context) {
     final loc = AppLocalizations.of(context)!;
     return Scaffold(
-      appBar: AppBar(title: const Text('Hesap Doğrulama')),
+      appBar: AppBar(title: Text(loc.accountVerificationTitle)),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
@@ -115,38 +116,38 @@ class _VerificationFormPageState extends State<VerificationFormPage> {
               children: [
                 TextFormField(
                   controller: _nameCtrl,
-                  decoration: const InputDecoration(labelText: 'Ad'),
+                  decoration: InputDecoration(labelText: loc.firstName),
                   validator: (v) =>
-                      v == null || v.trim().isEmpty ? 'Zorunlu' : null,
+                      v == null || v.trim().isEmpty ? loc.requiredFieldLabel : null,
                 ),
                 const SizedBox(height: 12),
                 TextFormField(
                   controller: _surnameCtrl,
-                  decoration: const InputDecoration(labelText: 'Soyad'),
+                  decoration: InputDecoration(labelText: loc.lastName),
                   validator: (v) =>
-                      v == null || v.trim().isEmpty ? 'Zorunlu' : null,
+                      v == null || v.trim().isEmpty ? loc.requiredFieldLabel : null,
                 ),
                 const SizedBox(height: 12),
                 TextFormField(
                   controller: _nationalIdCtrl,
-                  decoration: const InputDecoration(labelText: 'TCKN / Pasaport No'),
+                  decoration: InputDecoration(labelText: loc.nationalIdLabel),
                 ),
                 const SizedBox(height: 12),
                 TextFormField(
                   controller: _phoneCtrl,
-                  decoration: const InputDecoration(labelText: 'Telefon'),
+                  decoration: InputDecoration(labelText: loc.phone),
                 ),
                 const SizedBox(height: 12),
                 TextFormField(
                   controller: _addressCtrl,
-                  decoration: const InputDecoration(labelText: 'Adres'),
+                  decoration: InputDecoration(labelText: loc.address),
                   maxLines: 2,
                 ),
                 const SizedBox(height: 12),
                 ListTile(
                   contentPadding: EdgeInsets.zero,
                   title: Text(_birthDate == null
-                      ? 'Doğum tarihi seç'
+                      ? loc.birthDateSelectLabel
                       : _birthDate!.toLocal().toString().split(' ').first),
                   trailing: const Icon(Icons.calendar_today_outlined),
                   onTap: _pickBirthDate,

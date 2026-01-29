@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../widgets/section_card.dart';
 import '../../../ui/components/app_badge.dart';
+import '../../../l10n/app_localizations.dart';
 
 class VerificationSection extends StatelessWidget {
   const VerificationSection({
@@ -15,6 +16,7 @@ class VerificationSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final loc = AppLocalizations.of(context)!;
     final resolved = status.isEmpty ? 'unverified' : status;
     final isVerified = resolved == 'verified';
     final isPending = resolved == 'pending';
@@ -27,9 +29,9 @@ class VerificationSection extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Verification',
-            style: TextStyle(fontWeight: FontWeight.w700),
+          Text(
+            loc.verificationTitle,
+            style: const TextStyle(fontWeight: FontWeight.w700),
           ),
           const SizedBox(height: 8),
           Row(
@@ -46,10 +48,10 @@ class VerificationSection extends StatelessWidget {
               Expanded(
                 child: Text(
                   isVerified
-                      ? 'Hesap onaylı'
+                      ? loc.verificationStatusVerified
                       : isPending
-                          ? 'Doğrulama bekliyor'
-                          : 'Doğrulama gerekli',
+                          ? loc.verificationStatusPending
+                          : loc.verificationStatusRequired,
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: statusColor,
                     fontWeight: FontWeight.w600,
@@ -57,13 +59,17 @@ class VerificationSection extends StatelessWidget {
                 ),
               ),
               AppBadge(
-                label: isVerified ? 'Verified' : isPending ? 'Pending' : 'New',
+                label: isVerified
+                    ? loc.verificationBadgeVerified
+                    : isPending
+                        ? loc.verificationBadgePending
+                        : loc.verificationBadgeNew,
                 color: statusColor,
               ),
               const SizedBox(width: 6),
               TextButton(
                 onPressed: onManage,
-                child: Text(isVerified ? 'Görüntüle' : 'Yönet'),
+                child: Text(isVerified ? loc.viewAction : loc.manageAction),
               ),
             ],
           ),

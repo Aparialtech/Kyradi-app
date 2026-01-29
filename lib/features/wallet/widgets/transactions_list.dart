@@ -72,23 +72,43 @@ class _TransactionTile extends StatelessWidget {
         : isAdjust
             ? '+'
             : '-';
-    return ListTile(
-      contentPadding: EdgeInsets.zero,
-      leading: CircleAvatar(
-        backgroundColor: color.withValues(alpha: 0.12),
-        child: Icon(
-          isEarn ? Icons.savings_outlined : Icons.shopping_bag_outlined,
-          color: color,
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: ListTile(
+        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
+        visualDensity: VisualDensity.compact,
+        leading: Container(
+          padding: const EdgeInsets.all(2),
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            gradient: LinearGradient(
+              colors: [
+                color.withValues(alpha: 0.7),
+                color.withValues(alpha: 0.4),
+              ],
+            ),
+          ),
+          child: CircleAvatar(
+            backgroundColor: color.withValues(alpha: 0.12),
+            child: Icon(
+              isEarn ? Icons.savings_outlined : Icons.shopping_bag_outlined,
+              color: color,
+            ),
+          ),
         ),
-      ),
-      title: Text(tx.title),
-      subtitle: Text(tx.category),
-      trailing: Text(
-        '$sign${tx.amount.toStringAsFixed(2)} ₺',
-        style: theme.textTheme.titleSmall?.copyWith(
-          fontWeight: FontWeight.w700,
-          color: color,
+        title: Text(tx.title),
+        subtitle: Text(tx.category),
+        trailing: Text(
+          '$sign${tx.amount.toStringAsFixed(2)} ₺',
+          style: theme.textTheme.titleSmall?.copyWith(
+            fontWeight: FontWeight.w700,
+            color: color,
+          ),
         ),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(14),
+        ),
+        tileColor: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
       ),
     );
   }

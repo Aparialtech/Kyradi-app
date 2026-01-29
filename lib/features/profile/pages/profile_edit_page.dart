@@ -1,0 +1,338 @@
+import 'dart:io';
+import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:path_provider/path_provider.dart';
+import '../../../models/user.dart';
+import '../../../services/api_service.dart';
+import '../../../widgets/app_notification.dart';
+import '../../../widgets/section_card.dart';
+import '../../../core/profile_avatar_cache.dart';
+import '../../../l10n/app_localizations.dart';
+
+class ProfileEditPage extends StatefulWidget {
+  const ProfileEditPage({
+    super.key,
+    required this.user,
+    this.avatarPath,
+  });
+
+  final UserModel user;
+  final String? avatarPath;
+
+  @override
+  State<ProfileEditPage> createState() => _ProfileEditPageState();
+}
+
+class _ProfileEditPageState extends State<ProfileEditPage> {
+  final _formKey = GlobalKey<FormState>();
+  final _nameCtrl = TextEditingController();
+  final _surCtrl = TextEditingController();
+  final _phoneCtrl = TextEditingController();
+  final _addressCtrl = TextEditingController();
+  final _nationalIdCtrl = TextEditingController();
+  final _birthCtrl = TextEditingController();
+
+  bool _saving = false;
+  String? _avatarPath;
+
+  AppLocalizations get loc => AppLocalizations.of(context)!;
+
+  @override
+  void initState() {
+    super.initState();
+    final user = widget.user;
+    _nameCtrl.text = user.name;
+    _surCtrl.text = user.surname;
+    _phoneCtrl.text = user.phone;
+    _addressCtrl.text = user.address;
+    _nationalIdCtrl.text = user.nationalId ?? '';
+    _birthCtrl.text = _formatBirthDate(user.birthDate);
+    _avatarPath = widget.avatarPath;
+  }
+
+  @override
+  void dispose() {
+    _nameCtrl.dispose();
+    _surCtrl.dispose();
+    _phoneCtrl.dispose();
+    _addressCtrl.dispose();
+    _nationalIdCtrl.dispose();
+    _birthCtrl.dispose();
+    super.dispose();
+  }
+
+  String _formatBirthDate(String? raw) {
+    if (raw == null || raw.trim().isEmpty) return '';
+    return raw.split('T').first;
+  }
+
+  Future<void> _pickAvatar() async {
+    final picker = ImagePicker();
+    final file = await picker.pickImage(source: ImageSource.gallery, imageQuality: 85);
+    if (file == null) return;
+    final storedPath = await _persistAvatar(file.path);
+    if (!mounted) return;
+    setState(() => _avatarPath = storedPath);
+  }
+
+  Future<String> _persistAvatar(String sourcePath) async {
+    try {
+      final sourceFile = File(sourcePath);
+      if (!await sourceFile.exists()) return sourcePath;
+      final directory = await getApplicationDocumentsDirectory();
+      final name = sourceFile.uri.pathSegments.isNotEmpty
+          ? sourceFile.uri.pathSegments.last
+          : 'avatar_${DateTime.now().millisecondsSinceEpoch}.jpg';
+      final target = File('${directory.path}/$name');
+      if (await target.exists()) {
+        return target.path;
+      }
+      final copied = await sourceFile.copy(target.path);
+      return copied.path;
+    } catch (_) {
+      return sourcePath;
+    }
+  }
+
+  Future<void> _save() async {
+    if (!_formKey.currentState!.validate()) return;
+    setState(() => _saving = true);
+    try {
+      final payload = {
+        'name': _nameCtrl.text.trim(),
+        'surname': _surCtrl.text.trim(),
+        'phone': _phoneCtrl.text.trim(),
+        'address': _addressCtrl.text.trim(),
+        'nationalId': _nationalIdCtrl.text.trim(),
+        'birthDate': _birthCtrl.text.trim().isEmpty
+            ? null
+            : DateTime.tryParse(_birthCtrl.text.trim())?.toIso8601String(),
+      };
+      final res = await ApiService.updateProfile(widget.user.id, payload);
+      if (!mounted) return;
+      if (res['ok'] == true || (res['statusCode'] ?? 0) == 200) {
+        await ProfileAvatarCache.set(widget.user.id, _avatarPath);
+        AppNotification.show(
+          context,
+          message: loc.profileSavedMessage,
+          type: AppNotificationType.success,
+        );
+        if (!mounted) return;
+        Navigator.of(context).pop(true);
+      } else {
+        final msg = (res['message'] ?? res['error'] ?? 'Güncelleme başarısız').toString();
+        AppNotification.show(
+          context,
+          message: msg.isNotEmpty ? msg : loc.profileSaveFailed,
+          type: AppNotificationType.error,
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
+      AppNotification.show(
+        context,
+        message: loc.profileSaveFailedWithDetails('$e'),
+        type: AppNotificationType.error,
+      );
+    } finally {
+      if (mounted) setState(() => _saving = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final loc = AppLocalizations.of(context)!;
+    final resolvedPath = _avatarPath?.trim() ?? '';
+    final hasAvatar =
+        resolvedPath.isNotEmpty && File(resolvedPath).existsSync();
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(loc.profileEditTitle),
+        actions: [
+          TextButton(
+            onPressed: _saving ? null : _save,
+            child: _saving
+                ? const SizedBox(
+                    height: 16,
+                    width: 16,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : Text(loc.profileSaveAction),
+          ),
+        ],
+      ),
+      body: ListView(
+        padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
+        children: [
+          SectionCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                SectionHeader(
+                  title: loc.profilePhotoSectionTitle,
+                  subtitle: loc.profilePhotoSectionSubtitle,
+                  icon: Icons.photo_camera_outlined,
+                ),
+                const SizedBox(height: 14),
+                Row(
+                  children: [
+                    CircleAvatar(
+                      radius: 36,
+                      backgroundColor: Colors.transparent,
+                      child: Container(
+                        padding: const EdgeInsets.all(2),
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          gradient: LinearGradient(
+                            colors: [
+                              theme.colorScheme.primary.withValues(alpha: 0.9),
+                              theme.colorScheme.secondary.withValues(alpha: 0.8),
+                            ],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                        ),
+                        child: CircleAvatar(
+                          radius: 34,
+                          backgroundColor:
+                              theme.colorScheme.primary.withValues(alpha: 0.12),
+                          backgroundImage:
+                              hasAvatar ? FileImage(File(resolvedPath)) : null,
+                          child: _avatarPath == null || _avatarPath!.isEmpty
+                              ? Icon(
+                                  Icons.person,
+                                  color: theme.colorScheme.primary,
+                                  size: 30,
+                                )
+                              : null,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            loc.profilePhotoUploadTitle,
+                            style: theme.textTheme.titleSmall?.copyWith(
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+                          Text(
+                            loc.profilePhotoUploadHint,
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: theme.colorScheme.onSurfaceVariant,
+                            ),
+                          ),
+                          const SizedBox(height: 10),
+                          OutlinedButton.icon(
+                            onPressed: _saving ? null : _pickAvatar,
+                            icon: const Icon(Icons.upload),
+                            label: Text(loc.profilePhotoSelectAction),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                if (_saving) ...[
+                  const SizedBox(height: 12),
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(999),
+                    child: const LinearProgressIndicator(),
+                  ),
+                ],
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+          SectionCard(
+            child: Form(
+              key: _formKey,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  SectionHeader(
+                    title: loc.profilePersonalSectionTitle,
+                    subtitle: loc.profilePersonalSectionSubtitle,
+                    icon: Icons.badge_outlined,
+                  ),
+                  const SizedBox(height: 16),
+                  TextFormField(
+                    controller: _nameCtrl,
+                    decoration: InputDecoration(labelText: loc.profileFirstNameLabel),
+                    validator: (value) {
+                      if (value == null || value.trim().isEmpty) {
+                        return loc.validationRequired;
+                      }
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 12),
+                  TextFormField(
+                    controller: _surCtrl,
+                    decoration: InputDecoration(labelText: loc.profileLastNameLabel),
+                    validator: (value) {
+                      if (value == null || value.trim().isEmpty) {
+                        return loc.validationRequired;
+                      }
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 12),
+                  TextFormField(
+                    controller: _birthCtrl,
+                    decoration: InputDecoration(labelText: loc.profileBirthDateLabel),
+                  ),
+                  const SizedBox(height: 12),
+                  TextFormField(
+                    controller: _nationalIdCtrl,
+                    decoration: InputDecoration(labelText: loc.profileNationalIdLabel),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+          SectionCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                SectionHeader(
+                  title: loc.profileContactSectionTitle,
+                  subtitle: loc.profileContactSectionSubtitle,
+                  icon: Icons.contact_phone_outlined,
+                ),
+                const SizedBox(height: 16),
+                TextFormField(
+                  controller: _phoneCtrl,
+                  decoration: InputDecoration(labelText: loc.profilePhoneLabel),
+                ),
+                const SizedBox(height: 12),
+                TextFormField(
+                  controller: _addressCtrl,
+                  decoration: InputDecoration(labelText: loc.profileAddressLabel),
+                  maxLines: 2,
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 20),
+          FilledButton(
+            onPressed: _saving ? null : _save,
+            child: _saving
+                ? const SizedBox(
+                    height: 20,
+                    width: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : Text(loc.profileSaveAction),
+          ),
+        ],
+      ),
+    );
+  }
+}

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../widgets/section_card.dart';
+import '../../../l10n/app_localizations.dart';
 
 class BalanceCard extends StatelessWidget {
   const BalanceCard({
@@ -14,13 +15,14 @@ class BalanceCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final loc = AppLocalizations.of(context)!;
     return SectionCard(
       padding: const EdgeInsets.all(20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Cashback balance',
+            loc.walletBalanceLabel,
             style: theme.textTheme.bodySmall?.copyWith(
               color: theme.colorScheme.onSurfaceVariant,
             ),
@@ -43,7 +45,7 @@ class BalanceCard extends StatelessWidget {
                   borderRadius: BorderRadius.circular(999),
                 ),
                 child: Text(
-                  '+${monthlyEarned.toStringAsFixed(2)} ₺ this month',
+                  loc.walletMonthlyEarnedLabel(monthlyEarned.toStringAsFixed(2)),
                   style: theme.textTheme.labelSmall?.copyWith(
                     color: theme.colorScheme.primary,
                     fontWeight: FontWeight.w700,

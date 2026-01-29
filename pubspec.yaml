@@ -2,7 +2,7 @@ name: kyradi_app
 description: "KYRADI mobil uygulaması."
 publish_to: 'none'
 
-version: 1.0.0+1
+version: 1.0.0+111
 
 environment:
   sdk: ^3.9.0
@@ -10,6 +10,7 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  path_provider: ^2.1.4
   flutter_localizations: # ✅ çoklu dil için
     sdk: flutter
   cupertino_icons: ^1.0.8
@@ -40,6 +41,8 @@ dependencies:
 
   # --- Uluslararasılaştırma ---
   intl: ^0.20.2
+  pdf: ^3.11.3
+  printing: ^5.13.1
 
 dev_dependencies:
   flutter_test:

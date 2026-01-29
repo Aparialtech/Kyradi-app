@@ -103,6 +103,13 @@ class ApiService {
 
   static String get apiBaseUrl => baseUrl;
 
+  static bool get isAuthenticated => _authToken?.isNotEmpty == true;
+
+  static Future<bool> isAuthenticatedAsync() async {
+    await ensureInitialized();
+    return _authToken?.isNotEmpty == true;
+  }
+
   static String describeBaseUrl() {
     final resolved = baseUrl;
     final masked = _maskUrl(resolved);
@@ -328,6 +335,7 @@ class ApiService {
     String? authorizationCode,
     String? platform,
     String? deviceId,
+    String? flow,
   }) async {
     if (_usingMockBackend) {
       return MockServer.socialLogin(provider, idToken ?? accessToken ?? '');
@@ -339,6 +347,7 @@ class ApiService {
       if (authorizationCode != null) 'authorizationCode': authorizationCode,
       if (platform != null) 'platform': platform,
       if (deviceId != null) 'deviceId': deviceId,
+      if (flow != null && flow.isNotEmpty) 'flow': flow,
     });
     result['statusCode'] ??= result['_httpStatus'];
     if (result['ok'] == true) {
@@ -838,6 +847,24 @@ class ApiService {
       if (doc.isNotEmpty) result['luggage'] = doc;
     }
     return result;
+  }
+
+  static Future<Map<String, dynamic>> supportChat({
+    required String message,
+    String? sessionId,
+  }) async {
+    if (_usingMockBackend) {
+      return {
+        'ok': true,
+        'reply': MockServer.supportChatReply(message),
+        'sessionId': sessionId ?? 'mock-session',
+      };
+    }
+    final payload = <String, dynamic>{'message': message};
+    if (sessionId != null && sessionId.isNotEmpty) {
+      payload['sessionId'] = sessionId;
+    }
+    return _post('/support/chat', payload, timeout: const Duration(seconds: 18));
   }
 
   static Future<Map<String, dynamic>> uploadIdentityDocument({
