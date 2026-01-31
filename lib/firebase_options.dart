@@ -41,48 +41,51 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions web = FirebaseOptions(
-    apiKey: 'AIzaSyBBgl3IQwhXXwQ4372GbUzu2lf4YrQQXMU',
-    appId: '1:395311090803:web:b7575978cd61839dc52e06',
-    messagingSenderId: '395311090803',
-    projectId: 'kyradi',
-    authDomain: 'kyradi.firebaseapp.com',
-    storageBucket: 'kyradi.firebasestorage.app',
-    measurementId: 'G-PFDWSD4XKE',
+    apiKey: 'AIzaSyC2dUY0t2cGXdV7N0CJowNN4OA-nMwfw-Q',
+    appId: '1:143197560587:web:7b5a3069f93671f2108c0e',
+    messagingSenderId: '143197560587',
+    projectId: 'kyradi-superapp',
+    authDomain: 'kyradi-superapp.firebaseapp.com',
+    storageBucket: 'kyradi-superapp.firebasestorage.app',
+    measurementId: 'G-B7KNNCX27G',
   );
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyDK38k_MWSMFRl8uOp-iT3kTZiwdFLKAs8',
-    appId: '1:395311090803:android:4c33dfbeff0b0028c52e06',
-    messagingSenderId: '395311090803',
-    projectId: 'kyradi',
-    storageBucket: 'kyradi.firebasestorage.app',
+    apiKey: 'AIzaSyAaW_CXMEt6HuOBOjlPmtbO1jEA_OfV4fA',
+    appId: '1:143197560587:android:ebe8acc91573a6e9108c0e',
+    messagingSenderId: '143197560587',
+    projectId: 'kyradi-superapp',
+    storageBucket: 'kyradi-superapp.firebasestorage.app',
   );
 
   static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'AIzaSyDHYbgzeqa_H82T2JaGsDn0vvbdMrXKsTc',
-    appId: '1:395311090803:ios:1cc00f9d466c3628c52e06',
-    messagingSenderId: '395311090803',
-    projectId: 'kyradi',
-    storageBucket: 'kyradi.firebasestorage.app',
-    iosBundleId: 'com.dilan.bavulgooappp',
+    apiKey: 'AIzaSyA0HG8wgR7E7LdRSD5gKaTyvK0YhoLboHk',
+    appId: '1:143197560587:ios:a47ce1ba08c889a0108c0e',
+    messagingSenderId: '143197560587',
+    projectId: 'kyradi-superapp',
+    storageBucket: 'kyradi-superapp.firebasestorage.app',
+    iosClientId: '143197560587-inbditnleo9t3it24lfk49gg4s2v3r7h.apps.googleusercontent.com',
+    iosBundleId: 'com.kyradi.kyradi',
   );
 
   static const FirebaseOptions macos = FirebaseOptions(
-    apiKey: 'AIzaSyDHYbgzeqa_H82T2JaGsDn0vvbdMrXKsTc',
-    appId: '1:395311090803:ios:de8f712cac0cbfbbc52e06',
-    messagingSenderId: '395311090803',
-    projectId: 'kyradi',
-    storageBucket: 'kyradi.firebasestorage.app',
+    apiKey: 'AIzaSyA0HG8wgR7E7LdRSD5gKaTyvK0YhoLboHk',
+    appId: '1:143197560587:ios:1af013d2112c865d108c0e',
+    messagingSenderId: '143197560587',
+    projectId: 'kyradi-superapp',
+    storageBucket: 'kyradi-superapp.firebasestorage.app',
+    iosClientId: '143197560587-9c6s413uq9pkkhfepdajhtu8971d9ja4.apps.googleusercontent.com',
     iosBundleId: 'com.example.bavulgoApp',
   );
 
   static const FirebaseOptions windows = FirebaseOptions(
-    apiKey: 'AIzaSyBBgl3IQwhXXwQ4372GbUzu2lf4YrQQXMU',
-    appId: '1:395311090803:web:e77c3f4b6c2b8604c52e06',
-    messagingSenderId: '395311090803',
-    projectId: 'kyradi',
-    authDomain: 'kyradi.firebaseapp.com',
-    storageBucket: 'kyradi.firebasestorage.app',
-    measurementId: 'G-BPDKFM5QE7',
+    apiKey: 'AIzaSyC2dUY0t2cGXdV7N0CJowNN4OA-nMwfw-Q',
+    appId: '1:143197560587:web:af124345cf807040108c0e',
+    messagingSenderId: '143197560587',
+    projectId: 'kyradi-superapp',
+    authDomain: 'kyradi-superapp.firebaseapp.com',
+    storageBucket: 'kyradi-superapp.firebasestorage.app',
+    measurementId: 'G-MPF9K0PCPJ',
   );
+
 }

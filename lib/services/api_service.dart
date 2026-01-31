@@ -740,6 +740,76 @@ class ApiService {
     return result;
   }
 
+  static Future<Map<String, dynamic>> calculatePayment({
+    required DateTime startAt,
+    required DateTime endAt,
+    required bool insurance,
+    required String paymentMethod,
+  }) async {
+    if (_usingMockBackend) {
+      return MockServer.calculatePayment(
+        startAt: startAt,
+        endAt: endAt,
+        insurance: insurance,
+        paymentMethod: paymentMethod,
+      );
+    }
+    final body = <String, dynamic>{
+      'startAt': startAt.toUtc().toIso8601String(),
+      'endAt': endAt.toUtc().toIso8601String(),
+      'insurance': insurance,
+      'paymentMethod': paymentMethod,
+    };
+    final result = await _post('/payments/calculate', body);
+    result['statusCode'] ??= result['_httpStatus'];
+    return result;
+  }
+
+  static Future<Map<String, dynamic>> checkoutPayment({
+    required int amount,
+    required String paymentMethod,
+    String? reservationId,
+  }) async {
+    if (_usingMockBackend) {
+      return MockServer.checkoutPayment(
+        amount: amount,
+        paymentMethod: paymentMethod,
+        reservationId: reservationId,
+      );
+    }
+    final body = <String, dynamic>{
+      'amount': amount,
+      'paymentMethod': paymentMethod,
+    };
+    if (reservationId != null && reservationId.trim().isNotEmpty) {
+      body['reservationId'] = reservationId;
+    }
+    final result = await _post('/payments/checkout', body);
+    result['statusCode'] ??= result['_httpStatus'];
+    return result;
+  }
+
+  static Future<Map<String, dynamic>> walletTopup({
+    required double amount,
+  }) async {
+    if (_usingMockBackend) {
+      return MockServer.walletTopup(amount: amount);
+    }
+    final body = <String, dynamic>{'amount': amount};
+    final result = await _post('/wallet/topup', body);
+    result['statusCode'] ??= result['_httpStatus'];
+    return result;
+  }
+
+  static Future<Map<String, dynamic>> walletTransactions() async {
+    if (_usingMockBackend) {
+      return MockServer.walletTransactions();
+    }
+    final result = await _get('/wallet/transactions');
+    result['statusCode'] ??= result['_httpStatus'];
+    return result;
+  }
+
   static Future<Map<String, dynamic>> sendPaymentWebhook({
     required String providerPaymentId,
     required String status,

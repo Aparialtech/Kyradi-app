@@ -31,6 +31,7 @@ class DashboardPage extends StatefulWidget {
 }
 
 class _DashboardPageState extends State<DashboardPage> {
+  GoogleMapController? _homeMapController;
   late final HomeController _controller;
 
   String? _profileError;
@@ -124,6 +125,18 @@ class _DashboardPageState extends State<DashboardPage> {
       if (!mounted) return;
       setState(() => _luggageError = e.toString());
     }
+  }
+
+  Future<void> _zoomInHomeMap() async {
+    final controller = _homeMapController;
+    if (controller == null) return;
+    await controller.animateCamera(CameraUpdate.zoomIn());
+  }
+
+  Future<void> _zoomOutHomeMap() async {
+    final controller = _homeMapController;
+    if (controller == null) return;
+    await controller.animateCamera(CameraUpdate.zoomOut());
   }
 
   void _snack(String message, {AppNotificationType type = AppNotificationType.info}) {
@@ -300,6 +313,10 @@ class _DashboardPageState extends State<DashboardPage> {
                       setState(() => _homeMapSelected = location),
                   onOpenDetails: _openLocationDetails,
                   onOpenExplore: () => context.go('/explore'),
+                  onMapCreated: (controller) =>
+                      _homeMapController = controller,
+                  onZoomIn: _zoomInHomeMap,
+                  onZoomOut: _zoomOutHomeMap,
                 )
               else
                 SectionCard(
@@ -409,6 +426,9 @@ class _HomeMapCard extends StatelessWidget {
     required this.onSelect,
     required this.onOpenDetails,
     required this.onOpenExplore,
+    required this.onMapCreated,
+    required this.onZoomIn,
+    required this.onZoomOut,
   });
 
   final String title;
@@ -418,6 +438,9 @@ class _HomeMapCard extends StatelessWidget {
   final ValueChanged<DropLocation> onSelect;
   final ValueChanged<DropLocation> onOpenDetails;
   final VoidCallback onOpenExplore;
+  final ValueChanged<GoogleMapController> onMapCreated;
+  final VoidCallback onZoomIn;
+  final VoidCallback onZoomOut;
 
   @override
   Widget build(BuildContext context) {
@@ -465,17 +488,35 @@ class _HomeMapCard extends StatelessWidget {
             height: 220,
             child: ClipRRect(
               borderRadius: BorderRadius.circular(20),
-              child: GoogleMap(
-                initialCameraPosition: CameraPosition(
-                  target: initial,
-                  zoom: 12.2,
-                ),
-                markers: markers,
-                zoomControlsEnabled: false,
-                myLocationButtonEnabled: false,
-                onTap: (_) => onSelect(locations.first),
-                onLongPress: (_) => onOpenExplore(),
-                mapToolbarEnabled: false,
+              child: Stack(
+                children: [
+                  GoogleMap(
+                    initialCameraPosition: CameraPosition(
+                      target: initial,
+                      zoom: 12.2,
+                    ),
+                    markers: markers,
+                    zoomControlsEnabled: false,
+                    myLocationButtonEnabled: false,
+                    onTap: (_) => onSelect(locations.first),
+                    onLongPress: (_) => onOpenExplore(),
+                    mapToolbarEnabled: false,
+                    zoomGesturesEnabled: true,
+                    scrollGesturesEnabled: true,
+                    onMapCreated: onMapCreated,
+                  ),
+                  Positioned(
+                    top: 12,
+                    right: 12,
+                    child: Column(
+                      children: [
+                        _ZoomButton(icon: Icons.add, onTap: onZoomIn),
+                        const SizedBox(height: 8),
+                        _ZoomButton(icon: Icons.remove, onTap: onZoomOut),
+                      ],
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
@@ -590,6 +631,34 @@ class _IconActionCard extends StatelessWidget {
             const SizedBox(width: 8),
             const Icon(Icons.chevron_right),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ZoomButton extends StatelessWidget {
+  const _ZoomButton({
+    required this.icon,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Material(
+      color: theme.colorScheme.surface.withValues(alpha: 0.9),
+      shape: const CircleBorder(),
+      elevation: 3,
+      child: InkWell(
+        customBorder: const CircleBorder(),
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.all(8),
+          child: Icon(icon, size: 18),
         ),
       ),
     );

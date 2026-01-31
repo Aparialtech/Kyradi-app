@@ -66,12 +66,14 @@ class SectionHeader extends StatelessWidget {
     required this.title,
     this.subtitle,
     this.icon,
+    this.iconWidget,
     this.action,
   });
 
   final String title;
   final String? subtitle;
   final IconData? icon;
+  final Widget? iconWidget;
   final Widget? action;
 
   @override
@@ -82,7 +84,12 @@ class SectionHeader extends StatelessWidget {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        if (icon != null)
+        if (iconWidget != null)
+          Padding(
+            padding: const EdgeInsets.only(right: 10, top: 2),
+            child: iconWidget!,
+          )
+        else if (icon != null)
           Padding(
             padding: const EdgeInsets.only(right: 10, top: 2),
             child: Icon(icon, color: iconColor),
@@ -130,6 +137,72 @@ class SectionHeader extends StatelessWidget {
   }
 }
 
+class ThreeDIconBadge extends StatelessWidget {
+  const ThreeDIconBadge({
+    super.key,
+    required this.icon,
+    this.accent,
+  });
+
+  final IconData icon;
+  final Color? accent;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final resolved = accent ?? theme.colorScheme.primary;
+    final base = theme.colorScheme.surface;
+    return Stack(
+      alignment: Alignment.center,
+      children: [
+        Container(
+          height: 34,
+          width: 34,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            gradient: LinearGradient(
+              colors: [
+                resolved.withValues(alpha: 0.3),
+                resolved.withValues(alpha: 0.08),
+              ],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: resolved.withValues(alpha: 0.25),
+                blurRadius: 10,
+                offset: const Offset(0, 5),
+              ),
+            ],
+          ),
+        ),
+        Container(
+          height: 26,
+          width: 26,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: base,
+            border: Border.all(color: resolved.withValues(alpha: 0.35)),
+          ),
+        ),
+        Icon(
+          icon,
+          size: 16,
+          color: resolved,
+          shadows: [
+            Shadow(
+              color: resolved.withValues(alpha: 0.3),
+              blurRadius: 6,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
 /// Icon + label pill used for quick actions on the dashboard.
 class QuickActionTile extends StatelessWidget {
   const QuickActionTile({
@@ -148,8 +221,7 @@ class QuickActionTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final iconBg = (accentColor ?? theme.colorScheme.primary)
-        .withValues(alpha: 0.14);
+    final accent = accentColor ?? theme.colorScheme.primary;
     return Material(
       color: theme.colorScheme.surface,
       borderRadius: BorderRadius.circular(16),
@@ -161,17 +233,9 @@ class QuickActionTile extends StatelessWidget {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Container(
-                padding: const EdgeInsets.all(6),
-                decoration: BoxDecoration(
-                  color: iconBg,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Icon(
-                  icon,
-                  size: 18,
-                  color: accentColor ?? theme.colorScheme.primary,
-                ),
+              _ThreeDActionIcon(
+                icon: icon,
+                accent: accent,
               ),
               const SizedBox(width: 10),
               Text(
@@ -184,6 +248,69 @@ class QuickActionTile extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+class _ThreeDActionIcon extends StatelessWidget {
+  const _ThreeDActionIcon({
+    required this.icon,
+    required this.accent,
+  });
+
+  final IconData icon;
+  final Color accent;
+
+  @override
+  Widget build(BuildContext context) {
+    final base = Theme.of(context).colorScheme.surface;
+    return Stack(
+      alignment: Alignment.center,
+      children: [
+        Container(
+          height: 34,
+          width: 34,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            gradient: LinearGradient(
+              colors: [
+                accent.withValues(alpha: 0.3),
+                accent.withValues(alpha: 0.08),
+              ],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: accent.withValues(alpha: 0.25),
+                blurRadius: 10,
+                offset: const Offset(0, 5),
+              ),
+            ],
+          ),
+        ),
+        Container(
+          height: 26,
+          width: 26,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: base,
+            border: Border.all(color: accent.withValues(alpha: 0.35)),
+          ),
+        ),
+        Icon(
+          icon,
+          size: 16,
+          color: accent,
+          shadows: [
+            Shadow(
+              color: accent.withValues(alpha: 0.3),
+              blurRadius: 6,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+      ],
     );
   }
 }

@@ -8,6 +8,7 @@ import '../../payments/demo_payment_repository.dart';
 import '../../payments/wallet_payment_handler.dart';
 import '../../services/pricing_service.dart';
 import '../../core/repositories/luggage_repository.dart';
+import '../../services/api_service.dart';
 import '../../utils/crash_log.dart';
 import '../../widgets/app_notification.dart';
 import '../../widgets/section_card.dart';
@@ -51,7 +52,7 @@ class _ReservationStepperShellState extends State<ReservationStepperShell> {
     final step = _controller.step;
     if (!_canContinue(step)) return;
     if (step == 1) {
-      _controller.recalcPricing();
+      _controller.recalcPricingRemote();
     }
     final next = step + 1;
     _controller.setStep(next);
@@ -124,20 +125,43 @@ class _ReservationStepperShellState extends State<ReservationStepperShell> {
           return;
         }
       }
-      final result = await _paymentRepo.pay(
-        amount: pricing.total,
-        currency: 'TRY',
-        method: draft.paymentMethod,
-      );
-      final ok = result['ok'] == true || result['status'] == 'success';
-      if (!ok) {
-        AppNotification.show(
-          context,
-          message: loc.paymentFailedMessage,
-          type: AppNotificationType.error,
-        );
-        setState(() => _submitting = false);
-        return;
+      var ok = true;
+      if (draft.paymentMethod != 'pay_at_hotel' &&
+          draft.paymentMethod != 'transfer') {
+        try {
+          final checkout = await ApiService.checkoutPayment(
+            amount: pricing.total,
+            paymentMethod: draft.paymentMethod,
+          );
+          ok = checkout['ok'] == true ||
+              checkout['status'] == 'success' ||
+              checkout['paymentStatus'] == 'success';
+        } catch (_) {
+          ok = false;
+        }
+        if (!ok) {
+          final fallback = await _paymentRepo.pay(
+            amount: pricing.total,
+            currency: 'TRY',
+            method: draft.paymentMethod,
+          );
+          ok = fallback['ok'] == true || fallback['status'] == 'success';
+        }
+        if (!ok) {
+          AppNotification.show(
+            context,
+            message: loc.paymentFailedMessage,
+            type: AppNotificationType.error,
+          );
+          setState(() => _submitting = false);
+          return;
+        }
+      }
+      if (draft.paymentMethod == 'wallet') {
+        final balance = await WalletPaymentHandler.getBalance();
+        if (balance >= pricing.total) {
+          await WalletPaymentHandler.setBalance(balance - pricing.total);
+        }
       }
       final userId = _userId;
       if (userId == null || userId.isEmpty) {
@@ -389,9 +413,12 @@ class _ReservationStepperShellState extends State<ReservationStepperShell> {
                     ),
                     StepPricingOptions(
                       draft: _controller.draft,
+                      loading: _controller.pricingLoading,
+                      error: _controller.pricingError,
+                      onRecalculate: _controller.recalcPricingRemote,
                       onChanged: (draft) {
                         _controller.updateDraft(draft);
-                        _controller.recalcPricing();
+                        _controller.recalcPricingRemote();
                       },
                     ),
                     StepPayment(

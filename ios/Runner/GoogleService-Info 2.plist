@@ -2,10 +2,6 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-	<key>CLIENT_ID</key>
-	<string>143197560587-9c6s413uq9pkkhfepdajhtu8971d9ja4.apps.googleusercontent.com</string>
-	<key>REVERSED_CLIENT_ID</key>
-	<string>com.googleusercontent.apps.143197560587-9c6s413uq9pkkhfepdajhtu8971d9ja4</string>
 	<key>API_KEY</key>
 	<string>AIzaSyA0HG8wgR7E7LdRSD5gKaTyvK0YhoLboHk</string>
 	<key>GCM_SENDER_ID</key>
@@ -13,7 +9,7 @@
 	<key>PLIST_VERSION</key>
 	<string>1</string>
 	<key>BUNDLE_ID</key>
-	<string>com.example.bavulgoApp</string>
+	<string>com.kyradi.kyradi</string>
 	<key>PROJECT_ID</key>
 	<string>kyradi-superapp</string>
 	<key>STORAGE_BUCKET</key>
@@ -29,6 +25,6 @@
 	<key>IS_SIGNIN_ENABLED</key>
 	<true></true>
 	<key>GOOGLE_APP_ID</key>
-	<string>1:143197560587:ios:1af013d2112c865d108c0e</string>
+	<string>1:143197560587:ios:a47ce1ba08c889a0108c0e</string>
 </dict>
 </plist>

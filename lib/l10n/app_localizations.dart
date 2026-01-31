@@ -1013,7 +1013,7 @@ abstract class AppLocalizations {
   /// No description provided for @registerKvkkDocumentBody.
   ///
   /// In tr, this message translates to:
-  /// **'Kişisel Verilerin Korunması ve İşlenmesine İlişkin Aydınlatma Metni\nBu metin, KYRADI platformu kapsamında işlenen kişisel verilerin, 6698 sayılı Kişisel Verilerin Korunması Kanunu (\"KVKK\") uyarınca hangi kapsamda ve hangi amaçlarla işlendiğini açıklamak amacıyla hazırlanmıştır.\n\nİşlenen Kişisel Veri Türleri\nKYRADI platformu kapsamında aşağıdaki kişisel veri grupları işlenmektedir:\nMüşteri verileri:\nAd Soyad, Telefon, QR kod tokenı, Rezervasyon ve dolap bilgisi, Ödeme tutarı ve işlem numarası\nPersonel verileri:\nAd Soyad, E-posta, Kullanıcı rolü, IP, işlem logları, oturum bilgisi\nTeknik veriler:\nAudit log kayıtları, Tarayıcı/cihaz bilgisi, Hata raporları\n\nVeri İşleme Amaçları\nKişisel veriler; rezervasyon akışının sağlanması, QR kod üretimi ve doğrulaması, ödeme intent yönetimi, bagaj teslim ve iade sürecinin yürütülmesi, sistem güvenliğinin sağlanması ve kötüye kullanımın tespiti, yasal saklama yükümlülüklerinin yerine getirilmesi ile raporlama ve platform iyileştirmeleri amaçlarıyla işlenmektedir.\n\nHukuki Dayanaklar\nKişisel veriler, KVKK’nın 5/2-c maddesi kapsamında sözleşmenin kurulması ve ifası, 5/2-f maddesi kapsamında meşru menfaat, 5/2-ç maddesi kapsamında hukuki yükümlülükler ile açık rıza gerektiren durumlarda ilgili kişinin açık rızasına dayanılarak işlenmektedir.\n\nVerilerin Aktarıldığı Taraflar\nKişisel veriler; ödeme hizmetlerinin sağlanması amacıyla Stripe ve Iyzico gibi ödeme servislerine, altyapı ve barındırma hizmetleri kapsamında AWS, Google Cloud, Render ve Vercel gibi bulut sağlayıcılara, zorunlu hallerde kamu kurumlarına ve hukuki veya mali danışmanlara aktarılabilmektedir.\n\nSaklama Süreleri\nKişisel veriler; rezervasyon ve ödeme kayıtları için 10 yıl, audit log kayıtları için 2 yıl, kullanıcı hesapları için hesap kapanışından itibaren 1 yıl süreyle saklanmakta olup, QR kod tokenları 1–24 saat aralığında muhafaza edilmektedir.\n\nGüvenlik Tedbirleri\nKYRADI platformunda; tenant bazlı veri izolasyonu, parola hashleme, JWT tabanlı güvenlik, rol bazlı erişim kontrolü, rate limiting ve saldırı önleme mekanizmaları ile kritik işlemler için audit log tutulması gibi teknik ve idari güvenlik tedbirleri uygulanmaktadır.\n\nİlgili Kişinin Hakları\nKVKK’nın 11. maddesi kapsamında ilgili kişiler; kişisel verilerinin işlenip işlenmediğini öğrenme, silme ve düzeltme talebinde bulunma, veri işlemeye itiraz etme ve zarar halinde tazminat talep etme haklarına sahiptir.\n\nBaşvurular kvkk@kyradi.com adresi üzerinden iletilebilir.'**
+  /// **'Kişisel Verilerin Korunması ve İşlenmesine İlişkin Aydınlatma Metni\nBu metin, KYRADI platformu kapsamında işlenen kişisel verilerin, 6698 sayılı Kişisel Verilerin Korunması Kanunu (\"KVKK\") uyarınca hangi kapsamda ve hangi amaçlarla işlendiğini açıklamak amacıyla hazırlanmıştır.\n\nİşlenen Kişisel Veri Türleri\nKYRADI platformu kapsamında aşağıdaki kişisel veri grupları işlenmektedir:\nMüşteri verileri:\nAd Soyad, Telefon, QR kod tokenı, Rezervasyon ve dolap bilgisi, Ödeme tutarı ve işlem numarası\nPersonel verileri:\nAd Soyad, E-posta, Kullanıcı rolü, IP, işlem logları, oturum bilgisi\nTeknik veriler:\nAudit log kayıtları, Tarayıcı/cihaz bilgisi, Hata raporları\n\nVeri İşleme Amaçları\nKişisel veriler; rezervasyon akışının sağlanması, QR kod üretimi ve doğrulaması, ödeme intent yönetimi, bagaj teslim ve iade sürecinin yürütülmesi, sistem güvenliğinin sağlanması ve kötüye kullanımın tespiti, yasal saklama yükümlülüklerinin yerine getirilmesi ile raporlama ve platform iyileştirmeleri amaçlarıyla işlenmektedir.\n\nHukuki Dayanaklar\nKişisel veriler, KVKK’nın 5/2-c maddesi kapsamında sözleşmenin kurulması ve ifası, 5/2-f maddesi kapsamında meşru menfaat, 5/2-ç maddesi kapsamında hukuki yükümlülükler ile açık rıza gerektiren durumlarda ilgili kişinin açık rızasına dayanılarak işlenmektedir.\n\nVerilerin Aktarıldığı Taraflar\nKişisel veriler; ödeme hizmetlerinin sağlanması amacıyla Stripe ve Iyzico gibi ödeme servislerine, altyapı ve barındırma hizmetleri kapsamında AWS, Google Cloud, Render ve Vercel gibi bulut sağlayıcılara, zorunlu hallerde kamu kurumlarına ve hukuki veya mali danışmanlara aktarılabilmektedir.\n\nSaklama Süreleri\nKişisel veriler; rezervasyon ve ödeme kayıtları için 10 yıl, audit log kayıtları için 2 yıl, kullanıcı hesapları için hesap kapanışından itibaren 1 yıl süreyle saklanmakta olup, QR kod tokenları 1–24 saat aralığında muhafaza edilmektedir.\n\nGüvenlik Tedbirleri\nKYRADI platformunda; tenant bazlı veri izolasyonu, parola hashleme, JWT tabanlı güvenlik, rol bazlı erişim kontrolü, rate limiting ve saldırı önleme mekanizmaları ile kritik işlemler için audit log tutulması gibi teknik ve idari güvenlik tedbirleri uygulanmaktadır.\n\nAydınlatma ve Açık Rıza\nKullanıcı, gerekli hallerde açık rızasının alınacağını ve rızasını dilediği zaman geri çekebileceğini kabul eder. Açık rızanın geri çekilmesi, ilgili işlemlerin yürütülmesini kısmen veya tamamen etkileyebilir.\n\nVeri Güncelliği ve Doğruluk\nKullanıcı, KYRADI platformuna sunduğu verilerin doğru ve güncel olduğunu kabul eder. Yanlış veya güncel olmayan verilerden doğabilecek aksaklıklardan kullanıcı sorumludur.\n\nİletişim ve Bilgilendirme\nKullanıcı, hesap ve işlem bildirimlerinin e-posta, SMS veya uygulama içi bildirimlerle gönderilebileceğini kabul eder. Bu bildirimler güvenlik, ödeme ve rezervasyon süreçlerinin yürütülmesi amacıyla yapılır.\n\nİlgili Kişinin Hakları\nKVKK’nın 11. maddesi kapsamında ilgili kişiler; kişisel verilerinin işlenip işlenmediğini öğrenme, silme ve düzeltme talebinde bulunma, veri işlemeye itiraz etme ve zarar halinde tazminat talep etme haklarına sahiptir.\n\nBaşvurular kvkk@kyradi.com adresi üzerinden iletilebilir.'**
   String get registerKvkkDocumentBody;
 
   /// No description provided for @registerRestrictedDocumentBody.
@@ -4766,11 +4766,89 @@ abstract class AppLocalizations {
   /// **'Cüzdanına güvenle para ekle.'**
   String get topUpSectionSubtitle;
 
+  /// No description provided for @topUpMethodTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yükleme yöntemi seç'**
+  String get topUpMethodTitle;
+
+  /// No description provided for @topUpMethodSubtitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kayıtlı kartla devam et veya yeni kart ekle.'**
+  String get topUpMethodSubtitle;
+
+  /// No description provided for @topUpUseSavedCardTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kayıtlı kart kullan'**
+  String get topUpUseSavedCardTitle;
+
+  /// No description provided for @topUpUseSavedCardSubtitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kayıtlı kredi/banka kartlarından seç.'**
+  String get topUpUseSavedCardSubtitle;
+
+  /// No description provided for @topUpUseNewCardTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yeni kart kullan'**
+  String get topUpUseNewCardTitle;
+
+  /// No description provided for @topUpUseNewCardSubtitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yeni kredi ya da banka kartıyla öde.'**
+  String get topUpUseNewCardSubtitle;
+
+  /// No description provided for @topUpAmountTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yükleme tutarı'**
+  String get topUpAmountTitle;
+
+  /// No description provided for @topUpAmountSubtitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tutarı seç veya manuel gir.'**
+  String get topUpAmountSubtitle;
+
   /// No description provided for @topUpAmountLabel.
   ///
   /// In tr, this message translates to:
   /// **'Yükleme tutarı (₺)'**
   String get topUpAmountLabel;
+
+  /// No description provided for @topUpSelectCardTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kart seç'**
+  String get topUpSelectCardTitle;
+
+  /// No description provided for @topUpSelectCardSubtitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ücretlendirmek istediğin kartı seç.'**
+  String get topUpSelectCardSubtitle;
+
+  /// No description provided for @topUpSelectCardMessage.
+  ///
+  /// In tr, this message translates to:
+  /// **'Lütfen kayıtlı bir kart seçin.'**
+  String get topUpSelectCardMessage;
+
+  /// No description provided for @topUpCardDetailsTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kart bilgileri'**
+  String get topUpCardDetailsTitle;
+
+  /// No description provided for @topUpCardDetailsSubtitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kart bilgilerini güvenle gir.'**
+  String get topUpCardDetailsSubtitle;
 
   /// No description provided for @cardNumberLabel.
   ///
@@ -4856,11 +4934,29 @@ abstract class AppLocalizations {
   /// **'Cüzdan yükleme'**
   String get topUpTransactionTitle;
 
+  /// No description provided for @topUpTransactionTitleWithMethod.
+  ///
+  /// In tr, this message translates to:
+  /// **'Cüzdan yükleme ({method})'**
+  String topUpTransactionTitleWithMethod(Object method);
+
   /// No description provided for @topUpTransactionCategory.
   ///
   /// In tr, this message translates to:
   /// **'Yükleme'**
   String get topUpTransactionCategory;
+
+  /// No description provided for @walletSelectCardTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kart seç'**
+  String get walletSelectCardTitle;
+
+  /// No description provided for @selectedLabel.
+  ///
+  /// In tr, this message translates to:
+  /// **'Seçildi'**
+  String get selectedLabel;
 
   /// No description provided for @transferSectionTitle.
   ///
@@ -5497,6 +5593,102 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Fatura kaydedilemedi.'**
   String get invoiceSaveFailedMessage;
+
+  /// No description provided for @pricingRecalculateAction.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yeniden Hesapla'**
+  String get pricingRecalculateAction;
+
+  /// No description provided for @locationDetailsTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Lokasyon Bilgileri'**
+  String get locationDetailsTitle;
+
+  /// No description provided for @locationDetailsSubtitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Doluluk, açık/kapalı ve kapasite bilgileri.'**
+  String get locationDetailsSubtitle;
+
+  /// No description provided for @directionsAction.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yol Tarifi Al'**
+  String get directionsAction;
+
+  /// No description provided for @directionsSheetTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Harita uygulaması seçin'**
+  String get directionsSheetTitle;
+
+  /// No description provided for @directionsSheetSubtitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Konum için yönlendirme açılacak.'**
+  String get directionsSheetSubtitle;
+
+  /// No description provided for @directionsGoogleMaps.
+  ///
+  /// In tr, this message translates to:
+  /// **'Google Maps ile aç'**
+  String get directionsGoogleMaps;
+
+  /// No description provided for @directionsAppleMaps.
+  ///
+  /// In tr, this message translates to:
+  /// **'Apple Haritalar ile aç'**
+  String get directionsAppleMaps;
+
+  /// No description provided for @directionsPreviewTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Konumu haritada görüntüle'**
+  String get directionsPreviewTitle;
+
+  /// No description provided for @walletCreditCardLabel.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kredi Kartı'**
+  String get walletCreditCardLabel;
+
+  /// No description provided for @walletDebitCardLabel.
+  ///
+  /// In tr, this message translates to:
+  /// **'Banka Kartı'**
+  String get walletDebitCardLabel;
+
+  /// No description provided for @walletCreditCardSubtitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kredi kartlarını görüntüle ve yönet.'**
+  String get walletCreditCardSubtitle;
+
+  /// No description provided for @walletDebitCardSubtitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Banka kartlarını görüntüle ve yönet.'**
+  String get walletDebitCardSubtitle;
+
+  /// No description provided for @walletCardSavedMessage.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kart kaydedildi.'**
+  String get walletCardSavedMessage;
+
+  /// No description provided for @walletCardInvalidMessage.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kart bilgilerini eksiksiz girin.'**
+  String get walletCardInvalidMessage;
+
+  /// No description provided for @walletCardExpiryInvalidMessage.
+  ///
+  /// In tr, this message translates to:
+  /// **'Son kullanma tarihi geçersiz.'**
+  String get walletCardExpiryInvalidMessage;
 }
 
 class _AppLocalizationsDelegate

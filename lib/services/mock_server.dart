@@ -718,6 +718,76 @@ class MockServer {
     };
   }
 
+  static Future<Map<String, dynamic>> calculatePayment({
+    required DateTime startAt,
+    required DateTime endAt,
+    required bool insurance,
+    required String paymentMethod,
+  }) async {
+    const hourlyRate = 100;
+    const dailyRate = 500;
+    const insuranceFee = 50;
+    final minutes = endAt.difference(startAt).inMinutes;
+    final safeMinutes = minutes < 60 ? 60 : minutes;
+    final hours = (safeMinutes / 60).ceil();
+    final days = (safeMinutes / (24 * 60)).ceil();
+    final hourlyCost = hours * hourlyRate;
+    final dailyCost = days * dailyRate;
+    final baseCost = hourlyCost < dailyCost ? hourlyCost : dailyCost;
+    final insuranceCost = insurance ? insuranceFee : 0;
+    final hotelFee =
+        paymentMethod == 'pay_at_hotel' ? (baseCost * 0.10).round() : 0;
+    final total = baseCost + insuranceCost + hotelFee;
+    return {
+      'ok': true,
+      'statusCode': 200,
+      'pricing': {
+        'durationMinutes': safeMinutes,
+        'durationHours': hours,
+        'durationDays': days,
+        'hourlyCost': hourlyCost,
+        'dailyCost': dailyCost,
+        'baseCost': baseCost,
+        'insuranceFee': insuranceCost,
+        'hotelFee': hotelFee,
+        'total': total,
+        'chosen': hourlyCost <= dailyCost ? 'hourly' : 'daily',
+      },
+    };
+  }
+
+  static Future<Map<String, dynamic>> checkoutPayment({
+    required int amount,
+    required String paymentMethod,
+    String? reservationId,
+  }) async {
+    return {
+      'ok': true,
+      'statusCode': 200,
+      'paymentStatus': paymentMethod == 'pay_at_hotel' ? 'unpaid' : 'success',
+      'amount': amount,
+      'reservationId': reservationId,
+    };
+  }
+
+  static Future<Map<String, dynamic>> walletTopup({
+    required double amount,
+  }) async {
+    return {
+      'ok': true,
+      'statusCode': 200,
+      'balance': amount,
+    };
+  }
+
+  static Future<Map<String, dynamic>> walletTransactions() async {
+    return {
+      'ok': true,
+      'statusCode': 200,
+      'items': [],
+    };
+  }
+
   static Future<Map<String, dynamic>> sendPaymentWebhook({
     required String providerPaymentId,
     required String status,

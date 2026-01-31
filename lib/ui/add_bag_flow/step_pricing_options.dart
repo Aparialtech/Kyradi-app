@@ -10,10 +10,16 @@ class StepPricingOptions extends StatelessWidget {
     super.key,
     required this.draft,
     required this.onChanged,
+    required this.loading,
+    required this.error,
+    required this.onRecalculate,
   });
 
   final ReservationDraft draft;
   final ValueChanged<ReservationDraft> onChanged;
+  final bool loading;
+  final String? error;
+  final Future<void> Function() onRecalculate;
 
   PricingBreakdown _pricing() {
     return draft.pricing ??
@@ -27,12 +33,6 @@ class StepPricingOptions extends StatelessWidget {
 
   void _toggleInsurance(bool value) {
     final next = draft.copy()..insurance = value;
-    next.pricing = PricingService.calculate(
-      start: next.dropAt ?? DateTime.now(),
-      end: next.pickupAt ?? DateTime.now().add(const Duration(hours: 1)),
-      insurance: next.insurance,
-      paymentMethod: next.paymentMethod,
-    );
     onChanged(next);
   }
 
@@ -50,6 +50,24 @@ class StepPricingOptions extends StatelessWidget {
               ),
         ),
         const SizedBox(height: 12),
+        if (loading)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 12),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(999),
+              child: const LinearProgressIndicator(minHeight: 3),
+            ),
+          ),
+        if (!loading && error != null && error!.isNotEmpty)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 12),
+            child: Text(
+              error!,
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: Theme.of(context).colorScheme.error,
+                  ),
+            ),
+          ),
         SectionCard(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -94,6 +112,15 @@ class StepPricingOptions extends StatelessWidget {
             title: Text(loc.insuranceOptionTitle),
             subtitle: Text(loc.insuranceOptionSubtitle),
             contentPadding: EdgeInsets.zero,
+          ),
+        ),
+        const SizedBox(height: 8),
+        Align(
+          alignment: Alignment.centerRight,
+          child: TextButton.icon(
+            onPressed: loading ? null : onRecalculate,
+            icon: const Icon(Icons.refresh),
+            label: Text(loc.pricingRecalculateAction),
           ),
         ),
         const SizedBox(height: 12),

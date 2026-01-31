@@ -2584,7 +2584,49 @@ class AppLocalizationsDe extends AppLocalizations {
   String get topUpSectionSubtitle => 'Add money to your wallet securely.';
 
   @override
+  String get topUpMethodTitle => 'Choose top-up method';
+
+  @override
+  String get topUpMethodSubtitle =>
+      'Continue with a saved card or add a new card.';
+
+  @override
+  String get topUpUseSavedCardTitle => 'Use saved card';
+
+  @override
+  String get topUpUseSavedCardSubtitle =>
+      'Pick from your saved credit/debit cards.';
+
+  @override
+  String get topUpUseNewCardTitle => 'Use new card';
+
+  @override
+  String get topUpUseNewCardSubtitle => 'Pay with a new credit or debit card.';
+
+  @override
+  String get topUpAmountTitle => 'Top-up amount';
+
+  @override
+  String get topUpAmountSubtitle => 'Select or enter the amount to add.';
+
+  @override
   String get topUpAmountLabel => 'Top-up amount (₺)';
+
+  @override
+  String get topUpSelectCardTitle => 'Select a card';
+
+  @override
+  String get topUpSelectCardSubtitle => 'Choose the card you want to charge.';
+
+  @override
+  String get topUpSelectCardMessage => 'Please select a saved card.';
+
+  @override
+  String get topUpCardDetailsTitle => 'Card details';
+
+  @override
+  String get topUpCardDetailsSubtitle =>
+      'Enter your card information securely.';
 
   @override
   String get cardNumberLabel => 'Card number';
@@ -2631,7 +2673,18 @@ class AppLocalizationsDe extends AppLocalizations {
   String get topUpTransactionTitle => 'Wallet top-up';
 
   @override
+  String topUpTransactionTitleWithMethod(Object method) {
+    return 'Wallet top-up ($method)';
+  }
+
+  @override
   String get topUpTransactionCategory => 'Top-up';
+
+  @override
+  String get walletSelectCardTitle => 'Select card';
+
+  @override
+  String get selectedLabel => 'Selected';
 
   @override
   String get transferSectionTitle => 'Transfer';
@@ -2979,4 +3032,53 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get invoiceSaveFailedMessage => 'Fatura kaydedilemedi.';
+
+  @override
+  String get pricingRecalculateAction => 'Yeniden Hesapla';
+
+  @override
+  String get locationDetailsTitle => 'Lokasyon Bilgileri';
+
+  @override
+  String get locationDetailsSubtitle =>
+      'Doluluk, açık/kapalı ve kapasite bilgileri.';
+
+  @override
+  String get directionsAction => 'Yol Tarifi Al';
+
+  @override
+  String get directionsSheetTitle => 'Harita uygulaması seçin';
+
+  @override
+  String get directionsSheetSubtitle => 'Konum için yönlendirme açılacak.';
+
+  @override
+  String get directionsGoogleMaps => 'Google Maps ile aç';
+
+  @override
+  String get directionsAppleMaps => 'Apple Haritalar ile aç';
+
+  @override
+  String get directionsPreviewTitle => 'Konumu haritada görüntüle';
+
+  @override
+  String get walletCreditCardLabel => 'Kredi Kartı';
+
+  @override
+  String get walletDebitCardLabel => 'Banka Kartı';
+
+  @override
+  String get walletCreditCardSubtitle => 'Kredi kartlarını görüntüle ve yönet.';
+
+  @override
+  String get walletDebitCardSubtitle => 'Banka kartlarını görüntüle ve yönet.';
+
+  @override
+  String get walletCardSavedMessage => 'Kart kaydedildi.';
+
+  @override
+  String get walletCardInvalidMessage => 'Kart bilgilerini eksiksiz girin.';
+
+  @override
+  String get walletCardExpiryInvalidMessage => 'Son kullanma tarihi geçersiz.';
 }

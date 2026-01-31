@@ -18,7 +18,7 @@ import { AuthGuard } from './common/guards/auth.guard';
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      envFilePath: '.env',
+      envFilePath: ['.env.local', '.env'],
     }),
     MongooseModule.forRoot(process.env.MONGODB_URI || ''),
     AuthModule,

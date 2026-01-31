@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import '../models/reservation_draft.dart';
 import '../models/pricing_breakdown.dart';
 import '../services/pricing_service.dart';
+import '../services/api_service.dart';
 
 class ReservationFlowController extends ChangeNotifier {
   ReservationFlowController() : _draft = ReservationDraft();
@@ -9,10 +10,14 @@ class ReservationFlowController extends ChangeNotifier {
   ReservationDraft _draft;
   int _step = 0;
   bool _busy = false;
+  bool _pricingLoading = false;
+  String? _pricingError;
 
   ReservationDraft get draft => _draft;
   int get step => _step;
   bool get busy => _busy;
+  bool get pricingLoading => _pricingLoading;
+  String? get pricingError => _pricingError;
 
   void setStep(int value) {
     _step = value;
@@ -41,6 +46,37 @@ class ReservationFlowController extends ChangeNotifier {
     _draft.pricing = pricing;
     notifyListeners();
     return pricing;
+  }
+
+  Future<void> recalcPricingRemote() async {
+    final start = _draft.dropAt ?? DateTime.now();
+    final end = _draft.pickupAt ?? start.add(const Duration(hours: 1));
+    _pricingLoading = true;
+    _pricingError = null;
+    notifyListeners();
+    try {
+      final result = await ApiService.calculatePayment(
+        startAt: start,
+        endAt: end,
+        insurance: _draft.insurance,
+        paymentMethod: _draft.paymentMethod,
+      );
+      final ok = result['ok'] == true;
+      if (ok && result['pricing'] is Map) {
+        _draft.pricing = PricingBreakdown.fromJson(
+          Map<String, dynamic>.from(result['pricing'] as Map),
+        );
+      } else {
+        _pricingError = (result['error'] ?? result['message'] ?? '').toString();
+        _draft.pricing = recalcPricing();
+      }
+    } catch (e) {
+      _pricingError = e.toString();
+      _draft.pricing = recalcPricing();
+    } finally {
+      _pricingLoading = false;
+      notifyListeners();
+    }
   }
 
   bool get canContinueStep1 {

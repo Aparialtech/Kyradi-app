@@ -500,7 +500,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get registerKvkkDocumentBody =>
-      'Kişisel Verilerin Korunması ve İşlenmesine İlişkin Aydınlatma Metni\nBu metin, KYRADI platformu kapsamında işlenen kişisel verilerin, 6698 sayılı Kişisel Verilerin Korunması Kanunu (\"KVKK\") uyarınca hangi kapsamda ve hangi amaçlarla işlendiğini açıklamak amacıyla hazırlanmıştır.\n\nİşlenen Kişisel Veri Türleri\nKYRADI platformu kapsamında aşağıdaki kişisel veri grupları işlenmektedir:\nMüşteri verileri:\nAd Soyad, Telefon, QR kod tokenı, Rezervasyon ve dolap bilgisi, Ödeme tutarı ve işlem numarası\nPersonel verileri:\nAd Soyad, E-posta, Kullanıcı rolü, IP, işlem logları, oturum bilgisi\nTeknik veriler:\nAudit log kayıtları, Tarayıcı/cihaz bilgisi, Hata raporları\n\nVeri İşleme Amaçları\nKişisel veriler; rezervasyon akışının sağlanması, QR kod üretimi ve doğrulaması, ödeme intent yönetimi, bagaj teslim ve iade sürecinin yürütülmesi, sistem güvenliğinin sağlanması ve kötüye kullanımın tespiti, yasal saklama yükümlülüklerinin yerine getirilmesi ile raporlama ve platform iyileştirmeleri amaçlarıyla işlenmektedir.\n\nHukuki Dayanaklar\nKişisel veriler, KVKK’nın 5/2-c maddesi kapsamında sözleşmenin kurulması ve ifası, 5/2-f maddesi kapsamında meşru menfaat, 5/2-ç maddesi kapsamında hukuki yükümlülükler ile açık rıza gerektiren durumlarda ilgili kişinin açık rızasına dayanılarak işlenmektedir.\n\nVerilerin Aktarıldığı Taraflar\nKişisel veriler; ödeme hizmetlerinin sağlanması amacıyla Stripe ve Iyzico gibi ödeme servislerine, altyapı ve barındırma hizmetleri kapsamında AWS, Google Cloud, Render ve Vercel gibi bulut sağlayıcılara, zorunlu hallerde kamu kurumlarına ve hukuki veya mali danışmanlara aktarılabilmektedir.\n\nSaklama Süreleri\nKişisel veriler; rezervasyon ve ödeme kayıtları için 10 yıl, audit log kayıtları için 2 yıl, kullanıcı hesapları için hesap kapanışından itibaren 1 yıl süreyle saklanmakta olup, QR kod tokenları 1–24 saat aralığında muhafaza edilmektedir.\n\nGüvenlik Tedbirleri\nKYRADI platformunda; tenant bazlı veri izolasyonu, parola hashleme, JWT tabanlı güvenlik, rol bazlı erişim kontrolü, rate limiting ve saldırı önleme mekanizmaları ile kritik işlemler için audit log tutulması gibi teknik ve idari güvenlik tedbirleri uygulanmaktadır.\n\nİlgili Kişinin Hakları\nKVKK’nın 11. maddesi kapsamında ilgili kişiler; kişisel verilerinin işlenip işlenmediğini öğrenme, silme ve düzeltme talebinde bulunma, veri işlemeye itiraz etme ve zarar halinde tazminat talep etme haklarına sahiptir.\n\nBaşvurular kvkk@kyradi.com adresi üzerinden iletilebilir.';
+      'Kişisel Verilerin Korunması ve İşlenmesine İlişkin Aydınlatma Metni\nBu metin, KYRADI platformu kapsamında işlenen kişisel verilerin, 6698 sayılı Kişisel Verilerin Korunması Kanunu (\"KVKK\") uyarınca hangi kapsamda ve hangi amaçlarla işlendiğini açıklamak amacıyla hazırlanmıştır.\n\nİşlenen Kişisel Veri Türleri\nKYRADI platformu kapsamında aşağıdaki kişisel veri grupları işlenmektedir:\nMüşteri verileri:\nAd Soyad, Telefon, QR kod tokenı, Rezervasyon ve dolap bilgisi, Ödeme tutarı ve işlem numarası\nPersonel verileri:\nAd Soyad, E-posta, Kullanıcı rolü, IP, işlem logları, oturum bilgisi\nTeknik veriler:\nAudit log kayıtları, Tarayıcı/cihaz bilgisi, Hata raporları\n\nVeri İşleme Amaçları\nKişisel veriler; rezervasyon akışının sağlanması, QR kod üretimi ve doğrulaması, ödeme intent yönetimi, bagaj teslim ve iade sürecinin yürütülmesi, sistem güvenliğinin sağlanması ve kötüye kullanımın tespiti, yasal saklama yükümlülüklerinin yerine getirilmesi ile raporlama ve platform iyileştirmeleri amaçlarıyla işlenmektedir.\n\nHukuki Dayanaklar\nKişisel veriler, KVKK’nın 5/2-c maddesi kapsamında sözleşmenin kurulması ve ifası, 5/2-f maddesi kapsamında meşru menfaat, 5/2-ç maddesi kapsamında hukuki yükümlülükler ile açık rıza gerektiren durumlarda ilgili kişinin açık rızasına dayanılarak işlenmektedir.\n\nVerilerin Aktarıldığı Taraflar\nKişisel veriler; ödeme hizmetlerinin sağlanması amacıyla Stripe ve Iyzico gibi ödeme servislerine, altyapı ve barındırma hizmetleri kapsamında AWS, Google Cloud, Render ve Vercel gibi bulut sağlayıcılara, zorunlu hallerde kamu kurumlarına ve hukuki veya mali danışmanlara aktarılabilmektedir.\n\nSaklama Süreleri\nKişisel veriler; rezervasyon ve ödeme kayıtları için 10 yıl, audit log kayıtları için 2 yıl, kullanıcı hesapları için hesap kapanışından itibaren 1 yıl süreyle saklanmakta olup, QR kod tokenları 1–24 saat aralığında muhafaza edilmektedir.\n\nGüvenlik Tedbirleri\nKYRADI platformunda; tenant bazlı veri izolasyonu, parola hashleme, JWT tabanlı güvenlik, rol bazlı erişim kontrolü, rate limiting ve saldırı önleme mekanizmaları ile kritik işlemler için audit log tutulması gibi teknik ve idari güvenlik tedbirleri uygulanmaktadır.\n\nAydınlatma ve Açık Rıza\nKullanıcı, gerekli hallerde açık rızasının alınacağını ve rızasını dilediği zaman geri çekebileceğini kabul eder. Açık rızanın geri çekilmesi, ilgili işlemlerin yürütülmesini kısmen veya tamamen etkileyebilir.\n\nVeri Güncelliği ve Doğruluk\nKullanıcı, KYRADI platformuna sunduğu verilerin doğru ve güncel olduğunu kabul eder. Yanlış veya güncel olmayan verilerden doğabilecek aksaklıklardan kullanıcı sorumludur.\n\nİletişim ve Bilgilendirme\nKullanıcı, hesap ve işlem bildirimlerinin e-posta, SMS veya uygulama içi bildirimlerle gönderilebileceğini kabul eder. Bu bildirimler güvenlik, ödeme ve rezervasyon süreçlerinin yürütülmesi amacıyla yapılır.\n\nİlgili Kişinin Hakları\nKVKK’nın 11. maddesi kapsamında ilgili kişiler; kişisel verilerinin işlenip işlenmediğini öğrenme, silme ve düzeltme talebinde bulunma, veri işlemeye itiraz etme ve zarar halinde tazminat talep etme haklarına sahiptir.\n\nBaşvurular kvkk@kyradi.com adresi üzerinden iletilebilir.';
 
   @override
   String get registerRestrictedDocumentBody =>
@@ -2566,7 +2566,48 @@ class AppLocalizationsTr extends AppLocalizations {
   String get topUpSectionSubtitle => 'Cüzdanına güvenle para ekle.';
 
   @override
+  String get topUpMethodTitle => 'Yükleme yöntemi seç';
+
+  @override
+  String get topUpMethodSubtitle =>
+      'Kayıtlı kartla devam et veya yeni kart ekle.';
+
+  @override
+  String get topUpUseSavedCardTitle => 'Kayıtlı kart kullan';
+
+  @override
+  String get topUpUseSavedCardSubtitle =>
+      'Kayıtlı kredi/banka kartlarından seç.';
+
+  @override
+  String get topUpUseNewCardTitle => 'Yeni kart kullan';
+
+  @override
+  String get topUpUseNewCardSubtitle => 'Yeni kredi ya da banka kartıyla öde.';
+
+  @override
+  String get topUpAmountTitle => 'Yükleme tutarı';
+
+  @override
+  String get topUpAmountSubtitle => 'Tutarı seç veya manuel gir.';
+
+  @override
   String get topUpAmountLabel => 'Yükleme tutarı (₺)';
+
+  @override
+  String get topUpSelectCardTitle => 'Kart seç';
+
+  @override
+  String get topUpSelectCardSubtitle => 'Ücretlendirmek istediğin kartı seç.';
+
+  @override
+  String get topUpSelectCardMessage => 'Lütfen kayıtlı bir kart seçin.';
+
+  @override
+  String get topUpCardDetailsTitle => 'Kart bilgileri';
+
+  @override
+  String get topUpCardDetailsSubtitle => 'Kart bilgilerini güvenle gir.';
 
   @override
   String get cardNumberLabel => 'Kart numarası';
@@ -2614,7 +2655,18 @@ class AppLocalizationsTr extends AppLocalizations {
   String get topUpTransactionTitle => 'Cüzdan yükleme';
 
   @override
+  String topUpTransactionTitleWithMethod(Object method) {
+    return 'Cüzdan yükleme ($method)';
+  }
+
+  @override
   String get topUpTransactionCategory => 'Yükleme';
+
+  @override
+  String get walletSelectCardTitle => 'Kart seç';
+
+  @override
+  String get selectedLabel => 'Seçildi';
 
   @override
   String get transferSectionTitle => 'Transfer';
@@ -2965,4 +3017,53 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get invoiceSaveFailedMessage => 'Fatura kaydedilemedi.';
+
+  @override
+  String get pricingRecalculateAction => 'Yeniden Hesapla';
+
+  @override
+  String get locationDetailsTitle => 'Lokasyon Bilgileri';
+
+  @override
+  String get locationDetailsSubtitle =>
+      'Doluluk, açık/kapalı ve kapasite bilgileri.';
+
+  @override
+  String get directionsAction => 'Yol Tarifi Al';
+
+  @override
+  String get directionsSheetTitle => 'Harita uygulaması seçin';
+
+  @override
+  String get directionsSheetSubtitle => 'Konum için yönlendirme açılacak.';
+
+  @override
+  String get directionsGoogleMaps => 'Google Maps ile aç';
+
+  @override
+  String get directionsAppleMaps => 'Apple Haritalar ile aç';
+
+  @override
+  String get directionsPreviewTitle => 'Konumu haritada görüntüle';
+
+  @override
+  String get walletCreditCardLabel => 'Kredi Kartı';
+
+  @override
+  String get walletDebitCardLabel => 'Banka Kartı';
+
+  @override
+  String get walletCreditCardSubtitle => 'Kredi kartlarını görüntüle ve yönet.';
+
+  @override
+  String get walletDebitCardSubtitle => 'Banka kartlarını görüntüle ve yönet.';
+
+  @override
+  String get walletCardSavedMessage => 'Kart kaydedildi.';
+
+  @override
+  String get walletCardInvalidMessage => 'Kart bilgilerini eksiksiz girin.';
+
+  @override
+  String get walletCardExpiryInvalidMessage => 'Son kullanma tarihi geçersiz.';
 }

@@ -1026,7 +1026,20 @@
   "couponFailedMessage": "Coupon could not be applied.",
   "topUpSectionTitle": "Top up",
   "topUpSectionSubtitle": "Add money to your wallet securely.",
+  "topUpMethodTitle": "Choose top-up method",
+  "topUpMethodSubtitle": "Continue with a saved card or add a new card.",
+  "topUpUseSavedCardTitle": "Use saved card",
+  "topUpUseSavedCardSubtitle": "Pick from your saved credit/debit cards.",
+  "topUpUseNewCardTitle": "Use new card",
+  "topUpUseNewCardSubtitle": "Pay with a new credit or debit card.",
+  "topUpAmountTitle": "Top-up amount",
+  "topUpAmountSubtitle": "Select or enter the amount to add.",
   "topUpAmountLabel": "Top-up amount (₺)",
+  "topUpSelectCardTitle": "Select a card",
+  "topUpSelectCardSubtitle": "Choose the card you want to charge.",
+  "topUpSelectCardMessage": "Please select a saved card.",
+  "topUpCardDetailsTitle": "Card details",
+  "topUpCardDetailsSubtitle": "Enter your card information securely.",
   "cardNumberLabel": "Card number",
   "cardHolderNameLabel": "Cardholder name",
   "cardExpiryLabel": "Expiry (MM/YY)",
@@ -1047,7 +1060,15 @@
   "topUpSuccessMessage": "Top-up successful.",
   "topUpFailedMessage": "Top-up failed. Please try again.",
   "topUpTransactionTitle": "Wallet top-up",
+  "topUpTransactionTitleWithMethod": "Wallet top-up ({method})",
+  "@topUpTransactionTitleWithMethod": {
+    "placeholders": {
+      "method": {}
+    }
+  },
   "topUpTransactionCategory": "Top-up",
+  "walletSelectCardTitle": "Select card",
+  "selectedLabel": "Selected",
   "transferSectionTitle": "Transfer",
   "transferSectionSubtitle": "Send money to another user.",
   "transferTargetLabel": "Recipient (phone/email/ID)",
@@ -1190,5 +1211,21 @@
     "placeholders": {
       "file": {}
     }
-  }
+  },
+  "pricingRecalculateAction": "Recalculate",
+  "locationDetailsTitle": "Location Details",
+  "locationDetailsSubtitle": "Occupancy, open hours and capacity.",
+  "directionsAction": "Get Directions",
+  "directionsSheetTitle": "Choose a maps app",
+  "directionsSheetSubtitle": "We will open navigation to the location.",
+  "directionsGoogleMaps": "Open in Google Maps",
+  "directionsAppleMaps": "Open in Apple Maps",
+  "directionsPreviewTitle": "Live map preview",
+  "walletCreditCardLabel": "Credit Card",
+  "walletDebitCardLabel": "Debit Card",
+  "walletCreditCardSubtitle": "View and manage credit cards.",
+  "walletDebitCardSubtitle": "View and manage debit cards.",
+  "walletCardSavedMessage": "Card saved.",
+  "walletCardInvalidMessage": "Please fill card details.",
+  "walletCardExpiryInvalidMessage": "Invalid expiry date."
 }

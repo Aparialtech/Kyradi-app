@@ -1,6 +1,6 @@
 import 'package:firebase_core/firebase_core.dart';
 import '../../utils/crash_log.dart';
-import 'firebase_options.dart';
+import '../../firebase_options.dart';
 
 class FirebaseBootstrap {
   FirebaseBootstrap._();

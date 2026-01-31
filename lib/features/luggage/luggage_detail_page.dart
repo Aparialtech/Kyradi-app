@@ -195,7 +195,9 @@ class _LuggageDetailPageState extends State<LuggageDetailPage> {
                       ),
                 ),
                 subtitle: Text(loc.reservationInfoSubtitle),
-                leading: const Icon(Icons.info_outline),
+                leading: const ThreeDIconBadge(
+                  icon: Icons.info_outline,
+                ),
                 children: [
                   _InfoRow(
                     label: loc.luggageIdLabel,
@@ -237,7 +239,9 @@ class _LuggageDetailPageState extends State<LuggageDetailPage> {
                       ),
                 ),
                 subtitle: Text(loc.luggageInfoSectionSubtitle),
-                leading: const Icon(Icons.inventory_2_outlined),
+                leading: const ThreeDIconBadge(
+                  icon: Icons.inventory_2_outlined,
+                ),
                 children: [
                   _InfoRow(
                     label: loc.luggageInfoLabelSize,
@@ -308,7 +312,9 @@ class _LuggageDetailPageState extends State<LuggageDetailPage> {
                 SectionHeader(
                   title: loc.invoiceSectionTitle,
                   subtitle: loc.invoiceSectionSubtitle,
-                  icon: Icons.receipt_long_outlined,
+                  iconWidget: const ThreeDIconBadge(
+                    icon: Icons.receipt_long_outlined,
+                  ),
                 ),
                 const SizedBox(height: 12),
                 _InfoRow(

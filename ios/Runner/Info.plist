@@ -22,8 +22,6 @@
 	<string>$(FLUTTER_BUILD_NAME)</string>
 	<key>CFBundleSignature</key>
 	<string>????</string>
-	<key>CFBundleVersion</key>
-	<string>$(FLUTTER_BUILD_NUMBER)</string>
 	<key>CFBundleURLTypes</key>
 	<array>
 		<dict>
@@ -33,10 +31,12 @@
 			<string>GoogleSignIn</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
-				<string>com.googleusercontent.apps.257787138037-6deiuvca1572r0a2vi7ou1v1nk00e5kt</string>
+				<string>com.googleusercontent.apps.143197560587-inbditnleo9t3it24lfk49gg4s2v3r7h</string>
 			</array>
 		</dict>
 	</array>
+	<key>CFBundleVersion</key>
+	<string>$(FLUTTER_BUILD_NUMBER)</string>
 	<key>GMSApiKey</key>
 	<string>$(GOOGLE_MAPS_API_KEY)</string>
 	<key>GMSServicesAPIKey</key>
@@ -47,9 +47,9 @@
 	<true/>
 	<key>NSCameraUsageDescription</key>
 	<string>QR kod okutmak için kamera izni gereklidir.</string>
-	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>Konum tabanlı hizmetler için konum izni gereklidir.</string>
 	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>Konum tabanlı hizmetler için konum izni gereklidir.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>Konum tabanlı hizmetler için konum izni gereklidir.</string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>Mikrofon erişimi gerekli.</string>

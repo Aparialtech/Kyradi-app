@@ -191,7 +191,7 @@
   "registerAgreementView": "Metni Görüntüle",
   "registerKvkkDialogTitle": "KYRADI – KVKK Aydınlatma Metni",
   "registerRestrictedDialogTitle": "Aparial'in ve Genel Taşıma Şirketlerinin Reddettiği Maddeler",
-  "registerKvkkDocumentBody": "Kişisel Verilerin Korunması ve İşlenmesine İlişkin Aydınlatma Metni\nBu metin, KYRADI platformu kapsamında işlenen kişisel verilerin, 6698 sayılı Kişisel Verilerin Korunması Kanunu (\"KVKK\") uyarınca hangi kapsamda ve hangi amaçlarla işlendiğini açıklamak amacıyla hazırlanmıştır.\n\nİşlenen Kişisel Veri Türleri\nKYRADI platformu kapsamında aşağıdaki kişisel veri grupları işlenmektedir:\nMüşteri verileri:\nAd Soyad, Telefon, QR kod tokenı, Rezervasyon ve dolap bilgisi, Ödeme tutarı ve işlem numarası\nPersonel verileri:\nAd Soyad, E-posta, Kullanıcı rolü, IP, işlem logları, oturum bilgisi\nTeknik veriler:\nAudit log kayıtları, Tarayıcı/cihaz bilgisi, Hata raporları\n\nVeri İşleme Amaçları\nKişisel veriler; rezervasyon akışının sağlanması, QR kod üretimi ve doğrulaması, ödeme intent yönetimi, bagaj teslim ve iade sürecinin yürütülmesi, sistem güvenliğinin sağlanması ve kötüye kullanımın tespiti, yasal saklama yükümlülüklerinin yerine getirilmesi ile raporlama ve platform iyileştirmeleri amaçlarıyla işlenmektedir.\n\nHukuki Dayanaklar\nKişisel veriler, KVKK’nın 5/2-c maddesi kapsamında sözleşmenin kurulması ve ifası, 5/2-f maddesi kapsamında meşru menfaat, 5/2-ç maddesi kapsamında hukuki yükümlülükler ile açık rıza gerektiren durumlarda ilgili kişinin açık rızasına dayanılarak işlenmektedir.\n\nVerilerin Aktarıldığı Taraflar\nKişisel veriler; ödeme hizmetlerinin sağlanması amacıyla Stripe ve Iyzico gibi ödeme servislerine, altyapı ve barındırma hizmetleri kapsamında AWS, Google Cloud, Render ve Vercel gibi bulut sağlayıcılara, zorunlu hallerde kamu kurumlarına ve hukuki veya mali danışmanlara aktarılabilmektedir.\n\nSaklama Süreleri\nKişisel veriler; rezervasyon ve ödeme kayıtları için 10 yıl, audit log kayıtları için 2 yıl, kullanıcı hesapları için hesap kapanışından itibaren 1 yıl süreyle saklanmakta olup, QR kod tokenları 1–24 saat aralığında muhafaza edilmektedir.\n\nGüvenlik Tedbirleri\nKYRADI platformunda; tenant bazlı veri izolasyonu, parola hashleme, JWT tabanlı güvenlik, rol bazlı erişim kontrolü, rate limiting ve saldırı önleme mekanizmaları ile kritik işlemler için audit log tutulması gibi teknik ve idari güvenlik tedbirleri uygulanmaktadır.\n\nİlgili Kişinin Hakları\nKVKK’nın 11. maddesi kapsamında ilgili kişiler; kişisel verilerinin işlenip işlenmediğini öğrenme, silme ve düzeltme talebinde bulunma, veri işlemeye itiraz etme ve zarar halinde tazminat talep etme haklarına sahiptir.\n\nBaşvurular kvkk@kyradi.com adresi üzerinden iletilebilir.",
+  "registerKvkkDocumentBody": "Kişisel Verilerin Korunması ve İşlenmesine İlişkin Aydınlatma Metni\nBu metin, KYRADI platformu kapsamında işlenen kişisel verilerin, 6698 sayılı Kişisel Verilerin Korunması Kanunu (\"KVKK\") uyarınca hangi kapsamda ve hangi amaçlarla işlendiğini açıklamak amacıyla hazırlanmıştır.\n\nİşlenen Kişisel Veri Türleri\nKYRADI platformu kapsamında aşağıdaki kişisel veri grupları işlenmektedir:\nMüşteri verileri:\nAd Soyad, Telefon, QR kod tokenı, Rezervasyon ve dolap bilgisi, Ödeme tutarı ve işlem numarası\nPersonel verileri:\nAd Soyad, E-posta, Kullanıcı rolü, IP, işlem logları, oturum bilgisi\nTeknik veriler:\nAudit log kayıtları, Tarayıcı/cihaz bilgisi, Hata raporları\n\nVeri İşleme Amaçları\nKişisel veriler; rezervasyon akışının sağlanması, QR kod üretimi ve doğrulaması, ödeme intent yönetimi, bagaj teslim ve iade sürecinin yürütülmesi, sistem güvenliğinin sağlanması ve kötüye kullanımın tespiti, yasal saklama yükümlülüklerinin yerine getirilmesi ile raporlama ve platform iyileştirmeleri amaçlarıyla işlenmektedir.\n\nHukuki Dayanaklar\nKişisel veriler, KVKK’nın 5/2-c maddesi kapsamında sözleşmenin kurulması ve ifası, 5/2-f maddesi kapsamında meşru menfaat, 5/2-ç maddesi kapsamında hukuki yükümlülükler ile açık rıza gerektiren durumlarda ilgili kişinin açık rızasına dayanılarak işlenmektedir.\n\nVerilerin Aktarıldığı Taraflar\nKişisel veriler; ödeme hizmetlerinin sağlanması amacıyla Stripe ve Iyzico gibi ödeme servislerine, altyapı ve barındırma hizmetleri kapsamında AWS, Google Cloud, Render ve Vercel gibi bulut sağlayıcılara, zorunlu hallerde kamu kurumlarına ve hukuki veya mali danışmanlara aktarılabilmektedir.\n\nSaklama Süreleri\nKişisel veriler; rezervasyon ve ödeme kayıtları için 10 yıl, audit log kayıtları için 2 yıl, kullanıcı hesapları için hesap kapanışından itibaren 1 yıl süreyle saklanmakta olup, QR kod tokenları 1–24 saat aralığında muhafaza edilmektedir.\n\nGüvenlik Tedbirleri\nKYRADI platformunda; tenant bazlı veri izolasyonu, parola hashleme, JWT tabanlı güvenlik, rol bazlı erişim kontrolü, rate limiting ve saldırı önleme mekanizmaları ile kritik işlemler için audit log tutulması gibi teknik ve idari güvenlik tedbirleri uygulanmaktadır.\n\nAydınlatma ve Açık Rıza\nKullanıcı, gerekli hallerde açık rızasının alınacağını ve rızasını dilediği zaman geri çekebileceğini kabul eder. Açık rızanın geri çekilmesi, ilgili işlemlerin yürütülmesini kısmen veya tamamen etkileyebilir.\n\nVeri Güncelliği ve Doğruluk\nKullanıcı, KYRADI platformuna sunduğu verilerin doğru ve güncel olduğunu kabul eder. Yanlış veya güncel olmayan verilerden doğabilecek aksaklıklardan kullanıcı sorumludur.\n\nİletişim ve Bilgilendirme\nKullanıcı, hesap ve işlem bildirimlerinin e-posta, SMS veya uygulama içi bildirimlerle gönderilebileceğini kabul eder. Bu bildirimler güvenlik, ödeme ve rezervasyon süreçlerinin yürütülmesi amacıyla yapılır.\n\nİlgili Kişinin Hakları\nKVKK’nın 11. maddesi kapsamında ilgili kişiler; kişisel verilerinin işlenip işlenmediğini öğrenme, silme ve düzeltme talebinde bulunma, veri işlemeye itiraz etme ve zarar halinde tazminat talep etme haklarına sahiptir.\n\nBaşvurular kvkk@kyradi.com adresi üzerinden iletilebilir.",
   "registerRestrictedDocumentBody": "Bu belge, Aparial ve genel taşıma şirketleri tarafından taşınması reddedilen maddeleri özetlemektedir.\nGüvenlik, yasal düzenlemeler ve operasyonel riskler nedeniyle aşağıda belirtilen maddeler taşımaya kabul edilmez:\n\nTehlikeli ve Riskli Maddeler\n- Patlayıcı maddeler (dinamit, havai fişek, el bombası vb.)\n- Yanıcı ve parlayıcı maddeler (benzin, tiner, boya, çözücü vb.)\n- Basınçlı gazlar (propan, butan, oksijen tüpleri vb.)\n- Toksik, zehirli veya aşındırıcı kimyasallar (asit, baz, ağartıcı vb.)\n- Radyoaktif maddeler\n- Yanıcı kimyasallar içeren sıvılar veya çözücüler\n- Patlama veya yangın riski oluşturan herhangi bir madde veya cihaz\n\nSilah ve Tehlikeli Ekipmanlar\n- Silahlar, mühimmat ve benzeri ateşli cihazlar\n- Kesici veya delici aletler (hançer, uzun bıçak, sivri metal aletler vb.)\n\nCihazlar ve Basınçlı Ürünler\n- Gaz veya yakıt içeren cihazlar (yakıt dolu kamp ocakları vb.)\n- Basınçlı aerosol kutuları (tehlikeli gaz içeren spreyler)\n- Yüksek kapasiteli veya yedek lityum piller ve bataryalar\n\nRahatsızlık ve Güvenlik Riski Oluşturan Maddeler\n- Ağır kokulu, duman çıkaran veya çevreyi rahatsız eden maddeler\n\nDeğerli Eşyalar\n- Ziynet eşyalar (altın, mücevher vb. değerli eşyalar) taşımaya kabul edilmez.\n- Para (miktarına bakılmaksızın) taşımaya kabul edilmez.\n\nNot:\nBazı maddeler belirli izin, miktar veya güvenlik önlemleri ile taşınabilir. Ancak genel olarak bu tür maddeler hem Aparial hem de diğer taşıma şirketleri tarafından reddedilmektedir.",
   "registerSuccessMessage": "Kayıt başarılı ✅ Doğrulama e-postası gönderildi.",
   "registerEmailExistsMessage": "Bu e-posta adresi zaten kayıtlı ❌",
@@ -1082,7 +1082,20 @@
   "couponFailedMessage": "Kupon uygulanamadı.",
   "topUpSectionTitle": "Para yükle",
   "topUpSectionSubtitle": "Cüzdanına güvenle para ekle.",
+  "topUpMethodTitle": "Yükleme yöntemi seç",
+  "topUpMethodSubtitle": "Kayıtlı kartla devam et veya yeni kart ekle.",
+  "topUpUseSavedCardTitle": "Kayıtlı kart kullan",
+  "topUpUseSavedCardSubtitle": "Kayıtlı kredi/banka kartlarından seç.",
+  "topUpUseNewCardTitle": "Yeni kart kullan",
+  "topUpUseNewCardSubtitle": "Yeni kredi ya da banka kartıyla öde.",
+  "topUpAmountTitle": "Yükleme tutarı",
+  "topUpAmountSubtitle": "Tutarı seç veya manuel gir.",
   "topUpAmountLabel": "Yükleme tutarı (₺)",
+  "topUpSelectCardTitle": "Kart seç",
+  "topUpSelectCardSubtitle": "Ücretlendirmek istediğin kartı seç.",
+  "topUpSelectCardMessage": "Lütfen kayıtlı bir kart seçin.",
+  "topUpCardDetailsTitle": "Kart bilgileri",
+  "topUpCardDetailsSubtitle": "Kart bilgilerini güvenle gir.",
   "cardNumberLabel": "Kart numarası",
   "cardHolderNameLabel": "Kart sahibi",
   "cardExpiryLabel": "Son kullanma (AA/YY)",
@@ -1103,7 +1116,15 @@
   "topUpSuccessMessage": "Yükleme başarılı.",
   "topUpFailedMessage": "Yükleme başarısız. Tekrar dene.",
   "topUpTransactionTitle": "Cüzdan yükleme",
+  "topUpTransactionTitleWithMethod": "Cüzdan yükleme ({method})",
+  "@topUpTransactionTitleWithMethod": {
+    "placeholders": {
+      "method": {}
+    }
+  },
   "topUpTransactionCategory": "Yükleme",
+  "walletSelectCardTitle": "Kart seç",
+  "selectedLabel": "Seçildi",
   "transferSectionTitle": "Transfer",
   "walletActionsTitle": "Hızlı işlemler",
   "walletActionsSubtitle": "Kupon, para yükleme ve transfer adımlarını aç.",
@@ -1246,5 +1267,21 @@
     "placeholders": {
       "file": {}
     }
-  }
+  },
+  "pricingRecalculateAction": "Yeniden Hesapla",
+  "locationDetailsTitle": "Lokasyon Bilgileri",
+  "locationDetailsSubtitle": "Doluluk, açık/kapalı ve kapasite bilgileri.",
+  "directionsAction": "Yol Tarifi Al",
+  "directionsSheetTitle": "Harita uygulaması seçin",
+  "directionsSheetSubtitle": "Konum için yönlendirme açılacak.",
+  "directionsGoogleMaps": "Google Maps ile aç",
+  "directionsAppleMaps": "Apple Haritalar ile aç",
+  "directionsPreviewTitle": "Konumu haritada görüntüle",
+  "walletCreditCardLabel": "Kredi Kartı",
+  "walletDebitCardLabel": "Banka Kartı",
+  "walletCreditCardSubtitle": "Kredi kartlarını görüntüle ve yönet.",
+  "walletDebitCardSubtitle": "Banka kartlarını görüntüle ve yönet.",
+  "walletCardSavedMessage": "Kart kaydedildi.",
+  "walletCardInvalidMessage": "Kart bilgilerini eksiksiz girin.",
+  "walletCardExpiryInvalidMessage": "Son kullanma tarihi geçersiz."
 }

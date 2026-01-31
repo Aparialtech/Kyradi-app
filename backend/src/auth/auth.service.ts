@@ -39,7 +39,12 @@ export class AuthService {
   ) {}
 
   async register(dto: CreateUserDto) {
-    const user = await this.usersService.create(dto);
+    const { name, surname } = this.normalizeName(dto);
+    const user = await this.usersService.create({
+      ...dto,
+      name,
+      surname,
+    });
     const token = this.generateToken(user._id?.toString() ?? user['id'], user.email);
     await this.issueVerificationCode(user.email);
     return {
@@ -90,6 +95,27 @@ export class AuthService {
     return generateToken({ sub: userId, email }, this.secret);
   }
 
+  private normalizeName(dto: CreateUserDto) {
+    const nameRaw = typeof dto.name === 'string' ? dto.name.trim() : '';
+    const surnameRaw = typeof dto.surname === 'string' ? dto.surname.trim() : '';
+    if (nameRaw && surnameRaw) {
+      return { name: nameRaw, surname: surnameRaw };
+    }
+    const fullRaw = typeof dto.fullName === 'string' ? dto.fullName.trim() : '';
+    if (fullRaw) {
+      const normalized = fullRaw.replace(/\s+/g, ' ').trim();
+      if (!normalized) {
+        throw new BadRequestException('name+surname or fullName is required');
+      }
+      const parts = normalized.split(' ');
+      if (parts.length === 1) {
+        return { name: parts[0], surname: '.' };
+      }
+      return { name: parts[0], surname: parts.slice(1).join(' ') };
+    }
+    throw new BadRequestException('name+surname or fullName is required');
+  }
+
   private maskEmail(email?: string) {
     if (!email) return 'EMPTY';
     const [name, domain] = email.toLowerCase().split('@');
@@ -120,13 +146,6 @@ export class AuthService {
       throw new BadRequestException('FIREBASE_ADMIN_NOT_CONFIGURED');
     }
     const decoded = await admin.auth(app).verifyIdToken(idToken);
-    const projectId = process.env.FIREBASE_PROJECT_ID || 'kyradi';
-    const expectedIss = `https://securetoken.google.com/${projectId}`;
-    const aud = (decoded.aud ?? '').toString();
-    const iss = (decoded.iss ?? '').toString();
-    if (aud !== projectId || iss !== expectedIss) {
-      throw new BadRequestException('SOCIAL_TOKEN_INVALID');
-    }
     return decoded;
   }
 

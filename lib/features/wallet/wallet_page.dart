@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../l10n/app_localizations.dart';
 import '../../features/wallet/models/reward_mission.dart';
@@ -17,6 +16,8 @@ import '../../features/campaigns/campaigns_page.dart';
 import 'pages/wallet_transactions_page.dart';
 import 'pages/wallet_cashback_page.dart';
 import 'pages/wallet_cards_page.dart';
+import 'pages/wallet_topup_saved_card_page.dart';
+import 'pages/wallet_topup_new_card_page.dart';
 import '../../ui/components/app_empty_state.dart';
 import '../../ui/components/app_skeleton.dart';
 import '../../utils/crash_log.dart';
@@ -46,12 +47,6 @@ class _WalletPageState extends State<WalletPage>
   bool _couponLoading = false;
   String? _couponStatus;
 
-  final _topUpAmountCtrl = TextEditingController();
-  final _cardNumberCtrl = TextEditingController();
-  final _cardNameCtrl = TextEditingController();
-  final _cardExpiryCtrl = TextEditingController();
-  final _cardCvvCtrl = TextEditingController();
-  final FocusNode _cvvFocus = FocusNode();
   bool _topUpLoading = false;
 
   final _transferTargetCtrl = TextEditingController();
@@ -75,12 +70,6 @@ class _WalletPageState extends State<WalletPage>
   @override
   void dispose() {
     _couponCtrl.dispose();
-    _topUpAmountCtrl.dispose();
-    _cardNumberCtrl.dispose();
-    _cardNameCtrl.dispose();
-    _cardExpiryCtrl.dispose();
-    _cardCvvCtrl.dispose();
-    _cvvFocus.dispose();
     _transferTargetCtrl.dispose();
     _transferAmountCtrl.dispose();
     _transferNoteCtrl.dispose();
@@ -263,58 +252,14 @@ class _WalletPageState extends State<WalletPage>
     }
   }
 
-  Future<void> _submitTopUp() async {
+  Future<void> _applyTopUpResult({
+    required double amount,
+    required String label,
+  }) async {
     final loc = AppLocalizations.of(context)!;
-    if (_topUpLoading) return;
-    final amount = double.tryParse(_topUpAmountCtrl.text.replaceAll(',', '.')) ?? 0;
-    if (amount <= 0) {
-      AppNotification.show(
-        context,
-        message: loc.topUpInvalidAmountMessage,
-        type: AppNotificationType.warning,
-      );
-      return;
-    }
-    if (_cardNumberCtrl.text.trim().length < 12 ||
-        _cardNameCtrl.text.trim().isEmpty ||
-        _cardExpiryCtrl.text.trim().length < 4 ||
-        _cardCvvCtrl.text.trim().length < 3) {
-      AppNotification.show(
-        context,
-        message: loc.topUpInvalidCardMessage,
-        type: AppNotificationType.warning,
-      );
-      return;
-    }
-    final confirm = await showDialog<bool>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: Text(loc.topUpConfirmTitle),
-        content: Text(
-          loc.topUpConfirmMessage(
-            amount.toStringAsFixed(2),
-            _maskCardNumber(_cardNumberCtrl.text),
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(false),
-            child: Text(loc.dialogDismiss),
-          ),
-          TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(true),
-            child: Text(loc.dialogConfirm),
-          ),
-        ],
-      ),
-    );
-    if (confirm != true) return;
     setState(() => _topUpLoading = true);
     appLog('wallet', 'TOPUP_START amount=$amount', level: AppLogLevel.info);
     try {
-      await _showTopUpProcessingDialog(loc);
-      await Future<void>.delayed(const Duration(milliseconds: 1200));
-      if (!mounted) return;
       setState(() {
         _balance += amount;
         _transactions.insert(
@@ -322,7 +267,7 @@ class _WalletPageState extends State<WalletPage>
           WalletTransaction(
             type: WalletTransactionType.earn,
             amount: amount,
-            title: loc.topUpTransactionTitle,
+            title: loc.topUpTransactionTitleWithMethod(label),
             date: DateTime.now(),
             refId: 'TP-${DateTime.now().millisecondsSinceEpoch}',
             category: loc.topUpTransactionCategory,
@@ -349,36 +294,34 @@ class _WalletPageState extends State<WalletPage>
     }
   }
 
-  String _maskCardNumber(String raw) {
-    final digits = raw.replaceAll(RegExp(r'\s+'), '');
-    if (digits.length < 4) return '****';
-    final tail = digits.substring(digits.length - 4);
-    return '**** **** **** $tail';
-  }
-
-  Future<void> _showTopUpProcessingDialog(AppLocalizations loc) async {
-    if (!mounted) return;
-    showDialog<void>(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => AlertDialog(
-        title: Text(loc.topUpProcessingTitle),
-        content: Row(
-          children: [
-            const SizedBox(
-              height: 20,
-              width: 20,
-              child: CircularProgressIndicator(strokeWidth: 2),
-            ),
-            const SizedBox(width: 12),
-            Expanded(child: Text(loc.topUpProcessingSubtitle)),
-          ],
-        ),
+  Future<void> _openTopUpSaved() async {
+    final result = await Navigator.of(context).push<Map<String, dynamic>>(
+      MaterialPageRoute(
+        builder: (_) => const WalletTopUpSavedCardPage(),
       ),
     );
-    await Future<void>.delayed(const Duration(milliseconds: 900));
-    if (!mounted) return;
-    Navigator.of(context, rootNavigator: true).pop();
+    await _handleTopUpResult(result);
+  }
+
+  Future<void> _openTopUpNew() async {
+    final result = await Navigator.of(context).push<Map<String, dynamic>>(
+      MaterialPageRoute(
+        builder: (_) => const WalletTopUpNewCardPage(),
+      ),
+    );
+    await _handleTopUpResult(result);
+  }
+
+  Future<void> _handleTopUpResult(Map<String, dynamic>? result) async {
+    if (!mounted || result == null) return;
+    final rawAmount = result['amount'];
+    final label = result['label']?.toString() ?? '';
+    if (rawAmount is num) {
+      await _applyTopUpResult(
+        amount: rawAmount.toDouble(),
+        label: label,
+      );
+    }
   }
 
   Future<void> _submitTransfer() async {
@@ -625,94 +568,20 @@ class _WalletPageState extends State<WalletPage>
                                   icon: Icons.account_balance_wallet_outlined,
                                 ),
                                 const SizedBox(height: 12),
-                                Row(
-                                  children: [
-                                    _AmountChip(
-                                      label: '100 ₺',
-                                      onTap: () => _topUpAmountCtrl.text = '100',
-                                    ),
-                                    const SizedBox(width: 8),
-                                    _AmountChip(
-                                      label: '250 ₺',
-                                      onTap: () => _topUpAmountCtrl.text = '250',
-                                    ),
-                                    const SizedBox(width: 8),
-                                    _AmountChip(
-                                      label: '500 ₺',
-                                      onTap: () => _topUpAmountCtrl.text = '500',
-                                    ),
-                                  ],
+                                _TopUpMethodTile(
+                                  title: loc.topUpUseSavedCardTitle,
+                                  subtitle: loc.topUpUseSavedCardSubtitle,
+                                  icon: Icons.credit_card_rounded,
+                                  accent: const Color(0xFF2563EB),
+                                  onTap: _topUpLoading ? null : _openTopUpSaved,
                                 ),
                                 const SizedBox(height: 12),
-                                TextFormField(
-                                  controller: _topUpAmountCtrl,
-                                  keyboardType: TextInputType.number,
-                                  decoration:
-                                      InputDecoration(labelText: loc.topUpAmountLabel),
-                                ),
-                                const SizedBox(height: 16),
-                                _AnimatedCardPreview(
-                                  cardNumber: _cardNumberCtrl.text,
-                                  cardName: _cardNameCtrl.text,
-                                  expiry: _cardExpiryCtrl.text,
-                                  cvv: _cardCvvCtrl.text,
-                                  showBack: _cvvFocus.hasFocus,
-                                ),
-                                const SizedBox(height: 12),
-                                TextFormField(
-                                  controller: _cardNumberCtrl,
-                                  keyboardType: TextInputType.number,
-                                  inputFormatters: [
-                                    FilteringTextInputFormatter.digitsOnly
-                                  ],
-                                  decoration:
-                                      InputDecoration(labelText: loc.cardNumberLabel),
-                                  onChanged: (_) => setState(() {}),
-                                ),
-                                const SizedBox(height: 12),
-                                TextFormField(
-                                  controller: _cardNameCtrl,
-                                  decoration:
-                                      InputDecoration(labelText: loc.cardHolderNameLabel),
-                                  onChanged: (_) => setState(() {}),
-                                ),
-                                const SizedBox(height: 12),
-                                Row(
-                                  children: [
-                                    Expanded(
-                                      child: TextFormField(
-                                        controller: _cardExpiryCtrl,
-                                        keyboardType: TextInputType.number,
-                                        decoration:
-                                            InputDecoration(labelText: loc.cardExpiryLabel),
-                                        onChanged: (_) => setState(() {}),
-                                      ),
-                                    ),
-                                    const SizedBox(width: 12),
-                                    Expanded(
-                                      child: TextFormField(
-                                        controller: _cardCvvCtrl,
-                                        focusNode: _cvvFocus,
-                                        keyboardType: TextInputType.number,
-                                        obscureText: true,
-                                        decoration:
-                                            InputDecoration(labelText: loc.cardCvvLabel),
-                                        onChanged: (_) => setState(() {}),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(height: 16),
-                                FilledButton(
-                                  onPressed: _topUpLoading ? null : _submitTopUp,
-                                  child: _topUpLoading
-                                      ? const SizedBox(
-                                          height: 18,
-                                          width: 18,
-                                          child: CircularProgressIndicator(
-                                              strokeWidth: 2),
-                                        )
-                                      : Text(loc.topUpPayAction),
+                                _TopUpMethodTile(
+                                  title: loc.topUpUseNewCardTitle,
+                                  subtitle: loc.topUpUseNewCardSubtitle,
+                                  icon: Icons.add_card_rounded,
+                                  accent: const Color(0xFF10B981),
+                                  onTap: _topUpLoading ? null : _openTopUpNew,
                                 ),
                               ],
                             ),
@@ -795,40 +664,6 @@ class _WalletPageState extends State<WalletPage>
                 ],
               ),
             ),
-    );
-  }
-}
-
-class _AmountChip extends StatelessWidget {
-  const _AmountChip({required this.label, required this.onTap});
-
-  final String label;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
-      splashColor: theme.colorScheme.primary.withValues(alpha: 0.08),
-      highlightColor: theme.colorScheme.primary.withValues(alpha: 0.04),
-      child: Ink(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        decoration: BoxDecoration(
-          color: theme.colorScheme.surfaceContainerHighest,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: theme.colorScheme.outlineVariant.withValues(alpha: 0.6),
-          ),
-        ),
-        child: Text(
-          label,
-          style: theme.textTheme.labelMedium?.copyWith(
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-      ),
     );
   }
 }
@@ -978,183 +813,68 @@ class _PanelIcon extends StatelessWidget {
   }
 }
 
-class _AnimatedCardPreview extends StatelessWidget {
-  const _AnimatedCardPreview({
-    required this.cardNumber,
-    required this.cardName,
-    required this.expiry,
-    required this.cvv,
-    required this.showBack,
+class _TopUpMethodTile extends StatelessWidget {
+  const _TopUpMethodTile({
+    required this.title,
+    required this.subtitle,
+    required this.icon,
+    required this.accent,
+    required this.onTap,
   });
 
-  final String cardNumber;
-  final String cardName;
-  final String expiry;
-  final String cvv;
-  final bool showBack;
+  final String title;
+  final String subtitle;
+  final IconData icon;
+  final Color accent;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final displayNumber = cardNumber.isEmpty
-        ? '•••• •••• •••• ••••'
-        : cardNumber.replaceAllMapped(RegExp(r'.{4}'), (m) => '${m.group(0)} ');
-    final displayName = cardName.isEmpty ? 'CARDHOLDER' : cardName.toUpperCase();
-    final displayExpiry = expiry.isEmpty ? 'MM/YY' : expiry;
-    final displayCvv = cvv.isEmpty ? '•••' : cvv;
-
-    return AnimatedSwitcher(
-      duration: const Duration(milliseconds: 300),
-      transitionBuilder: (child, animation) {
-        final rotate = Tween<double>(begin: 1, end: 0).animate(animation);
-        return AnimatedBuilder(
-          animation: rotate,
-          child: child,
-          builder: (context, child) {
-            final angle = showBack ? 3.1416 * rotate.value : -3.1416 * rotate.value;
-            return Transform(
-              alignment: Alignment.center,
-              transform: Matrix4.identity()..rotateY(angle),
-              child: child,
-            );
-          },
-        );
-      },
-      child: showBack
-          ? _CardBack(
-              key: const ValueKey('back'),
-              cvv: displayCvv,
-            )
-          : _CardFront(
-              key: const ValueKey('front'),
-              number: displayNumber,
-              name: displayName,
-              expiry: displayExpiry,
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(16),
+      child: Ink(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(16),
+          color: theme.colorScheme.surface,
+          border: Border.all(color: accent.withValues(alpha: 0.25)),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.06),
+              blurRadius: 10,
+              offset: const Offset(0, 6),
             ),
-    );
-  }
-}
-
-class _CardFront extends StatelessWidget {
-  const _CardFront({
-    super.key,
-    required this.number,
-    required this.name,
-    required this.expiry,
-  });
-
-  final String number;
-  final String name;
-  final String expiry;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Container(
-      height: 150,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(20),
-        gradient: const LinearGradient(
-          colors: [Color(0xFF005C99), Color(0xFF2C2966)],
+          ],
         ),
-      ),
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'KYRADI',
-            style: theme.textTheme.titleSmall?.copyWith(
-              color: Colors.white,
-              fontWeight: FontWeight.w700,
-              letterSpacing: 2,
-            ),
-          ),
-          const Spacer(),
-          Text(
-            number.trim(),
-            style: theme.textTheme.titleMedium?.copyWith(
-              color: Colors.white,
-              letterSpacing: 1.2,
-            ),
-          ),
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  name,
-                  style: theme.textTheme.labelMedium?.copyWith(
-                    color: Colors.white,
-                  ),
-                ),
-              ),
-              Text(
-                expiry,
-                style: theme.textTheme.labelMedium?.copyWith(
-                  color: Colors.white,
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _CardBack extends StatelessWidget {
-  const _CardBack({super.key, required this.cvv});
-
-  final String cvv;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Container(
-      height: 150,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(20),
-        gradient: const LinearGradient(
-          colors: [Color(0xFF2C2966), Color(0xFF005C99)],
-        ),
-      ),
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            height: 36,
-            color: Colors.black.withValues(alpha: 0.6),
-          ),
-          const SizedBox(height: 16),
-          Row(
-            children: [
-              Expanded(
-                child: Container(
-                  color: Colors.white,
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                  child: Align(
-                    alignment: Alignment.centerRight,
-                    child: Text(
-                      cvv,
-                      style: theme.textTheme.labelMedium?.copyWith(
-                        letterSpacing: 2,
-                      ),
+        child: Row(
+          children: [
+            _PanelIcon(accent: accent, icon: icon),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: theme.textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w700,
                     ),
                   ),
-                ),
+                  const SizedBox(height: 4),
+                  Text(
+                    subtitle,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(width: 12),
-              Text(
-                'CVV',
-                style: theme.textTheme.labelSmall?.copyWith(
-                  color: Colors.white,
-                ),
-              ),
-            ],
-          ),
-        ],
+            ),
+            const Icon(Icons.chevron_right_rounded),
+          ],
+        ),
       ),
     );
   }

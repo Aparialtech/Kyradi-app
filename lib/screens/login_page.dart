@@ -17,6 +17,7 @@ import '../core/ios/ios_config_service.dart';
 import '../core/firebase/firebase_bootstrap.dart';
 import '../core/auth/google_oauth_config.dart';
 import '../ui/components/app_back_app_bar.dart';
+import '../widgets/app_logo_overlay.dart';
 import '../ui/components/rainbow_bar.dart';
 
 class LoginPage extends StatefulWidget {
@@ -26,6 +27,11 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
+  static const LinearGradient _warmGradient = LinearGradient(
+    colors: [Color(0xFFFF8C42), Color(0xFFFF5F6D)],
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+  );
   static const String _rememberEmailKey = 'remember_email';
   static const FlutterSecureStorage _secureStorage = FlutterSecureStorage();
 
@@ -153,7 +159,9 @@ class _LoginPageState extends State<LoginPage> {
       final firebaseIdToken = authResult.firebaseIdToken;
       final accessToken = authResult.accessToken;
       final authorizationCode = authResult.authorizationCode;
-      final effectiveToken = firebaseIdToken?.isNotEmpty == true ? firebaseIdToken : idToken;
+      final effectiveToken = provider == 'google'
+          ? (firebaseIdToken?.isNotEmpty == true ? firebaseIdToken : idToken)
+          : idToken;
       final tokenTrimmed = effectiveToken?.trim() ?? '';
       final tokenSegments = tokenTrimmed.isEmpty ? 0 : tokenTrimmed.split('.').length;
       final startsWithEyJ = tokenTrimmed.startsWith('eyJ');
@@ -165,18 +173,21 @@ class _LoginPageState extends State<LoginPage> {
       }
       appLog(
         'auth',
-        'AUTH_GOOGLE_TOKEN_FORMAT tokenLen=${tokenTrimmed.length} segments=$tokenSegments startsWithEyJ=$startsWithEyJ',
+        'AUTH_${provider.toUpperCase()}_TOKEN_FORMAT tokenLen=${tokenTrimmed.length} segments=$tokenSegments startsWithEyJ=$startsWithEyJ',
         level: AppLogLevel.info,
       );
       if (tokenSegments != 3 || !startsWithEyJ) {
         if (!mounted) return;
         setState(() => _loading = false);
-        _notify(l10n.googleTokenInvalid, type: AppNotificationType.error);
+        _notify(
+          provider == 'google' ? l10n.googleTokenInvalid : l10n.tokenInvalidMessage,
+          type: AppNotificationType.error,
+        );
         return;
       }
       appLog(
         'auth',
-        'AUTH_GOOGLE_TOKEN firebaseLen=${firebaseIdToken?.length ?? 0} idTokenLen=${idToken?.length ?? 0}',
+        'AUTH_${provider.toUpperCase()}_TOKEN firebaseLen=${firebaseIdToken?.length ?? 0} idTokenLen=${idToken?.length ?? 0}',
         level: AppLogLevel.debug,
       );
       final res = await ApiService.socialLogin(
@@ -195,7 +206,7 @@ class _LoginPageState extends State<LoginPage> {
       if (ok) {
         appLog('auth', 'AUTH_${provider.toUpperCase()}_RESULT ok', level: AppLogLevel.info);
         final profile = res["profile"];
-        final userId = profile?["id"];
+        final userId = profile?["id"] ?? profile?["_id"];
         if (userId != null) {
           final prefs = await SharedPreferences.getInstance();
           if (!mounted) return;
@@ -205,6 +216,7 @@ class _LoginPageState extends State<LoginPage> {
         _notify(AppLocalizations.of(context)!.loginSuccess,
             type: AppNotificationType.success);
         if (!mounted) return;
+        AppLogoOverlayController.show();
         context.go('/home');
       } else if (msg.toLowerCase().contains('popup_closed') ||
           msg.toLowerCase().contains('login cancelled')) {
@@ -320,7 +332,7 @@ class _LoginPageState extends State<LoginPage> {
       if (ok) {
         // ✅ Başarılı giriş
         final profile = res["profile"];
-        final userId = profile?["id"];
+        final userId = profile?["id"] ?? profile?["_id"];
         if (userId != null) {
           final prefs = await SharedPreferences.getInstance();
           if (!mounted) return;
@@ -331,6 +343,7 @@ class _LoginPageState extends State<LoginPage> {
         await _persistRememberedEmail(email);
         _notify(l10n.loginSuccess, type: AppNotificationType.success);
         if (!mounted) return;
+        AppLogoOverlayController.show();
         context.go('/home');
       } else if (status == 401) {
         _notify(l10n.loginInvalidCredentials, type: AppNotificationType.error);
@@ -485,7 +498,9 @@ class _LoginPageState extends State<LoginPage> {
                                 decoration: InputDecoration(
                                   labelText: l10n.email,
                                   hintText: l10n.emailHint,
-                                  prefixIcon: const Icon(Icons.alternate_email),
+                                  prefixIcon: _FieldIcon(
+                                    icon: Icons.alternate_email,
+                                  ),
                                 ),
                                 validator: (v) {
                                   if (v == null || v.trim().isEmpty) {
@@ -510,7 +525,9 @@ class _LoginPageState extends State<LoginPage> {
                                 decoration: InputDecoration(
                                   labelText: l10n.passwordLabel,
                                   hintText: l10n.passwordHint,
-                                  prefixIcon: const Icon(Icons.lock_outline),
+                                  prefixIcon: _FieldIcon(
+                                    icon: Icons.lock_outline,
+                                  ),
                                   suffixIcon: IconButton(
                                     onPressed: () =>
                                         setState(() => _obscure = !_obscure),
@@ -566,6 +583,8 @@ class _LoginPageState extends State<LoginPage> {
                                 text: l10n.loginButtonLabel,
                                 onPressed: _loading ? null : _submit,
                                 loading: _loading,
+                                gradient: _warmGradient,
+                                glass: true,
                               ),
                               const SizedBox(height: 18),
                               Row(
@@ -699,6 +718,59 @@ class _LoginPageState extends State<LoginPage> {
             },
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _FieldIcon extends StatelessWidget {
+  const _FieldIcon({required this.icon});
+
+  final IconData icon;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final accent = theme.colorScheme.primary;
+    final base = theme.colorScheme.surface;
+    return Padding(
+      padding: const EdgeInsets.only(left: 6, right: 4),
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          Container(
+            height: 28,
+            width: 28,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: LinearGradient(
+                colors: [
+                  accent.withValues(alpha: 0.25),
+                  accent.withValues(alpha: 0.08),
+                ],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: accent.withValues(alpha: 0.2),
+                  blurRadius: 8,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+          ),
+          Container(
+            height: 22,
+            width: 22,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: base,
+              border: Border.all(color: accent.withValues(alpha: 0.35)),
+            ),
+          ),
+          Icon(icon, size: 14, color: accent),
+        ],
       ),
     );
   }

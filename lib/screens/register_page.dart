@@ -16,6 +16,7 @@ import '../core/firebase/firebase_bootstrap.dart';
 import '../core/auth/google_oauth_config.dart';
 import '../utils/crash_log.dart';
 import '../ui/components/rainbow_bar.dart';
+import '../widgets/app_logo_overlay.dart';
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
@@ -25,6 +26,11 @@ class RegisterPage extends StatefulWidget {
 }
 
 class _RegisterPageState extends State<RegisterPage> {
+  static const LinearGradient _warmGradient = LinearGradient(
+    colors: [Color(0xFFFF8C42), Color(0xFFFF5F6D)],
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+  );
   final _formKey = GlobalKey<FormState>();
 
   final _nameCtrl = TextEditingController();
@@ -202,8 +208,9 @@ class _RegisterPageState extends State<RegisterPage> {
       final idToken = authResult.providerIdToken;
       final accessToken = authResult.accessToken;
       final authorizationCode = authResult.authorizationCode;
-      final effectiveToken =
-          firebaseIdToken?.isNotEmpty == true ? firebaseIdToken : idToken;
+      final effectiveToken = provider == 'google'
+          ? (firebaseIdToken?.isNotEmpty == true ? firebaseIdToken : idToken)
+          : idToken;
       final tokenTrimmed = effectiveToken?.trim() ?? '';
       final tokenSegments = tokenTrimmed.isEmpty ? 0 : tokenTrimmed.split('.').length;
       final startsWithEyJ = tokenTrimmed.startsWith('eyJ');
@@ -215,13 +222,16 @@ class _RegisterPageState extends State<RegisterPage> {
       }
       appLog(
         'auth',
-        'AUTH_GOOGLE_TOKEN_FORMAT tokenLen=${tokenTrimmed.length} segments=$tokenSegments startsWithEyJ=$startsWithEyJ',
+        'AUTH_${provider.toUpperCase()}_TOKEN_FORMAT tokenLen=${tokenTrimmed.length} segments=$tokenSegments startsWithEyJ=$startsWithEyJ',
         level: AppLogLevel.info,
       );
       if (tokenSegments != 3 || !startsWithEyJ) {
         if (!mounted) return;
         setState(() => _loading = false);
-        _notify(l10n.googleTokenInvalid, type: AppNotificationType.error);
+        _notify(
+          provider == 'google' ? l10n.googleTokenInvalid : l10n.tokenInvalidMessage,
+          type: AppNotificationType.error,
+        );
         return;
       }
       final res = await ApiService.socialLogin(
@@ -239,7 +249,7 @@ class _RegisterPageState extends State<RegisterPage> {
       final msg = (res['message'] ?? res['error'] ?? '').toString();
       if (ok) {
         final profile = res["profile"];
-        final userId = profile?["id"];
+        final userId = profile?["id"] ?? profile?["_id"];
         if (userId != null) {
           final prefs = await SharedPreferences.getInstance();
           if (!mounted) return;
@@ -251,6 +261,7 @@ class _RegisterPageState extends State<RegisterPage> {
           type: AppNotificationType.success,
         );
         if (!mounted) return;
+        AppLogoOverlayController.show();
         context.go('/home');
       } else if (status == 400 || status == 401) {
         final mapped = _mapSocialAuthError(l10n, msg.isNotEmpty ? msg : 'TOKEN_INVALID');
@@ -459,7 +470,9 @@ class _RegisterPageState extends State<RegisterPage> {
                               controller: _nameCtrl,
                               decoration: InputDecoration(
                                 labelText: l10n.firstName,
-                                prefixIcon: const Icon(Icons.person_outline),
+                                prefixIcon: const _FieldIcon(
+                                  icon: Icons.person_outline,
+                                ),
                               ),
                               validator: (v) =>
                                   (v == null || v.trim().isEmpty) ? l10n.validationRequired : null,
@@ -471,7 +484,9 @@ class _RegisterPageState extends State<RegisterPage> {
                               controller: _surCtrl,
                               decoration: InputDecoration(
                                 labelText: l10n.lastName,
-                                prefixIcon: const Icon(Icons.person_rounded),
+                                prefixIcon: const _FieldIcon(
+                                  icon: Icons.person_rounded,
+                                ),
                               ),
                               validator: (v) =>
                                   (v == null || v.trim().isEmpty) ? l10n.validationRequired : null,
@@ -486,7 +501,9 @@ class _RegisterPageState extends State<RegisterPage> {
                         child: InputDecorator(
                           decoration: InputDecoration(
                             labelText: l10n.birthDate,
-                            prefixIcon: const Icon(Icons.event),
+                            prefixIcon: const _FieldIcon(
+                              icon: Icons.event,
+                            ),
                           ),
                           child: Text(
                             _birthDate == null
@@ -518,7 +535,9 @@ class _RegisterPageState extends State<RegisterPage> {
                         onChanged: (v) => setState(() => _gender = v ?? 'none'),
                         decoration: InputDecoration(
                           labelText: l10n.gender,
-                          prefixIcon: const Icon(Icons.wc),
+                          prefixIcon: const _FieldIcon(
+                            icon: Icons.wc,
+                          ),
                         ),
                       ),
                       ],
@@ -540,7 +559,9 @@ class _RegisterPageState extends State<RegisterPage> {
                         decoration: InputDecoration(
                           labelText: l10n.emailAddressLabel,
                           hintText: l10n.emailHint,
-                          prefixIcon: const Icon(Icons.email_outlined),
+                          prefixIcon: const _FieldIcon(
+                            icon: Icons.email_outlined,
+                          ),
                         ),
                         validator: (v) => AppValidators.email(v, l10n),
                       ),
@@ -554,7 +575,9 @@ class _RegisterPageState extends State<RegisterPage> {
                         ],
                         decoration: InputDecoration(
                           labelText: l10n.nationalIdLabel,
-                          prefixIcon: const Icon(Icons.credit_card),
+                          prefixIcon: const _FieldIcon(
+                            icon: Icons.credit_card,
+                          ),
                         ),
                         validator: (v) => AppValidators.tcKimlik(v, l10n),
                       ),
@@ -565,7 +588,9 @@ class _RegisterPageState extends State<RegisterPage> {
                         decoration: InputDecoration(
                           labelText: l10n.phone,
                           hintText: l10n.phoneHint,
-                          prefixIcon: const Icon(Icons.phone_outlined),
+                          prefixIcon: const _FieldIcon(
+                            icon: Icons.phone_outlined,
+                          ),
                         ),
                         validator: (v) => AppValidators.phone(v, l10n),
                       ),
@@ -592,7 +617,9 @@ class _RegisterPageState extends State<RegisterPage> {
                           ],
                           decoration: InputDecoration(
                             labelText: l10n.passwordLabel,
-                            prefixIcon: const Icon(Icons.lock_outline),
+                            prefixIcon: const _FieldIcon(
+                              icon: Icons.lock_outline,
+                            ),
                           ),
                           onChanged: (_) => _formKey.currentState?.validate(),
                           validator: (v) => AppValidators.password(v, l10n),
@@ -608,7 +635,9 @@ class _RegisterPageState extends State<RegisterPage> {
                           ],
                           decoration: InputDecoration(
                             labelText: l10n.registerPasswordRepeatLabel,
-                            prefixIcon: const Icon(Icons.verified_user_outlined),
+                            prefixIcon: const _FieldIcon(
+                              icon: Icons.verified_user_outlined,
+                            ),
                           ),
                           onChanged: (_) => _formKey.currentState?.validate(),
                           validator: (v) => AppValidators.passwordRepeat(
@@ -645,6 +674,8 @@ class _RegisterPageState extends State<RegisterPage> {
                           text: l10n.registerButtonLabel,
                           onPressed: _loading ? null : _submit,
                           loading: _loading,
+                          gradient: _warmGradient,
+                          glass: true,
                         ),
                       ],
                     ),
@@ -759,6 +790,59 @@ class _RegisterPageState extends State<RegisterPage> {
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _FieldIcon extends StatelessWidget {
+  const _FieldIcon({required this.icon});
+
+  final IconData icon;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final accent = theme.colorScheme.primary;
+    final base = theme.colorScheme.surface;
+    return Padding(
+      padding: const EdgeInsets.only(left: 6, right: 4),
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          Container(
+            height: 28,
+            width: 28,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: LinearGradient(
+                colors: [
+                  accent.withValues(alpha: 0.25),
+                  accent.withValues(alpha: 0.08),
+                ],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: accent.withValues(alpha: 0.2),
+                  blurRadius: 8,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+          ),
+          Container(
+            height: 22,
+            width: 22,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: base,
+              border: Border.all(color: accent.withValues(alpha: 0.35)),
+            ),
+          ),
+          Icon(icon, size: 14, color: accent),
+        ],
       ),
     );
   }

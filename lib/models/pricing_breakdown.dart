@@ -35,4 +35,19 @@ class PricingBreakdown {
         'total': total,
         'chosen': chosen,
       };
+
+  factory PricingBreakdown.fromJson(Map<String, dynamic> json) {
+    return PricingBreakdown(
+      durationMinutes: (json['durationMinutes'] ?? 0) as int,
+      durationHours: (json['durationHours'] ?? 0) as int,
+      durationDays: (json['durationDays'] ?? 0) as int,
+      hourlyCost: (json['hourlyCost'] ?? 0) as int,
+      dailyCost: (json['dailyCost'] ?? 0) as int,
+      baseCost: (json['baseCost'] ?? 0) as int,
+      insuranceFee: (json['insuranceFee'] ?? 0) as int,
+      hotelFee: (json['hotelFee'] ?? 0) as int,
+      total: (json['total'] ?? 0) as int,
+      chosen: (json['chosen'] ?? '').toString(),
+    );
+  }
 }

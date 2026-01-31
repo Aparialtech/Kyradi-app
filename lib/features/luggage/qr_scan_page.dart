@@ -321,17 +321,13 @@ class _QrScanPageState extends State<QrScanPage> {
               ),
               if (luggage.scheduledDropTime != null)
                 _InfoRow(
-                  label: loc.dropTimeLabel(
-                    _formatDateTime(context, luggage.scheduledDropTime!),
-                  ),
-                  value: '',
+                  label: loc.dropTimeTitle,
+                  value: _formatDateTime(context, luggage.scheduledDropTime!),
                 ),
               if (luggage.scheduledPickupTime != null)
                 _InfoRow(
-                  label: loc.pickupTimeLabel(
-                    _formatDateTime(context, luggage.scheduledPickupTime!),
-                  ),
-                  value: '',
+                  label: loc.pickupTimeTitle,
+                  value: _formatDateTime(context, luggage.scheduledPickupTime!),
                 ),
               if ((luggage.ownerName ?? '').isNotEmpty)
                 _InfoRow(label: loc.ownerNameLabel, value: luggage.ownerName!),

@@ -24,6 +24,13 @@ class LocationListCard extends StatelessWidget {
         location.isOpenNow ? theme.colorScheme.primary : theme.colorScheme.error;
     final distanceLabel =
         distanceKm == null ? null : '${distanceKm!.toStringAsFixed(1)} km';
+    final availabilityLabel = loc.locationSlotsLabel(
+      location.availableSlots,
+      location.totalSlots,
+    );
+    final availabilityColor = location.availableSlots == 0
+        ? theme.colorScheme.error
+        : theme.colorScheme.secondary;
 
     return SectionCard(
       margin: const EdgeInsets.symmetric(vertical: 8),
@@ -39,6 +46,26 @@ class LocationListCard extends StatelessWidget {
             children: [
               Row(
                 children: [
+                  Container(
+                    height: 44,
+                    width: 44,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: LinearGradient(
+                        colors: [
+                          theme.colorScheme.primary.withValues(alpha: 0.2),
+                          theme.colorScheme.primary.withValues(alpha: 0.05),
+                        ],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                    ),
+                    child: Icon(
+                      Icons.location_on_rounded,
+                      color: theme.colorScheme.primary,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
                   Expanded(
                     child: Text(
                       location.name,
@@ -65,6 +92,11 @@ class LocationListCard extends StatelessWidget {
                         style: theme.textTheme.labelSmall,
                       ),
                     ),
+                  const SizedBox(width: 8),
+                  Icon(
+                    Icons.chevron_right_rounded,
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
                 ],
               ),
               const SizedBox(height: 6),
@@ -98,19 +130,17 @@ class LocationListCard extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                     decoration: BoxDecoration(
-                      color: theme.colorScheme.surfaceContainerHighest,
+                      color: availabilityColor.withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(999),
                       border: Border.all(
-                        color: theme.colorScheme.outlineVariant.withValues(alpha: 0.6),
+                        color: availabilityColor.withValues(alpha: 0.4),
                       ),
                     ),
                     child: Text(
-                      loc.locationSlotsLabel(
-                        location.availableSlots,
-                        location.totalSlots,
-                      ),
+                      availabilityLabel,
                       style: theme.textTheme.labelSmall?.copyWith(
                         fontWeight: FontWeight.w600,
+                        color: availabilityColor,
                       ),
                     ),
                   ),
@@ -123,6 +153,17 @@ class LocationListCard extends StatelessWidget {
                   value: location.occupancyRate,
                   backgroundColor:
                       theme.colorScheme.primary.withValues(alpha: 0.08),
+                ),
+              ),
+              const SizedBox(height: 10),
+              Align(
+                alignment: Alignment.centerRight,
+                child: Text(
+                  loc.detailsAction,
+                  style: theme.textTheme.labelMedium?.copyWith(
+                    color: theme.colorScheme.primary,
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
               ),
             ],

@@ -1,7 +1,9 @@
 const String kIosGoogleClientId =
-    '257787138037-6deiuvca1572r0a2vi7ou1v1nk00e5kt.apps.googleusercontent.com';
-const String kAndroidGoogleClientId = '';
-const String kWebGoogleClientId = '';
+    '143197560587-inbditnleo9t3it24lfk49gg4s2v3r7h.apps.googleusercontent.com';
+const String kAndroidGoogleClientId =
+    '143197560587-du4ii0ou3l883ks15lofjc5r105aunn7.apps.googleusercontent.com';
+const String kWebGoogleClientId =
+    '143197560587-du4ii0ou3l883ks15lofjc5r105aunn7.apps.googleusercontent.com';
 
 String reversedClientIdFromClientId(String clientId) {
   final prefix = clientId.split('.apps.googleusercontent.com').first;

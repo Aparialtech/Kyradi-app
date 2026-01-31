@@ -6,7 +6,7 @@ class PricingService {
 
   static const int hourlyRate = 100;
   static const int dailyRate = 500;
-  static const int insuranceFee = 99;
+  static const int insuranceFee = 50;
 
   static PricingBreakdown calculate({
     required DateTime start,

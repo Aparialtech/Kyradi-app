@@ -12,6 +12,7 @@ import '../../widgets/app_notification.dart';
 import '../../core/profile_avatar_cache.dart';
 import '../../core/app_theme_mode.dart';
 import '../../widgets/section_card.dart';
+import '../../widgets/app_logo_overlay.dart';
 import 'pages/about_page.dart';
 import 'pages/faq_page.dart';
 import 'widgets/profile_header_card.dart';
@@ -203,6 +204,7 @@ class _ProfilePageState extends State<ProfilePage> {
     if (result == true) {
       await ApiService.clearSession();
       if (!mounted) return;
+      AppLogoOverlayController.hide();
       context.go('/intro');
     }
   }

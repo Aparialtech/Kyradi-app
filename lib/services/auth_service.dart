@@ -70,20 +70,25 @@ class AuthService {
       return AuthResult(ok: false, error: 'Firebase yapılandırması eksik.', statusCode: 500);
     }
     try {
-      final clientId = kIsWeb
-          ? (kWebGoogleClientId.isNotEmpty ? kWebGoogleClientId : null)
-          : (Platform.isIOS && isValidIosGoogleClientId(kIosGoogleClientId)
+      final iosClientId =
+          Platform.isIOS && isValidIosGoogleClientId(kIosGoogleClientId)
               ? kIosGoogleClientId
-              : (Platform.isAndroid && kAndroidGoogleClientId.isNotEmpty
-                  ? kAndroidGoogleClientId
-                  : null));
+              : null;
+      final androidServerClientId =
+          Platform.isAndroid && kAndroidGoogleClientId.isNotEmpty
+              ? kAndroidGoogleClientId
+              : null;
+      final webClientId =
+          kIsWeb && kWebGoogleClientId.isNotEmpty ? kWebGoogleClientId : null;
+      final clientId = kIsWeb ? webClientId : iosClientId;
       appLog(
         'auth',
-        'AUTH_GOOGLE_CLIENT platform=${_platformLabel()} clientId_used=${maskClientId(clientId ?? '')}',
+        'AUTH_GOOGLE_CLIENT platform=${_platformLabel()} clientId_used=${maskClientId(clientId ?? '')} serverClientId_used=${maskClientId(androidServerClientId ?? '')}',
         level: AppLogLevel.info,
       );
       final googleSignIn = GoogleSignIn(
         clientId: clientId,
+        serverClientId: androidServerClientId,
         scopes: ['email', 'profile', 'openid'],
       );
       final account = await googleSignIn.signIn();
