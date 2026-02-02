@@ -21,6 +21,7 @@ export enum PaymentStatus {
   PENDING = 'pending',
   PAID = 'paid',
   FAILED = 'failed',
+  REFUNDED = 'refunded',
 }
 
 @Schema({ _id: false })
@@ -98,6 +99,9 @@ export class Luggage extends Document {
 
   @Prop()
   providerPaymentId?: string;
+
+  @Prop()
+  paymentId?: string;
 
   @Prop()
   checkoutUrl?: string;

@@ -254,8 +254,19 @@ export class LuggagesService {
       }
       const now = new Date();
       if (status === LuggageStatus.DROPPED) {
-        if (luggage.paymentStatus !== PaymentStatus.PAID) {
-          throw new BadRequestException('PAYMENT_REQUIRED_BEFORE_DROP');
+        const paid =
+          luggage.paymentStatus === PaymentStatus.PAID ||
+          !!luggage.paidAt ||
+          (!!luggage.transactionId && luggage.transactionId.trim().length > 0);
+        if (!paid) {
+          throw new BadRequestException({
+            message: 'PAYMENT_REQUIRED_BEFORE_DROP',
+            code: 'PAYMENT_REQUIRED_BEFORE_DROP',
+            action: 'OPEN_PAYMENT',
+            luggageId: luggage._id?.toString() ?? luggageId,
+            paymentStatus: luggage.paymentStatus ?? PaymentStatus.UNPAID,
+            amountDue: luggage.totalPrice ?? 0,
+          });
         }
       }
       if (status === LuggageStatus.PICKED) {

@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import '../../l10n/app_localizations.dart';
 import '../../models/luggage.dart';
 import '../../services/luggage_service.dart';
+import '../../screens/payment_page.dart';
 import '../../widgets/app_notification.dart';
 
 class QrScanPage extends StatefulWidget {
@@ -151,6 +152,8 @@ class _QrScanPageState extends State<QrScanPage> {
           orElse: () => luggage,
         );
         setState(() => _matched = updated);
+      } else if (_isPaymentRequired(res)) {
+        await _handlePaymentRequired(userId, luggage);
       } else {
         final msg =
             (res['error'] ?? res['message'] ?? loc.qrDropFailed).toString();
@@ -168,6 +171,58 @@ class _QrScanPageState extends State<QrScanPage> {
       );
     } finally {
       if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  bool _isPaymentRequired(Map<String, dynamic> result) {
+    final msg =
+        (result['message'] ?? result['error'] ?? result['code'] ?? '').toString();
+    return msg.trim() == 'PAYMENT_REQUIRED_BEFORE_DROP';
+  }
+
+  Future<void> _handlePaymentRequired(String userId, LuggageModel luggage) async {
+    final loc = AppLocalizations.of(context)!;
+    final go = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(loc.paymentPageTitle),
+        content: Text(loc.paymentRequiredBeforeDropMessage),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: Text(loc.dialogDismiss),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: Text(loc.paymentStartAction),
+          ),
+        ],
+      ),
+    );
+    if (go != true) return;
+    final result = await Navigator.of(context).push<bool>(
+      MaterialPageRoute(
+        builder: (_) => PaymentPage(
+          userId: userId,
+          reservationId: luggage.id,
+          paymentMethod: luggage.paymentMethod ?? 'card',
+          totalPrice: luggage.totalPrice ?? 0,
+          sizeLabel: luggage.size ?? 'Orta',
+          dropAt: luggage.scheduledDropTime,
+          pickupAt: luggage.scheduledPickupTime,
+          locationId: luggage.dropLocationId,
+        ),
+      ),
+    );
+    if (result == true) {
+      final refreshed = await LuggageService.getUserLuggages(userId);
+      _cache = refreshed;
+      final updated = refreshed.firstWhere(
+        (item) => item.id == luggage.id,
+        orElse: () => luggage,
+      );
+      setState(() => _matched = updated);
+      await _sendDrop();
     }
   }
 

@@ -222,7 +222,8 @@ class _PaymentPageState extends State<PaymentPage> {
       setState(() => _loading = false);
       final ok = result['ok'] == true || result['status'] == 'success';
       if (!ok) {
-        _showError(loc.paymentFailedMessage);
+        final msg = (result['error'] ?? result['message'] ?? '').toString().trim();
+        _showError(msg.isNotEmpty ? msg : loc.paymentFailedMessage);
         return;
       }
       _cardNumberCtrl.clear();

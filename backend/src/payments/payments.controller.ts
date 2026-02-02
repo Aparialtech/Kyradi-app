@@ -1,4 +1,4 @@
-import { BadRequestException, Body, Controller, Get, Post, Query } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Get, Post, Query, ForbiddenException } from '@nestjs/common';
 import { calculatePricingQuote } from '../common/utils/pricing-quote.util';
 import { MockPaymentDto } from './dto/mock-payment.dto';
 import { PaymentsService } from './payments.service';
@@ -49,6 +49,10 @@ export class PaymentsController {
 
   @Post('mock')
   async mockPayment(@Body() dto: MockPaymentDto) {
+    const demoMode = (process.env.PAYMENTS_DEMO_MODE ?? '').toLowerCase() === 'true';
+    if (!demoMode) {
+      throw new ForbiddenException('PAYMENTS_DEMO_DISABLED');
+    }
     const paymentId = `MOCK_${Date.now()}`;
     const reservationId = dto.bookingId?.toString() ?? '';
     const amount = typeof dto.amount === 'number' ? dto.amount : Number(dto.amount ?? 0);

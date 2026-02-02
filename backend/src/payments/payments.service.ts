@@ -102,8 +102,12 @@ export class PaymentsService {
     const luggage = await this.luggageModel.findById(reservationId).exec();
     if (!luggage) return false;
     luggage.paymentStatus = PaymentStatus.PAID;
+    if (!luggage.paymentMethod) {
+      luggage.paymentMethod = PaymentMethod.CARD;
+    }
     luggage.paidAt = new Date();
     luggage.providerPaymentId = paymentId;
+    luggage.paymentId = paymentId;
     luggage.transactionId = paymentId;
     if (typeof amount === 'number' && amount > 0) {
       luggage.totalPrice = Math.round(amount);

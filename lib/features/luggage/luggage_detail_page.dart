@@ -14,6 +14,7 @@ import '../../widgets/app_notification.dart';
 import '../../widgets/section_card.dart';
 import '../../utils/crash_log.dart';
 import 'package:go_router/go_router.dart';
+import '../../screens/payment_page.dart';
 
 class LuggageDetailPage extends StatefulWidget {
   const LuggageDetailPage({
@@ -123,6 +124,8 @@ class _LuggageDetailPageState extends State<LuggageDetailPage> {
               : loc.luggagePickupAction,
           type: AppNotificationType.success,
         );
+      } else if (_isPaymentRequired(result)) {
+        await _handlePaymentRequired();
       } else {
         final msg = (result['error'] ?? result['message'] ?? '').toString();
         AppNotification.show(
@@ -141,6 +144,55 @@ class _LuggageDetailPageState extends State<LuggageDetailPage> {
       );
     } finally {
       if (mounted) setState(() => _updating = false);
+    }
+  }
+
+  bool _isPaymentRequired(Map<String, dynamic> result) {
+    final msg = (result['message'] ?? result['error'] ?? result['code'] ?? '')
+        .toString()
+        .trim();
+    return msg == 'PAYMENT_REQUIRED_BEFORE_DROP';
+  }
+
+  Future<void> _handlePaymentRequired() async {
+    if (!mounted || _luggage == null || _userId == null) return;
+      final loc = AppLocalizations.of(context)!;
+      final go = await showDialog<bool>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: Text(loc.paymentPageTitle),
+          content: Text(loc.paymentRequiredBeforeDropMessage),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(false),
+              child: Text(loc.dialogDismiss),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.of(ctx).pop(true),
+              child: Text(loc.paymentStartAction),
+            ),
+          ],
+        ),
+      );
+    if (go != true) return;
+    final luggage = _luggage!;
+    final result = await Navigator.of(context).push<bool>(
+      MaterialPageRoute(
+        builder: (_) => PaymentPage(
+          userId: _userId!,
+          reservationId: luggage.id,
+          paymentMethod: luggage.paymentMethod ?? 'card',
+          totalPrice: luggage.totalPrice ?? 0,
+          sizeLabel: luggage.size ?? 'Orta',
+          dropAt: luggage.scheduledDropTime,
+          pickupAt: luggage.scheduledPickupTime,
+          locationId: luggage.dropLocationId,
+        ),
+      ),
+    );
+    if (result == true) {
+      await _load();
+      await _updateStatus('dropped');
     }
   }
 

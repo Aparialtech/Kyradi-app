@@ -25,6 +25,7 @@ async function bootstrap() {
     'MAIL_PASS',
     'GOOGLE_DIRECTIONS_API_KEY',
     'MAGICPAY_WEBHOOK_SECRET',
+    'PAYMENTS_DEMO_MODE',
     'CHAT_PROVIDER',
     'CHAT_API_KEY',
     'CHAT_MODEL',
