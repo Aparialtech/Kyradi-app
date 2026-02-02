@@ -7,7 +7,6 @@ import 'package:flutter/services.dart';
 
 import '../widgets/gradient_button.dart';
 import '../l10n/app_localizations.dart';
-import '../ui/components/app_back_app_bar.dart';
 
 class IntroSplashPage extends StatefulWidget {
   const IntroSplashPage({super.key});
@@ -84,10 +83,15 @@ class _IntroSplashPageState extends State<IntroSplashPage>
       begin: Alignment.topLeft,
       end: Alignment.bottomRight,
     );
-    return Scaffold(
-      extendBodyBehindAppBar: true,
-      appBar: buildBackAppBar(context),
-      body: Stack(
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: const SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        statusBarBrightness: Brightness.dark,
+        statusBarIconBrightness: Brightness.light,
+      ),
+      child: Scaffold(
+        extendBodyBehindAppBar: true,
+        body: Stack(
         children: [
           const _IntroGeometricBackground(),
           SafeArea(
@@ -274,6 +278,7 @@ class _IntroSplashPageState extends State<IntroSplashPage>
           ),
         ],
       ),
+    ),
     );
   }
 }
