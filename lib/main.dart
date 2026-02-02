@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'l10n/app_localizations.dart';
 import 'core/app_locale.dart';
 import 'core/app_theme_mode.dart';
@@ -10,7 +11,6 @@ import 'ui/components/error_fallback_page.dart';
 import 'utils/crash_log.dart';
 import 'core/firebase/firebase_bootstrap.dart';
 import 'router/app_router.dart';
-import 'widgets/app_logo_overlay.dart';
 
 
 const _primaryColor = Color(0xFF005C99);
@@ -30,6 +30,7 @@ Future<void> main() async {
   runZonedGuarded(
     () async {
       WidgetsFlutterBinding.ensureInitialized();
+      SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
 
       // Global error handlers to surface iOS/TestFlight crashes with context.
       FlutterError.onError = (FlutterErrorDetails details) {
@@ -89,6 +90,19 @@ class MyApp extends StatelessWidget {
     return ValueListenableBuilder<ThemeMode>(
       valueListenable: AppThemeMode.notifier,
       builder: (context, themeMode, _) {
+        final overlayStyle =
+            themeMode == ThemeMode.dark
+                ? SystemUiOverlayStyle.light.copyWith(
+                    statusBarColor: Colors.transparent,
+                    systemNavigationBarColor: Colors.transparent,
+                    systemNavigationBarIconBrightness: Brightness.light,
+                  )
+                : SystemUiOverlayStyle.dark.copyWith(
+                    statusBarColor: Colors.transparent,
+                    systemNavigationBarColor: Colors.transparent,
+                    systemNavigationBarIconBrightness: Brightness.dark,
+                  );
+        SystemChrome.setSystemUIOverlayStyle(overlayStyle);
         return ValueListenableBuilder<Locale?>(
           valueListenable: AppLocale.notifier,
           builder: (context, currentLocale, _) {
@@ -704,27 +718,10 @@ class MyApp extends StatelessWidget {
                     if (fatalEntry != null && !kDebugMode) {
                       return ErrorFallbackPage(entry: fatalEntry);
                     }
-                    return ValueListenableBuilder<bool>(
-                      valueListenable: AppLogoOverlayController.showTop,
-                      builder: (context, showTop, _) {
-                        final topPad = MediaQuery.of(context).padding.top + 20;
-                        return Localizations.override(
-                          context: context,
-                          locale: currentLocale,
-                          child: Stack(
-                            children: [
-                              if (showTop)
-                                Padding(
-                                  padding: EdgeInsets.only(top: topPad),
-                                  child: content,
-                                )
-                              else
-                                content,
-                              const AppLogoOverlay(),
-                            ],
-                          ),
-                        );
-                      },
+                    return Localizations.override(
+                      context: context,
+                      locale: currentLocale,
+                      child: content,
                     );
                   },
                 );

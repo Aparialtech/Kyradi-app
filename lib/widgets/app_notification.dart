@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 
@@ -138,14 +139,14 @@ class _NotificationOverlayState extends State<_NotificationOverlay>
     super.dispose();
   }
 
-  Color get _background {
+  Color get _accent {
     switch (widget.type) {
       case AppNotificationType.success:
-        return const Color(0xFF166866);
+        return const Color(0xFF2E7D32);
       case AppNotificationType.warning:
-        return const Color(0xFF2C2966);
+        return const Color(0xFFF9A825);
       case AppNotificationType.error:
-        return const Color(0xFF2E2E2E);
+        return const Color(0xFFB71C1C);
       case AppNotificationType.info:
         return const Color(0xFF005C99);
     }
@@ -186,37 +187,61 @@ class _NotificationOverlayState extends State<_NotificationOverlay>
                 child: Material(
                   color: Colors.transparent,
                   child: Container(
-                    decoration: BoxDecoration(
-                      color: _background,
-                      borderRadius: BorderRadius.circular(20),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.14),
-                          blurRadius: 22,
-                          offset: const Offset(0, 12),
-                        ),
-                      ],
-                    ),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 12,
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        widget.leading ??
-                            Icon(_icon, color: Colors.white, size: 18),
-                        const SizedBox(width: 10),
-                        Flexible(
-                          child: Text(
-                            widget.message,
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.w600,
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(18),
+                      child: BackdropFilter(
+                        filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: Colors.black.withValues(alpha: 0.55),
+                            borderRadius: BorderRadius.circular(18),
+                            border: Border.all(
+                              color: _accent.withValues(alpha: 0.4),
+                              width: 1,
                             ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.18),
+                                blurRadius: 24,
+                                offset: const Offset(0, 14),
+                              ),
+                            ],
+                          ),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 12,
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              widget.leading ??
+                                  Container(
+                                    height: 26,
+                                    width: 26,
+                                    decoration: BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      color: _accent.withValues(alpha: 0.2),
+                                    ),
+                                    child: Icon(
+                                      _icon,
+                                      color: _accent,
+                                      size: 16,
+                                    ),
+                                  ),
+                              const SizedBox(width: 10),
+                              Flexible(
+                                child: Text(
+                                  widget.message,
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
                         ),
-                      ],
+                      ),
                     ),
                   ),
                 ),
