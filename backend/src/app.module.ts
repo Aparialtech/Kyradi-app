@@ -13,6 +13,9 @@ import { PaymentsModule } from './payments/payments.module';
 import { PricingModule } from './pricing/pricing.module';
 import { DirectionsModule } from './directions/directions.module';
 import { AuthGuard } from './common/guards/auth.guard';
+import { ChatModule } from './chat/chat.module';
+import { ReservationsModule } from './reservations/reservations.module';
+import { WalletModule } from './wallet/wallet.module';
 
 @Module({
   imports: [
@@ -29,6 +32,9 @@ import { AuthGuard } from './common/guards/auth.guard';
     PaymentsModule,
     PricingModule,
     DirectionsModule,
+    ChatModule,
+    ReservationsModule,
+    WalletModule,
   ],
   controllers: [AppController],
   providers: [

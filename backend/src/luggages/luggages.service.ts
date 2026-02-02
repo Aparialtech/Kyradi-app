@@ -180,6 +180,15 @@ export class LuggagesService {
       .then((items) => items.map((item) => this._decorateLuggage(item)));
   }
 
+  async findByIdForUser(userId: string, luggageId: string) {
+    const item = await this.luggageModel
+      .findOne({ _id: luggageId, userId })
+      .lean()
+      .exec();
+    if (!item) throw new NotFoundException('Luggage not found');
+    return this._decorateLuggage(item);
+  }
+
   async updateMetadata(userId: string, luggageId: string, dto: UpdateLuggageDto) {
     let delegateCode: string | undefined;
     const existing = await this.luggageModel.findOne({ _id: luggageId, userId }).exec();

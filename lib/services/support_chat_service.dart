@@ -18,6 +18,13 @@ class SupportChatReply {
 class SupportChatService {
   const SupportChatService._();
 
+  static Future<Map<String, dynamic>> health() async {
+    appLog('support', 'SUPPORT_CHAT_HEALTH', level: AppLogLevel.info);
+    final result = await ApiService.supportChatHealth();
+    result['statusCode'] ??= result['_httpStatus'];
+    return result;
+  }
+
   static Future<SupportChatReply> sendMessage({
     required String message,
     String? sessionId,

@@ -937,6 +937,19 @@ class ApiService {
     return _post('/support/chat', payload, timeout: const Duration(seconds: 18));
   }
 
+  static Future<Map<String, dynamic>> supportChatHealth() async {
+    if (_usingMockBackend) {
+      return {
+        'ok': true,
+        'providerReady': false,
+        'provider': 'mock',
+        'model': 'mock',
+        'message': 'mock',
+      };
+    }
+    return _get('/chat/health', timeout: const Duration(seconds: 10));
+  }
+
   static Future<Map<String, dynamic>> uploadIdentityDocument({
     required List<int> bytes,
     required String filename,

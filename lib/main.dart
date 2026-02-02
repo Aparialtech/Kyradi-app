@@ -11,8 +11,7 @@ import 'utils/crash_log.dart';
 import 'core/firebase/firebase_bootstrap.dart';
 import 'router/app_router.dart';
 import 'widgets/app_logo_overlay.dart';
-import 'package:firebase_core/firebase_core.dart';
-import 'firebase_options.dart';
+
 
 const _primaryColor = Color(0xFF005C99);
 const _secondaryColor = Color(0xFF166866);

@@ -12,6 +12,8 @@ export enum PaymentMethod {
   CARD = 'card',
   INSTALLMENT = 'installment',
   PAY_AT_HOTEL = 'pay_at_hotel',
+  WALLET = 'wallet',
+  TRANSFER = 'transfer',
 }
 
 export enum PaymentStatus {

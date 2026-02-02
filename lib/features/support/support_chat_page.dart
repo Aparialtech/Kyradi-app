@@ -17,6 +17,8 @@ class _SupportChatPageState extends State<SupportChatPage> {
   final _focusNode = FocusNode();
   bool _isSending = false;
   bool _isTyping = false;
+  bool _providerReady = true;
+  String _providerMessage = '';
   String? _sessionId;
 
   @override
@@ -28,6 +30,7 @@ class _SupportChatPageState extends State<SupportChatPage> {
         _ChatMessage.bot(text: loc.supportChatGreeting),
       );
     }
+    _loadHealth();
   }
 
   @override
@@ -42,6 +45,13 @@ class _SupportChatPageState extends State<SupportChatPage> {
     if (_isSending) return;
     final text = _textController.text.trim();
     if (text.isEmpty) return;
+    if (!_providerReady) {
+      final loc = AppLocalizations.of(context)!;
+      setState(() {
+        _messages.add(_ChatMessage.bot(text: loc.supportChatFallback));
+      });
+      return;
+    }
     setState(() {
       _isSending = true;
       _messages.add(_ChatMessage.user(text: text));
@@ -72,6 +82,23 @@ class _SupportChatPageState extends State<SupportChatPage> {
       });
     }
     _scrollToEnd();
+  }
+
+  Future<void> _loadHealth() async {
+    try {
+      final res = await SupportChatService.health();
+      if (!mounted) return;
+      setState(() {
+        _providerReady = res['providerReady'] == true;
+        _providerMessage = (res['message'] ?? '').toString();
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _providerReady = false;
+        _providerMessage = '';
+      });
+    }
   }
 
   String _fallbackReply(String input, AppLocalizations loc) {
@@ -131,6 +158,21 @@ class _SupportChatPageState extends State<SupportChatPage> {
       body: SafeArea(
         child: Column(
           children: [
+            if (!_providerReady)
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                color: theme.colorScheme.errorContainer,
+                child: Text(
+                  _providerMessage.isNotEmpty
+                      ? _providerMessage
+                      : loc.supportChatFallback,
+                  style: TextStyle(
+                    color: theme.colorScheme.onErrorContainer,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
             Expanded(
               child: ListView.builder(
                 controller: _scrollController,
@@ -167,6 +209,7 @@ class _SupportChatPageState extends State<SupportChatPage> {
                       focusNode: _focusNode,
                       minLines: 1,
                       maxLines: 4,
+                      enabled: _providerReady,
                       textInputAction: TextInputAction.send,
                       onSubmitted: (_) => _sendMessage(),
                       decoration: InputDecoration(
