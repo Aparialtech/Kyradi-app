@@ -222,7 +222,7 @@ class _QrScanPageState extends State<QrScanPage> {
         orElse: () => luggage,
       );
       setState(() => _matched = updated);
-      await _sendDrop();
+      await _confirmDrop();
     }
   }
 
