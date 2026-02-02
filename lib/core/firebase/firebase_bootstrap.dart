@@ -10,17 +10,14 @@ class FirebaseBootstrap {
 
   static Future<void> initFirebase() async {
     try {
-      if (DefaultFirebaseOptions.isConfigured) {
-        await Firebase.initializeApp(
-          options: DefaultFirebaseOptions.currentPlatform,
-        );
-        appLog('firebase', 'init with explicit options',
-            level: AppLogLevel.info);
-      } else {
-        await Firebase.initializeApp();
-        appLog('firebase', 'init with platform defaults',
-            level: AppLogLevel.info);
-      }
+      await Firebase.initializeApp(
+        options: DefaultFirebaseOptions.currentPlatform,
+      );
+      appLog(
+        'firebase',
+        'init with explicit options',
+        level: AppLogLevel.info,
+      );
       isReady = true;
       appLog('firebase', 'ready=true', level: AppLogLevel.info);
     } catch (e) {
