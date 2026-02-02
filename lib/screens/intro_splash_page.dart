@@ -323,28 +323,7 @@ class _IntroGeometricBackground extends StatelessWidget {
             colors: [Color(0xFF9B59B6), Color(0x009B59B6)],
           ),
         ),
-        Positioned(
-          bottom: 70,
-          right: -40,
-          child: Transform.rotate(
-            angle: 0.55,
-            child: _GlassRibbon(
-              width: 260,
-              height: 120,
-            ),
-          ),
-        ),
-        Positioned(
-          top: 200,
-          left: 10,
-          child: Transform.rotate(
-            angle: -0.5,
-            child: _GlassRibbon(
-              width: 200,
-              height: 90,
-            ),
-          ),
-        ),
+        // Glass ribbons removed to keep background clean.
       ],
     );
   }
