@@ -211,7 +211,7 @@ class _LogoBadge extends StatelessWidget {
       child: Padding(
         padding: EdgeInsets.all(size * 0.2),
         child: Image.asset(
-          'assets/images/kyradi_app_icon.png',
+          'assets/images/kyradi_logo.png',
           fit: BoxFit.contain,
         ),
       ),

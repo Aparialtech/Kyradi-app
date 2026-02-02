@@ -66,9 +66,9 @@ class _SplashPageState extends State<SplashPage>
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      // LOGO DOSYAN: assets/images/kyradi_app_icon.png
+                      // LOGO DOSYAN: assets/images/kyradi_logo.png
                       Image.asset(
-                        'assets/images/kyradi_app_icon.png',
+                        'assets/images/kyradi_logo.png',
                         height: 120,
                         fit: BoxFit.contain,
                       ),

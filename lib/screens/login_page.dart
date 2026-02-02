@@ -501,7 +501,7 @@ class _LoginPageState extends State<LoginPage> {
                               child: Padding(
                                 padding: const EdgeInsets.all(12),
                                 child: Image.asset(
-                                  'assets/images/kyradi_app_icon.png',
+                                  'assets/images/kyradi_logo.png',
                                   fit: BoxFit.contain,
                                 ),
                               ),

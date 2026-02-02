@@ -166,7 +166,7 @@ class _IntroSplashPageState extends State<IntroSplashPage>
                                 ),
                                 padding: const EdgeInsets.all(30),
                                 child: Image.asset(
-                                  'assets/images/kyradi_app_icon.png',
+                                  'assets/images/kyradi_logo.png',
                                   fit: BoxFit.contain,
                                 ),
                               ),
