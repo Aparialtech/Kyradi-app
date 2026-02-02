@@ -43,6 +43,7 @@ class _RegisterPageState extends State<RegisterPage> {
   DateTime? _birthDate;
 
   String _gender = 'none';
+  int _step = 0;
   bool _loading = false;
   bool _googleConfigOk = true;
   bool _appleConfigOk = true;
@@ -122,6 +123,79 @@ class _RegisterPageState extends State<RegisterPage> {
       'IOS_CONFIG_REGISTER firebase_ok=$_firebaseReady google_ok=$_googleConfigOk apple_ok=$_appleConfigOk clientIdPresent=$clientIdOk schemePresent=$hasScheme',
       level: AppLogLevel.info,
     );
+  }
+
+  bool _validateStep(AppLocalizations l10n) {
+    switch (_step) {
+      case 0:
+        if ((_nameCtrl.text.trim().isEmpty) ||
+            (_surCtrl.text.trim().isEmpty)) {
+          _notify(l10n.validationRequired, type: AppNotificationType.error);
+          return false;
+        }
+        final ageError = AppValidators.age18(_birthDate, l10n);
+        if (ageError != null) {
+          _notify(ageError, type: AppNotificationType.error);
+          return false;
+        }
+        return true;
+      case 1:
+        final emailErr = AppValidators.email(_emailCtrl.text, l10n);
+        if (emailErr != null) {
+          _notify(emailErr, type: AppNotificationType.error);
+          return false;
+        }
+        final phoneErr = AppValidators.phone(_telCtrl.text, l10n);
+        if (phoneErr != null) {
+          _notify(phoneErr, type: AppNotificationType.error);
+          return false;
+        }
+        return true;
+      case 2:
+        final tcErr = AppValidators.tcKimlik(_tcCtrl.text, l10n);
+        if (tcErr != null) {
+          _notify(tcErr, type: AppNotificationType.error);
+          return false;
+        }
+        final passErr = AppValidators.password(_passCtrl.text, l10n);
+        if (passErr != null) {
+          _notify(passErr, type: AppNotificationType.error);
+          return false;
+        }
+        final pass2Err = AppValidators.passwordRepeat(
+          _pass2Ctrl.text.trim(),
+          _passCtrl.text.trim(),
+          l10n,
+        );
+        if (pass2Err != null) {
+          _notify(pass2Err, type: AppNotificationType.error);
+          return false;
+        }
+        if (!_kvkkAccepted) {
+          _notify(l10n.registerKvkkAgreementWarning, type: AppNotificationType.error);
+          return false;
+        }
+        if (!_restrictedItemsAccepted) {
+          _notify(
+            l10n.registerRestrictedAgreementWarning,
+            type: AppNotificationType.error,
+          );
+          return false;
+        }
+        return true;
+      default:
+        return true;
+    }
+  }
+
+  void _nextStep(AppLocalizations l10n) {
+    if (_validateStep(l10n)) {
+      setState(() => _step = (_step + 1).clamp(0, 2));
+    }
+  }
+
+  void _prevStep() {
+    setState(() => _step = (_step - 1).clamp(0, 2));
   }
 
   Future<AuthResult> _signInWithGoogle() async {
@@ -432,6 +506,11 @@ class _RegisterPageState extends State<RegisterPage> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context)!;
+    final stepTitles = [
+      l10n.registerPersonalSectionTitle,
+      l10n.registerContactSectionTitle,
+      l10n.registerSecuritySectionTitle,
+    ];
     return Scaffold(
       appBar: AppBar(title: Text(l10n.registerTitle)),
       body: DecoratedBox(
@@ -454,231 +533,248 @@ class _RegisterPageState extends State<RegisterPage> {
                 const SizedBox(height: 16),
                 const RainbowBar(height: 4),
                 const SizedBox(height: 12),
-                SectionCard(
-                  child: Column(
-                    children: [
-                      SectionHeader(
-                        title: l10n.registerPersonalSectionTitle,
-                        subtitle: l10n.registerPersonalSectionSubtitle,
-                        icon: Icons.badge_outlined,
-                      ),
-                      const SizedBox(height: 18),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: TextFormField(
-                              controller: _nameCtrl,
-                              decoration: InputDecoration(
-                                labelText: l10n.firstName,
-                                prefixIcon: const _FieldIcon(
-                                  icon: Icons.person_outline,
-                                ),
-                              ),
-                              validator: (v) =>
-                                  (v == null || v.trim().isEmpty) ? l10n.validationRequired : null,
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: TextFormField(
-                              controller: _surCtrl,
-                              decoration: InputDecoration(
-                                labelText: l10n.lastName,
-                                prefixIcon: const _FieldIcon(
-                                  icon: Icons.person_rounded,
-                                ),
-                              ),
-                              validator: (v) =>
-                                  (v == null || v.trim().isEmpty) ? l10n.validationRequired : null,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 14),
-                      InkWell(
-                        onTap: _pickBirth,
-                        borderRadius: BorderRadius.circular(18),
-                        child: InputDecorator(
-                          decoration: InputDecoration(
-                            labelText: l10n.birthDate,
-                            prefixIcon: const _FieldIcon(
-                              icon: Icons.event,
-                            ),
-                          ),
-                          child: Text(
-                            _birthDate == null
-                                ? l10n.formNotSelected
-                                : '${_birthDate!.day.toString().padLeft(2, '0')}.'
-                                  '${_birthDate!.month.toString().padLeft(2, '0')}.'
-                                  '${_birthDate!.year}',
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 14),
-                      DropdownButtonFormField<String>(
-                        key: ValueKey(_gender),
-                        initialValue: _gender,
-                        items: [
-                          DropdownMenuItem(
-                            value: 'male',
-                            child: Text(l10n.genderMale),
-                          ),
-                          DropdownMenuItem(
-                            value: 'female',
-                            child: Text(l10n.genderFemale),
-                          ),
-                          DropdownMenuItem(
-                            value: 'none',
-                            child: Text(l10n.genderUndisclosed),
-                          ),
-                        ],
-                        onChanged: (v) => setState(() => _gender = v ?? 'none'),
-                        decoration: InputDecoration(
-                          labelText: l10n.gender,
-                          prefixIcon: const _FieldIcon(
-                            icon: Icons.wc,
-                          ),
-                        ),
-                      ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 18),
-                SectionCard(
-                  child: Column(
-                    children: [
-                      SectionHeader(
-                        title: l10n.registerContactSectionTitle,
-                        subtitle: l10n.registerContactSectionSubtitle,
-                        icon: Icons.contact_mail_outlined,
-                      ),
-                      const SizedBox(height: 18),
-                      TextFormField(
-                        controller: _emailCtrl,
-                        keyboardType: TextInputType.emailAddress,
-                        decoration: InputDecoration(
-                          labelText: l10n.emailAddressLabel,
-                          hintText: l10n.emailHint,
-                          prefixIcon: const _FieldIcon(
-                            icon: Icons.email_outlined,
-                          ),
-                        ),
-                        validator: (v) => AppValidators.email(v, l10n),
-                      ),
-                      const SizedBox(height: 14),
-                      TextFormField(
-                        controller: _tcCtrl,
-                        keyboardType: TextInputType.number,
-                        inputFormatters: [
-                          LengthLimitingTextInputFormatter(11),
-                          AppValidators.digitsOnlyFormatter,
-                        ],
-                        decoration: InputDecoration(
-                          labelText: l10n.nationalIdLabel,
-                          prefixIcon: const _FieldIcon(
-                            icon: Icons.credit_card,
-                          ),
-                        ),
-                        validator: (v) => AppValidators.tcKimlik(v, l10n),
-                      ),
-                      const SizedBox(height: 14),
-                      TextFormField(
-                        controller: _telCtrl,
-                        keyboardType: TextInputType.phone,
-                        decoration: InputDecoration(
-                          labelText: l10n.phone,
-                          hintText: l10n.phoneHint,
-                          prefixIcon: const _FieldIcon(
-                            icon: Icons.phone_outlined,
-                          ),
-                        ),
-                        validator: (v) => AppValidators.phone(v, l10n),
-                      ),
-                    ],
-                  ),
+                _StepProgress(
+                  current: _step,
+                  titles: stepTitles,
                 ),
-                  const SizedBox(height: 18),
-                SectionCard(
-                  child: Column(
-                    children: [
-                      SectionHeader(
-                        title: l10n.registerSecuritySectionTitle,
-                        subtitle: l10n.registerSecuritySectionSubtitle,
-                        icon: Icons.lock_outline_rounded,
-                      ),
-                      const SizedBox(height: 18),
-                      TextFormField(
-                        controller: _passCtrl,
-                          obscureText: true,
-                          enableSuggestions: false,
-                          autocorrect: false,
-                          inputFormatters: [
-                            FilteringTextInputFormatter.deny(RegExp(r'\s')),
-                          ],
-                          decoration: InputDecoration(
-                            labelText: l10n.passwordLabel,
-                            prefixIcon: const _FieldIcon(
-                              icon: Icons.lock_outline,
+                const SizedBox(height: 16),
+                AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 250),
+                  child: _step == 0
+                      ? _RegisterStepCard(
+                          key: const ValueKey('step-personal'),
+                          title: l10n.registerPersonalSectionTitle,
+                          subtitle: l10n.registerPersonalSectionSubtitle,
+                          icon: Icons.badge_outlined,
+                          child: Column(
+                            children: [
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: TextFormField(
+                                      controller: _nameCtrl,
+                                      decoration: InputDecoration(
+                                        labelText: l10n.firstName,
+                                        prefixIcon: const _FieldIcon(
+                                          icon: Icons.person_outline,
+                                        ),
+                                      ),
+                                      validator: (v) => (v == null || v.trim().isEmpty)
+                                          ? l10n.validationRequired
+                                          : null,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: TextFormField(
+                                      controller: _surCtrl,
+                                      decoration: InputDecoration(
+                                        labelText: l10n.lastName,
+                                        prefixIcon: const _FieldIcon(
+                                          icon: Icons.person_rounded,
+                                        ),
+                                      ),
+                                      validator: (v) => (v == null || v.trim().isEmpty)
+                                          ? l10n.validationRequired
+                                          : null,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 14),
+                              InkWell(
+                                onTap: _pickBirth,
+                                borderRadius: BorderRadius.circular(18),
+                                child: InputDecorator(
+                                  decoration: InputDecoration(
+                                    labelText: l10n.birthDate,
+                                    prefixIcon: const _FieldIcon(
+                                      icon: Icons.event,
+                                    ),
+                                  ),
+                                  child: Text(
+                                    _birthDate == null
+                                        ? l10n.formNotSelected
+                                        : '${_birthDate!.day.toString().padLeft(2, '0')}.'
+                                          '${_birthDate!.month.toString().padLeft(2, '0')}.'
+                                          '${_birthDate!.year}',
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 14),
+                              DropdownButtonFormField<String>(
+                                key: ValueKey(_gender),
+                                initialValue: _gender,
+                                items: [
+                                  DropdownMenuItem(
+                                    value: 'male',
+                                    child: Text(l10n.genderMale),
+                                  ),
+                                  DropdownMenuItem(
+                                    value: 'female',
+                                    child: Text(l10n.genderFemale),
+                                  ),
+                                  DropdownMenuItem(
+                                    value: 'none',
+                                    child: Text(l10n.genderUndisclosed),
+                                  ),
+                                ],
+                                onChanged: (v) => setState(() => _gender = v ?? 'none'),
+                                decoration: InputDecoration(
+                                  labelText: l10n.gender,
+                                  prefixIcon: const _FieldIcon(
+                                    icon: Icons.wc,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        )
+                      : _step == 1
+                          ? _RegisterStepCard(
+                              key: const ValueKey('step-contact'),
+                              title: l10n.registerContactSectionTitle,
+                              subtitle: l10n.registerContactSectionSubtitle,
+                              icon: Icons.contact_mail_outlined,
+                              child: Column(
+                                children: [
+                                  TextFormField(
+                                    controller: _emailCtrl,
+                                    keyboardType: TextInputType.emailAddress,
+                                    decoration: InputDecoration(
+                                      labelText: l10n.emailAddressLabel,
+                                      hintText: l10n.emailHint,
+                                      prefixIcon: const _FieldIcon(
+                                        icon: Icons.email_outlined,
+                                      ),
+                                    ),
+                                    validator: (v) => AppValidators.email(v, l10n),
+                                  ),
+                                  const SizedBox(height: 14),
+                                  TextFormField(
+                                    controller: _telCtrl,
+                                    keyboardType: TextInputType.phone,
+                                    decoration: InputDecoration(
+                                      labelText: l10n.phone,
+                                      hintText: l10n.phoneHint,
+                                      prefixIcon: const _FieldIcon(
+                                        icon: Icons.phone_outlined,
+                                      ),
+                                    ),
+                                    validator: (v) => AppValidators.phone(v, l10n),
+                                  ),
+                                ],
+                              ),
+                            )
+                          : _RegisterStepCard(
+                              key: const ValueKey('step-security'),
+                              title: l10n.registerSecuritySectionTitle,
+                              subtitle: l10n.registerSecuritySectionSubtitle,
+                              icon: Icons.lock_outline_rounded,
+                              child: Column(
+                                children: [
+                                  TextFormField(
+                                    controller: _tcCtrl,
+                                    keyboardType: TextInputType.number,
+                                    inputFormatters: [
+                                      LengthLimitingTextInputFormatter(11),
+                                      AppValidators.digitsOnlyFormatter,
+                                    ],
+                                    decoration: InputDecoration(
+                                      labelText: l10n.nationalIdLabel,
+                                      prefixIcon: const _FieldIcon(
+                                        icon: Icons.credit_card,
+                                      ),
+                                    ),
+                                    validator: (v) => AppValidators.tcKimlik(v, l10n),
+                                  ),
+                                  const SizedBox(height: 14),
+                                  TextFormField(
+                                    controller: _passCtrl,
+                                    obscureText: true,
+                                    enableSuggestions: false,
+                                    autocorrect: false,
+                                    inputFormatters: [
+                                      FilteringTextInputFormatter.deny(RegExp(r'\s')),
+                                    ],
+                                    decoration: InputDecoration(
+                                      labelText: l10n.passwordLabel,
+                                      prefixIcon: const _FieldIcon(
+                                        icon: Icons.lock_outline,
+                                      ),
+                                    ),
+                                    onChanged: (_) => _formKey.currentState?.validate(),
+                                    validator: (v) => AppValidators.password(v, l10n),
+                                  ),
+                                  const SizedBox(height: 14),
+                                  TextFormField(
+                                    controller: _pass2Ctrl,
+                                    obscureText: true,
+                                    enableSuggestions: false,
+                                    autocorrect: false,
+                                    inputFormatters: [
+                                      FilteringTextInputFormatter.deny(RegExp(r'\s')),
+                                    ],
+                                    decoration: InputDecoration(
+                                      labelText: l10n.registerPasswordRepeatLabel,
+                                      prefixIcon: const _FieldIcon(
+                                        icon: Icons.verified_user_outlined,
+                                      ),
+                                    ),
+                                    onChanged: (_) => _formKey.currentState?.validate(),
+                                    validator: (v) => AppValidators.passwordRepeat(
+                                      v?.trim(),
+                                      _passCtrl.text.trim(),
+                                      l10n,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 14),
+                                  _AgreementTile(
+                                    accepted: _kvkkAccepted,
+                                    label: l10n.registerKvkkAgreementLabel,
+                                    onOpen: () => _openAgreementPage(
+                                      title: l10n.registerKvkkDialogTitle,
+                                      body: l10n.registerKvkkDocumentBody,
+                                      onAccepted: (v) =>
+                                          setState(() => _kvkkAccepted = v),
+                                    ),
+                                    actionLabel: l10n.registerAgreementView,
+                                  ),
+                                  _AgreementTile(
+                                    accepted: _restrictedItemsAccepted,
+                                    label: l10n.registerRestrictedAgreementLabel,
+                                    onOpen: () => _openAgreementPage(
+                                      title: l10n.registerRestrictedDialogTitle,
+                                      body: l10n.registerRestrictedDocumentBody,
+                                      onAccepted: (v) => setState(
+                                        () => _restrictedItemsAccepted = v,
+                                      ),
+                                    ),
+                                    actionLabel: l10n.registerAgreementView,
+                                  ),
+                                  const SizedBox(height: 8),
+                                  GradientButton(
+                                    text: l10n.registerButtonLabel,
+                                    onPressed: _loading
+                                        ? null
+                                        : () {
+                                            if (_validateStep(l10n)) {
+                                              _submit();
+                                            }
+                                          },
+                                    loading: _loading,
+                                    gradient: _warmGradient,
+                                    glass: true,
+                                  ),
+                                ],
+                              ),
                             ),
-                          ),
-                          onChanged: (_) => _formKey.currentState?.validate(),
-                          validator: (v) => AppValidators.password(v, l10n),
-                        ),
-                        const SizedBox(height: 14),
-                        TextFormField(
-                          controller: _pass2Ctrl,
-                          obscureText: true,
-                          enableSuggestions: false,
-                          autocorrect: false,
-                          inputFormatters: [
-                            FilteringTextInputFormatter.deny(RegExp(r'\s')),
-                          ],
-                          decoration: InputDecoration(
-                            labelText: l10n.registerPasswordRepeatLabel,
-                            prefixIcon: const _FieldIcon(
-                              icon: Icons.verified_user_outlined,
-                            ),
-                          ),
-                          onChanged: (_) => _formKey.currentState?.validate(),
-                          validator: (v) => AppValidators.passwordRepeat(
-                            v?.trim(),
-                            _passCtrl.text.trim(),
-                            l10n,
-                          ),
-                        ),
-                        const SizedBox(height: 14),
-                        _AgreementTile(
-                          accepted: _kvkkAccepted,
-                          label: l10n.registerKvkkAgreementLabel,
-                          onOpen: () => _openAgreementPage(
-                            title: l10n.registerKvkkDialogTitle,
-                            body: l10n.registerKvkkDocumentBody,
-                            onAccepted: (v) => setState(() => _kvkkAccepted = v),
-                          ),
-                          actionLabel: l10n.registerAgreementView,
-                        ),
-                        _AgreementTile(
-                          accepted: _restrictedItemsAccepted,
-                          label: l10n.registerRestrictedAgreementLabel,
-                          onOpen: () => _openAgreementPage(
-                            title: l10n.registerRestrictedDialogTitle,
-                            body: l10n.registerRestrictedDocumentBody,
-                            onAccepted: (v) => setState(
-                              () => _restrictedItemsAccepted = v,
-                            ),
-                          ),
-                          actionLabel: l10n.registerAgreementView,
-                        ),
-                        const SizedBox(height: 8),
-                        GradientButton(
-                          text: l10n.registerButtonLabel,
-                          onPressed: _loading ? null : _submit,
-                          loading: _loading,
-                          gradient: _warmGradient,
-                          glass: true,
-                        ),
-                      ],
-                    ),
+                ),
+                const SizedBox(height: 16),
+                _StepActions(
+                  step: _step,
+                  onBack: _prevStep,
+                  onNext: () => _nextStep(l10n),
                 ),
                 const SizedBox(height: 18),
                 SectionCard(
@@ -791,6 +887,117 @@ class _RegisterPageState extends State<RegisterPage> {
           ),
         ),
       ),
+    );
+  }
+}
+
+class _StepProgress extends StatelessWidget {
+  const _StepProgress({
+    required this.current,
+    required this.titles,
+  });
+
+  final int current;
+  final List<String> titles;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Column(
+      children: [
+        Row(
+          children: List.generate(titles.length, (index) {
+            final isActive = index <= current;
+            return Expanded(
+              child: Container(
+                height: 4,
+                margin: EdgeInsets.only(right: index == titles.length - 1 ? 0 : 8),
+                decoration: BoxDecoration(
+                  color: isActive
+                      ? theme.colorScheme.primary
+                      : theme.colorScheme.outlineVariant.withValues(alpha: 0.5),
+                  borderRadius: BorderRadius.circular(999),
+                ),
+              ),
+            );
+          }),
+        ),
+        const SizedBox(height: 10),
+        Text(
+          titles[current],
+          style: theme.textTheme.titleSmall?.copyWith(
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _RegisterStepCard extends StatelessWidget {
+  const _RegisterStepCard({
+    super.key,
+    required this.title,
+    required this.subtitle,
+    required this.icon,
+    required this.child,
+  });
+
+  final String title;
+  final String subtitle;
+  final IconData icon;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return SectionCard(
+      child: Column(
+        children: [
+          SectionHeader(
+            title: title,
+            subtitle: subtitle,
+            icon: icon,
+          ),
+          const SizedBox(height: 18),
+          child,
+        ],
+      ),
+    );
+  }
+}
+
+class _StepActions extends StatelessWidget {
+  const _StepActions({
+    required this.step,
+    required this.onBack,
+    required this.onNext,
+  });
+
+  final int step;
+  final VoidCallback onBack;
+  final VoidCallback onNext;
+
+  @override
+  Widget build(BuildContext context) {
+    if (step == 2) {
+      return const SizedBox.shrink();
+    }
+    return Row(
+      children: [
+        if (step > 0)
+          OutlinedButton.icon(
+            onPressed: onBack,
+            icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 16),
+            label: const Text('Geri'),
+          ),
+        if (step > 0) const SizedBox(width: 12),
+        Expanded(
+          child: FilledButton(
+            onPressed: onNext,
+            child: const Text('Devam Et'),
+          ),
+        ),
+      ],
     );
   }
 }

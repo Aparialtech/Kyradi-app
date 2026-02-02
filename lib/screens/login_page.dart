@@ -98,7 +98,10 @@ class _LoginPageState extends State<LoginPage> {
     } catch (_) {}
   }
 
-  void _notify(String message, {AppNotificationType type = AppNotificationType.info}) {
+  void _notify(
+    String message, {
+    AppNotificationType type = AppNotificationType.info,
+  }) {
     if (!mounted) return;
     AppNotification.show(context, message: message, type: type);
   }
@@ -137,13 +140,14 @@ class _LoginPageState extends State<LoginPage> {
     if (_loading) return;
     final l10n = AppLocalizations.of(context)!;
     if (!_firebaseReady) {
-      _notify(
-        l10n.firebaseConfigMissing,
-        type: AppNotificationType.warning,
-      );
+      _notify(l10n.firebaseConfigMissing, type: AppNotificationType.warning);
       return;
     }
-    appLog('auth', 'AUTH_${provider.toUpperCase()}_START', level: AppLogLevel.info);
+    appLog(
+      'auth',
+      'AUTH_${provider.toUpperCase()}_START',
+      level: AppLogLevel.info,
+    );
     setState(() => _loading = true);
     try {
       final authResult = await handler();
@@ -163,7 +167,9 @@ class _LoginPageState extends State<LoginPage> {
           ? (firebaseIdToken?.isNotEmpty == true ? firebaseIdToken : idToken)
           : idToken;
       final tokenTrimmed = effectiveToken?.trim() ?? '';
-      final tokenSegments = tokenTrimmed.isEmpty ? 0 : tokenTrimmed.split('.').length;
+      final tokenSegments = tokenTrimmed.isEmpty
+          ? 0
+          : tokenTrimmed.split('.').length;
       final startsWithEyJ = tokenTrimmed.startsWith('eyJ');
       if (tokenTrimmed.isEmpty) {
         if (!mounted) return;
@@ -180,7 +186,9 @@ class _LoginPageState extends State<LoginPage> {
         if (!mounted) return;
         setState(() => _loading = false);
         _notify(
-          provider == 'google' ? l10n.googleTokenInvalid : l10n.tokenInvalidMessage,
+          provider == 'google'
+              ? l10n.googleTokenInvalid
+              : l10n.tokenInvalidMessage,
           type: AppNotificationType.error,
         );
         return;
@@ -204,7 +212,11 @@ class _LoginPageState extends State<LoginPage> {
       final msg = (res['message'] ?? res['error'] ?? '').toString();
       if (!mounted) return;
       if (ok) {
-        appLog('auth', 'AUTH_${provider.toUpperCase()}_RESULT ok', level: AppLogLevel.info);
+        appLog(
+          'auth',
+          'AUTH_${provider.toUpperCase()}_RESULT ok',
+          level: AppLogLevel.info,
+        );
         final profile = res["profile"];
         final userId = profile?["id"] ?? profile?["_id"];
         if (userId != null) {
@@ -213,26 +225,49 @@ class _LoginPageState extends State<LoginPage> {
           await prefs.setString('userId', userId.toString());
           if (!mounted) return;
         }
-        _notify(AppLocalizations.of(context)!.loginSuccess,
-            type: AppNotificationType.success);
+        _notify(
+          AppLocalizations.of(context)!.loginSuccess,
+          type: AppNotificationType.success,
+        );
         if (!mounted) return;
         AppLogoOverlayController.show();
         context.go('/home');
       } else if (msg.toLowerCase().contains('popup_closed') ||
           msg.toLowerCase().contains('login cancelled')) {
-        appLog('auth', 'AUTH_${provider.toUpperCase()}_RESULT cancelled', level: AppLogLevel.info);
+        appLog(
+          'auth',
+          'AUTH_${provider.toUpperCase()}_RESULT cancelled',
+          level: AppLogLevel.info,
+        );
         return;
       } else if (status == 400 || status == 401) {
-        appLog('auth', 'AUTH_${provider.toUpperCase()}_ERROR invalid', level: AppLogLevel.warn);
-        final mapped = _mapSocialAuthError(l10n, msg.isNotEmpty ? msg : 'TOKEN_INVALID');
+        appLog(
+          'auth',
+          'AUTH_${provider.toUpperCase()}_ERROR invalid',
+          level: AppLogLevel.warn,
+        );
+        final mapped = _mapSocialAuthError(
+          l10n,
+          msg.isNotEmpty ? msg : 'TOKEN_INVALID',
+        );
         _notify(mapped, type: AppNotificationType.error);
       } else {
-        appLog('auth', 'AUTH_${provider.toUpperCase()}_ERROR', level: AppLogLevel.warn);
-        _notify(msg.isNotEmpty ? msg : AppLocalizations.of(context)!.loginFailed,
-            type: AppNotificationType.error);
+        appLog(
+          'auth',
+          'AUTH_${provider.toUpperCase()}_ERROR',
+          level: AppLogLevel.warn,
+        );
+        _notify(
+          msg.isNotEmpty ? msg : AppLocalizations.of(context)!.loginFailed,
+          type: AppNotificationType.error,
+        );
       }
     } catch (e) {
-      appLog('auth', 'AUTH_${provider.toUpperCase()}_ERROR $e', level: AppLogLevel.error);
+      appLog(
+        'auth',
+        'AUTH_${provider.toUpperCase()}_ERROR $e',
+        level: AppLogLevel.error,
+      );
       if (!mounted) return;
       setState(() => _loading = false);
       _notify(
@@ -330,7 +365,7 @@ class _LoginPageState extends State<LoginPage> {
 
       // 🎯 Duruma göre kullanıcıya anlamlı mesaj göster
       if (ok) {
-        // ✅ Başarılı giriş
+        //  Başarılı giriş
         final profile = res["profile"];
         final userId = profile?["id"] ?? profile?["_id"];
         if (userId != null) {
@@ -350,10 +385,7 @@ class _LoginPageState extends State<LoginPage> {
       } else if (status == 403) {
         await _handleVerificationRequired(email, msg);
       } else if (status == 429) {
-        _notify(
-          l10n.loginTooManyAttempts,
-          type: AppNotificationType.warning,
-        );
+        _notify(l10n.loginTooManyAttempts, type: AppNotificationType.warning);
       } else {
         _notify(
           msg.isNotEmpty ? msg : l10n.loginFailed,
@@ -370,7 +402,10 @@ class _LoginPageState extends State<LoginPage> {
     }
   }
 
-  Future<void> _handleVerificationRequired(String email, String serverMessage) async {
+  Future<void> _handleVerificationRequired(
+    String email,
+    String serverMessage,
+  ) async {
     final normalized = email.trim().toLowerCase();
     final l10n = AppLocalizations.of(context)!;
     _notify(
@@ -393,7 +428,10 @@ class _LoginPageState extends State<LoginPage> {
       }
     } catch (e) {
       if (!mounted) return;
-      _notify(l10n.verificationSendFailedWithDetails('$e'), type: AppNotificationType.error);
+      _notify(
+        l10n.verificationSendFailedWithDetails('$e'),
+        type: AppNotificationType.error,
+      );
     }
     if (!mounted) return;
     setState(() => _loading = false);
@@ -431,7 +469,10 @@ class _LoginPageState extends State<LoginPage> {
                       const RainbowBar(height: 4),
                       const SizedBox(height: 12),
                       SectionCard(
-                        padding: const EdgeInsets.symmetric(horizontal: 26, vertical: 24),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 26,
+                          vertical: 24,
+                        ),
                         child: Column(
                           children: [
                             Container(
@@ -440,13 +481,18 @@ class _LoginPageState extends State<LoginPage> {
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
                                 gradient: const LinearGradient(
-                                  colors: [Color(0xFF2C2966), Color(0xFF005C99)],
+                                  colors: [
+                                    Color(0xFF2C2966),
+                                    Color(0xFF005C99),
+                                  ],
                                   begin: Alignment.topLeft,
                                   end: Alignment.bottomRight,
                                 ),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: const Color(0xFF2C3E50).withValues(alpha: 0.18),
+                                    color: const Color(
+                                      0xFF2C3E50,
+                                    ).withValues(alpha: 0.18),
                                     blurRadius: 24,
                                     offset: const Offset(0, 12),
                                   ),
@@ -455,7 +501,7 @@ class _LoginPageState extends State<LoginPage> {
                               child: Padding(
                                 padding: const EdgeInsets.all(12),
                                 child: Image.asset(
-                                  'assets/images/kyradi_logo.png',
+                                  'assets/images/kyradi_app_icon.png',
                                   fit: BoxFit.contain,
                                 ),
                               ),
@@ -472,7 +518,9 @@ class _LoginPageState extends State<LoginPage> {
                             Text(
                               l10n.loginHeroSubtitle,
                               style: theme.textTheme.bodyMedium?.copyWith(
-                                color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
+                                color: theme.colorScheme.onSurface.withValues(
+                                  alpha: 0.7,
+                                ),
                               ),
                               textAlign: TextAlign.center,
                             ),
@@ -520,7 +568,9 @@ class _LoginPageState extends State<LoginPage> {
                                 enableSuggestions: false,
                                 autocorrect: false,
                                 inputFormatters: [
-                                  FilteringTextInputFormatter.deny(RegExp(r'\s')),
+                                  FilteringTextInputFormatter.deny(
+                                    RegExp(r'\s'),
+                                  ),
                                 ],
                                 decoration: InputDecoration(
                                   labelText: l10n.passwordLabel,
@@ -532,7 +582,9 @@ class _LoginPageState extends State<LoginPage> {
                                     onPressed: () =>
                                         setState(() => _obscure = !_obscure),
                                     icon: Icon(
-                                      _obscure ? Icons.visibility : Icons.visibility_off,
+                                      _obscure
+                                          ? Icons.visibility
+                                          : Icons.visibility_off,
                                     ),
                                   ),
                                 ),
@@ -552,9 +604,13 @@ class _LoginPageState extends State<LoginPage> {
                                   Checkbox(
                                     value: _rememberMe,
                                     onChanged: (value) {
-                                      setState(() => _rememberMe = value ?? false);
+                                      setState(
+                                        () => _rememberMe = value ?? false,
+                                      );
                                       if (!(value ?? false)) {
-                                        _secureStorage.delete(key: _rememberEmailKey);
+                                        _secureStorage.delete(
+                                          key: _rememberEmailKey,
+                                        );
                                       }
                                     },
                                   ),
@@ -562,7 +618,8 @@ class _LoginPageState extends State<LoginPage> {
                                 ],
                               ),
                               Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
                                 children: [
                                   TextButton(
                                     onPressed: () {
@@ -591,13 +648,16 @@ class _LoginPageState extends State<LoginPage> {
                                 children: [
                                   const Expanded(child: Divider()),
                                   Padding(
-                                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 12,
+                                    ),
                                     child: Text(
                                       l10n.loginSocialDivider,
-                                      style: theme.textTheme.bodySmall?.copyWith(
-                                        color:
-                                            theme.colorScheme.onSurface.withValues(alpha: 0.6),
-                                      ),
+                                      style: theme.textTheme.bodySmall
+                                          ?.copyWith(
+                                            color: theme.colorScheme.onSurface
+                                                .withValues(alpha: 0.6),
+                                          ),
                                     ),
                                   ),
                                   const Expanded(child: Divider()),
@@ -607,17 +667,22 @@ class _LoginPageState extends State<LoginPage> {
                               Align(
                                 alignment: Alignment.center,
                                 child: ConstrainedBox(
-                                  constraints: const BoxConstraints(maxWidth: 360),
+                                  constraints: const BoxConstraints(
+                                    maxWidth: 360,
+                                  ),
                                   child: Row(
                                     children: [
                                       Expanded(
                                         child: OutlinedButton.icon(
-                                          onPressed: _loading || !_googleConfigOk || !_firebaseReady
+                                          onPressed:
+                                              _loading ||
+                                                  !_googleConfigOk ||
+                                                  !_firebaseReady
                                               ? null
                                               : () => _handleSocialAuth(
-                                                    _signInWithGoogle,
-                                                    provider: 'google',
-                                                  ),
+                                                  _signInWithGoogle,
+                                                  provider: 'google',
+                                                ),
                                           icon: const CircleAvatar(
                                             radius: 10,
                                             backgroundColor: Color(0xFFEA4335),
@@ -630,7 +695,9 @@ class _LoginPageState extends State<LoginPage> {
                                               ),
                                             ),
                                           ),
-                                          label: Text(l10n.loginContinueWithGoogle),
+                                          label: Text(
+                                            l10n.loginContinueWithGoogle,
+                                          ),
                                           style: OutlinedButton.styleFrom(
                                             padding: const EdgeInsets.symmetric(
                                               vertical: 12,
@@ -642,14 +709,19 @@ class _LoginPageState extends State<LoginPage> {
                                       const SizedBox(width: 12),
                                       Expanded(
                                         child: OutlinedButton.icon(
-                                          onPressed: _loading || !_appleConfigOk || !_firebaseReady
+                                          onPressed:
+                                              _loading ||
+                                                  !_appleConfigOk ||
+                                                  !_firebaseReady
                                               ? null
                                               : () => _handleSocialAuth(
-                                                    _signInWithApple,
-                                                    provider: 'apple',
-                                                  ),
+                                                  _signInWithApple,
+                                                  provider: 'apple',
+                                                ),
                                           icon: const Icon(Icons.apple),
-                                          label: Text(l10n.loginContinueWithApple),
+                                          label: Text(
+                                            l10n.loginContinueWithApple,
+                                          ),
                                           style: OutlinedButton.styleFrom(
                                             padding: const EdgeInsets.symmetric(
                                               vertical: 12,
@@ -662,14 +734,16 @@ class _LoginPageState extends State<LoginPage> {
                                   ),
                                 ),
                               ),
-                              if (!_firebaseReady || !_googleConfigOk || !_appleConfigOk) ...[
+                              if (!_firebaseReady ||
+                                  !_googleConfigOk ||
+                                  !_appleConfigOk) ...[
                                 const SizedBox(height: 10),
                                 Text(
                                   !_firebaseReady
                                       ? l10n.firebaseConfigMissing
                                       : (!_googleConfigOk
-                                          ? l10n.googleConfigMissingIosScheme
-                                          : l10n.appleConfigMissing),
+                                            ? l10n.googleConfigMissingIosScheme
+                                            : l10n.appleConfigMissing),
                                   style: theme.textTheme.bodySmall?.copyWith(
                                     color: theme.colorScheme.error,
                                   ),
@@ -682,7 +756,10 @@ class _LoginPageState extends State<LoginPage> {
                       ),
                       const SizedBox(height: 18),
                       SectionCard(
-                        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 18,
+                          vertical: 14,
+                        ),
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
@@ -702,11 +779,16 @@ class _LoginPageState extends State<LoginPage> {
                       ),
                       const SizedBox(height: 20),
                       SectionCard(
-                        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 18,
+                          vertical: 12,
+                        ),
                         child: Text(
                           l10n.copyrightNotice,
                           style: theme.textTheme.bodySmall?.copyWith(
-                            color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                            color: theme.colorScheme.onSurface.withValues(
+                              alpha: 0.6,
+                            ),
                           ),
                           textAlign: TextAlign.center,
                         ),

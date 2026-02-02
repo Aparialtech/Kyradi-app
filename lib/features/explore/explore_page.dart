@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:go_router/go_router.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../core/drop_locations.dart';
 import '../../l10n/app_localizations.dart';
 import '../../services/locations_service.dart';
@@ -246,6 +247,8 @@ class _ExplorePageState extends State<ExplorePage> {
     return AppEmptyState(
       title: message,
       subtitle: loc.exploreEmptySubtitle,
+      actionLabel: loc.retryAction,
+      onAction: _fetchLocations,
     );
   }
 
@@ -254,10 +257,10 @@ class _ExplorePageState extends State<ExplorePage> {
     if (_loading) {
       return ListView.builder(
         padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
-        itemCount: 6,
+        itemCount: 3,
         itemBuilder: (context, index) => const Padding(
           padding: EdgeInsets.symmetric(vertical: 8),
-          child: AppSkeleton(height: 120, radius: 20),
+          child: AppSkeleton(height: 140, radius: 20),
         ),
       );
     }
@@ -289,9 +292,40 @@ class _ExplorePageState extends State<ExplorePage> {
           location: location,
           distanceKm: _distanceFor(location),
           onTap: () => _openLocationDetail(location),
+          onDetails: () => _openLocationDetail(location),
+          onDirections: () => _openDirections(location),
         );
       },
     );
+  }
+
+  Future<void> _openDirections(DropLocation location) async {
+    final loc = AppLocalizations.of(context)!;
+    final lat = location.position.latitude;
+    final lng = location.position.longitude;
+    final googleUri = Uri.parse(
+      'https://www.google.com/maps/dir/?api=1&destination=$lat,$lng',
+    );
+    final appleUri = Uri.parse(
+      'http://maps.apple.com/?daddr=$lat,$lng',
+    );
+    final isIos = Theme.of(context).platform == TargetPlatform.iOS;
+
+    if (isIos) {
+      if (await launchUrl(appleUri, mode: LaunchMode.externalApplication)) {
+        return;
+      }
+      if (await launchUrl(googleUri, mode: LaunchMode.externalApplication)) {
+        return;
+      }
+    } else {
+      if (await launchUrl(googleUri, mode: LaunchMode.externalApplication)) {
+        return;
+      }
+    }
+    if (!mounted) return;
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text(loc.mapsOpenFailed)));
   }
 
   Widget _buildMapView(List<DropLocation> locations) {
@@ -344,52 +378,60 @@ class _ExplorePageState extends State<ExplorePage> {
     final paged = _pagedLocations(sorted);
     return Scaffold(
       appBar: AppBar(
-        title: Text(loc.findLocation),
+        toolbarHeight: 0,
+        elevation: 0,
+        backgroundColor: Colors.transparent,
+        surfaceTintColor: Colors.transparent,
       ),
-      body: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
-            child: Column(
-              children: [
-                ExploreTopBar(
-                  controller: _searchCtrl,
-                  hintText: loc.findLocation,
-                  onFilterTap: _openFilterSheet,
-                  onChanged: (value) => setState(() {
-                    _query = value;
-                    _page = 1;
-                  }),
-                ),
-                const SizedBox(height: 12),
-                ExploreToggleBar(
-                  showMap: _showMap,
-                  onChanged: _handleMapToggle,
-                  listLabel: 'List',
-                  mapLabel: 'Map',
-                ),
-                const SizedBox(height: 12),
-                _SortBar(
-                  selected: _sort,
-                  totalCount: filtered.length,
-                  onChanged: (value) => setState(() {
-                    _sort = value;
-                    _page = 1;
-                  }),
-                ),
-              ],
+      body: SafeArea(
+        bottom: false,
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+              child: Column(
+                children: [
+                  ExploreTopBar(
+                    controller: _searchCtrl,
+                    hintText: loc.findLocation,
+                    title: loc.findLocation,
+                    subtitle: 'Yakındaki KYRADI noktalarını keşfet',
+                    onFilterTap: _openFilterSheet,
+                    onChanged: (value) => setState(() {
+                      _query = value;
+                      _page = 1;
+                    }),
+                  ),
+                  const SizedBox(height: 12),
+                  ExploreToggleBar(
+                    showMap: _showMap,
+                    onChanged: _handleMapToggle,
+                    listLabel: 'Liste',
+                    mapLabel: 'Harita',
+                  ),
+                  const SizedBox(height: 12),
+                  _SortBar(
+                    selected: _sort,
+                    totalCount: filtered.length,
+                    onChanged: (value) => setState(() {
+                      _sort = value;
+                      _page = 1;
+                    }),
+                  ),
+                ],
+              ),
             ),
-          ),
-          const Divider(height: 1),
-          Expanded(
-            child: AnimatedSwitcher(
-              duration: const Duration(milliseconds: 250),
-              child: _showMap
-                  ? _buildMapView(sorted)
-                  : _buildListView(paged, filtered.length),
+            const Divider(height: 1),
+            Expanded(
+              child: AnimatedSwitcher(
+                duration: const Duration(milliseconds: 250),
+                child: _showMap
+                    ? _buildMapView(sorted)
+                    : _buildListView(paged, filtered.length),
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

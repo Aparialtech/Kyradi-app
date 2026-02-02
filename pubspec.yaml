@@ -60,6 +60,7 @@ flutter:
   generate: true   # ✅ ARB dosyalarını kullanabilmen için
   assets:
     - assets/images/kyradi_logo.png
+    - assets/images/kyradi_app_icon.png
 
 package_rename_config:
   android:

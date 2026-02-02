@@ -62,7 +62,7 @@ class _SplashPageState extends State<SplashPage> with SingleTickerProviderStateM
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Image.asset(
-                        'assets/images/kyradi_logo.png', // 🔹 PNG dosyanın adı
+                        'assets/images/kyradi_app_icon.png', // 🔹 PNG dosyanın adı
                         height: 120,
                         fit: BoxFit.contain,
                       ),

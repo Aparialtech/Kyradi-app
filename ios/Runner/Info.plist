@@ -31,14 +31,8 @@
 			<string>GoogleSignIn</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
-				<string>com.googleusercontent.apps.257787138037-6deiuvca1572r0a2vi7ou1v1nk00e5kt</string>
+				<string>com.googleusercontent.apps.143197560587-inbditnleo9t3it24lfk49gg4s2v3r7h</string>
 			</array>
-		</dict>
-		<dict>
-			<key>CFBundleTypeRole</key>
-			<string>Editor</string>
-			<key>CFBundleURLSchemes</key>
-			<array/>
 		</dict>
 	</array>
 	<key>CFBundleVersion</key>
