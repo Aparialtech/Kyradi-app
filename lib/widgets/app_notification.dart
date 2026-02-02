@@ -214,20 +214,7 @@ class _NotificationOverlayState extends State<_NotificationOverlay>
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              widget.leading ??
-                                  Container(
-                                    height: 26,
-                                    width: 26,
-                                    decoration: BoxDecoration(
-                                      shape: BoxShape.circle,
-                                      color: _accent.withValues(alpha: 0.2),
-                                    ),
-                                    child: Icon(
-                                      _icon,
-                                      color: _accent,
-                                      size: 16,
-                                    ),
-                                  ),
+                              widget.leading ?? _ThreeDIconBadge(icon: _icon, accent: _accent),
                               const SizedBox(width: 10),
                               Flexible(
                                 child: Text(
@@ -249,6 +236,65 @@ class _NotificationOverlayState extends State<_NotificationOverlay>
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _ThreeDIconBadge extends StatelessWidget {
+  const _ThreeDIconBadge({
+    required this.icon,
+    required this.accent,
+  });
+
+  final IconData icon;
+  final Color accent;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 30,
+      width: 30,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        gradient: LinearGradient(
+          colors: [
+            accent.withValues(alpha: 0.9),
+            accent.withValues(alpha: 0.55),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: accent.withValues(alpha: 0.35),
+            blurRadius: 12,
+            offset: const Offset(0, 6),
+          ),
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.3),
+            blurRadius: 8,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          Positioned(
+            top: 4,
+            left: 6,
+            right: 6,
+            child: Container(
+              height: 6,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(6),
+                color: Colors.white.withValues(alpha: 0.5),
+              ),
+            ),
+          ),
+          Icon(icon, color: Colors.white, size: 16),
+        ],
       ),
     );
   }

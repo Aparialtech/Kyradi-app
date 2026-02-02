@@ -77,9 +77,9 @@ class _IntroSplashPageState extends State<IntroSplashPage>
     final l10n = AppLocalizations.of(context)!;
     const warmGradient = LinearGradient(
       colors: [
-        Color(0xFFFFD26F),
-        Color(0xFFFF8C42),
-        Color(0xFFFF5F6D),
+        Color(0xFF0B1220),
+        Color(0xFF1B2A4A),
+        Color(0xFF163B5C),
       ],
       begin: Alignment.topLeft,
       end: Alignment.bottomRight,
@@ -289,9 +289,9 @@ class _IntroGeometricBackground extends StatelessWidget {
           decoration: BoxDecoration(
             gradient: LinearGradient(
               colors: [
-                Color(0xFFFFD26F),
-                Color(0xFFFF8C42),
-                Color(0xFFFF5F6D),
+                Color(0xFF0B1220),
+                Color(0xFF1B2A4A),
+                Color(0xFF163B5C),
               ],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
@@ -300,34 +300,34 @@ class _IntroGeometricBackground extends StatelessWidget {
           child: SizedBox.expand(),
         ),
         Positioned(
-          top: -120,
-          left: -80,
+          top: -140,
+          left: -60,
           child: _BlurBlob(
-            size: 260,
-            colors: [Color(0xFFFFF1B3), Color(0x00FFF1B3)],
+            size: 280,
+            colors: [Color(0xFF4A90E2), Color(0x004A90E2)],
           ),
         ),
         Positioned(
-          top: 120,
-          right: -120,
+          top: 80,
+          right: -140,
           child: _BlurBlob(
-            size: 300,
-            colors: [Color(0xFFFFB66C), Color(0x00FFB66C)],
+            size: 340,
+            colors: [Color(0xFF7ED6DF), Color(0x007ED6DF)],
           ),
         ),
         Positioned(
-          bottom: -140,
-          left: -40,
+          bottom: -160,
+          left: -60,
           child: _BlurBlob(
-            size: 320,
-            colors: [Color(0xFFFF6B6B), Color(0x00FF6B6B)],
+            size: 360,
+            colors: [Color(0xFF9B59B6), Color(0x009B59B6)],
           ),
         ),
         Positioned(
-          bottom: 80,
-          right: -30,
+          bottom: 70,
+          right: -40,
           child: Transform.rotate(
-            angle: 0.5,
+            angle: 0.55,
             child: _GlassRibbon(
               width: 260,
               height: 120,
@@ -335,10 +335,10 @@ class _IntroGeometricBackground extends StatelessWidget {
           ),
         ),
         Positioned(
-          top: 220,
-          left: 20,
+          top: 200,
+          left: 10,
           child: Transform.rotate(
-            angle: -0.45,
+            angle: -0.5,
             child: _GlassRibbon(
               width: 200,
               height: 90,
