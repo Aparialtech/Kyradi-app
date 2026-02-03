@@ -62,6 +62,9 @@ export class User extends Document {
   identityDocumentUrl?: string;
 
   @Prop()
+  avatarUrl?: string;
+
+  @Prop()
   birthDate?: Date;
 
   @Prop()

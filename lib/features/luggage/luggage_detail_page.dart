@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:pdf/pdf.dart';
+import 'package:printing/printing.dart';
 import '../../models/luggage.dart';
 import '../../l10n/app_localizations.dart';
 import '../../core/repositories/luggage_repository.dart';
@@ -438,7 +439,12 @@ class _LuggageDetailPageState extends State<LuggageDetailPage> {
   Future<void> _downloadInvoice(LuggageModel luggage) async {
     final loc = AppLocalizations.of(context)!;
     try {
-      final dir = await getApplicationDocumentsDirectory();
+      Directory? dir;
+      if (Platform.isAndroid) {
+        dir = await getDownloadsDirectory();
+        dir ??= await getExternalStorageDirectory();
+      }
+      dir ??= await getApplicationDocumentsDirectory();
       final safeId = luggage.id.isNotEmpty ? luggage.id.substring(0, 8) : 'KYRADI';
       final filename = 'kyradi_invoice_$safeId.pdf';
       final file = File('${dir.path}/$filename');
@@ -453,7 +459,18 @@ class _LuggageDetailPageState extends State<LuggageDetailPage> {
       final location = luggage.dropLocationName.isNotEmpty
           ? luggage.dropLocationName
           : luggage.dropLocationId;
-      final doc = pw.Document();
+      final fontBase = await PdfGoogleFonts.notoSansRegular();
+      final fontBold = await PdfGoogleFonts.notoSansBold();
+      final navy = PdfColor.fromInt(0xFF0F172A);
+      final slate = PdfColor.fromInt(0xFF475569);
+      final light = PdfColor.fromInt(0xFFF8FAFC);
+      final accent = PdfColor.fromInt(0xFF2563EB);
+      final doc = pw.Document(
+        theme: pw.ThemeData.withFont(
+          base: fontBase,
+          bold: fontBold,
+        ),
+      );
       doc.addPage(
         pw.Page(
           margin: const pw.EdgeInsets.all(24),
@@ -462,13 +479,14 @@ class _LuggageDetailPageState extends State<LuggageDetailPage> {
               crossAxisAlignment: pw.CrossAxisAlignment.start,
               children: [
                 pw.Container(
-                  padding: const pw.EdgeInsets.all(16),
+                  padding: const pw.EdgeInsets.all(18),
                   decoration: pw.BoxDecoration(
-                    color: PdfColor.fromInt(0xFF111827),
+                    color: navy,
                     borderRadius: const pw.BorderRadius.all(pw.Radius.circular(16)),
                   ),
                   child: pw.Row(
                     mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                    crossAxisAlignment: pw.CrossAxisAlignment.start,
                     children: [
                       pw.Column(
                         crossAxisAlignment: pw.CrossAxisAlignment.start,
@@ -477,7 +495,7 @@ class _LuggageDetailPageState extends State<LuggageDetailPage> {
                             'KYRADI',
                             style: pw.TextStyle(
                               color: PdfColor.fromInt(0xFFFFFFFF),
-                              fontSize: 20,
+                              fontSize: 22,
                               fontWeight: pw.FontWeight.bold,
                             ),
                           ),
@@ -485,42 +503,167 @@ class _LuggageDetailPageState extends State<LuggageDetailPage> {
                           pw.Text(
                             loc.invoiceTitle,
                             style: pw.TextStyle(
-                              color: PdfColor.fromInt(0xFFCBD5F5),
+                              color: PdfColor.fromInt(0xFFE2E8F0),
                               fontSize: 12,
+                            ),
+                          ),
+                          pw.SizedBox(height: 4),
+                          pw.Text(
+                            loc.invoiceFooterNote,
+                            style: pw.TextStyle(
+                              color: PdfColor.fromInt(0xFFCBD5F5),
+                              fontSize: 9,
                             ),
                           ),
                         ],
                       ),
+                      pw.Column(
+                        crossAxisAlignment: pw.CrossAxisAlignment.end,
+                        children: [
+                          pw.Text(
+                            '${loc.invoiceNumberLabel}: #$safeId',
+                            style: pw.TextStyle(
+                              color: PdfColor.fromInt(0xFFFFFFFF),
+                              fontSize: 11,
+                            ),
+                          ),
+                          pw.SizedBox(height: 4),
+                          pw.Text(
+                            '${loc.invoiceDateLabel}: $date',
+                            style: pw.TextStyle(
+                              color: PdfColor.fromInt(0xFFE2E8F0),
+                              fontSize: 11,
+                            ),
+                          ),
+                          pw.SizedBox(height: 6),
+                          pw.Container(
+                            padding: const pw.EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                            decoration: pw.BoxDecoration(
+                              color: accent,
+                              borderRadius: const pw.BorderRadius.all(pw.Radius.circular(10)),
+                            ),
+                            child: pw.Text(
+                              paymentStatus,
+                              style: pw.TextStyle(
+                                color: PdfColor.fromInt(0xFFFFFFFF),
+                                fontSize: 9,
+                                fontWeight: pw.FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+                pw.SizedBox(height: 18),
+                pw.Container(
+                  padding: const pw.EdgeInsets.all(14),
+                  decoration: pw.BoxDecoration(
+                    color: light,
+                    borderRadius: const pw.BorderRadius.all(pw.Radius.circular(14)),
+                  ),
+                  child: pw.Column(
+                    crossAxisAlignment: pw.CrossAxisAlignment.start,
+                    children: [
                       pw.Text(
-                        '#$safeId',
+                        loc.invoiceCustomerLabel,
                         style: pw.TextStyle(
-                          color: PdfColor.fromInt(0xFFFFFFFF),
-                          fontSize: 12,
+                          color: slate,
+                          fontSize: 10,
                         ),
+                      ),
+                      pw.SizedBox(height: 6),
+                      pw.Text(
+                        customer,
+                        style: pw.TextStyle(
+                          fontSize: 13,
+                          fontWeight: pw.FontWeight.bold,
+                          color: navy,
+                        ),
+                      ),
+                      pw.SizedBox(height: 8),
+                      _pdfRow(loc.invoiceEmailLabel, email, labelColor: slate, valueColor: navy),
+                      _pdfRow(
+                        loc.invoiceLocationLabel,
+                        location,
+                        labelColor: slate,
+                        valueColor: navy,
                       ),
                     ],
                   ),
                 ),
                 pw.SizedBox(height: 16),
-                _pdfRow(loc.invoiceDateLabel, date),
-                _pdfRow(loc.invoiceCustomerLabel, customer),
-                _pdfRow(loc.invoiceEmailLabel, email),
-                _pdfRow(loc.invoiceLocationLabel, location),
-                pw.Divider(),
-                _pdfRow(loc.invoiceItemLabel, loc.invoiceItemTitle),
-                _pdfRow(loc.invoiceItemDesc, loc.invoiceItemSubtitle),
-                _pdfRow(loc.invoicePaymentMethodLabel, paymentMethod),
-                _pdfRow(loc.invoicePaymentStatusLabel, paymentStatus),
-                _pdfRow(loc.invoiceAmountLabel, total),
-                _pdfRow(loc.invoiceVatLabel, loc.invoiceVatValue),
-                pw.Divider(),
-                _pdfRow(loc.invoiceTotalLabel, total, bold: true),
-                pw.SizedBox(height: 16),
                 pw.Text(
-                  loc.invoiceFooterNote,
+                  loc.invoiceItemLabel,
                   style: pw.TextStyle(
-                    fontSize: 10,
-                    color: PdfColor.fromInt(0xFF6B7280),
+                    fontSize: 11,
+                    color: slate,
+                    fontWeight: pw.FontWeight.bold,
+                  ),
+                ),
+                pw.SizedBox(height: 8),
+                pw.Container(
+                  padding: const pw.EdgeInsets.all(12),
+                  decoration: pw.BoxDecoration(
+                    border: pw.Border.all(color: PdfColor.fromInt(0xFFE2E8F0)),
+                    borderRadius: const pw.BorderRadius.all(pw.Radius.circular(12)),
+                  ),
+                  child: pw.Column(
+                    crossAxisAlignment: pw.CrossAxisAlignment.start,
+                    children: [
+                      pw.Text(
+                        loc.invoiceItemTitle,
+                        style: pw.TextStyle(
+                          fontWeight: pw.FontWeight.bold,
+                          color: navy,
+                        ),
+                      ),
+                      pw.SizedBox(height: 6),
+                      pw.Text(
+                        loc.invoiceItemSubtitle,
+                        style: pw.TextStyle(fontSize: 10, color: slate),
+                      ),
+                      pw.SizedBox(height: 8),
+                      _pdfRow(
+                        loc.invoicePaymentMethodLabel,
+                        paymentMethod,
+                        labelColor: slate,
+                        valueColor: navy,
+                      ),
+                    ],
+                  ),
+                ),
+                pw.SizedBox(height: 16),
+                pw.Container(
+                  padding: const pw.EdgeInsets.all(12),
+                  decoration: pw.BoxDecoration(
+                    color: PdfColor.fromInt(0xFFF1F5F9),
+                    borderRadius: const pw.BorderRadius.all(pw.Radius.circular(12)),
+                  ),
+                  child: pw.Column(
+                    children: [
+                      _pdfRow(
+                        loc.invoiceAmountLabel,
+                        total,
+                        labelColor: slate,
+                        valueColor: navy,
+                      ),
+                      _pdfRow(
+                        loc.invoiceVatLabel,
+                        loc.invoiceVatValue,
+                        labelColor: slate,
+                        valueColor: navy,
+                      ),
+                      pw.Divider(color: PdfColor.fromInt(0xFFE2E8F0)),
+                      _pdfRow(
+                        loc.invoiceTotalLabel,
+                        total,
+                        bold: true,
+                        labelColor: navy,
+                        valueColor: navy,
+                      ),
+                    ],
                   ),
                 ),
               ],
@@ -528,11 +671,15 @@ class _LuggageDetailPageState extends State<LuggageDetailPage> {
           },
         ),
       );
-      await file.writeAsBytes(await doc.save());
+      final bytes = await doc.save();
+      await file.writeAsBytes(bytes, flush: true);
+      if (mounted) {
+        await Printing.sharePdf(bytes: bytes, filename: filename);
+      }
       if (!mounted) return;
       AppNotification.show(
         context,
-        message: loc.invoiceSavedMessage(filename),
+        message: loc.invoiceSavedMessage(file.path),
         type: AppNotificationType.success,
       );
     } catch (e) {
@@ -546,7 +693,13 @@ class _LuggageDetailPageState extends State<LuggageDetailPage> {
   }
 }
 
-pw.Widget _pdfRow(String label, String value, {bool bold = false}) {
+pw.Widget _pdfRow(
+  String label,
+  String value, {
+  bool bold = false,
+  PdfColor? labelColor,
+  PdfColor? valueColor,
+}) {
   return pw.Padding(
     padding: const pw.EdgeInsets.symmetric(vertical: 4),
     child: pw.Row(
@@ -556,7 +709,7 @@ pw.Widget _pdfRow(String label, String value, {bool bold = false}) {
           label,
           style: pw.TextStyle(
             fontSize: 11,
-            color: PdfColor.fromInt(0xFF6B7280),
+            color: labelColor ?? PdfColor.fromInt(0xFF6B7280),
           ),
         ),
         pw.Text(
@@ -564,6 +717,7 @@ pw.Widget _pdfRow(String label, String value, {bool bold = false}) {
           style: pw.TextStyle(
             fontSize: bold ? 12 : 11,
             fontWeight: bold ? pw.FontWeight.bold : pw.FontWeight.normal,
+            color: valueColor,
           ),
         ),
       ],

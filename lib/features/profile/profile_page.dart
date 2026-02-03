@@ -100,6 +100,12 @@ class _ProfilePageState extends State<ProfilePage> {
           _user = UserModel.fromJson(Map<String, dynamic>.from(raw));
           _inAppNotifications = _user?.pushReminderEnabled ?? true;
           _emailNotifications = _user?.emailReminderEnabled ?? true;
+          final remoteAvatar = _user?.avatarUrl?.trim() ?? '';
+          if (remoteAvatar.isNotEmpty &&
+              ProfileAvatarCache.notifier.value != remoteAvatar) {
+            await ProfileAvatarCache.set(_userId, remoteAvatar);
+            _avatarPath = remoteAvatar;
+          }
         }
       } else {
         errorMessage =

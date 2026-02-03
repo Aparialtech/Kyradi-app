@@ -62,6 +62,7 @@ class UserModel {
   final String verificationStatus;
   final String? verifiedAt;
   final String? identityDocumentUrl;
+  final String? avatarUrl;
   final bool pushReminderEnabled;
   final bool emailReminderEnabled;
   final EmergencyContactModel? emergencyContact;
@@ -79,6 +80,7 @@ class UserModel {
     this.verificationStatus = 'unverified',
     this.verifiedAt,
     this.identityDocumentUrl,
+    this.avatarUrl,
     this.pushReminderEnabled = true,
     this.emailReminderEnabled = true,
     this.emergencyContact,
@@ -104,6 +106,9 @@ class UserModel {
       verificationStatus: (json['verificationStatus'] ?? 'unverified').toString(),
       verifiedAt: json['verifiedAt']?.toString(),
       identityDocumentUrl: identityRaw.isEmpty ? null : identityRaw,
+      avatarUrl: (json['avatarUrl'] ?? '').toString().trim().isEmpty
+          ? null
+          : (json['avatarUrl'] ?? '').toString(),
       pushReminderEnabled: (json['pushReminderEnabled'] ?? true) == true,
       emailReminderEnabled: (json['emailReminderEnabled'] ?? true) == true,
       emergencyContact: json['emergencyContact'] != null
@@ -127,6 +132,7 @@ class UserModel {
         'verificationStatus': verificationStatus,
         'verifiedAt': verifiedAt,
         'identityDocumentUrl': identityDocumentUrl,
+        'avatarUrl': avatarUrl,
         'pushReminderEnabled': pushReminderEnabled,
         'emailReminderEnabled': emailReminderEnabled,
         'emergencyContact': emergencyContact?.toJson(),

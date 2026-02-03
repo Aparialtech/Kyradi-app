@@ -111,6 +111,9 @@ export class UsersService {
             ...(dto.identityDocumentUrl !== undefined && {
               identityDocumentUrl: dto.identityDocumentUrl,
             }),
+            ...(dto.avatarUrl !== undefined && {
+              avatarUrl: dto.avatarUrl,
+            }),
             ...(dto.emergencyContact && {
               emergencyContact: {
                 fullName: dto.emergencyContact.fullName ?? '',

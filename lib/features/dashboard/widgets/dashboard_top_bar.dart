@@ -19,7 +19,12 @@ class DashboardTopBar extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final resolvedPath = avatarPath?.trim() ?? '';
-    final hasAvatar = resolvedPath.isNotEmpty && File(resolvedPath).existsSync();
+    final isRemote = resolvedPath.startsWith('http');
+    final hasLocal = resolvedPath.isNotEmpty && File(resolvedPath).existsSync();
+    final hasAvatar = isRemote || hasLocal;
+    final ImageProvider? avatarImage = isRemote
+        ? NetworkImage(resolvedPath)
+        : (hasLocal ? FileImage(File(resolvedPath)) : null);
     return Row(
       children: [
         Expanded(
@@ -63,7 +68,7 @@ class DashboardTopBar extends StatelessWidget {
             child: CircleAvatar(
               radius: 22,
               backgroundColor: theme.colorScheme.primary.withValues(alpha: 0.12),
-              backgroundImage: hasAvatar ? FileImage(File(resolvedPath)) : null,
+              backgroundImage: avatarImage,
               child: !hasAvatar
                   ? Icon(
                       Icons.person,

@@ -34,6 +34,7 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
 
   bool _saving = false;
   String? _avatarPath;
+  String? _avatarUploadUrl;
 
   AppLocalizations get loc => AppLocalizations.of(context)!;
 
@@ -72,7 +73,10 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
     if (file == null) return;
     final storedPath = await _persistAvatar(file.path);
     if (!mounted) return;
-    setState(() => _avatarPath = storedPath);
+    setState(() {
+      _avatarPath = storedPath;
+      _avatarUploadUrl = null;
+    });
   }
 
   Future<String> _persistAvatar(String sourcePath) async {
@@ -98,6 +102,36 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _saving = true);
     try {
+      var avatarUrl = _avatarPath?.trim() ?? '';
+      if (avatarUrl.isNotEmpty && !avatarUrl.startsWith('http')) {
+        final file = File(avatarUrl);
+        if (await file.exists()) {
+          final bytes = await file.readAsBytes();
+          final filename = file.uri.pathSegments.isNotEmpty
+              ? file.uri.pathSegments.last
+              : 'avatar_${DateTime.now().millisecondsSinceEpoch}.jpg';
+          final uploadRes = await ApiService.uploadIdentityDocument(
+            bytes: bytes,
+            filename: filename,
+          );
+          if (uploadRes['ok'] == true && uploadRes['fileUrl'] != null) {
+            avatarUrl = uploadRes['fileUrl'].toString();
+            _avatarUploadUrl = avatarUrl;
+          } else {
+            final err =
+                (uploadRes['error'] ?? uploadRes['message'] ?? 'Yükleme başarısız')
+                    .toString();
+            AppNotification.show(
+              context,
+              message: err,
+              type: AppNotificationType.error,
+            );
+            if (mounted) setState(() => _saving = false);
+            return;
+          }
+        }
+      }
+
       final payload = {
         'name': _nameCtrl.text.trim(),
         'surname': _surCtrl.text.trim(),
@@ -107,11 +141,13 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
         'birthDate': _birthCtrl.text.trim().isEmpty
             ? null
             : DateTime.tryParse(_birthCtrl.text.trim())?.toIso8601String(),
+        if (avatarUrl.isNotEmpty) 'avatarUrl': avatarUrl,
       };
       final res = await ApiService.updateProfile(widget.user.id, payload);
       if (!mounted) return;
       if (res['ok'] == true || (res['statusCode'] ?? 0) == 200) {
-        await ProfileAvatarCache.set(widget.user.id, _avatarPath);
+        final cacheValue = (avatarUrl.isNotEmpty) ? avatarUrl : _avatarPath;
+        await ProfileAvatarCache.set(widget.user.id, cacheValue);
         AppNotification.show(
           context,
           message: loc.profileSavedMessage,
@@ -144,8 +180,12 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
     final theme = Theme.of(context);
     final loc = AppLocalizations.of(context)!;
     final resolvedPath = _avatarPath?.trim() ?? '';
-    final hasAvatar =
-        resolvedPath.isNotEmpty && File(resolvedPath).existsSync();
+    final isRemote = resolvedPath.startsWith('http');
+    final hasLocal = resolvedPath.isNotEmpty && File(resolvedPath).existsSync();
+    final hasAvatar = isRemote || hasLocal;
+    final ImageProvider? avatarImage = isRemote
+        ? NetworkImage(resolvedPath)
+        : (hasLocal ? FileImage(File(resolvedPath)) : null);
     return Scaffold(
       appBar: AppBar(
         title: Text(loc.profileEditTitle),
@@ -197,8 +237,7 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
                           radius: 34,
                           backgroundColor:
                               theme.colorScheme.primary.withValues(alpha: 0.12),
-                          backgroundImage:
-                              hasAvatar ? FileImage(File(resolvedPath)) : null,
+                          backgroundImage: avatarImage,
                           child: _avatarPath == null || _avatarPath!.isEmpty
                               ? Icon(
                                   Icons.person,

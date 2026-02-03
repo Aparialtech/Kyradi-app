@@ -294,156 +294,151 @@ class _PaymentPageState extends State<PaymentPage> {
         child: LayoutBuilder(
           builder: (context, constraints) {
             return SingleChildScrollView(
-              padding: const EdgeInsets.all(16),
-              child: ConstrainedBox(
-                constraints: BoxConstraints(minHeight: constraints.maxHeight),
-                child: IntrinsicHeight(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      _buildQuoteSummaryCard(theme, loc, quotePrice),
-                      const SizedBox(height: 16),
-                      _buildProtectionSection(loc, theme),
-                      const SizedBox(height: 12),
-                      _buildPaymentMethodSection(loc, theme),
-                      const SizedBox(height: 16),
-                      if (_paymentMethod == 'pay_at_hotel') ...[
-                        Text(
-                          loc.paymentPayAtHotelTitle,
-                          style: theme.textTheme.titleMedium,
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 140),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  _buildQuoteSummaryCard(theme, loc, quotePrice),
+                  const SizedBox(height: 16),
+                  _buildProtectionSection(loc, theme),
+                  const SizedBox(height: 12),
+                  _buildPaymentMethodSection(loc, theme),
+                  const SizedBox(height: 16),
+                  if (_paymentMethod == 'pay_at_hotel') ...[
+                    Text(
+                      loc.paymentPayAtHotelTitle,
+                      style: theme.textTheme.titleMedium,
+                    ),
+                    const SizedBox(height: 8),
+                    Text(loc.paymentPayAtHotelBody),
+                    const SizedBox(height: 16),
+                  ] else ...[
+                    Text(
+                      loc.paymentPageSubtitle,
+                      style: theme.textTheme.bodyMedium,
+                    ),
+                    const SizedBox(height: 16),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        _CardBrandPill(
+                          label: 'VISA',
+                          color: const Color(0xFF1A1F71),
                         ),
-                        const SizedBox(height: 8),
-                        Text(loc.paymentPayAtHotelBody),
-                        const SizedBox(height: 16),
-                      ] else ...[
-                        Text(
-                          loc.paymentPageSubtitle,
-                          style: theme.textTheme.bodyMedium,
+                        const SizedBox(width: 8),
+                        _CardBrandPill(
+                          label: 'MC',
+                          color: const Color(0xFFEB001B),
                         ),
-                        const SizedBox(height: 16),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.end,
-                          children: [
-                            _CardBrandPill(
-                              label: 'VISA',
-                              color: const Color(0xFF1A1F71),
-                            ),
-                            const SizedBox(width: 8),
-                            _CardBrandPill(
-                              label: 'MC',
-                              color: const Color(0xFFEB001B),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 10),
-                        TextField(
-                          controller: _cardNumberCtrl,
-                          focusNode: _cardNumberFocus,
-                          keyboardType: TextInputType.number,
-                          textInputAction: TextInputAction.next,
-                          maxLength: 19,
-                          inputFormatters: [
-                            FilteringTextInputFormatter.digitsOnly,
-                            CardNumberInputFormatter(),
-                          ],
-                          decoration: InputDecoration(
-                            labelText: loc.paymentCardNumberLabel,
-                            hintText: '1234 5678 9012 3456',
-                            prefixIcon: const Icon(Icons.credit_card_outlined),
-                          ),
-                          onSubmitted: (_) => _nameFocus.requestFocus(),
-                        ),
-                        const SizedBox(height: 12),
-                        TextField(
-                          controller: _nameCtrl,
-                          focusNode: _nameFocus,
-                          textCapitalization: TextCapitalization.characters,
-                          textInputAction: TextInputAction.next,
-                          inputFormatters: [
-                            FilteringTextInputFormatter.allow(
-                              RegExp(r"[A-Za-zÀ-ÖØ-öø-ÿ\s]"),
-                            ),
-                            UpperCaseTextFormatter(),
-                          ],
-                          decoration: InputDecoration(
-                            labelText: loc.paymentCardNameLabel,
-                            hintText: 'AD SOYAD',
-                            prefixIcon: const Icon(Icons.person_outline),
-                          ),
-                          onSubmitted: (_) => _expiryFocus.requestFocus(),
-                        ),
-                        const SizedBox(height: 12),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: TextField(
-                                controller: _expiryCtrl,
-                                focusNode: _expiryFocus,
-                                keyboardType: TextInputType.number,
-                                textInputAction: TextInputAction.next,
-                                maxLength: 5,
-                                inputFormatters: [
-                                  FilteringTextInputFormatter.digitsOnly,
-                                  ExpiryDateInputFormatter(),
-                                ],
-                                decoration: InputDecoration(
-                                  labelText: loc.paymentExpiryLabel,
-                                  hintText: 'MM/YY',
-                                  prefixIcon: const Icon(Icons.calendar_today_outlined),
-                                ),
-                                onSubmitted: (_) => _cvcFocus.requestFocus(),
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: TextField(
-                                controller: _cvcCtrl,
-                                focusNode: _cvcFocus,
-                                keyboardType: TextInputType.number,
-                                textInputAction: TextInputAction.done,
-                                maxLength: 4,
-                                obscureText: true,
-                                inputFormatters: [
-                                  FilteringTextInputFormatter.digitsOnly,
-                                ],
-                                decoration: InputDecoration(
-                                  labelText: loc.paymentCvcLabel,
-                                  hintText: 'CVV',
-                                  prefixIcon: const Icon(Icons.lock_outline),
-                                ),
-                                onSubmitted: (_) => _completePayment(),
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 16),
                       ],
-                      Align(
-                        alignment: Alignment.centerLeft,
+                    ),
+                    const SizedBox(height: 10),
+                    TextField(
+                      controller: _cardNumberCtrl,
+                      focusNode: _cardNumberFocus,
+                      keyboardType: TextInputType.number,
+                      textInputAction: TextInputAction.next,
+                      maxLength: 19,
+                      inputFormatters: [
+                        FilteringTextInputFormatter.digitsOnly,
+                        CardNumberInputFormatter(),
+                      ],
+                      decoration: InputDecoration(
+                        labelText: loc.paymentCardNumberLabel,
+                        hintText: '1234 5678 9012 3456',
+                        prefixIcon: const Icon(Icons.credit_card_outlined),
+                      ),
+                      onSubmitted: (_) => _nameFocus.requestFocus(),
+                    ),
+                    const SizedBox(height: 12),
+                    TextField(
+                      controller: _nameCtrl,
+                      focusNode: _nameFocus,
+                      textCapitalization: TextCapitalization.characters,
+                      textInputAction: TextInputAction.next,
+                      inputFormatters: [
+                        FilteringTextInputFormatter.allow(
+                          RegExp(r"[A-Za-zÀ-ÖØ-öø-ÿ\s]"),
+                        ),
+                        UpperCaseTextFormatter(),
+                      ],
+                      decoration: InputDecoration(
+                        labelText: loc.paymentCardNameLabel,
+                        hintText: 'AD SOYAD',
+                        prefixIcon: const Icon(Icons.person_outline),
+                      ),
+                      onSubmitted: (_) => _expiryFocus.requestFocus(),
+                    ),
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: TextField(
+                            controller: _expiryCtrl,
+                            focusNode: _expiryFocus,
+                            keyboardType: TextInputType.number,
+                            textInputAction: TextInputAction.next,
+                            maxLength: 5,
+                            inputFormatters: [
+                              FilteringTextInputFormatter.digitsOnly,
+                              ExpiryDateInputFormatter(),
+                            ],
+                            decoration: InputDecoration(
+                              labelText: loc.paymentExpiryLabel,
+                              hintText: 'MM/YY',
+                              prefixIcon: const Icon(Icons.calendar_today_outlined),
+                            ),
+                            onSubmitted: (_) => _cvcFocus.requestFocus(),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: TextField(
+                            controller: _cvcCtrl,
+                            focusNode: _cvcFocus,
+                            keyboardType: TextInputType.number,
+                            textInputAction: TextInputAction.done,
+                            maxLength: 4,
+                            obscureText: true,
+                            inputFormatters: [
+                              FilteringTextInputFormatter.digitsOnly,
+                            ],
+                            decoration: InputDecoration(
+                              labelText: loc.paymentCvcLabel,
+                              hintText: 'CVV',
+                              prefixIcon: const Icon(Icons.lock_outline),
+                            ),
+                            onSubmitted: (_) => _completePayment(),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                  ],
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      priceLabel,
+                      style: theme.textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                  if (_quoteError != null)
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: Padding(
+                        padding: const EdgeInsets.only(top: 6),
                         child: Text(
-                          priceLabel,
-                          style: theme.textTheme.titleLarge?.copyWith(
-                            fontWeight: FontWeight.w700,
+                          loc.pricingQuoteFailedMessage,
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.colorScheme.error,
                           ),
                         ),
                       ),
-                      if (_quoteError != null)
-                        Align(
-                          alignment: Alignment.centerLeft,
-                          child: Padding(
-                            padding: const EdgeInsets.only(top: 6),
-                            child: Text(
-                              loc.pricingQuoteFailedMessage,
-                              style: theme.textTheme.bodySmall?.copyWith(
-                                color: theme.colorScheme.error,
-                              ),
-                            ),
-                          ),
-                        ),
-                      const SizedBox(height: 12),
-                    ],
-                  ),
-                ),
+                    ),
+                  const SizedBox(height: 12),
+                ],
               ),
             );
           },

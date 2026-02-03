@@ -18,5 +18,6 @@ export class UpdateUserDto {
   pushReminderEnabled?: boolean;
   emailReminderEnabled?: boolean;
   identityDocumentUrl?: string;
+  avatarUrl?: string;
   emergencyContact?: EmergencyContactDto;
 }
