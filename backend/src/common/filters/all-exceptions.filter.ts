@@ -31,10 +31,17 @@ export class AllExceptionsFilter implements ExceptionFilter {
         ? (responseBody as { message?: string | string[] }).message
         : 'Internal server error';
 
-    this.logger.error(
-      `${request.method} ${request.url} ${status} - ${JSON.stringify(message)}`,
-      (exception as Error)?.stack,
-    );
+    const summary = `${request.method} ${request.url} ${status} - ${JSON.stringify(
+      message,
+    )}`;
+    // Avoid treating expected client errors (4xx) as server errors in logs.
+    if (status >= 500) {
+      this.logger.error(summary, (exception as Error)?.stack);
+    } else if (status >= 400) {
+      this.logger.warn(summary);
+    } else {
+      this.logger.log(summary);
+    }
 
     const payload =
       typeof responseBody === 'string'
