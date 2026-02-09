@@ -4,6 +4,7 @@ import '../services/api_service.dart';
 import '../widgets/app_notification.dart';
 import '../widgets/gradient_button.dart';
 import '../widgets/section_card.dart';
+import '../widgets/app_mesh_background.dart';
 import '../l10n/app_localizations.dart';
 import 'reset_password_page.dart'; // ✅ eklendi
 
@@ -113,134 +114,140 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
     final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
+      backgroundColor: Colors.transparent,
       appBar: AppBar(title: Text(l10n.forgotTitle)),
-      body: DecoratedBox(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            colors: [Color(0xFFF7F8FC), Color(0xFFEFF2F7)],
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-          ),
-        ),
-        child: SafeArea(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                SectionCard(
-                  padding: const EdgeInsets.symmetric(horizontal: 26, vertical: 24),
-                  child: Column(
-                    children: [
-                      Container(
-                        height: 64,
-                        width: 64,
-                        decoration: const BoxDecoration(
-                          shape: BoxShape.circle,
-                          gradient: LinearGradient(
-                            colors: [Color(0xFF2C2966), Color(0xFF005C99)],
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                          ),
-                        ),
-                        child: const Icon(Icons.lock_reset, color: Colors.white),
-                      ),
-                      const SizedBox(height: 16),
-                      Text(
-                        l10n.forgotIntro,
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                          color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 22),
-                SectionCard(
-                  child: Form(
-                    key: _formKey,
-                    autovalidateMode: AutovalidateMode.onUserInteraction,
+      body: Stack(
+        children: [
+          const AppMeshBackground(),
+          SafeArea(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  SectionCard(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 26, vertical: 24),
                     child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        SectionHeader(
-                          title: l10n.forgotEmailSectionTitle,
-                          subtitle: l10n.forgotEmailSectionSubtitle,
-                          icon: Icons.mail_outline,
+                        Container(
+                          height: 64,
+                          width: 64,
+                          decoration: const BoxDecoration(
+                            shape: BoxShape.circle,
+                            gradient: LinearGradient(
+                              colors: [Color(0xFF2C2966), Color(0xFF005C99)],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                          ),
+                          child: const Icon(Icons.lock_reset, color: Colors.white),
                         ),
                         const SizedBox(height: 16),
-                        TextFormField(
-                          controller: _emailCtrl,
-                          keyboardType: TextInputType.emailAddress,
-                          decoration: InputDecoration(
-                            labelText: l10n.emailAddressLabel,
-                            hintText: l10n.emailHint,
-                            prefixIcon: const Icon(Icons.alternate_email),
+                        Text(
+                          l10n.forgotIntro,
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            color:
+                                theme.colorScheme.onSurface.withValues(alpha: 0.7),
                           ),
-                          validator: (v) {
-                            if (v == null || v.trim().isEmpty) {
-                              return l10n.validationEmailRequired;
-                            }
-                            final ok = RegExp(r'^\S+@\S+\.\S+$').hasMatch(v.trim());
-                            if (!ok) {
-                              return l10n.validationEmailInvalid;
-                            }
-                            return null;
-                          },
-                        ),
-                        const SizedBox(height: 18),
-                        GradientButton(
-                          text: (_secondsLeft > 0)
-                              ? l10n.forgotResendCountdown(_secondsLeft)
-                              : l10n.forgotSendButton,
-                          leading: const Icon(Icons.send_rounded),
-                          onPressed:
-                              (_secondsLeft > 0 || _loading) ? null : _sendCode,
-                          loading: _loading,
-                        ),
-                        const SizedBox(height: 6),
-                        TextButton.icon(
-                          icon: const Icon(Icons.key),
-                          label: Text(l10n.forgotAlreadyHaveCode),
-                          onPressed: _loading
-                              ? null
-                              : () {
-                                  final email = _emailCtrl.text.trim().toLowerCase();
-                                  final isValid = _formKey.currentState?.validate() ?? false;
-                                  if (!isValid) {
-                                    _notify(
-                                      l10n.forgotNeedValidEmail,
-                                      type: AppNotificationType.warning,
-                                    );
-                                    return;
-                                  }
-                                  Navigator.of(context).push(
-                                    MaterialPageRoute(
-                                      builder: (_) => ResetPasswordPage(email: email),
-                                    ),
-                                  );
-                                },
+                          textAlign: TextAlign.center,
                         ),
                       ],
                     ),
                   ),
-                ),
-                const SizedBox(height: 22),
-                SectionCard(
-                  padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
-                  child: Text(
-                    l10n.copyrightNotice,
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                  const SizedBox(height: 22),
+                  SectionCard(
+                    child: Form(
+                      key: _formKey,
+                      autovalidateMode: AutovalidateMode.onUserInteraction,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          SectionHeader(
+                            title: l10n.forgotEmailSectionTitle,
+                            subtitle: l10n.forgotEmailSectionSubtitle,
+                            icon: Icons.mail_outline,
+                          ),
+                          const SizedBox(height: 16),
+                          TextFormField(
+                            controller: _emailCtrl,
+                            keyboardType: TextInputType.emailAddress,
+                            decoration: InputDecoration(
+                              labelText: l10n.emailAddressLabel,
+                              hintText: l10n.emailHint,
+                              prefixIcon: const Icon(Icons.alternate_email),
+                            ),
+                            validator: (v) {
+                              if (v == null || v.trim().isEmpty) {
+                                return l10n.validationEmailRequired;
+                              }
+                              final ok =
+                                  RegExp(r'^\S+@\S+\.\S+$').hasMatch(v.trim());
+                              if (!ok) {
+                                return l10n.validationEmailInvalid;
+                              }
+                              return null;
+                            },
+                          ),
+                          const SizedBox(height: 18),
+                          GradientButton(
+                            text: (_secondsLeft > 0)
+                                ? l10n.forgotResendCountdown(_secondsLeft)
+                                : l10n.forgotSendButton,
+                            leading: const Icon(Icons.send_rounded),
+                            onPressed: (_secondsLeft > 0 || _loading)
+                                ? null
+                                : _sendCode,
+                            loading: _loading,
+                          ),
+                          const SizedBox(height: 6),
+                          TextButton.icon(
+                            icon: const Icon(Icons.key),
+                            label: Text(l10n.forgotAlreadyHaveCode),
+                            onPressed: _loading
+                                ? null
+                                : () {
+                                    final email =
+                                        _emailCtrl.text.trim().toLowerCase();
+                                    final isValid =
+                                        _formKey.currentState?.validate() ?? false;
+                                    if (!isValid) {
+                                      _notify(
+                                        l10n.forgotNeedValidEmail,
+                                        type: AppNotificationType.warning,
+                                      );
+                                      return;
+                                    }
+                                    Navigator.of(context).push(
+                                      MaterialPageRoute(
+                                        builder: (_) =>
+                                            ResetPasswordPage(email: email),
+                                      ),
+                                    );
+                                  },
+                          ),
+                        ],
+                      ),
                     ),
-                    textAlign: TextAlign.center,
                   ),
-                ),
-              ],
+                  const SizedBox(height: 22),
+                  SectionCard(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+                    child: Text(
+                      l10n.copyrightNotice,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color:
+                            theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
-        ),
+        ],
       ),
     );
   }

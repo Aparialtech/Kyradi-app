@@ -3,6 +3,7 @@ import '../../../l10n/app_localizations.dart';
 import '../models/wallet_transaction.dart';
 import '../widgets/transactions_list.dart';
 import '../../../ui/components/app_empty_state.dart';
+import '../../../widgets/app_mesh_background.dart';
 
 class WalletTransactionsPage extends StatefulWidget {
   const WalletTransactionsPage({
@@ -56,6 +57,7 @@ class _WalletTransactionsPageState extends State<WalletTransactionsPage>
         .where((t) => t.category == loc.walletTransactionCategoryCashback)
         .toList();
     return Scaffold(
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
         title: Text(loc.walletTransactionsTitle),
         bottom: TabBar(
@@ -67,49 +69,54 @@ class _WalletTransactionsPageState extends State<WalletTransactionsPage>
           ],
         ),
       ),
-      body: Column(
+      body: Stack(
         children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-            child: Row(
-              children: [
-                Text(loc.walletFilterDateLabel),
-                const Spacer(),
-                DropdownButton<DateFilter>(
-                  value: _dateFilter,
-                  underline: const SizedBox.shrink(),
-                  onChanged: (value) {
-                    if (value == null) return;
-                    setState(() => _dateFilter = value);
-                  },
-                  items: [
-                    DropdownMenuItem(
-                      value: DateFilter.last7,
-                      child: Text(loc.walletFilterLast7),
-                    ),
-                    DropdownMenuItem(
-                      value: DateFilter.last30,
-                      child: Text(loc.walletFilterLast30),
-                    ),
-                    DropdownMenuItem(
-                      value: DateFilter.last90,
-                      child: Text(loc.walletFilterLast90),
+          const AppMeshBackground(),
+          Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+                child: Row(
+                  children: [
+                    Text(loc.walletFilterDateLabel),
+                    const Spacer(),
+                    DropdownButton<DateFilter>(
+                      value: _dateFilter,
+                      underline: const SizedBox.shrink(),
+                      onChanged: (value) {
+                        if (value == null) return;
+                        setState(() => _dateFilter = value);
+                      },
+                      items: [
+                        DropdownMenuItem(
+                          value: DateFilter.last7,
+                          child: Text(loc.walletFilterLast7),
+                        ),
+                        DropdownMenuItem(
+                          value: DateFilter.last30,
+                          child: Text(loc.walletFilterLast30),
+                        ),
+                        DropdownMenuItem(
+                          value: DateFilter.last90,
+                          child: Text(loc.walletFilterLast90),
+                        ),
+                      ],
                     ),
                   ],
                 ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 8),
-          Expanded(
-            child: TabBarView(
-              controller: _tabController,
-              children: [
-                _TransactionsBody(items: topups),
-                _TransactionsBody(items: spends),
-                _TransactionsBody(items: cashback),
-              ],
-            ),
+              ),
+              const SizedBox(height: 8),
+              Expanded(
+                child: TabBarView(
+                  controller: _tabController,
+                  children: [
+                    _TransactionsBody(items: topups),
+                    _TransactionsBody(items: spends),
+                    _TransactionsBody(items: cashback),
+                  ],
+                ),
+              ),
+            ],
           ),
         ],
       ),

@@ -14,6 +14,7 @@ import '../bookings/widgets/bookings_header.dart';
 import '../bookings/widgets/bookings_segmented_control.dart';
 import '../bookings/widgets/trip_card.dart';
 import '../bookings/widgets/trip_timeline_sheet.dart';
+import '../../widgets/app_mesh_background.dart';
 
 class BookingsPage extends StatefulWidget {
   const BookingsPage({super.key});
@@ -203,30 +204,32 @@ class _BookingsPageState extends State<BookingsPage> {
     final items = _segmentItems;
 
     return Scaffold(
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
         title: Text(loc.myLuggages),
       ),
       body: Stack(
         children: [
+          const AppMeshBackground(),
           Column(
             children: [
               Padding(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
-            child: Column(
-              children: [
-                BookingsHeader(
-                  title: loc.myLuggages,
-                  subtitle: loc.luggagesSectionSubtitle,
-                  onOpenClassic: () => context.push('/luggage'),
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+                child: Column(
+                  children: [
+                    BookingsHeader(
+                      title: loc.myLuggages,
+                      subtitle: loc.luggagesSectionSubtitle,
+                      onOpenClassic: () => context.push('/luggage'),
+                    ),
+                    const SizedBox(height: 12),
+                    BookingsSegmentedControl(
+                      segment: _segment,
+                      onChanged: (value) => setState(() => _segment = value),
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 12),
-                BookingsSegmentedControl(
-                  segment: _segment,
-                  onChanged: (value) => setState(() => _segment = value),
-                ),
-              ],
-            ),
-          ),
+              ),
               const Divider(height: 1),
               Expanded(
                 child: _loading

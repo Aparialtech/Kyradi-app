@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter/foundation.dart';
@@ -11,18 +12,21 @@ import '../../ui/components/app_skeleton.dart';
 import '../../widgets/app_notification.dart';
 import '../../core/profile_avatar_cache.dart';
 import '../../core/app_theme_mode.dart';
+import '../../core/notification_prefs.dart';
 import '../../widgets/section_card.dart';
 import '../../widgets/app_logo_overlay.dart';
+import '../../widgets/app_mesh_background.dart';
 import 'pages/about_page.dart';
 import 'pages/faq_page.dart';
 import 'widgets/profile_header_card.dart';
 import 'widgets/security_section.dart';
-import 'widgets/settings_section.dart';
 import 'widgets/support_section.dart';
 import 'widgets/verification_section.dart';
 import '../../screens/crash_log_page.dart';
 import 'pages/verification_form_page.dart';
 import 'pages/profile_edit_page.dart';
+import 'pages/profile_settings_page.dart';
+import 'pages/identity_verification_page.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -38,6 +42,7 @@ class _ProfilePageState extends State<ProfilePage> {
   String? _userId;
   bool _inAppNotifications = true;
   bool _emailNotifications = true;
+  bool _criticalOnly = false;
   String _languageCode = 'tr';
   ThemeMode _themeMode = AppThemeMode.notifier.value;
   String? _avatarPath;
@@ -48,6 +53,10 @@ class _ProfilePageState extends State<ProfilePage> {
     ProfileAvatarCache.notifier.addListener(_handleAvatarUpdate);
     _restoreUser();
     AppThemeMode.notifier.addListener(_handleThemeUpdate);
+    NotificationPrefs.load().then((_) {
+      if (!mounted) return;
+      setState(() => _criticalOnly = NotificationPrefs.criticalOnly.value);
+    });
   }
 
   @override
@@ -101,10 +110,12 @@ class _ProfilePageState extends State<ProfilePage> {
           _inAppNotifications = _user?.pushReminderEnabled ?? true;
           _emailNotifications = _user?.emailReminderEnabled ?? true;
           final remoteAvatar = _user?.avatarUrl?.trim() ?? '';
-          if (remoteAvatar.isNotEmpty &&
-              ProfileAvatarCache.notifier.value != remoteAvatar) {
-            await ProfileAvatarCache.set(_userId, remoteAvatar);
-            _avatarPath = remoteAvatar;
+          if (remoteAvatar.isNotEmpty) {
+            final resolved = _resolveAvatarUrl(remoteAvatar);
+            if (ProfileAvatarCache.notifier.value != resolved) {
+              await ProfileAvatarCache.set(_userId, resolved);
+              _avatarPath = resolved;
+            }
           }
         }
       } else {
@@ -121,8 +132,38 @@ class _ProfilePageState extends State<ProfilePage> {
     setState(() => _loading = false);
   }
 
-  void _openLuggageCenter() {
-    context.push('/luggage');
+  String _resolveAvatarUrl(String value) {
+    final trimmed = value.trim();
+    if (trimmed.isEmpty) return trimmed;
+    if (trimmed.startsWith('http')) return trimmed;
+    if (File(trimmed).existsSync()) return trimmed;
+    final base = ApiService.baseUrl;
+    if (base.isEmpty) return trimmed;
+    if (trimmed.startsWith('/')) {
+      return base.endsWith('/')
+          ? '${base.substring(0, base.length - 1)}$trimmed'
+          : '$base$trimmed';
+    }
+    return trimmed;
+  }
+
+  Future<void> _openSettings() async {
+    await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => ProfileSettingsPage(
+          inAppNotifications: _inAppNotifications,
+          emailNotifications: _emailNotifications,
+          onInAppChanged: (value) => _updateNotificationSettings(inApp: value),
+          onEmailChanged: (value) => _updateNotificationSettings(email: value),
+          languageCode: _languageCode,
+          onLanguageChanged: (value) => setState(() => _languageCode = value),
+          themeMode: _themeMode,
+          onThemeChanged: (value) => setState(() => _themeMode = value),
+          criticalOnly: _criticalOnly,
+          onCriticalOnlyChanged: _updateCriticalOnly,
+        ),
+      ),
+    );
   }
 
   Future<void> _openEditProfile() async {
@@ -175,14 +216,59 @@ class _ProfilePageState extends State<ProfilePage> {
     }
   }
 
+  Future<void> _updateCriticalOnly(bool value) async {
+    setState(() => _criticalOnly = value);
+    await NotificationPrefs.setCriticalOnly(value);
+  }
+
 
   Future<void> _openVerification() async {
     if (_user == null) return;
-    await Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => VerificationFormPage(user: _user!),
-      ),
+    final loc = AppLocalizations.of(context)!;
+    final choice = await showModalBottomSheet<String>(
+      context: context,
+      showDragHandle: true,
+      builder: (context) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                ListTile(
+                  leading: const ThreeDIconBadge(icon: Icons.mail_outline),
+                  title: Text(loc.emailVerificationTitle),
+                  subtitle: Text(loc.emailVerificationSubtitle),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () => Navigator.of(context).pop('email'),
+                ),
+                ListTile(
+                  leading: const ThreeDIconBadge(icon: Icons.badge_outlined),
+                  title: Text(loc.identityVerificationTitle),
+                  subtitle: Text(loc.identityVerificationSubtitle),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () => Navigator.of(context).pop('identity'),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
+    if (!mounted || choice == null) return;
+    if (choice == 'email') {
+      await Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (_) => VerificationFormPage(user: _user!),
+        ),
+      );
+    } else {
+      await Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (_) => const IdentityVerificationPage(),
+        ),
+      );
+    }
     if (!mounted) return;
     await _loadProfile();
   }
@@ -232,93 +318,95 @@ class _ProfilePageState extends State<ProfilePage> {
           child: Text(loc.profile),
         ),
       ),
-      body: _loading
-          ? ListView(
-              padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
-              children: const [
-                AppSkeleton(height: 120, radius: 20),
-                SizedBox(height: 16),
-                AppSkeleton(height: 90, radius: 20),
-                SizedBox(height: 16),
-                AppSkeleton(height: 140, radius: 20),
-                SizedBox(height: 16),
-                AppSkeleton(height: 160, radius: 20),
-              ],
-            )
-          : _error != null
-              ? AppErrorState(
-                  message: _error == 'USER_ID_MISSING'
-                      ? loc.userIdMissing
-                      : _error!,
-                  onRetry: _restoreUser,
-                )
-              : ListView(
+      body: Stack(
+        children: [
+          const AppMeshBackground(),
+          _loading
+              ? ListView(
                   padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
-                  children: [
-                    if (_user != null)
-                      ProfileHeaderCard(
-                        user: _user!,
-                        onEdit: _openEditProfile,
-                        avatarPath: _avatarPath,
-                      ),
-                    if (_user != null) ...[
-                      const SizedBox(height: 16),
-                      _ProfileDetailsCard(user: _user!),
-                    ],
-                    const SizedBox(height: 16),
-                    VerificationSection(
-                      status: _user?.verificationStatus ?? 'unverified',
-                      onManage: _openVerification,
-                    ),
-                    const SizedBox(height: 16),
-                    SettingsSection(
-                      inAppNotifications: _inAppNotifications,
-                      emailNotifications: _emailNotifications,
-                      onInAppChanged: (value) =>
-                          _updateNotificationSettings(inApp: value),
-                      onEmailChanged: (value) =>
-                          _updateNotificationSettings(email: value),
-                      languageCode: _languageCode,
-                      onLanguageChanged: (value) =>
-                          setState(() => _languageCode = value),
-                      themeMode: _themeMode,
-                      onThemeChanged: (value) =>
-                          setState(() => _themeMode = value),
-                    ),
-                    const SizedBox(height: 16),
-                    SecuritySection(
-                      onChangePassword: () {
-                        Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (_) => const ChangePasswordPage(),
-                          ),
-                        );
-                      },
-                      onLogout: _confirmLogout,
-                    ),
-                    const SizedBox(height: 16),
-                    SupportSection(
-                      onFaq: () {
-                        Navigator.of(context).push(
-                          MaterialPageRoute(builder: (_) => const FaqPage()),
-                        );
-                      },
-                      onAbout: () {
-                        Navigator.of(context).push(
-                          MaterialPageRoute(builder: (_) => const AboutPage()),
-                        );
-                      },
-                    ),
-                    const SizedBox(height: 16),
-                    ListTile(
-                      leading: const Icon(Icons.luggage_outlined),
-                      title: Text(loc.myLuggages),
-                      subtitle: Text(loc.luggagesSectionSubtitle),
-                      trailing: const Icon(Icons.chevron_right),
-                      onTap: _openLuggageCenter,
-                    ),
+                  children: const [
+                    AppSkeleton(height: 120, radius: 20),
+                    SizedBox(height: 16),
+                    AppSkeleton(height: 90, radius: 20),
+                    SizedBox(height: 16),
+                    AppSkeleton(height: 140, radius: 20),
+                    SizedBox(height: 16),
+                    AppSkeleton(height: 160, radius: 20),
                   ],
-                ),
+                )
+              : _error != null
+                  ? AppErrorState(
+                      message: _error == 'USER_ID_MISSING'
+                          ? loc.userIdMissing
+                          : _error!,
+                      onRetry: _restoreUser,
+                    )
+                  : ListView(
+                      padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
+                      children: [
+                        if (_user != null)
+                          ProfileHeaderCard(
+                            user: _user!,
+                            onEdit: _openEditProfile,
+                            avatarPath: _avatarPath,
+                          ),
+                        if (_user != null) ...[
+                          const SizedBox(height: 16),
+                          _ProfileDetailsCard(user: _user!),
+                        ],
+                        const SizedBox(height: 16),
+                        VerificationSection(
+                          status: _user?.verificationStatus ?? 'unverified',
+                          identityVerified: _user?.identityVerified ?? false,
+                          onManage: _openVerification,
+                        ),
+                        const SizedBox(height: 16),
+                        SectionCard(
+                          backgroundColor: Theme.of(context)
+                              .colorScheme
+                              .surface
+                              .withValues(alpha: 0.92),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 4,
+                          ),
+                          child: ListTile(
+                            leading: const ThreeDIconBadge(
+                              icon: Icons.settings_outlined,
+                            ),
+                            title: Text(loc.settingsTitle),
+                            trailing: const Icon(Icons.chevron_right),
+                            onTap: _openSettings,
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        SecuritySection(
+                          onChangePassword: () {
+                            Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (_) => const ChangePasswordPage(),
+                              ),
+                            );
+                          },
+                          onLogout: _confirmLogout,
+                        ),
+                        const SizedBox(height: 16),
+                        SupportSection(
+                          onFaq: () {
+                            Navigator.of(context).push(
+                              MaterialPageRoute(builder: (_) => const FaqPage()),
+                            );
+                          },
+                          onAbout: () {
+                            Navigator.of(context).push(
+                              MaterialPageRoute(builder: (_) => const AboutPage()),
+                            );
+                          },
+                        ),
+                      ],
+                    ),
+        ],
+      ),
     );
   }
 }
@@ -335,54 +423,68 @@ class _ProfileDetailsCard extends StatelessWidget {
     final loc = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
     return SectionCard(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SectionHeader(
-            title: loc.profileDetailsTitle,
-            subtitle: loc.profileDetailsSubtitle,
-            icon: Icons.badge_outlined,
+      backgroundColor: theme.colorScheme.surface.withValues(alpha: 0.94),
+      child: Theme(
+        // Make ExpansionTile feel like a button, without extra Material padding/dividers.
+        data: theme.copyWith(dividerColor: Colors.transparent),
+        child: ExpansionTile(
+          tilePadding: EdgeInsets.zero,
+          childrenPadding: EdgeInsets.zero,
+          leading: const ThreeDIconBadge(icon: Icons.badge_outlined),
+          title: Text(
+            loc.profileDetailsTitle,
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.w800,
+            ),
           ),
-          const SizedBox(height: 12),
-          _InfoTile(
-            icon: Icons.email_outlined,
-            label: loc.profileEmailLabel,
-            value: user.email,
+          subtitle: Text(
+            loc.profileDetailsSubtitle,
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
           ),
-          _InfoTile(
-            icon: Icons.phone_outlined,
-            label: loc.profilePhoneLabel,
-            value: user.phone.isEmpty ? '-' : user.phone,
-          ),
-          _InfoTile(
-            icon: Icons.badge_outlined,
-            label: loc.profileNationalIdLabel,
-            value: _maskNationalId(user.nationalId),
-          ),
-          _InfoTile(
-            icon: Icons.cake_outlined,
-            label: loc.profileBirthDateLabel,
-            value: _formatBirthDate(user.birthDate),
-          ),
-          _InfoTile(
-            icon: Icons.person_outline,
-            label: loc.profileGenderLabel,
-            value: _genderLabel(loc, user.gender),
-          ),
-          _InfoTile(
-            icon: Icons.location_on_outlined,
-            label: loc.profileAddressLabel,
-            value: user.address.isEmpty ? '-' : user.address,
-          ),
-          const SizedBox(height: 4),
-          Divider(color: theme.colorScheme.outlineVariant),
-          const SizedBox(height: 4),
-          _InfoTile(
-            icon: Icons.verified_user_outlined,
-            label: loc.profileVerificationStatus,
-            value: _statusLabel(loc, user.verificationStatus),
-          ),
-        ],
+          children: [
+            const SizedBox(height: 12),
+            _InfoTile(
+              icon: Icons.email_outlined,
+              label: loc.profileEmailLabel,
+              value: user.email,
+            ),
+            _InfoTile(
+              icon: Icons.phone_outlined,
+              label: loc.profilePhoneLabel,
+              value: user.phone.isEmpty ? '-' : user.phone,
+            ),
+            _InfoTile(
+              icon: Icons.badge_outlined,
+              label: loc.profileNationalIdLabel,
+              value: _maskNationalId(user.nationalId),
+            ),
+            _InfoTile(
+              icon: Icons.cake_outlined,
+              label: loc.profileBirthDateLabel,
+              value: _formatBirthDate(user.birthDate),
+            ),
+            _InfoTile(
+              icon: Icons.person_outline,
+              label: loc.profileGenderLabel,
+              value: _genderLabel(loc, user.gender),
+            ),
+            _InfoTile(
+              icon: Icons.location_on_outlined,
+              label: loc.profileAddressLabel,
+              value: user.address.isEmpty ? '-' : user.address,
+            ),
+            const SizedBox(height: 4),
+            Divider(color: theme.colorScheme.outlineVariant),
+            const SizedBox(height: 4),
+            _InfoTile(
+              icon: Icons.verified_user_outlined,
+              label: loc.profileVerificationStatus,
+              value: _statusLabel(loc, user.verificationStatus),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -442,15 +544,7 @@ class _InfoTile extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            height: 36,
-            width: 36,
-            decoration: BoxDecoration(
-              color: theme.colorScheme.primary.withValues(alpha: 0.12),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Icon(icon, color: theme.colorScheme.primary, size: 18),
-          ),
+          ThreeDIconBadge(icon: icon),
           const SizedBox(width: 12),
           Expanded(
             child: Column(

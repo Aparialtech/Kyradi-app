@@ -10,6 +10,7 @@ import '../core/ios/ios_config_service.dart';
 import '../l10n/app_localizations.dart';
 import '../services/api_service.dart';
 import '../widgets/section_card.dart';
+import '../widgets/app_mesh_background.dart';
 
 class LocationReservationPage extends StatefulWidget {
   final String locationId;
@@ -73,14 +74,57 @@ class _LocationReservationPageState extends State<LocationReservationPage> {
     });
   }
 
+  Map<String, String> _locationContacts(DropLocation location) {
+    const fallback = '+90 212 000 00 00';
+    final id = location.id.toLowerCase();
+    if (id.contains('taksim')) return {'phone': '+90 212 555 01 01'};
+    if (id.contains('besiktas')) return {'phone': '+90 212 555 02 02'};
+    if (id.contains('bakirkoy')) return {'phone': '+90 212 555 03 03'};
+    if (id.contains('airport') || id.contains('havaliman')) {
+      return {'phone': '+90 212 555 04 04'};
+    }
+    return {'phone': fallback};
+  }
+
+  List<String> _miniGuideFor(DropLocation location) {
+    final lower = location.name.toLowerCase();
+    if (lower.contains('taksim')) {
+      return ['☕ Gümüşsuyu Cafe', '🍽️ Galata Restoran', '🚶 İstiklal Caddesi'];
+    }
+    if (lower.contains('besiktas')) {
+      return ['☕ Beşiktaş Kahve', '🍽️ Çarşı Restoran', '🚶 Deniz Müzesi'];
+    }
+    return ['☕ Yakın kafe', '🍽️ Yakın restoran', '🚶 Gezilecek yer'];
+  }
+
+  List<String> _travelTimesFor(DropLocation location) {
+    final lower = location.name.toLowerCase();
+    if (lower.contains('taksim')) {
+      return ['📍 Taksim Meydanı → 6 dk', '✈️ Havalimanı → 38 dk'];
+    }
+    if (lower.contains('besiktas')) {
+      return ['📍 Sahil → 5 dk', '✈️ Havalimanı → 40 dk'];
+    }
+    if (lower.contains('bakirkoy')) {
+      return ['📍 Metro → 7 dk', '✈️ Havalimanı → 18 dk'];
+    }
+    return ['📍 Merkez → 10 dk', '✈️ Havalimanı → 35 dk'];
+  }
+
   @override
   Widget build(BuildContext context) {
     final loc = AppLocalizations.of(context)!;
     final location = DropLocationsRepository.byId(widget.locationId);
     if (location == null) {
       return Scaffold(
+        backgroundColor: Colors.transparent,
         appBar: AppBar(title: Text(loc.locationNotFoundTitle)),
-        body: Center(child: Text(loc.locationNotFoundMessage)),
+        body: Stack(
+          children: [
+            const AppMeshBackground(),
+            Center(child: Text(loc.locationNotFoundMessage)),
+          ],
+        ),
       );
     }
 
@@ -88,12 +132,16 @@ class _LocationReservationPageState extends State<LocationReservationPage> {
     final fmt = DateFormat('dd MMM HH:mm', Localizations.localeOf(context).toLanguageTag());
 
     return Scaffold(
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
         title: Text(location.name),
       ),
-      body: ListView(
-        padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
+      body: Stack(
         children: [
+          const AppMeshBackground(),
+          ListView(
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
+            children: [
           _HeroHeader(location: location),
           const SizedBox(height: 16),
           _MapCard(
@@ -109,7 +157,9 @@ class _LocationReservationPageState extends State<LocationReservationPage> {
                 SectionHeader(
                   title: loc.locationDetailsTitle,
                   subtitle: loc.locationDetailsSubtitle,
-                  icon: Icons.store_mall_directory_outlined,
+                  iconWidget: const ThreeDIconBadge(
+                    icon: Icons.store_mall_directory_outlined,
+                  ),
                 ),
                 const SizedBox(height: 12),
                 Text(
@@ -174,6 +224,106 @@ class _LocationReservationPageState extends State<LocationReservationPage> {
                     ),
                   ],
                 ),
+                const SizedBox(height: 12),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: _travelTimesFor(location)
+                      .map(
+                        (label) => _InfoChip(
+                          label: label,
+                          color: theme.colorScheme.primary,
+                          icon: Icons.navigation_rounded,
+                        ),
+                      )
+                      .toList(),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 18),
+          SectionCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const SectionHeader(
+                  title: 'Mini Rehber',
+                  subtitle: 'Yakın çevrede hızlı öneriler.',
+                  iconWidget: ThreeDIconBadge(icon: Icons.explore_rounded),
+                ),
+                const SizedBox(height: 12),
+                ..._miniGuideFor(location).map(
+                  (item) => Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 4),
+                    child: Text(item, style: theme.textTheme.bodyMedium),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 18),
+          SectionCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const SectionHeader(
+                  title: 'Güvence & Güven',
+                  subtitle: 'Kısa ve net güvence bilgileri.',
+                  iconWidget: ThreeDIconBadge(icon: Icons.verified_user_outlined),
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  'Kyradi noktalarında bırakılan bavullar sigortalıdır.',
+                  style: theme.textTheme.bodyMedium,
+                ),
+                const SizedBox(height: 10),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: const [
+                    _TrustBadge(label: 'Sigortalı Alan', icon: Icons.lock_rounded),
+                    _TrustBadge(label: 'Kamera İzleme', icon: Icons.videocam_rounded),
+                    _TrustBadge(label: 'Yetkili Personel', icon: Icons.person_pin_rounded),
+                    _TrustBadge(label: 'KVKK Uyumlu', icon: Icons.verified_outlined),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 18),
+          SectionCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const SectionHeader(
+                  title: 'Yardıma mı ihtiyacın var?',
+                  subtitle: 'Hızlı destek kanalları.',
+                  iconWidget: ThreeDIconBadge(icon: Icons.support_agent_rounded),
+                ),
+                const SizedBox(height: 12),
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: const ThreeDIconBadge(icon: Icons.phone_outlined),
+                  title: const Text('Lokasyon Telefonu'),
+                  subtitle: Text(_locationContacts(location)['phone'] ?? ''),
+                ),
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: const ThreeDIconBadge(icon: Icons.chat_bubble_outline),
+                  title: const Text('WhatsApp Destek'),
+                  onTap: () => launchUrl(
+                    Uri.parse('https://wa.me/905000000000'),
+                    mode: LaunchMode.externalApplication,
+                  ),
+                ),
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: const ThreeDIconBadge(icon: Icons.email_outlined),
+                  title: const Text('E-posta'),
+                  onTap: () => launchUrl(
+                    Uri.parse('mailto:support@kyradi.com'),
+                  ),
+                ),
               ],
             ),
           ),
@@ -187,7 +337,9 @@ class _LocationReservationPageState extends State<LocationReservationPage> {
                   subtitle: location.openingHours.isEmpty
                       ? loc.openingHoursAlwaysOpen
                       : loc.openingHoursSubtitle,
-                  icon: Icons.access_time,
+                  iconWidget: const ThreeDIconBadge(
+                    icon: Icons.access_time,
+                  ),
                 ),
                 const SizedBox(height: 12),
                 if (location.openingHours.isEmpty)
@@ -208,7 +360,9 @@ class _LocationReservationPageState extends State<LocationReservationPage> {
                 SectionHeader(
                   title: loc.upcomingReservationsTitle,
                   subtitle: loc.upcomingReservationsSubtitle,
-                  icon: Icons.calendar_today_outlined,
+                  iconWidget: const ThreeDIconBadge(
+                    icon: Icons.calendar_today_outlined,
+                  ),
                 ),
                 const SizedBox(height: 12),
                 if (location.reservations.isEmpty)
@@ -220,7 +374,9 @@ class _LocationReservationPageState extends State<LocationReservationPage> {
                   ...location.reservations.map(
                     (slot) => ListTile(
                       contentPadding: EdgeInsets.zero,
-                      leading: const Icon(Icons.event_available_outlined),
+                      leading: const ThreeDIconBadge(
+                        icon: Icons.event_available_outlined,
+                      ),
                       title: Text(loc.reservationTileTitle(slot.code)),
                       subtitle: Text(
                         loc.reservationSlotSummary(
@@ -241,7 +397,9 @@ class _LocationReservationPageState extends State<LocationReservationPage> {
                 SectionHeader(
                   title: loc.continueSectionTitle,
                   subtitle: loc.continueSectionSubtitle,
-                  icon: Icons.person_outline,
+                  iconWidget: const ThreeDIconBadge(
+                    icon: Icons.person_outline,
+                  ),
                 ),
                 const SizedBox(height: 12),
                 FutureBuilder<bool>(
@@ -276,6 +434,8 @@ class _LocationReservationPageState extends State<LocationReservationPage> {
                 ),
               ],
             ),
+          ),
+        ],
           ),
         ],
       ),
@@ -600,7 +760,7 @@ class _InfoChip extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, size: 16, color: color),
+            _MiniThreeDIcon(icon: icon, accent: color),
             const SizedBox(width: 6),
             Text(
               label,
@@ -611,6 +771,80 @@ class _InfoChip extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _MiniThreeDIcon extends StatelessWidget {
+  const _MiniThreeDIcon({
+    required this.icon,
+    required this.accent,
+  });
+
+  final IconData icon;
+  final Color accent;
+
+  @override
+  Widget build(BuildContext context) {
+    final base = Theme.of(context).colorScheme.surface;
+    return Container(
+      height: 22,
+      width: 22,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        gradient: LinearGradient(
+          colors: [
+            accent.withValues(alpha: 0.28),
+            accent.withValues(alpha: 0.08),
+          ],
+        ),
+        border: Border.all(color: accent.withValues(alpha: 0.35)),
+      ),
+      child: Center(
+        child: Icon(
+          icon,
+          size: 12,
+          color: accent,
+        ),
+      ),
+    );
+  }
+}
+
+class _TrustBadge extends StatelessWidget {
+  const _TrustBadge({
+    required this.label,
+    required this.icon,
+  });
+
+  final String label;
+  final IconData icon;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceVariant.withValues(alpha: 0.6),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(
+          color: theme.colorScheme.outlineVariant.withValues(alpha: 0.4),
+        ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _MiniThreeDIcon(icon: icon, accent: theme.colorScheme.primary),
+          const SizedBox(width: 6),
+          Text(
+            label,
+            style: theme.textTheme.labelSmall?.copyWith(
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
       ),
     );
   }

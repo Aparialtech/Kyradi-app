@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../services/api_service.dart';
 import '../../../widgets/app_notification.dart';
+import '../../../widgets/app_mesh_background.dart';
+import '../../../widgets/section_card.dart';
 
 class EmailOtpVerifyPage extends StatefulWidget {
   const EmailOtpVerifyPage({super.key});
@@ -90,37 +92,46 @@ class _EmailOtpVerifyPageState extends State<EmailOtpVerifyPage> {
   Widget build(BuildContext context) {
     final loc = AppLocalizations.of(context)!;
     return Scaffold(
+      backgroundColor: Colors.transparent,
       appBar: AppBar(title: Text(loc.verificationTitle)),
-      body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          children: [
-            TextField(
-              controller: _codeCtrl,
-              keyboardType: TextInputType.number,
-              decoration: InputDecoration(labelText: loc.verificationCodeLabel),
-              maxLength: 6,
+      body: Stack(
+        children: [
+          const AppMeshBackground(),
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: SectionCard(
+              child: Column(
+                children: [
+                  TextField(
+                    controller: _codeCtrl,
+                    keyboardType: TextInputType.number,
+                    decoration:
+                        InputDecoration(labelText: loc.verificationCodeLabel),
+                    maxLength: 6,
+                  ),
+                  const SizedBox(height: 12),
+                  FilledButton(
+                    onPressed: _loading ? null : _verify,
+                    child: _loading
+                        ? const SizedBox(
+                            width: 18,
+                            height: 18,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : Text(loc.verifyButtonLabel),
+                  ),
+                  const SizedBox(height: 12),
+                  TextButton(
+                    onPressed: _seconds == 0 ? _resend : null,
+                    child: Text(_seconds == 0
+                        ? loc.verificationResendButton
+                        : loc.verificationCountdownLabel(_seconds)),
+                  ),
+                ],
+              ),
             ),
-            const SizedBox(height: 12),
-            FilledButton(
-              onPressed: _loading ? null : _verify,
-              child: _loading
-                  ? const SizedBox(
-                      width: 18,
-                      height: 18,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : Text(loc.verifyButtonLabel),
-            ),
-            const SizedBox(height: 12),
-            TextButton(
-              onPressed: _seconds == 0 ? _resend : null,
-              child: Text(_seconds == 0
-                  ? loc.verificationResendButton
-                  : loc.verificationCountdownLabel(_seconds)),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

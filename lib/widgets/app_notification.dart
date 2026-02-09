@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
+import '../core/notification_prefs.dart';
 
 enum AppNotificationType { info, success, warning, error }
 
@@ -17,6 +18,10 @@ class AppNotification {
     Duration duration = const Duration(seconds: 2),
     Widget? leading,
   }) {
+    if (NotificationPrefs.criticalOnly.value &&
+        (type == AppNotificationType.info || type == AppNotificationType.success)) {
+      return;
+    }
     _currentEntry?.remove();
     final overlay = Overlay.of(context);
 

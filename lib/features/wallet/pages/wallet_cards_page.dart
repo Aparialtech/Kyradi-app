@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../l10n/app_localizations.dart';
+import '../../../widgets/app_mesh_background.dart';
 import '../../../widgets/section_card.dart';
 import '../models/saved_card.dart';
 import '../widgets/saved_card_visual.dart';
@@ -141,155 +142,163 @@ class _WalletCardsPageState extends State<WalletCardsPage> {
   Widget build(BuildContext context) {
     final loc = AppLocalizations.of(context)!;
     return Scaffold(
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
         title: Text(
           widget.selectMode ? loc.walletSelectCardTitle : loc.walletCardsTitle,
         ),
       ),
-      body: ListView(
-        padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
+      body: Stack(
         children: [
-          if (!widget.selectMode) ...[
-            SectionCard(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  SectionHeader(
-                    title: loc.walletAddCardTitle,
-                    subtitle: loc.walletAddCardSubtitle,
-                    icon: Icons.credit_card_outlined,
-                  ),
-                  const SizedBox(height: 16),
-                  Wrap(
-                    spacing: 10,
+          const AppMeshBackground(),
+          ListView(
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
+            children: [
+              if (!widget.selectMode) ...[
+                SectionCard(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      ChoiceChip(
-                        selected: _cardType == 'credit',
-                        label: Text(loc.walletCreditCardLabel),
-                        onSelected: (_) => setState(() => _cardType = 'credit'),
+                      SectionHeader(
+                        title: loc.walletAddCardTitle,
+                        subtitle: loc.walletAddCardSubtitle,
+                        icon: Icons.credit_card_outlined,
                       ),
-                      ChoiceChip(
-                        selected: _cardType == 'debit',
-                        label: Text(loc.walletDebitCardLabel),
-                        onSelected: (_) => setState(() => _cardType = 'debit'),
+                      const SizedBox(height: 16),
+                      Wrap(
+                        spacing: 10,
+                        children: [
+                          ChoiceChip(
+                            selected: _cardType == 'credit',
+                            label: Text(loc.walletCreditCardLabel),
+                            onSelected: (_) =>
+                                setState(() => _cardType = 'credit'),
+                          ),
+                          ChoiceChip(
+                            selected: _cardType == 'debit',
+                            label: Text(loc.walletDebitCardLabel),
+                            onSelected: (_) =>
+                                setState(() => _cardType = 'debit'),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                      TextField(
+                        controller: _numberCtrl,
+                        keyboardType: TextInputType.number,
+                        decoration: InputDecoration(
+                          labelText: loc.walletCardNumberLabel,
+                          hintText: '1234 5678 9012 3456',
+                          prefixIcon: const Icon(Icons.credit_card_outlined),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      TextField(
+                        controller: _nameCtrl,
+                        textCapitalization: TextCapitalization.words,
+                        decoration: InputDecoration(
+                          labelText: loc.walletCardNameLabel,
+                          hintText: 'AD SOYAD',
+                          prefixIcon: const Icon(Icons.person_outline),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: TextField(
+                              controller: _expiryCtrl,
+                              keyboardType: TextInputType.number,
+                              inputFormatters: [
+                                FilteringTextInputFormatter.digitsOnly,
+                                ExpiryDateFormatter(),
+                              ],
+                              decoration: InputDecoration(
+                                labelText: loc.walletCardExpiryLabel,
+                                hintText: 'MM/YY',
+                                prefixIcon:
+                                    const Icon(Icons.calendar_today_outlined),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: TextField(
+                              controller: _cvvCtrl,
+                              keyboardType: TextInputType.number,
+                              obscureText: true,
+                              decoration: InputDecoration(
+                                labelText: loc.walletCardCvvLabel,
+                                hintText: 'CVV',
+                                prefixIcon: const Icon(Icons.lock_outline),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                      FilledButton.icon(
+                        onPressed: _saveCard,
+                        icon: const Icon(Icons.add),
+                        label: Text(loc.walletAddCardAction),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 16),
-                  TextField(
-                    controller: _numberCtrl,
-                    keyboardType: TextInputType.number,
-                    decoration: InputDecoration(
-                      labelText: loc.walletCardNumberLabel,
-                      hintText: '1234 5678 9012 3456',
-                      prefixIcon: const Icon(Icons.credit_card_outlined),
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  TextField(
-                    controller: _nameCtrl,
-                    textCapitalization: TextCapitalization.words,
-                    decoration: InputDecoration(
-                      labelText: loc.walletCardNameLabel,
-                      hintText: 'AD SOYAD',
-                      prefixIcon: const Icon(Icons.person_outline),
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: TextField(
-                          controller: _expiryCtrl,
-                          keyboardType: TextInputType.number,
-                          inputFormatters: [
-                            FilteringTextInputFormatter.digitsOnly,
-                          ExpiryDateFormatter(),
-                          ],
-                          decoration: InputDecoration(
-                            labelText: loc.walletCardExpiryLabel,
-                            hintText: 'MM/YY',
-                            prefixIcon:
-                                const Icon(Icons.calendar_today_outlined),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: TextField(
-                          controller: _cvvCtrl,
-                          keyboardType: TextInputType.number,
-                          obscureText: true,
-                          decoration: InputDecoration(
-                            labelText: loc.walletCardCvvLabel,
-                            hintText: 'CVV',
-                            prefixIcon: const Icon(Icons.lock_outline),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  FilledButton.icon(
-                    onPressed: _saveCard,
-                    icon: const Icon(Icons.add),
-                    label: Text(loc.walletAddCardAction),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 16),
-          ],
-          SectionCard(
-            child: Row(
-              children: [
-                Expanded(
-                  child: _TypeTile(
-                    title: loc.walletCreditCardLabel,
-                    subtitle: loc.walletCreditCardSubtitle,
-                    icon: Icons.credit_card_rounded,
-                    color: const Color(0xFF2563EB),
-                    onTap: () => _openType('credit'),
-                  ),
                 ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: _TypeTile(
-                    title: loc.walletDebitCardLabel,
-                    subtitle: loc.walletDebitCardSubtitle,
-                    icon: Icons.account_balance_rounded,
-                    color: const Color(0xFF10B981),
-                    onTap: () => _openType('debit'),
-                  ),
-                ),
+                const SizedBox(height: 16),
               ],
-            ),
-          ),
-          const SizedBox(height: 16),
-          if (_loading)
-            const Center(child: CircularProgressIndicator())
-          else if (_cards.isEmpty)
-            SectionCard(
-              child: ListTile(
-                leading: const Icon(Icons.info_outline),
-                title: Text(loc.walletCardsEmptyTitle),
-                subtitle: Text(loc.walletCardsEmptySubtitle),
-              ),
-            )
-          else
-            ..._cards
-                .take(widget.selectMode ? _cards.length : 3)
-                .map(
-                  (card) => Padding(
-                    padding: const EdgeInsets.only(bottom: 12),
-                    child: SavedCardVisual(
-                      card: card,
-                      onTap: widget.selectMode
-                          ? () => Navigator.of(context).pop(card)
-                          : null,
+              SectionCard(
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: _TypeTile(
+                        title: loc.walletCreditCardLabel,
+                        subtitle: loc.walletCreditCardSubtitle,
+                        icon: Icons.credit_card_rounded,
+                        color: const Color(0xFF2563EB),
+                        onTap: () => _openType('credit'),
+                      ),
                     ),
-                  ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: _TypeTile(
+                        title: loc.walletDebitCardLabel,
+                        subtitle: loc.walletDebitCardSubtitle,
+                        icon: Icons.account_balance_rounded,
+                        color: const Color(0xFF10B981),
+                        onTap: () => _openType('debit'),
+                      ),
+                    ),
+                  ],
                 ),
+              ),
+              const SizedBox(height: 16),
+              if (_loading)
+                const Center(child: CircularProgressIndicator())
+              else if (_cards.isEmpty)
+                SectionCard(
+                  child: ListTile(
+                    leading: const Icon(Icons.info_outline),
+                    title: Text(loc.walletCardsEmptyTitle),
+                    subtitle: Text(loc.walletCardsEmptySubtitle),
+                  ),
+                )
+              else
+                ..._cards
+                    .take(widget.selectMode ? _cards.length : 3)
+                    .map(
+                      (card) => Padding(
+                        padding: const EdgeInsets.only(bottom: 12),
+                        child: SavedCardVisual(
+                          card: card,
+                          onTap: widget.selectMode
+                              ? () => Navigator.of(context).pop(card)
+                              : null,
+                        ),
+                      ),
+                    ),
+            ],
+          ),
         ],
       ),
     );
@@ -313,31 +322,38 @@ class _CardsListPage extends StatelessWidget {
     final title =
         type == 'credit' ? loc.walletCreditCardLabel : loc.walletDebitCardLabel;
     return Scaffold(
+      backgroundColor: Colors.transparent,
       appBar: AppBar(title: Text(title)),
-      body: ListView(
-        padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
-        children: cards.isEmpty
-            ? [
-                SectionCard(
-                  child: ListTile(
-                    leading: const Icon(Icons.credit_card_outlined),
-                    title: Text(loc.walletCardsEmptyTitle),
-                    subtitle: Text(loc.walletCardsEmptySubtitle),
-                  ),
-                ),
-              ]
-            : cards
-                .map(
-                  (card) => Padding(
-                    padding: const EdgeInsets.only(bottom: 12),
-                    child: SavedCardVisual(
-                      card: card,
-                      onTap:
-                          selectMode ? () => Navigator.of(context).pop(card) : null,
+      body: Stack(
+        children: [
+          const AppMeshBackground(),
+          ListView(
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
+            children: cards.isEmpty
+                ? [
+                    SectionCard(
+                      child: ListTile(
+                        leading: const Icon(Icons.credit_card_outlined),
+                        title: Text(loc.walletCardsEmptyTitle),
+                        subtitle: Text(loc.walletCardsEmptySubtitle),
+                      ),
                     ),
-                  ),
-                )
-                .toList(),
+                  ]
+                : cards
+                    .map(
+                      (card) => Padding(
+                        padding: const EdgeInsets.only(bottom: 12),
+                        child: SavedCardVisual(
+                          card: card,
+                          onTap: selectMode
+                              ? () => Navigator.of(context).pop(card)
+                              : null,
+                        ),
+                      ),
+                    )
+                    .toList(),
+          ),
+        ],
       ),
     );
   }

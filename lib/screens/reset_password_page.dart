@@ -4,6 +4,8 @@ import '../widgets/app_notification.dart';
 import '../widgets/gradient_button.dart';
 import '../services/api_service.dart';
 import '../l10n/app_localizations.dart';
+import '../widgets/app_mesh_background.dart';
+import '../widgets/section_card.dart';
 
 class ResetPasswordPage extends StatefulWidget {
   final String email;
@@ -65,105 +67,113 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context)!;
     return Scaffold(
+      backgroundColor: Colors.transparent,
       appBar: AppBar(title: Text(l10n.resetTitle)),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(22),
-                  child: Form(
-                    key: _formKey,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          widget.email,
-                          style: theme.textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          l10n.resetSubtitle,
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: theme.colorScheme.onSurface.withValues(
-                              alpha: 0.65,
+      body: Stack(
+        children: [
+          const AppMeshBackground(),
+          SafeArea(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  SectionCard(
+                    padding: const EdgeInsets.all(22),
+                    child: Form(
+                      key: _formKey,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            widget.email,
+                            style: theme.textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.w700,
                             ),
                           ),
-                        ),
-                        const SizedBox(height: 18),
-                        TextFormField(
-                          controller: _codeCtrl,
-                          keyboardType: TextInputType.number,
-                          decoration: InputDecoration(
-                            labelText: l10n.verificationCodeLabel,
-                            prefixIcon: const Icon(
-                              Icons.confirmation_number_outlined,
+                          const SizedBox(height: 4),
+                          Text(
+                            l10n.resetSubtitle,
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: theme.colorScheme.onSurface.withValues(
+                                alpha: 0.65,
+                              ),
                             ),
                           ),
-                          validator: (v) {
-                            if (v == null || v.isEmpty) return l10n.validationVerificationCodeRequired;
-                            if (v.length != 6) return l10n.validationVerificationCodeLength;
-                            return null;
-                          },
-                        ),
-                        const SizedBox(height: 14),
-                        TextFormField(
-                          controller: _passCtrl,
-                          obscureText: true,
-                          decoration: InputDecoration(
-                            labelText: l10n.resetNewPasswordLabel,
-                            prefixIcon: const Icon(Icons.lock_outline),
+                          const SizedBox(height: 18),
+                          TextFormField(
+                            controller: _codeCtrl,
+                            keyboardType: TextInputType.number,
+                            decoration: InputDecoration(
+                              labelText: l10n.verificationCodeLabel,
+                              prefixIcon: const Icon(
+                                Icons.confirmation_number_outlined,
+                              ),
+                            ),
+                            validator: (v) {
+                              if (v == null || v.isEmpty) {
+                                return l10n.validationVerificationCodeRequired;
+                              }
+                              if (v.length != 6) {
+                                return l10n.validationVerificationCodeLength;
+                              }
+                              return null;
+                            },
                           ),
-                          validator: (v) {
-                            if (v == null || v.length < 6) {
-                              return l10n.validationMinChars('6');
-                            }
-                            return null;
-                          },
-                        ),
-                        const SizedBox(height: 14),
-                        TextFormField(
-                          controller: _pass2Ctrl,
-                          obscureText: true,
-                          decoration: InputDecoration(
-                            labelText: l10n.resetConfirmPasswordLabel,
-                            prefixIcon: const Icon(Icons.verified_user_outlined),
+                          const SizedBox(height: 14),
+                          TextFormField(
+                            controller: _passCtrl,
+                            obscureText: true,
+                            decoration: InputDecoration(
+                              labelText: l10n.resetNewPasswordLabel,
+                              prefixIcon: const Icon(Icons.lock_outline),
+                            ),
+                            validator: (v) {
+                              if (v == null || v.length < 6) {
+                                return l10n.validationMinChars('6');
+                              }
+                              return null;
+                            },
                           ),
-                          validator: (v) {
-                            if (v != _passCtrl.text) {
-                              return l10n.passwordMismatch;
-                            }
-                            return null;
-                          },
-                        ),
-                        const SizedBox(height: 22),
-                        GradientButton(
-                          text: l10n.resetSubmitButton,
-                          leading: const Icon(Icons.save_alt),
-                          onPressed: _loading ? null : _submit,
-                          loading: _loading,
-                        ),
-                      ],
+                          const SizedBox(height: 14),
+                          TextFormField(
+                            controller: _pass2Ctrl,
+                            obscureText: true,
+                            decoration: InputDecoration(
+                              labelText: l10n.resetConfirmPasswordLabel,
+                              prefixIcon: const Icon(Icons.verified_user_outlined),
+                            ),
+                            validator: (v) {
+                              if (v != _passCtrl.text) {
+                                return l10n.passwordMismatch;
+                              }
+                              return null;
+                            },
+                          ),
+                          const SizedBox(height: 22),
+                          GradientButton(
+                            text: l10n.resetSubmitButton,
+                            leading: const Icon(Icons.save_alt),
+                            onPressed: _loading ? null : _submit,
+                            loading: _loading,
+                          ),
+                        ],
+                      ),
                     ),
                   ),
-                ),
+                  const SizedBox(height: 22),
+                  Text(
+                    l10n.copyrightNotice,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
               ),
-              const SizedBox(height: 22),
-              Text(
-                l10n.copyrightNotice,
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
-                ),
-                textAlign: TextAlign.center,
-              ),
-            ],
+            ),
           ),
-        ),
+        ],
       ),
     );
   }

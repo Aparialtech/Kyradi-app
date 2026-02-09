@@ -73,6 +73,7 @@ class _QuickActionTile extends StatefulWidget {
 
 class _QuickActionTileState extends State<_QuickActionTile> {
   bool _hovered = false;
+  bool _pressed = false;
 
   @override
   Widget build(BuildContext context) {
@@ -85,55 +86,62 @@ class _QuickActionTileState extends State<_QuickActionTile> {
       onEnter: (_) => setState(() => _hovered = true),
       onExit: (_) => setState(() => _hovered = false),
       child: InkWell(
+        onTapDown: (_) => setState(() => _pressed = true),
+        onTapCancel: () => setState(() => _pressed = false),
+        onTapUp: (_) => setState(() => _pressed = false),
         onTap: widget.action.onTap,
         borderRadius: BorderRadius.circular(18),
         splashColor: theme.colorScheme.primary.withValues(alpha: 0.08),
         highlightColor: theme.colorScheme.primary.withValues(alpha: 0.04),
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 140),
-          curve: Curves.easeOut,
-          decoration: BoxDecoration(
-            color: bgColor,
-            borderRadius: BorderRadius.circular(18),
-            gradient: _hovered
-                ? LinearGradient(
-                    colors: [
-                      hoverTint,
-                      accent.withValues(alpha: 0.04),
-                    ],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  )
-                : null,
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: _hovered ? 0.08 : 0.05),
-                blurRadius: _hovered ? 16 : 12,
-                offset: const Offset(0, 6),
-              ),
-            ],
-            border: Border.all(
-              color: theme.colorScheme.outlineVariant.withValues(alpha: 0.6),
-            ),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(12),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                _ThreeDIcon(
-                  icon: widget.action.icon,
-                  accent: accent,
-                ),
-                const SizedBox(height: 10),
-                Text(
-                  widget.action.label,
-                  textAlign: TextAlign.center,
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    fontWeight: FontWeight.w600,
-                  ),
+        child: AnimatedScale(
+          duration: const Duration(milliseconds: 120),
+          scale: _pressed ? 0.97 : 1,
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 140),
+            curve: Curves.easeOut,
+            decoration: BoxDecoration(
+              color: bgColor,
+              borderRadius: BorderRadius.circular(18),
+              gradient: _hovered
+                  ? LinearGradient(
+                      colors: [
+                        hoverTint,
+                        accent.withValues(alpha: 0.04),
+                      ],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    )
+                  : null,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: _hovered ? 0.08 : 0.05),
+                  blurRadius: _hovered ? 16 : 12,
+                  offset: const Offset(0, 6),
                 ),
               ],
+              border: Border.all(
+                color: theme.colorScheme.outlineVariant.withValues(alpha: 0.6),
+              ),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(12),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  _ThreeDIcon(
+                    icon: widget.action.icon,
+                    accent: accent,
+                  ),
+                  const SizedBox(height: 10),
+                  Text(
+                    widget.action.label,
+                    textAlign: TextAlign.center,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ),

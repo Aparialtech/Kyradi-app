@@ -2,6 +2,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../l10n/app_localizations.dart';
+import '../ui/shell/root_shell.dart';
 
 class SuperAppShell extends StatefulWidget {
   const SuperAppShell({
@@ -71,7 +72,7 @@ class _SuperAppShellState extends State<SuperAppShell> {
           Navigator.of(context).maybePop(result);
         }
       },
-      child: Scaffold(
+      child: RootShell(
         body: widget.navigationShell,
         bottomNavigationBar: _PremiumNavBar(
           items: items,

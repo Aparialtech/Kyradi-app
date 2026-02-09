@@ -3,6 +3,7 @@ import '../../../models/user.dart';
 import '../../../services/api_service.dart';
 import '../../../widgets/app_notification.dart';
 import '../../../l10n/app_localizations.dart';
+import '../../../widgets/app_mesh_background.dart';
 import 'email_otp_verify_page.dart';
 
 class VerificationFormPage extends StatefulWidget {
@@ -106,67 +107,75 @@ class _VerificationFormPageState extends State<VerificationFormPage> {
   Widget build(BuildContext context) {
     final loc = AppLocalizations.of(context)!;
     return Scaffold(
+      backgroundColor: Colors.transparent,
       appBar: AppBar(title: Text(loc.accountVerificationTitle)),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              children: [
-                TextFormField(
-                  controller: _nameCtrl,
-                  decoration: InputDecoration(labelText: loc.firstName),
-                  validator: (v) =>
-                      v == null || v.trim().isEmpty ? loc.requiredFieldLabel : null,
+      body: Stack(
+        children: [
+          const AppMeshBackground(),
+          SafeArea(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  children: [
+                    TextFormField(
+                      controller: _nameCtrl,
+                      decoration: InputDecoration(labelText: loc.firstName),
+                      validator: (v) => v == null || v.trim().isEmpty
+                          ? loc.requiredFieldLabel
+                          : null,
+                    ),
+                    const SizedBox(height: 12),
+                    TextFormField(
+                      controller: _surnameCtrl,
+                      decoration: InputDecoration(labelText: loc.lastName),
+                      validator: (v) => v == null || v.trim().isEmpty
+                          ? loc.requiredFieldLabel
+                          : null,
+                    ),
+                    const SizedBox(height: 12),
+                    TextFormField(
+                      controller: _nationalIdCtrl,
+                      decoration: InputDecoration(labelText: loc.nationalIdLabel),
+                    ),
+                    const SizedBox(height: 12),
+                    TextFormField(
+                      controller: _phoneCtrl,
+                      decoration: InputDecoration(labelText: loc.phone),
+                    ),
+                    const SizedBox(height: 12),
+                    TextFormField(
+                      controller: _addressCtrl,
+                      decoration: InputDecoration(labelText: loc.address),
+                      maxLines: 2,
+                    ),
+                    const SizedBox(height: 12),
+                    ListTile(
+                      contentPadding: EdgeInsets.zero,
+                      title: Text(_birthDate == null
+                          ? loc.birthDateSelectLabel
+                          : _birthDate!.toLocal().toString().split(' ').first),
+                      trailing: const Icon(Icons.calendar_today_outlined),
+                      onTap: _pickBirthDate,
+                    ),
+                    const SizedBox(height: 18),
+                    FilledButton(
+                      onPressed: _loading ? null : _submit,
+                      child: _loading
+                          ? const SizedBox(
+                              width: 18,
+                              height: 18,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : Text(loc.save),
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 12),
-                TextFormField(
-                  controller: _surnameCtrl,
-                  decoration: InputDecoration(labelText: loc.lastName),
-                  validator: (v) =>
-                      v == null || v.trim().isEmpty ? loc.requiredFieldLabel : null,
-                ),
-                const SizedBox(height: 12),
-                TextFormField(
-                  controller: _nationalIdCtrl,
-                  decoration: InputDecoration(labelText: loc.nationalIdLabel),
-                ),
-                const SizedBox(height: 12),
-                TextFormField(
-                  controller: _phoneCtrl,
-                  decoration: InputDecoration(labelText: loc.phone),
-                ),
-                const SizedBox(height: 12),
-                TextFormField(
-                  controller: _addressCtrl,
-                  decoration: InputDecoration(labelText: loc.address),
-                  maxLines: 2,
-                ),
-                const SizedBox(height: 12),
-                ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  title: Text(_birthDate == null
-                      ? loc.birthDateSelectLabel
-                      : _birthDate!.toLocal().toString().split(' ').first),
-                  trailing: const Icon(Icons.calendar_today_outlined),
-                  onTap: _pickBirthDate,
-                ),
-                const SizedBox(height: 18),
-                FilledButton(
-                  onPressed: _loading ? null : _submit,
-                  child: _loading
-                      ? const SizedBox(
-                          width: 18,
-                          height: 18,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : Text(loc.save),
-                ),
-              ],
+              ),
             ),
           ),
-        ),
+        ],
       ),
     );
   }

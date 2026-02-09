@@ -14,6 +14,10 @@ PreferredSizeWidget buildBackAppBar(
             onPressed: () => Navigator.of(context).maybePop(),
           )
         : null,
+    backgroundColor: Colors.transparent,
+    surfaceTintColor: Colors.transparent,
+    elevation: 0,
+    scrolledUnderElevation: 0,
     toolbarHeight: canPop ? kToolbarHeight : 0,
   );
 }

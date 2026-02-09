@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../l10n/app_localizations.dart';
 import '../widgets/app_notification.dart';
+import '../widgets/app_mesh_background.dart';
 
 class NotificationsPage extends StatelessWidget {
   const NotificationsPage({super.key});
@@ -12,6 +13,7 @@ class NotificationsPage extends StatelessWidget {
     final loc = AppLocalizations.of(context)!;
 
     return Scaffold(
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
         title: Text(loc.notificationsTooltip),
         actions: [
@@ -28,21 +30,27 @@ class NotificationsPage extends StatelessWidget {
           ),
         ],
       ),
-      body: ValueListenableBuilder<List<AppNotificationEntry>>(
-        valueListenable: NotificationCenter.listenable,
-        builder: (context, entries, _) {
-          if (entries.isEmpty) {
-            return _EmptyState(theme: theme, loc: loc);
-          }
-          return ListView.builder(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            itemCount: entries.length,
-            itemBuilder: (context, index) {
-              final item = entries[index];
-              return _NotificationCard(entry: item);
+      body: Stack(
+        children: [
+          const AppMeshBackground(),
+          ValueListenableBuilder<List<AppNotificationEntry>>(
+            valueListenable: NotificationCenter.listenable,
+            builder: (context, entries, _) {
+              if (entries.isEmpty) {
+                return _EmptyState(theme: theme, loc: loc);
+              }
+              return ListView.builder(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                itemCount: entries.length,
+                itemBuilder: (context, index) {
+                  final item = entries[index];
+                  return _NotificationCard(entry: item);
+                },
+              );
             },
-          );
-        },
+          ),
+        ],
       ),
     );
   }

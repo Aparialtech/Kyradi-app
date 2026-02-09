@@ -5,23 +5,16 @@ import 'package:flutter/services.dart';
 import 'l10n/app_localizations.dart';
 import 'core/app_locale.dart';
 import 'core/app_theme_mode.dart';
+import 'core/background_theme_mode.dart';
+import 'core/feature_flags.dart';
 import 'services/api_service.dart';
 import 'ui/components/config_missing_page.dart';
 import 'ui/components/error_fallback_page.dart';
 import 'utils/crash_log.dart';
 import 'core/firebase/firebase_bootstrap.dart';
 import 'router/app_router.dart';
-
-
-const _primaryColor = Color(0xFF005C99);
-const _secondaryColor = Color(0xFF166866);
-const _accentColor = Color(0xFF2C2966);
-const _neutralDark = Color(0xFF2C3E50);
-const _backgroundColor = Color(0xFFEFEFEF);
-const _surfaceColor = Colors.white;
-const _textColor = Color(0xFF2E2E2E);
-const _fontFamily = 'SF Pro Display';
-const _fontFallback = <String>['SF Pro Text', 'Inter', 'Poppins', 'Roboto'];
+import 'ui/theme/app_colors.dart';
+import 'ui/theme/app_typography.dart';
 
 final _appRouter = buildAppRouter();
 
@@ -49,6 +42,7 @@ Future<void> main() async {
 
       await _safeBootstrap();
       await AppThemeMode.load();
+      await AppBackgroundThemeMode.load();
       runApp(const MyApp());
     },
     (error, stack) {
@@ -72,6 +66,9 @@ Future<void> _safeBootstrap() async {
   try {
     await ApiService.ensureInitialized().timeout(const Duration(seconds: 6));
     ApiService.logBaseUrlStatus();
+    if (kDebugMode) {
+      appLog('flags', 'FeatureFlags: ${FeatureFlags.snapshot()}');
+    }
   } catch (e) {
     appLog('bootstrap', 'api init timeout/error: $e', level: AppLogLevel.error);
     CrashLogBuffer.recordFatal('bootstrap', 'api init failed: $e');
@@ -106,89 +103,9 @@ class MyApp extends StatelessWidget {
         return ValueListenableBuilder<Locale?>(
           valueListenable: AppLocale.notifier,
           builder: (context, currentLocale, _) {
-            final baseScheme =
-                ColorScheme.fromSeed(
-                  seedColor: _primaryColor,
-                  brightness: Brightness.light,
-                ).copyWith(
-                  primary: _primaryColor,
-                  onPrimary: Colors.white,
-                  primaryContainer: _accentColor,
-                  onPrimaryContainer: Colors.white,
-                  secondary: _secondaryColor,
-                  onSecondary: Colors.white,
-                  secondaryContainer: _neutralDark,
-                  onSecondaryContainer: Colors.white,
-                  tertiary: _accentColor,
-                  onTertiary: Colors.white,
-                  surface: _surfaceColor,
-                  onSurface: _textColor,
-                  surfaceContainerHighest: const Color(0xFFD8DEE6),
-                  onSurfaceVariant: const Color(0xFF4D5866),
-                  outline: const Color(0xFF9AA4AE),
-                  outlineVariant: const Color(0xFFC3C8CE),
-                  inverseSurface: _neutralDark,
-                  onInverseSurface: Colors.white,
-                  inversePrimary: const Color(0xFFA9D2F4),
-                );
-            final darkScheme =
-                ColorScheme.fromSeed(
-                  seedColor: _primaryColor,
-                  brightness: Brightness.dark,
-                ).copyWith(
-                  primary: const Color(0xFF5AB0FF),
-                  onPrimary: const Color(0xFF0B1A26),
-                  primaryContainer: const Color(0xFF163B5C),
-                  onPrimaryContainer: Colors.white,
-                  secondary: const Color(0xFF4FAEAA),
-                  onSecondary: const Color(0xFF0B1A26),
-                  secondaryContainer: const Color(0xFF1B2E2D),
-                  onSecondaryContainer: Colors.white,
-                  tertiary: const Color(0xFF6C6AD6),
-                  onTertiary: const Color(0xFF0B0B1A),
-                  surface: const Color(0xFF111821),
-                  onSurface: const Color(0xFFE7EDF5),
-                  surfaceContainerHighest: const Color(0xFF1A2431),
-                  onSurfaceVariant: const Color(0xFFB5C3D4),
-                  outline: const Color(0xFF3B4A5A),
-                  outlineVariant: const Color(0xFF2A3644),
-                  inverseSurface: const Color(0xFFE7EDF5),
-                  onInverseSurface: const Color(0xFF111821),
-                  inversePrimary: const Color(0xFF2C4C6B),
-                );
-
-            final baseTextTheme = ThemeData.light().textTheme;
-            final textTheme = baseTextTheme.copyWith(
-              headlineLarge: baseTextTheme.headlineLarge?.copyWith(
-                fontWeight: FontWeight.w800,
-                letterSpacing: -0.4,
-              ),
-              headlineMedium: baseTextTheme.headlineMedium?.copyWith(
-                fontWeight: FontWeight.w800,
-                letterSpacing: -0.3,
-              ),
-              headlineSmall: baseTextTheme.headlineSmall?.copyWith(
-                fontWeight: FontWeight.w700,
-                letterSpacing: -0.2,
-              ),
-              titleLarge: baseTextTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.w700,
-                letterSpacing: -0.1,
-              ),
-              titleMedium: baseTextTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w700,
-              ),
-              titleSmall: baseTextTheme.titleSmall?.copyWith(
-                fontWeight: FontWeight.w600,
-              ),
-              bodyLarge: baseTextTheme.bodyLarge?.copyWith(height: 1.4),
-              bodyMedium: baseTextTheme.bodyMedium?.copyWith(height: 1.4),
-              bodySmall: baseTextTheme.bodySmall?.copyWith(height: 1.35),
-              labelLarge: baseTextTheme.labelLarge?.copyWith(
-                fontWeight: FontWeight.w700,
-                letterSpacing: 0.2,
-              ),
-            );
+            final baseScheme = AppColors.lightScheme();
+            final darkScheme = AppColors.darkScheme();
+            final textTheme = AppTypography.build(ThemeData.light().textTheme);
 
             return MaterialApp.router(
               key: ValueKey(currentLocale?.languageCode ?? 'tr'),
@@ -198,32 +115,32 @@ class MyApp extends StatelessWidget {
               theme: ThemeData(
                 useMaterial3: true,
                 colorScheme: baseScheme,
-                fontFamily: _fontFamily,
-                fontFamilyFallback: _fontFallback,
-                scaffoldBackgroundColor: _backgroundColor,
+                fontFamily: AppTypography.fontFamily,
+                fontFamilyFallback: AppTypography.fontFallback,
+                scaffoldBackgroundColor: AppColors.background,
                 appBarTheme: AppBarTheme(
-                  backgroundColor: _surfaceColor,
-                  foregroundColor: _textColor,
-                  surfaceTintColor: _surfaceColor,
+                  backgroundColor: AppColors.surface,
+                  foregroundColor: AppColors.text,
+                  surfaceTintColor: AppColors.surface,
                   elevation: 0,
                   scrolledUnderElevation: 2,
-                  shadowColor: _neutralDark.withValues(alpha: 0.08),
+                  shadowColor: AppColors.neutralDark.withValues(alpha: 0.08),
                   centerTitle: true,
                   iconTheme: const IconThemeData(size: 22),
                   titleTextStyle: const TextStyle(
                     fontWeight: FontWeight.w700,
                     fontSize: 20,
-                    color: _textColor,
+                    color: AppColors.text,
                   ),
                 ),
                 cardTheme: CardThemeData(
                   elevation: 4,
                   margin: EdgeInsets.zero,
-                  color: _surfaceColor,
+                  color: AppColors.surface,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(20),
                   ),
-                  shadowColor: _neutralDark.withValues(alpha: 0.08),
+                  shadowColor: AppColors.neutralDark.withValues(alpha: 0.08),
                 ),
                 listTileTheme: ListTileThemeData(
                   iconColor: baseScheme.primary,
@@ -241,20 +158,20 @@ class MyApp extends StatelessWidget {
                   ),
                 ),
                 dialogTheme: DialogThemeData(
-                  backgroundColor: _surfaceColor,
+                  backgroundColor: AppColors.surface,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(22),
                   ),
                   titleTextStyle: textTheme.titleLarge?.copyWith(
-                    color: _textColor,
+                    color: AppColors.text,
                     fontWeight: FontWeight.w700,
                   ),
                   contentTextStyle: textTheme.bodyMedium?.copyWith(
-                    color: _textColor,
+                    color: AppColors.text,
                   ),
                 ),
                 bottomSheetTheme: BottomSheetThemeData(
-                  backgroundColor: _surfaceColor,
+                  backgroundColor: AppColors.surface,
                   shape: const RoundedRectangleBorder(
                     borderRadius: BorderRadius.vertical(
                       top: Radius.circular(24),
@@ -284,7 +201,7 @@ class MyApp extends StatelessWidget {
                 ),
                 inputDecorationTheme: InputDecorationTheme(
                   filled: true,
-                  fillColor: _surfaceColor,
+                  fillColor: AppColors.surface,
                   contentPadding: const EdgeInsets.symmetric(
                     horizontal: 18,
                     vertical: 16,
@@ -376,7 +293,7 @@ class MyApp extends StatelessWidget {
                   ),
                 ),
                 floatingActionButtonTheme: FloatingActionButtonThemeData(
-                  backgroundColor: _accentColor,
+                  backgroundColor: AppColors.accent,
                   foregroundColor: Colors.white,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(16),
@@ -384,7 +301,7 @@ class MyApp extends StatelessWidget {
                 ),
                 navigationBarTheme: NavigationBarThemeData(
                   height: 70,
-                  backgroundColor: _surfaceColor,
+                  backgroundColor: AppColors.surface,
                   indicatorColor: baseScheme.primary.withValues(alpha: 0.12),
                   labelTextStyle: WidgetStateProperty.resolveWith(
                     (states) => TextStyle(
@@ -423,8 +340,8 @@ class MyApp extends StatelessWidget {
                   thickness: 1,
                 ),
                 textTheme: textTheme.apply(
-                  bodyColor: _textColor,
-                  displayColor: _textColor,
+                  bodyColor: AppColors.text,
+                  displayColor: AppColors.text,
                 ),
                 pageTransitionsTheme: const PageTransitionsTheme(
                   builders: {
@@ -436,8 +353,8 @@ class MyApp extends StatelessWidget {
               darkTheme: ThemeData(
                 useMaterial3: true,
                 colorScheme: darkScheme,
-                fontFamily: _fontFamily,
-                fontFamilyFallback: _fontFallback,
+                fontFamily: AppTypography.fontFamily,
+                fontFamilyFallback: AppTypography.fontFallback,
                 scaffoldBackgroundColor: const Color(0xFF0E141B),
                 appBarTheme: AppBarTheme(
                   backgroundColor: const Color(0xFF111821),

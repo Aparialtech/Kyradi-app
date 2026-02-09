@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../l10n/app_localizations.dart';
+import '../../../widgets/app_mesh_background.dart';
+import '../../../widgets/section_card.dart';
 
 class AboutPage extends StatelessWidget {
   const AboutPage({super.key});
@@ -8,28 +10,34 @@ class AboutPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final loc = AppLocalizations.of(context)!;
     return Scaffold(
+      backgroundColor: Colors.transparent,
       appBar: AppBar(title: Text(loc.aboutKyradiTitle)),
-      body: ListView(
-        padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
+      body: Stack(
         children: [
-          Text(
-            'Kyradi',
-            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                  fontWeight: FontWeight.w700,
+          const AppMeshBackground(),
+          ListView(
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
+            children: [
+              Text(
+                'Kyradi',
+                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                loc.aboutKyradiDescription,
+                style: Theme.of(context).textTheme.bodyMedium,
+              ),
+              const SizedBox(height: 16),
+              SectionCard(
+                child: ListTile(
+                  title: Text(loc.versionLabel),
+                  subtitle: const Text('1.0.0'),
+                  trailing: const Icon(Icons.info_outline),
                 ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            loc.aboutKyradiDescription,
-            style: Theme.of(context).textTheme.bodyMedium,
-          ),
-          const SizedBox(height: 16),
-          Card(
-            child: ListTile(
-              title: Text(loc.versionLabel),
-              subtitle: const Text('1.0.0'),
-              trailing: const Icon(Icons.info_outline),
-            ),
+              ),
+            ],
           ),
         ],
       ),

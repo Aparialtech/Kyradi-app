@@ -26,14 +26,14 @@ class SecuritySection extends StatelessWidget {
           const SizedBox(height: 8),
           ListTile(
             contentPadding: EdgeInsets.zero,
-            leading: const Icon(Icons.lock_reset_outlined),
+            leading: const ThreeDIconBadge(icon: Icons.lock_reset_outlined),
             title: Text(loc.changePasswordTitle),
             trailing: const Icon(Icons.chevron_right),
             onTap: onChangePassword,
           ),
           ListTile(
             contentPadding: EdgeInsets.zero,
-            leading: const Icon(Icons.logout),
+            leading: const ThreeDIconBadge(icon: Icons.logout),
             title: Text(loc.logout),
             trailing: const Icon(Icons.chevron_right),
             onTap: onLogout,

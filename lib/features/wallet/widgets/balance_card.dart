@@ -18,44 +18,84 @@ class BalanceCard extends StatelessWidget {
     final loc = AppLocalizations.of(context)!;
     return SectionCard(
       padding: const EdgeInsets.all(20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      backgroundColor: theme.colorScheme.surface.withValues(alpha: 0.92),
+      child: Stack(
         children: [
-          Text(
-            loc.walletBalanceLabel,
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
+          Positioned(
+            right: -30,
+            top: -30,
+            child: Container(
+              height: 120,
+              width: 120,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: LinearGradient(
+                  colors: [
+                    theme.colorScheme.primary.withValues(alpha: 0.18),
+                    theme.colorScheme.secondary.withValues(alpha: 0.06),
+                  ],
+                ),
+              ),
             ),
           ),
-          const SizedBox(height: 6),
-          Text(
-            '${balance.toStringAsFixed(2)} ₺',
-            style: theme.textTheme.headlineSmall?.copyWith(
-              fontWeight: FontWeight.w800,
-            ),
-          ),
-          const SizedBox(height: 12),
-          Row(
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 6,
+                    ),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(999),
+                      color: theme.colorScheme.primary.withValues(alpha: 0.14),
+                    ),
+                    child: Text(
+                      'KYRADI WALLET',
+                      style: theme.textTheme.labelSmall?.copyWith(
+                        color: theme.colorScheme.primary,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 1.1,
+                      ),
+                    ),
+                  ),
+                  const Spacer(),
+                  Icon(
+                    Icons.account_balance_wallet_outlined,
+                    color: theme.colorScheme.primary,
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Text(
+                loc.walletBalanceLabel,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                '${balance.toStringAsFixed(2)} ₺',
+                style: theme.textTheme.headlineSmall?.copyWith(
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+              const SizedBox(height: 12),
               Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
-                  color: theme.colorScheme.primary.withValues(alpha: 0.12),
+                  color: theme.colorScheme.secondary.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(999),
                 ),
                 child: Text(
                   loc.walletMonthlyEarnedLabel(monthlyEarned.toStringAsFixed(2)),
                   style: theme.textTheme.labelSmall?.copyWith(
-                    color: theme.colorScheme.primary,
+                    color: theme.colorScheme.secondary,
                     fontWeight: FontWeight.w700,
                   ),
                 ),
-              ),
-              const Spacer(),
-              Icon(
-                Icons.account_balance_wallet_outlined,
-                color: theme.colorScheme.primary,
               ),
             ],
           ),

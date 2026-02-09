@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../l10n/app_localizations.dart';
 import '../utils/crash_log.dart';
+import '../widgets/app_mesh_background.dart';
 
 class CrashLogPage extends StatelessWidget {
   const CrashLogPage({super.key});
@@ -11,6 +12,7 @@ class CrashLogPage extends StatelessWidget {
     final loc = AppLocalizations.of(context)!;
     final entries = CrashLogBuffer.entries;
     return Scaffold(
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
         title: Text(loc.crashLogsTitle),
         actions: [
@@ -30,20 +32,25 @@ class CrashLogPage extends StatelessWidget {
           ),
         ],
       ),
-      body: entries.isEmpty
-          ? Center(child: Text(loc.crashLogsEmpty))
-          : ListView.separated(
-              padding: const EdgeInsets.all(16),
-              itemCount: entries.length,
-              separatorBuilder: (_, __) => const Divider(height: 20),
-              itemBuilder: (context, index) {
-                final entry = entries[index];
-                return Text(
-                  entry.toLine(),
-                  style: Theme.of(context).textTheme.bodySmall,
-                );
-              },
-            ),
+      body: Stack(
+        children: [
+          const AppMeshBackground(),
+          entries.isEmpty
+              ? Center(child: Text(loc.crashLogsEmpty))
+              : ListView.separated(
+                  padding: const EdgeInsets.all(16),
+                  itemCount: entries.length,
+                  separatorBuilder: (_, __) => const Divider(height: 20),
+                  itemBuilder: (context, index) {
+                    final entry = entries[index];
+                    return Text(
+                      entry.toLine(),
+                      style: Theme.of(context).textTheme.bodySmall,
+                    );
+                  },
+                ),
+        ],
+      ),
     );
   }
 }

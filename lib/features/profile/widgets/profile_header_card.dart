@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import '../../../models/user.dart';
+import '../../../services/api_service.dart';
 import '../../../widgets/section_card.dart';
 import '../../../l10n/app_localizations.dart';
 
@@ -21,14 +22,17 @@ class ProfileHeaderCard extends StatelessWidget {
     final theme = Theme.of(context);
     final loc = AppLocalizations.of(context)!;
     final fullName = '${user.name} ${user.surname}'.trim();
-    final resolvedPath = avatarPath?.trim() ?? '';
+    final resolvedPath = _resolveAvatarUrl(avatarPath ?? '');
     final isRemote = resolvedPath.startsWith('http');
     final hasLocal = resolvedPath.isNotEmpty && File(resolvedPath).existsSync();
     final hasAvatar = isRemote || hasLocal;
     final ImageProvider? avatarImage = isRemote
         ? NetworkImage(resolvedPath)
         : (hasLocal ? FileImage(File(resolvedPath)) : null);
-    final isVerified = user.verificationStatus == 'verified';
+    // Backward compatible:
+    // - Older users may be considered verified via email verificationStatus.
+    // - New KYC flow sets identityVerified (and backend may also keep legacy `verified` true).
+    final isVerified = user.identityVerified == true || user.verificationStatus == 'verified';
     return SectionCard(
       padding: const EdgeInsets.all(20),
       child: Row(
@@ -106,5 +110,20 @@ class ProfileHeaderCard extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  String _resolveAvatarUrl(String value) {
+    final trimmed = value.trim();
+    if (trimmed.isEmpty) return trimmed;
+    if (trimmed.startsWith('http')) return trimmed;
+    if (File(trimmed).existsSync()) return trimmed;
+    final base = ApiService.baseUrl;
+    if (base.isEmpty) return trimmed;
+    if (trimmed.startsWith('/')) {
+      return base.endsWith('/')
+          ? '${base.substring(0, base.length - 1)}$trimmed'
+          : '$base$trimmed';
+    }
+    return trimmed;
   }
 }

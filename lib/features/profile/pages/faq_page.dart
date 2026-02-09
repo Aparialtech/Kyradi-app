@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../l10n/app_localizations.dart';
+import '../../../widgets/app_mesh_background.dart';
+import '../../../widgets/section_card.dart';
 
 class FaqPage extends StatelessWidget {
   const FaqPage({super.key});
@@ -14,33 +16,41 @@ class FaqPage extends StatelessWidget {
       [loc.faqQ4, loc.faqA4],
     ];
     return Scaffold(
+      backgroundColor: Colors.transparent,
       appBar: AppBar(title: Text(loc.faqTitle)),
-      body: ListView(
-        padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
-        children: items.map((item) {
-          return Card(
-            margin: const EdgeInsets.only(bottom: 12),
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    item[0],
-                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                          fontWeight: FontWeight.w700,
+      body: Stack(
+        children: [
+          const AppMeshBackground(),
+          ListView(
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
+            children: items.map((item) {
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: SectionCard(
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          item[0],
+                          style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                                fontWeight: FontWeight.w700,
+                              ),
                         ),
+                        const SizedBox(height: 6),
+                        Text(
+                          item[1],
+                          style: Theme.of(context).textTheme.bodySmall,
+                        ),
+                      ],
+                    ),
                   ),
-                  const SizedBox(height: 6),
-                  Text(
-                    item[1],
-                    style: Theme.of(context).textTheme.bodySmall,
-                  ),
-                ],
-              ),
-            ),
-          );
-        }).toList(),
+                ),
+              );
+            }).toList(),
+          ),
+        ],
       ),
     );
   }

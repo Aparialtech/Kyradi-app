@@ -5,6 +5,8 @@ import '../services/api_service.dart';
 import '../widgets/app_notification.dart';
 import '../widgets/gradient_button.dart';
 import '../l10n/app_localizations.dart';
+import '../widgets/app_mesh_background.dart';
+import '../widgets/section_card.dart';
 
 class VerifyCodePage extends StatefulWidget {
   const VerifyCodePage({super.key, this.email});
@@ -123,59 +125,67 @@ class _VerifyCodePageState extends State<VerifyCodePage> {
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context)!;
     return Scaffold(
-      backgroundColor: theme.colorScheme.surface,
+      backgroundColor: Colors.transparent,
       appBar: AppBar(title: Text(l10n.verificationTitle)),
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Text(
-                l10n.verificationInstructions(_email),
-                style: theme.textTheme.bodyMedium,
+      body: Stack(
+        children: [
+          const AppMeshBackground(),
+          SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  SectionCard(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Text(
+                          l10n.verificationInstructions(_email),
+                          style: theme.textTheme.bodyMedium,
+                        ),
+                        const SizedBox(height: 12),
+                        TextField(
+                          controller: _codeCtrl,
+                          keyboardType: TextInputType.number,
+                          maxLength: 6,
+                          decoration: InputDecoration(
+                            labelText: l10n.verificationCodeLabel,
+                            counterText: '',
+                            border: const OutlineInputBorder(),
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        GradientButton(
+                          text: l10n.verifyButtonLabel,
+                          loading: _loading,
+                          onPressed: _loading ? null : _verify,
+                        ),
+                        const SizedBox(height: 8),
+                        TextButton(
+                          onPressed: (_seconds > 0 || _loading) ? null : _resend,
+                          child: Text(
+                            _seconds > 0
+                                ? l10n.verificationCountdownLabel(_seconds)
+                                : l10n.verificationResendButton,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const Spacer(),
+                  Text(
+                    l10n.copyrightNotice,
+                    textAlign: TextAlign.center,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(height: 12),
-
-              TextField(
-                controller: _codeCtrl,
-                keyboardType: TextInputType.number,
-                maxLength: 6,
-                decoration: InputDecoration(
-                  labelText: l10n.verificationCodeLabel,
-                  counterText: '',
-                  border: const OutlineInputBorder(),
-                ),
-              ),
-              const SizedBox(height: 12),
-
-              GradientButton(
-                text: l10n.verifyButtonLabel,
-                loading: _loading,
-                onPressed: _loading ? null : _verify,
-              ),
-
-              const SizedBox(height: 8),
-              TextButton(
-                onPressed: (_seconds > 0 || _loading) ? null : _resend,
-                child: Text(
-                  _seconds > 0
-                      ? l10n.verificationCountdownLabel(_seconds)
-                      : l10n.verificationResendButton,
-                ),
-              ),
-
-              const Spacer(),
-              Text(
-                l10n.copyrightNotice,
-                textAlign: TextAlign.center,
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
-                ),
-              ),
-            ],
+            ),
           ),
-        ),
+        ],
       ),
     );
   }

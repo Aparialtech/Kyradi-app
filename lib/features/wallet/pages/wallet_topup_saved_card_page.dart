@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../widgets/app_notification.dart';
+import '../../../widgets/app_mesh_background.dart';
 import '../../../widgets/section_card.dart';
 import '../models/saved_card.dart';
 import '../widgets/saved_card_visual.dart';
@@ -136,117 +137,124 @@ class _WalletTopUpSavedCardPageState extends State<WalletTopUpSavedCardPage> {
   Widget build(BuildContext context) {
     final loc = AppLocalizations.of(context)!;
     return Scaffold(
+      backgroundColor: Colors.transparent,
       appBar: AppBar(title: Text(loc.topUpUseSavedCardTitle)),
-      body: ListView(
-        padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
+      body: Stack(
         children: [
-          SectionCard(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                SectionHeader(
-                  title: loc.topUpAmountTitle,
-                  subtitle: loc.topUpAmountSubtitle,
-                  icon: Icons.account_balance_wallet_outlined,
-                ),
-                const SizedBox(height: 12),
-                Row(
+          const AppMeshBackground(),
+          ListView(
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
+            children: [
+              SectionCard(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _AmountChip(
-                      label: '100 ₺',
-                      onTap: () => _amountCtrl.text = '100',
+                    SectionHeader(
+                      title: loc.topUpAmountTitle,
+                      subtitle: loc.topUpAmountSubtitle,
+                      icon: Icons.account_balance_wallet_outlined,
                     ),
-                    const SizedBox(width: 8),
-                    _AmountChip(
-                      label: '250 ₺',
-                      onTap: () => _amountCtrl.text = '250',
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        _AmountChip(
+                          label: '100 ₺',
+                          onTap: () => _amountCtrl.text = '100',
+                        ),
+                        const SizedBox(width: 8),
+                        _AmountChip(
+                          label: '250 ₺',
+                          onTap: () => _amountCtrl.text = '250',
+                        ),
+                        const SizedBox(width: 8),
+                        _AmountChip(
+                          label: '500 ₺',
+                          onTap: () => _amountCtrl.text = '500',
+                        ),
+                      ],
                     ),
-                    const SizedBox(width: 8),
-                    _AmountChip(
-                      label: '500 ₺',
-                      onTap: () => _amountCtrl.text = '500',
+                    const SizedBox(height: 12),
+                    TextFormField(
+                      controller: _amountCtrl,
+                      keyboardType: TextInputType.number,
+                      decoration: InputDecoration(labelText: loc.topUpAmountLabel),
                     ),
                   ],
                 ),
-                const SizedBox(height: 12),
-                TextFormField(
-                  controller: _amountCtrl,
-                  keyboardType: TextInputType.number,
-                  decoration: InputDecoration(labelText: loc.topUpAmountLabel),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 16),
-          SectionCard(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                SectionHeader(
-                  title: loc.topUpSelectCardTitle,
-                  subtitle: loc.topUpSelectCardSubtitle,
-                  icon: Icons.credit_card_outlined,
-                ),
-                const SizedBox(height: 12),
-                if (_loading)
-                  const Center(child: CircularProgressIndicator())
-                else if (_cards.isEmpty)
-                  ListTile(
-                    leading: const Icon(Icons.credit_card_off_outlined),
-                    title: Text(loc.walletCardsEmptyTitle),
-                    subtitle: Text(loc.walletCardsEmptySubtitle),
-                  )
-                else
-                  ..._cards.map(
-                    (card) => Padding(
-                      padding: const EdgeInsets.only(bottom: 12),
-                      child: Stack(
-                        children: [
-                          SavedCardVisual(
-                            card: card,
-                            onTap: () => setState(() => _selected = card),
-                          ),
-                          if (_selected?.id == card.id)
-                            Positioned(
-                              top: 12,
-                              right: 12,
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 10,
-                                  vertical: 4,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: Colors.white.withValues(alpha: 0.9),
-                                  borderRadius: BorderRadius.circular(999),
-                                ),
-                                child: Text(
-                                  loc.selectedLabel,
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .labelSmall
-                                      ?.copyWith(
-                                        fontWeight: FontWeight.w700,
-                                      ),
-                                ),
-                              ),
-                            ),
-                        ],
-                      ),
+              ),
+              const SizedBox(height: 16),
+              SectionCard(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    SectionHeader(
+                      title: loc.topUpSelectCardTitle,
+                      subtitle: loc.topUpSelectCardSubtitle,
+                      icon: Icons.credit_card_outlined,
                     ),
-                  ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 16),
-          FilledButton(
-            onPressed: _submitting ? null : _submit,
-            child: _submitting
-                ? const SizedBox(
-                    height: 18,
-                    width: 18,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : Text(loc.topUpPayAction),
+                    const SizedBox(height: 12),
+                    if (_loading)
+                      const Center(child: CircularProgressIndicator())
+                    else if (_cards.isEmpty)
+                      ListTile(
+                        leading: const Icon(Icons.credit_card_off_outlined),
+                        title: Text(loc.walletCardsEmptyTitle),
+                        subtitle: Text(loc.walletCardsEmptySubtitle),
+                      )
+                    else
+                      ..._cards.map(
+                        (card) => Padding(
+                          padding: const EdgeInsets.only(bottom: 12),
+                          child: Stack(
+                            children: [
+                              SavedCardVisual(
+                                card: card,
+                                onTap: () => setState(() => _selected = card),
+                              ),
+                              if (_selected?.id == card.id)
+                                Positioned(
+                                  top: 12,
+                                  right: 12,
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 10,
+                                      vertical: 4,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color:
+                                          Colors.white.withValues(alpha: 0.9),
+                                      borderRadius: BorderRadius.circular(999),
+                                    ),
+                                    child: Text(
+                                      loc.selectedLabel,
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .labelSmall
+                                          ?.copyWith(
+                                            fontWeight: FontWeight.w700,
+                                          ),
+                                    ),
+                                  ),
+                                ),
+                            ],
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
+              FilledButton(
+                onPressed: _submitting ? null : _submit,
+                child: _submitting
+                    ? const SizedBox(
+                        height: 18,
+                        width: 18,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : Text(loc.topUpPayAction),
+              ),
+            ],
           ),
         ],
       ),

@@ -5689,6 +5689,192 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Son kullanma tarihi geçersiz.'**
   String get walletCardExpiryInvalidMessage;
+
+  /// No description provided for @identityVerificationTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kimlik Doğrulama'**
+  String get identityVerificationTitle;
+
+  /// No description provided for @identityVerificationSubtitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kimlik bilgilerini ve belgelerini yükle.'**
+  String get identityVerificationSubtitle;
+
+  /// No description provided for @emailVerificationTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'E-posta Doğrulama'**
+  String get emailVerificationTitle;
+
+  /// No description provided for @emailVerificationSubtitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'E-postana gönderilen kod ile doğrula.'**
+  String get emailVerificationSubtitle;
+
+  /// No description provided for @emailVerifiedLabel.
+  ///
+  /// In tr, this message translates to:
+  /// **'E-posta doğrulandı'**
+  String get emailVerifiedLabel;
+
+  /// No description provided for @emailPendingLabel.
+  ///
+  /// In tr, this message translates to:
+  /// **'E-posta doğrulama bekleniyor'**
+  String get emailPendingLabel;
+
+  /// No description provided for @emailVerificationNeededLabel.
+  ///
+  /// In tr, this message translates to:
+  /// **'E-posta doğrulaması gerekli'**
+  String get emailVerificationNeededLabel;
+
+  /// No description provided for @identityVerifiedLabel.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kimlik doğrulandı'**
+  String get identityVerifiedLabel;
+
+  /// No description provided for @identityVerificationNeededLabel.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kimlik doğrulaması gerekli'**
+  String get identityVerificationNeededLabel;
+
+  /// No description provided for @personalInfoTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kişisel Bilgiler'**
+  String get personalInfoTitle;
+
+  /// No description provided for @identityPhotosTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kimlik Fotoğrafları'**
+  String get identityPhotosTitle;
+
+  /// No description provided for @identityFrontLabel.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kimlik Ön Yüz'**
+  String get identityFrontLabel;
+
+  /// No description provided for @identityBackLabel.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kimlik Arka Yüz'**
+  String get identityBackLabel;
+
+  /// No description provided for @selfieStepTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Selfie'**
+  String get selfieStepTitle;
+
+  /// No description provided for @selfieLabel.
+  ///
+  /// In tr, this message translates to:
+  /// **'Selfie'**
+  String get selfieLabel;
+
+  /// No description provided for @selfieNotRequiredMessage.
+  ///
+  /// In tr, this message translates to:
+  /// **'Selfie bu doğrulama için gerekli değil.'**
+  String get selfieNotRequiredMessage;
+
+  /// No description provided for @reviewAndSubmitTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Onay ve Gönder'**
+  String get reviewAndSubmitTitle;
+
+  /// No description provided for @reviewHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bilgileri kontrol edin ve doğrulama için gönderin.'**
+  String get reviewHint;
+
+  /// No description provided for @uploadedLabel.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yüklendi'**
+  String get uploadedLabel;
+
+  /// No description provided for @missingLabel.
+  ///
+  /// In tr, this message translates to:
+  /// **'Eksik'**
+  String get missingLabel;
+
+  /// No description provided for @nextAction.
+  ///
+  /// In tr, this message translates to:
+  /// **'Devam Et'**
+  String get nextAction;
+
+  /// No description provided for @back.
+  ///
+  /// In tr, this message translates to:
+  /// **'Geri'**
+  String get back;
+
+  /// No description provided for @cancel.
+  ///
+  /// In tr, this message translates to:
+  /// **'Vazgeç'**
+  String get cancel;
+
+  /// No description provided for @submit.
+  ///
+  /// In tr, this message translates to:
+  /// **'Gönder'**
+  String get submit;
+
+  /// No description provided for @identityPhotoLabel.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kimlik Fotoğrafı'**
+  String get identityPhotoLabel;
+
+  /// No description provided for @identityVerifiedTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Hesabın kimlikle onaylandı'**
+  String get identityVerifiedTitle;
+
+  /// No description provided for @identityPendingReviewTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kimlik doğrulama incelemede'**
+  String get identityPendingReviewTitle;
+
+  /// No description provided for @submittedForReviewMessage.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kimlik doğrulama inceleme için gönderildi.'**
+  String get submittedForReviewMessage;
+
+  /// No description provided for @uploadSuccessMessage.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yükleme tamamlandı.'**
+  String get uploadSuccessMessage;
+
+  /// No description provided for @saveSuccessMessage.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kaydedildi.'**
+  String get saveSuccessMessage;
+
+  /// No description provided for @nationalIdInvalidMessage.
+  ///
+  /// In tr, this message translates to:
+  /// **'T.C. kimlik numarası geçersiz.'**
+  String get nationalIdInvalidMessage;
 }
 
 class _AppLocalizationsDelegate

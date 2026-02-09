@@ -4,6 +4,8 @@ import '../l10n/app_localizations.dart';
 import '../services/api_service.dart';
 import '../widgets/app_notification.dart';
 import '../widgets/gradient_button.dart';
+import '../widgets/app_mesh_background.dart';
+import '../widgets/section_card.dart';
 
 class ChangePasswordPage extends StatefulWidget {
   const ChangePasswordPage({super.key});
@@ -78,91 +80,96 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
   Widget build(BuildContext context) {
     final loc = AppLocalizations.of(context)!;
     return Scaffold(
+      backgroundColor: Colors.transparent,
       appBar: AppBar(title: Text(loc.changePassword)),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(22),
-                  child: Form(
-                    key: _formKey,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          loc.changePasswordIntro,
-                          style: Theme.of(context).textTheme.bodyMedium
-                              ?.copyWith(
-                                color: Theme.of(
-                                  context,
-                                ).colorScheme.onSurface.withValues(alpha: 0.75),
-                              ),
-                        ),
-                        const SizedBox(height: 18),
-                        TextFormField(
-                          controller: _oldCtrl,
-                          obscureText: true,
-                          decoration: InputDecoration(
-                            labelText: loc.oldPassword,
-                            prefixIcon: const Icon(Icons.lock_open_outlined),
+      body: Stack(
+        children: [
+          const AppMeshBackground(),
+          SafeArea(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  SectionCard(
+                    padding: const EdgeInsets.all(22),
+                    child: Form(
+                      key: _formKey,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            loc.changePasswordIntro,
+                            style: Theme.of(context).textTheme.bodyMedium
+                                ?.copyWith(
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.onSurface.withValues(alpha: 0.75),
+                                ),
                           ),
-                          validator: (v) =>
-                              (v == null || v.isEmpty) ? loc.validationRequired : null,
-                        ),
-                        const SizedBox(height: 14),
-                        TextFormField(
-                          controller: _newCtrl,
-                          obscureText: true,
-                          decoration: InputDecoration(
-                            labelText: loc.newPassword,
-                            hintText: loc.changePasswordRequirementHint,
-                            prefixIcon: const Icon(Icons.lock_outline),
+                          const SizedBox(height: 18),
+                          TextFormField(
+                            controller: _oldCtrl,
+                            obscureText: true,
+                            decoration: InputDecoration(
+                              labelText: loc.oldPassword,
+                              prefixIcon: const Icon(Icons.lock_open_outlined),
+                            ),
+                            validator: (v) => (v == null || v.isEmpty)
+                                ? loc.validationRequired
+                                : null,
                           ),
-                          validator: (v) {
-                            if (v == null || v.isEmpty) {
-                              return loc.validationRequired;
-                            }
-                            if (v.length < 8) {
-                              return loc.validationMinChars(8);
-                            }
-                            if (!RegExp(
-                              r'^(?=.*[A-Za-z])(?=.*\d)',
-                            ).hasMatch(v)) {
-                              return '${loc.validationPasswordNeedsLetter}\n${loc.validationPasswordNeedsNumber}';
-                            }
-                            return null;
-                          },
-                        ),
-                        const SizedBox(height: 14),
-                        TextFormField(
-                          controller: _new2Ctrl,
-                          obscureText: true,
-                          decoration: InputDecoration(
-                            labelText: loc.confirmNewPassword,
-                            prefixIcon: const Icon(Icons.verified_user_outlined),
+                          const SizedBox(height: 14),
+                          TextFormField(
+                            controller: _newCtrl,
+                            obscureText: true,
+                            decoration: InputDecoration(
+                              labelText: loc.newPassword,
+                              hintText: loc.changePasswordRequirementHint,
+                              prefixIcon: const Icon(Icons.lock_outline),
+                            ),
+                            validator: (v) {
+                              if (v == null || v.isEmpty) {
+                                return loc.validationRequired;
+                              }
+                              if (v.length < 8) {
+                                return loc.validationMinChars(8);
+                              }
+                              if (!RegExp(
+                                r'^(?=.*[A-Za-z])(?=.*\d)',
+                              ).hasMatch(v)) {
+                                return '${loc.validationPasswordNeedsLetter}\n${loc.validationPasswordNeedsNumber}';
+                              }
+                              return null;
+                            },
                           ),
-                          validator: (v) =>
-                              (v != _newCtrl.text) ? loc.passwordMismatch : null,
-                        ),
-                        const SizedBox(height: 24),
-                        GradientButton(
-                          text: loc.changePassword,
-                          leading: const Icon(Icons.save_alt),
-                          onPressed: _loading ? null : _submit,
-                          loading: _loading,
-                        ),
-                      ],
+                          const SizedBox(height: 14),
+                          TextFormField(
+                            controller: _new2Ctrl,
+                            obscureText: true,
+                            decoration: InputDecoration(
+                              labelText: loc.confirmNewPassword,
+                              prefixIcon: const Icon(Icons.verified_user_outlined),
+                            ),
+                            validator: (v) =>
+                                (v != _newCtrl.text) ? loc.passwordMismatch : null,
+                          ),
+                          const SizedBox(height: 24),
+                          GradientButton(
+                            text: loc.changePassword,
+                            leading: const Icon(Icons.save_alt),
+                            onPressed: _loading ? null : _submit,
+                            loading: _loading,
+                          ),
+                        ],
+                      ),
                     ),
                   ),
-                ),
+                ],
               ),
-            ],
+            ),
           ),
-        ),
+        ],
       ),
     );
   }

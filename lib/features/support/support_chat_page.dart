@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../l10n/app_localizations.dart';
 import '../../services/support_chat_service.dart';
+import '../../widgets/app_mesh_background.dart';
 
 class SupportChatPage extends StatefulWidget {
   const SupportChatPage({super.key});
@@ -152,103 +153,111 @@ class _SupportChatPageState extends State<SupportChatPage> {
     final loc = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
     return Scaffold(
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
         title: Text(loc.supportChatTitle),
       ),
-      body: SafeArea(
-        child: Column(
-          children: [
-            if (!_providerReady)
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                color: theme.colorScheme.errorContainer,
-                child: Text(
-                  _providerMessage.isNotEmpty
-                      ? _providerMessage
-                      : loc.supportChatFallback,
-                  style: TextStyle(
-                    color: theme.colorScheme.onErrorContainer,
-                    fontWeight: FontWeight.w600,
+      body: Stack(
+        children: [
+          const AppMeshBackground(),
+          SafeArea(
+            child: Column(
+              children: [
+                if (!_providerReady)
+                  Container(
+                    width: double.infinity,
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                    color: theme.colorScheme.errorContainer,
+                    child: Text(
+                      _providerMessage.isNotEmpty
+                          ? _providerMessage
+                          : loc.supportChatFallback,
+                      style: TextStyle(
+                        color: theme.colorScheme.onErrorContainer,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                Expanded(
+                  child: ListView.builder(
+                    controller: _scrollController,
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+                    itemCount: _messages.length + (_isTyping ? 1 : 0),
+                    itemBuilder: (context, index) {
+                      if (_isTyping && index == _messages.length) {
+                        return _ChatBubble(
+                          message: _ChatMessage.bot(text: loc.supportChatTyping),
+                          isTyping: true,
+                        );
+                      }
+                      return _ChatBubble(message: _messages[index]);
+                    },
                   ),
                 ),
-              ),
-            Expanded(
-              child: ListView.builder(
-                controller: _scrollController,
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
-                itemCount: _messages.length + (_isTyping ? 1 : 0),
-                itemBuilder: (context, index) {
-                  if (_isTyping && index == _messages.length) {
-                    return _ChatBubble(
-                      message: _ChatMessage.bot(text: loc.supportChatTyping),
-                      isTyping: true,
-                    );
-                  }
-                  return _ChatBubble(message: _messages[index]);
-                },
-              ),
-            ),
-            Container(
-              padding: const EdgeInsets.fromLTRB(16, 10, 16, 16),
-              decoration: BoxDecoration(
-                color: theme.colorScheme.surface,
-                boxShadow: [
-                  BoxShadow(
-                    color: theme.colorScheme.shadow.withOpacity(0.08),
-                    blurRadius: 12,
-                    offset: const Offset(0, -6),
+                Container(
+                  padding: const EdgeInsets.fromLTRB(16, 10, 16, 16),
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.surface.withValues(alpha: 0.9),
+                    boxShadow: [
+                      BoxShadow(
+                        color: theme.colorScheme.shadow.withOpacity(0.08),
+                        blurRadius: 12,
+                        offset: const Offset(0, -6),
+                      ),
+                    ],
                   ),
-                ],
-              ),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: TextField(
-                      controller: _textController,
-                      focusNode: _focusNode,
-                      minLines: 1,
-                      maxLines: 4,
-                      enabled: _providerReady,
-                      textInputAction: TextInputAction.send,
-                      onSubmitted: (_) => _sendMessage(),
-                      decoration: InputDecoration(
-                        hintText: loc.supportChatHint,
-                        filled: true,
-                        fillColor:
-                            theme.colorScheme.surfaceVariant.withOpacity(0.45),
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 14,
-                        ),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(18),
-                          borderSide: BorderSide.none,
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: TextField(
+                          controller: _textController,
+                          focusNode: _focusNode,
+                          minLines: 1,
+                          maxLines: 4,
+                          enabled: _providerReady,
+                          textInputAction: TextInputAction.send,
+                          onSubmitted: (_) => _sendMessage(),
+                          decoration: InputDecoration(
+                            hintText: loc.supportChatHint,
+                            filled: true,
+                            fillColor:
+                                theme.colorScheme.surfaceVariant.withOpacity(0.45),
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 14,
+                            ),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(18),
+                              borderSide: BorderSide.none,
+                            ),
+                          ),
                         ),
                       ),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  SizedBox(
-                    height: 52,
-                    width: 52,
-                    child: ElevatedButton(
-                      onPressed: _isSending ? null : _sendMessage,
-                      style: ElevatedButton.styleFrom(
-                        padding: EdgeInsets.zero,
-                        shape: const CircleBorder(),
+                      const SizedBox(width: 12),
+                      SizedBox(
+                        height: 52,
+                        width: 52,
+                        child: ElevatedButton(
+                          onPressed: _isSending ? null : _sendMessage,
+                          style: ElevatedButton.styleFrom(
+                            padding: EdgeInsets.zero,
+                            shape: const CircleBorder(),
+                          ),
+                          child: Icon(
+                            Icons.send_rounded,
+                            color: theme.colorScheme.onPrimary,
+                          ),
+                        ),
                       ),
-                      child: Icon(
-                        Icons.send_rounded,
-                        color: theme.colorScheme.onPrimary,
-                      ),
-                    ),
+                    ],
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

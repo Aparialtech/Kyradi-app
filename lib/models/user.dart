@@ -61,6 +61,7 @@ class UserModel {
   final String? nationalId;
   final String verificationStatus;
   final String? verifiedAt;
+  final bool identityVerified;
   final String? identityDocumentUrl;
   final String? avatarUrl;
   final bool pushReminderEnabled;
@@ -79,6 +80,7 @@ class UserModel {
     this.nationalId,
     this.verificationStatus = 'unverified',
     this.verifiedAt,
+    this.identityVerified = false,
     this.identityDocumentUrl,
     this.avatarUrl,
     this.pushReminderEnabled = true,
@@ -105,6 +107,7 @@ class UserModel {
       nationalId: (json['nationalId'] ?? '').toString(),
       verificationStatus: (json['verificationStatus'] ?? 'unverified').toString(),
       verifiedAt: json['verifiedAt']?.toString(),
+      identityVerified: (json['identityVerified'] ?? json['verified'] ?? false) == true,
       identityDocumentUrl: identityRaw.isEmpty ? null : identityRaw,
       avatarUrl: (json['avatarUrl'] ?? '').toString().trim().isEmpty
           ? null
@@ -131,6 +134,7 @@ class UserModel {
         'nationalId': nationalId,
         'verificationStatus': verificationStatus,
         'verifiedAt': verifiedAt,
+        'identityVerified': identityVerified,
         'identityDocumentUrl': identityDocumentUrl,
         'avatarUrl': avatarUrl,
         'pushReminderEnabled': pushReminderEnabled,

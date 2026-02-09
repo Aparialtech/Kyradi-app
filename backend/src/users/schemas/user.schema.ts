@@ -82,6 +82,10 @@ export class User extends Document {
   @Prop({ default: false })
   verified: boolean;
 
+  // Identity (KYC) verification status. Email verification remains `verificationStatus`.
+  @Prop({ default: false })
+  identityVerified: boolean;
+
   @Prop({ default: 'unverified' })
   verificationStatus: 'unverified' | 'pending' | 'verified';
 

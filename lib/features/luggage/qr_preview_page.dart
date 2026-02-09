@@ -5,6 +5,7 @@ import 'package:qr_flutter/qr_flutter.dart';
 import '../../l10n/app_localizations.dart';
 import '../../models/luggage.dart';
 import '../../widgets/app_notification.dart';
+import '../../widgets/app_mesh_background.dart';
 
 class QrPreviewPage extends StatelessWidget {
   const QrPreviewPage({super.key, required this.luggage});
@@ -31,130 +32,137 @@ class QrPreviewPage extends StatelessWidget {
     }
 
     return Scaffold(
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
         title: Text(luggage.displayLabel),
       ),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Container(
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(24),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.08),
-                      blurRadius: 16,
-                      offset: const Offset(0, 8),
+      body: Stack(
+        children: [
+          const AppMeshBackground(),
+          SafeArea(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(24),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.08),
+                          blurRadius: 16,
+                          offset: const Offset(0, 8),
+                        ),
+                      ],
                     ),
+                    padding: const EdgeInsets.all(24),
+                    child: SizedBox(
+                      width: 260,
+                      height: 260,
+                      child: QrImageView(
+                        data: luggage.qrCode,
+                        backgroundColor: Colors.white,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  SelectableText(
+                    luggage.qrCode,
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 1.2,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  if (infoItems.isNotEmpty) ...[
+                    const SizedBox(height: 12),
+                    Text(infoItems.join(' · '), style: theme.textTheme.bodyMedium),
                   ],
-                ),
-                padding: const EdgeInsets.all(24),
-                child: SizedBox(
-                  width: 260,
-                  height: 260,
-                  child: QrImageView(
-                    data: luggage.qrCode,
-                    backgroundColor: Colors.white,
+                  if ((luggage.note ?? '').isNotEmpty) ...[
+                    const SizedBox(height: 8),
+                    Text(loc.noteLabel(luggage.note ?? ''),
+                        style: theme.textTheme.bodySmall),
+                  ],
+                  const SizedBox(height: 20),
+                  Text(
+                    loc.pickupPinSentMessage,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                    textAlign: TextAlign.center,
                   ),
-                ),
-              ),
-              const SizedBox(height: 20),
-              SelectableText(
-                luggage.qrCode,
-                style: theme.textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: 1.2,
-                ),
-                textAlign: TextAlign.center,
-              ),
-              if (infoItems.isNotEmpty) ...[
-                const SizedBox(height: 12),
-                Text(infoItems.join(' · '), style: theme.textTheme.bodyMedium),
-              ],
-              if ((luggage.note ?? '').isNotEmpty) ...[
-                const SizedBox(height: 8),
-                Text(loc.noteLabel(luggage.note ?? ''),
-                    style: theme.textTheme.bodySmall),
-              ],
-              const SizedBox(height: 20),
-              Text(
-                loc.pickupPinSentMessage,
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
-                ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 12),
-              FilledButton.icon(
-                onPressed: () {
-                  Clipboard.setData(ClipboardData(text: luggage.qrCode));
-                  AppNotification.show(
-                    context,
-                    message: loc.qrCopied,
-                    type: AppNotificationType.success,
-                  );
-                },
-                icon: const Icon(Icons.copy),
-                label: Text(loc.qrCopyCode),
-              ),
-              const SizedBox(height: 12),
-              OutlinedButton.icon(
-                onPressed: () {
-                  final text = 'Bavul QR Kodu: ${luggage.qrCode}';
-                  Clipboard.setData(ClipboardData(text: text));
-                  AppNotification.show(
-                    context,
-                    message: loc.qrTextCopied,
-                    type: AppNotificationType.success,
-                  );
-                },
-                icon: const Icon(Icons.print_outlined),
-                label: Text(loc.qrCopyPrintable),
-              ),
-              const SizedBox(height: 24),
-              _InfoRow(
-                icon: Icons.info_outline,
-                label: loc.statusLabel,
-                value: _statusLabel(loc, luggage.status),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                loc.createdAtLabel(
-                  DateFormat('dd.MM.yyyy HH:mm').format(luggage.createdAt.toLocal()),
-                ),
-                style: theme.textTheme.bodySmall,
-              ),
-              if (luggage.dropConfirmedAt != null)
-                Text(
-                  loc.dropConfirmedAtLabel(
-                    DateFormat('dd.MM.yyyy HH:mm')
-                        .format(luggage.dropConfirmedAt!.toLocal()),
+                  const SizedBox(height: 12),
+                  FilledButton.icon(
+                    onPressed: () {
+                      Clipboard.setData(ClipboardData(text: luggage.qrCode));
+                      AppNotification.show(
+                        context,
+                        message: loc.qrCopied,
+                        type: AppNotificationType.success,
+                      );
+                    },
+                    icon: const Icon(Icons.copy),
+                    label: Text(loc.qrCopyCode),
                   ),
-                  style: theme.textTheme.bodySmall,
-                ),
-              if (luggage.pickupConfirmedAt != null)
-                Text(
-                  loc.pickupConfirmedAtLabel(
-                    DateFormat('dd.MM.yyyy HH:mm')
-                        .format(luggage.pickupConfirmedAt!.toLocal()),
+                  const SizedBox(height: 12),
+                  OutlinedButton.icon(
+                    onPressed: () {
+                      final text = 'Bavul QR Kodu: ${luggage.qrCode}';
+                      Clipboard.setData(ClipboardData(text: text));
+                      AppNotification.show(
+                        context,
+                        message: loc.qrTextCopied,
+                        type: AppNotificationType.success,
+                      );
+                    },
+                    icon: const Icon(Icons.print_outlined),
+                    label: Text(loc.qrCopyPrintable),
                   ),
-                  style: theme.textTheme.bodySmall,
-                ),
-              const SizedBox(height: 12),
-              Text(
-                loc.qrShareInstructions,
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
-                ),
-                textAlign: TextAlign.center,
+                  const SizedBox(height: 24),
+                  _InfoRow(
+                    icon: Icons.info_outline,
+                    label: loc.statusLabel,
+                    value: _statusLabel(loc, luggage.status),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    loc.createdAtLabel(
+                      DateFormat('dd.MM.yyyy HH:mm')
+                          .format(luggage.createdAt.toLocal()),
+                    ),
+                    style: theme.textTheme.bodySmall,
+                  ),
+                  if (luggage.dropConfirmedAt != null)
+                    Text(
+                      loc.dropConfirmedAtLabel(
+                        DateFormat('dd.MM.yyyy HH:mm')
+                            .format(luggage.dropConfirmedAt!.toLocal()),
+                      ),
+                      style: theme.textTheme.bodySmall,
+                    ),
+                  if (luggage.pickupConfirmedAt != null)
+                    Text(
+                      loc.pickupConfirmedAtLabel(
+                        DateFormat('dd.MM.yyyy HH:mm')
+                            .format(luggage.pickupConfirmedAt!.toLocal()),
+                      ),
+                      style: theme.textTheme.bodySmall,
+                    ),
+                  const SizedBox(height: 12),
+                  Text(
+                    loc.qrShareInstructions,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
-        ),
+        ],
       ),
     );
   }

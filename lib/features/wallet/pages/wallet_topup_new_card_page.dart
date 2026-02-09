@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../widgets/app_notification.dart';
+import '../../../widgets/app_mesh_background.dart';
 import '../../../widgets/section_card.dart';
 import '../widgets/animated_card_preview.dart';
 import '../widgets/expiry_date_formatter.dart';
@@ -124,120 +125,128 @@ class _WalletTopUpNewCardPageState extends State<WalletTopUpNewCardPage> {
   Widget build(BuildContext context) {
     final loc = AppLocalizations.of(context)!;
     return Scaffold(
+      backgroundColor: Colors.transparent,
       appBar: AppBar(title: Text(loc.topUpUseNewCardTitle)),
-      body: ListView(
-        padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
+      body: Stack(
         children: [
-          SectionCard(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                SectionHeader(
-                  title: loc.topUpAmountTitle,
-                  subtitle: loc.topUpAmountSubtitle,
-                  icon: Icons.account_balance_wallet_outlined,
-                ),
-                const SizedBox(height: 12),
-                Row(
+          const AppMeshBackground(),
+          ListView(
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
+            children: [
+              SectionCard(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _AmountChip(
-                      label: '100 ₺',
-                      onTap: () => _amountCtrl.text = '100',
+                    SectionHeader(
+                      title: loc.topUpAmountTitle,
+                      subtitle: loc.topUpAmountSubtitle,
+                      icon: Icons.account_balance_wallet_outlined,
                     ),
-                    const SizedBox(width: 8),
-                    _AmountChip(
-                      label: '250 ₺',
-                      onTap: () => _amountCtrl.text = '250',
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        _AmountChip(
+                          label: '100 ₺',
+                          onTap: () => _amountCtrl.text = '100',
+                        ),
+                        const SizedBox(width: 8),
+                        _AmountChip(
+                          label: '250 ₺',
+                          onTap: () => _amountCtrl.text = '250',
+                        ),
+                        const SizedBox(width: 8),
+                        _AmountChip(
+                          label: '500 ₺',
+                          onTap: () => _amountCtrl.text = '500',
+                        ),
+                      ],
                     ),
-                    const SizedBox(width: 8),
-                    _AmountChip(
-                      label: '500 ₺',
-                      onTap: () => _amountCtrl.text = '500',
+                    const SizedBox(height: 12),
+                    TextFormField(
+                      controller: _amountCtrl,
+                      keyboardType: TextInputType.number,
+                      decoration: InputDecoration(labelText: loc.topUpAmountLabel),
                     ),
                   ],
                 ),
-                const SizedBox(height: 12),
-                TextFormField(
-                  controller: _amountCtrl,
-                  keyboardType: TextInputType.number,
-                  decoration: InputDecoration(labelText: loc.topUpAmountLabel),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 16),
-          SectionCard(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                SectionHeader(
-                  title: loc.topUpCardDetailsTitle,
-                  subtitle: loc.topUpCardDetailsSubtitle,
-                  icon: Icons.credit_card_outlined,
-                ),
-                const SizedBox(height: 12),
-                AnimatedCardPreview(
-                  cardNumber: _cardNumberCtrl.text,
-                  cardName: _cardNameCtrl.text,
-                  expiry: _cardExpiryCtrl.text,
-                  cvv: _cardCvvCtrl.text,
-                  showBack: _cvvFocus.hasFocus,
-                ),
-                const SizedBox(height: 12),
-                TextFormField(
-                  controller: _cardNumberCtrl,
-                  keyboardType: TextInputType.number,
-                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                  decoration: InputDecoration(labelText: loc.cardNumberLabel),
-                  onChanged: (_) => setState(() {}),
-                ),
-                const SizedBox(height: 12),
-                TextFormField(
-                  controller: _cardNameCtrl,
-                  decoration: InputDecoration(labelText: loc.cardHolderNameLabel),
-                  onChanged: (_) => setState(() {}),
-                ),
-                const SizedBox(height: 12),
-                Row(
+              ),
+              const SizedBox(height: 16),
+              SectionCard(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Expanded(
-                      child: TextFormField(
-                        controller: _cardExpiryCtrl,
-                        keyboardType: TextInputType.number,
-                        inputFormatters: [
-                          FilteringTextInputFormatter.digitsOnly,
-                          ExpiryDateFormatter(),
-                        ],
-                        decoration: InputDecoration(labelText: loc.cardExpiryLabel),
-                        onChanged: (_) => setState(() {}),
-                      ),
+                    SectionHeader(
+                      title: loc.topUpCardDetailsTitle,
+                      subtitle: loc.topUpCardDetailsSubtitle,
+                      icon: Icons.credit_card_outlined,
                     ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: TextFormField(
-                        controller: _cardCvvCtrl,
-                        focusNode: _cvvFocus,
-                        keyboardType: TextInputType.number,
-                        obscureText: true,
-                        decoration: InputDecoration(labelText: loc.cardCvvLabel),
-                        onChanged: (_) => setState(() {}),
-                      ),
+                    const SizedBox(height: 12),
+                    AnimatedCardPreview(
+                      cardNumber: _cardNumberCtrl.text,
+                      cardName: _cardNameCtrl.text,
+                      expiry: _cardExpiryCtrl.text,
+                      cvv: _cardCvvCtrl.text,
+                      showBack: _cvvFocus.hasFocus,
+                    ),
+                    const SizedBox(height: 12),
+                    TextFormField(
+                      controller: _cardNumberCtrl,
+                      keyboardType: TextInputType.number,
+                      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                      decoration: InputDecoration(labelText: loc.cardNumberLabel),
+                      onChanged: (_) => setState(() {}),
+                    ),
+                    const SizedBox(height: 12),
+                    TextFormField(
+                      controller: _cardNameCtrl,
+                      decoration: InputDecoration(labelText: loc.cardHolderNameLabel),
+                      onChanged: (_) => setState(() {}),
+                    ),
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: TextFormField(
+                            controller: _cardExpiryCtrl,
+                            keyboardType: TextInputType.number,
+                            inputFormatters: [
+                              FilteringTextInputFormatter.digitsOnly,
+                              ExpiryDateFormatter(),
+                            ],
+                            decoration:
+                                InputDecoration(labelText: loc.cardExpiryLabel),
+                            onChanged: (_) => setState(() {}),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: TextFormField(
+                            controller: _cardCvvCtrl,
+                            focusNode: _cvvFocus,
+                            keyboardType: TextInputType.number,
+                            obscureText: true,
+                            decoration:
+                                InputDecoration(labelText: loc.cardCvvLabel),
+                            onChanged: (_) => setState(() {}),
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 16),
-          FilledButton(
-            onPressed: _submitting ? null : _submit,
-            child: _submitting
-                ? const SizedBox(
-                    height: 18,
-                    width: 18,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : Text(loc.topUpPayAction),
+              ),
+              const SizedBox(height: 16),
+              FilledButton(
+                onPressed: _submitting ? null : _submit,
+                child: _submitting
+                    ? const SizedBox(
+                        height: 18,
+                        width: 18,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : Text(loc.topUpPayAction),
+              ),
+            ],
           ),
         ],
       ),

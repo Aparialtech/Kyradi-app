@@ -20,6 +20,7 @@ import 'pages/wallet_topup_saved_card_page.dart';
 import 'pages/wallet_topup_new_card_page.dart';
 import '../../ui/components/app_empty_state.dart';
 import '../../ui/components/app_skeleton.dart';
+import '../../widgets/app_mesh_background.dart';
 import '../../utils/crash_log.dart';
 import '../../widgets/app_notification.dart';
 import '../../widgets/section_card.dart';
@@ -407,24 +408,28 @@ class _WalletPageState extends State<WalletPage>
     final loc = AppLocalizations.of(context)!;
     return Scaffold(
       appBar: AppBar(title: Text(loc.walletTitle)),
-      body: _loading
-          ? ListView(
-              padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
-              children: const [
-                AppSkeleton(height: 110, radius: 20),
-                SizedBox(height: 16),
-                AppSkeleton(height: 90, radius: 20),
-                SizedBox(height: 16),
-                AppSkeleton(height: 160, radius: 20),
-                SizedBox(height: 16),
-                AppSkeleton(height: 220, radius: 20),
-              ],
-            )
-          : RefreshIndicator(
-              onRefresh: () => _loadMockData(AppLocalizations.of(context)!),
-              child: ListView(
-                padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
-                children: [
+      body: Stack(
+        children: [
+          const AppMeshBackground(),
+          _loading
+              ? ListView(
+                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
+                  children: const [
+                    AppSkeleton(height: 110, radius: 20),
+                    SizedBox(height: 16),
+                    AppSkeleton(height: 90, radius: 20),
+                    SizedBox(height: 16),
+                    AppSkeleton(height: 160, radius: 20),
+                    SizedBox(height: 16),
+                    AppSkeleton(height: 220, radius: 20),
+                  ],
+                )
+              : RefreshIndicator(
+                  onRefresh: () =>
+                      _loadMockData(AppLocalizations.of(context)!),
+                  child: ListView(
+                    padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
+                    children: [
                   WalletHeader(
                     title: loc.walletHeaderTitle,
                     subtitle: loc.walletHeaderSubtitle,
@@ -436,12 +441,36 @@ class _WalletPageState extends State<WalletPage>
                     monthlyEarned: _monthlyEarned,
                   ),
                   const SizedBox(height: 16),
-                  WalletQuickActions(
-                    onTopUp: () => _togglePanel(_WalletPanel.topup),
-                    onTransactions: _openTransactions,
-                    onCashback: _openCashback,
-                    onCoupons: _openCoupons,
-                    onCards: _openCards,
+                  SectionCard(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          loc.walletActionsTitle,
+                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                fontWeight: FontWeight.w700,
+                              ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          loc.walletActionsSubtitle,
+                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                color: Theme.of(context)
+                                    .colorScheme
+                                    .onSurfaceVariant,
+                              ),
+                        ),
+                        const SizedBox(height: 12),
+                        WalletQuickActions(
+                          onTopUp: () => _togglePanel(_WalletPanel.topup),
+                          onTransactions: _openTransactions,
+                          onCashback: _openCashback,
+                          onCoupons: _openCoupons,
+                          onCards: _openCards,
+                        ),
+                      ],
+                    ),
                   ),
                   const SizedBox(height: 16),
                   SectionCard(
@@ -661,9 +690,11 @@ class _WalletPageState extends State<WalletPage>
                           subtitle: loc.walletEmptyTransactionsSubtitle,
                         )
                       : TransactionsList(items: _transactions),
-                ],
-              ),
-            ),
+                    ],
+                  ),
+                ),
+        ],
+      ),
     );
   }
 }

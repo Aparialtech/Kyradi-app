@@ -6,6 +6,7 @@ import '../../models/luggage.dart';
 import '../../services/reminder_service.dart';
 import '../../widgets/app_notification.dart';
 import '../../widgets/section_card.dart';
+import '../../widgets/app_mesh_background.dart';
 import '../../ui/components/app_section_header.dart';
 import '../../ui/components/app_error_state.dart';
 import '../../core/profile_avatar_cache.dart';
@@ -255,163 +256,204 @@ class _DashboardPageState extends State<DashboardPage> {
 
     final campaigns = [
       CampaignItem(
-        title: loc.campaignCityWelcomeTitle,
-        subtitle: loc.campaignCityWelcomeSubtitle,
+        title: 'Kahve Dünyası Hediyesi',
+        subtitle: 'İlk rezervasyonuna özel 1 kahve ücretsiz.',
         tag: loc.campaignNewTag,
+        icon: Icons.local_cafe_outlined,
+        gradient: [
+          const Color(0xFF8B5E34),
+          const Color(0xFFD9A15A),
+        ],
       ),
       CampaignItem(
-        title: loc.campaignWeekendTitle,
-        subtitle: loc.campaignWeekendSubtitle,
+        title: '3+ Gün %50 İndirim',
+        subtitle: '3 gün ve üzeri rezervasyonlarda yarı fiyat.',
         tag: loc.campaignHotTag,
+        icon: Icons.local_offer_outlined,
+        gradient: [
+          const Color(0xFF1E3A8A),
+          const Color(0xFF3B82F6),
+        ],
       ),
       CampaignItem(
-        title: loc.campaignAirportTitle,
-        subtitle: loc.campaignAirportSubtitle,
+        title: 'Boyner %10 İndirim',
+        subtitle: 'Boyner mağazalarında ekstra avantaj.',
         tag: loc.campaignBonusTag,
+        icon: Icons.shopping_bag_outlined,
+        gradient: [
+          const Color(0xFF7C3AED),
+          const Color(0xFFA78BFA),
+        ],
+      ),
+      CampaignItem(
+        title: 'Kyradi Vadi & Axis',
+        subtitle: 'Vadi İstanbul ve Axis AVM’de hizmetinizde.',
+        tag: 'YENİ NOKTA',
+        icon: Icons.location_on_outlined,
+        gradient: [
+          const Color(0xFF0F766E),
+          const Color(0xFF5EEAD4),
+        ],
+      ),
+      CampaignItem(
+        title: 'Öğrenci %30 İndirim',
+        subtitle: 'Edu mail ile kayıt ol, %30 indirim kazan.',
+        tag: 'GENÇ',
+        icon: Icons.school_outlined,
+        gradient: [
+          const Color(0xFFB45309),
+          const Color(0xFFF59E0B),
+        ],
       ),
     ];
 
     return Scaffold(
-      body: SafeArea(
-        child: RefreshIndicator(
-          onRefresh: () async {
-            if (_controller.userId != null) {
-              await _loadProfile(_controller.userId!);
-              await _loadLuggages(_controller.userId!);
-            }
-            await _loadLocations();
-          },
-          child: ListView(
-            padding: const EdgeInsets.fromLTRB(16, 18, 16, 32),
-            children: [
-              ValueListenableBuilder<String?>(
-                valueListenable: ProfileAvatarCache.notifier,
-                builder: (context, avatarPath, _) {
-                  return DashboardTopBar(
-                    title: loc.dashboardGreeting(displayName),
-                    subtitle: loc.dashboardSubtitle,
-                    onAvatarTap: () => context.go('/profile'),
-                    avatarPath: avatarPath,
-                  );
-                },
-              ),
-              const SizedBox(height: 16),
-              DashboardSearchBar(
-                hintText: loc.findLocation,
-                onTap: () => context.go('/explore'),
-              ),
-              const SizedBox(height: 18),
-              QuickActionsGrid(actions: _buildQuickActions(loc)),
-              const SizedBox(height: 18),
-              if (_homeMapReady)
-                _HomeMapCard(
-                  title: loc.map,
-                  subtitle: loc.mapIntro,
-                  locations: _controller.locations,
-                  selected: _homeMapSelected,
-                  onSelect: (location) =>
-                      setState(() => _homeMapSelected = location),
-                  onOpenDetails: _openLocationDetails,
-                  onOpenExplore: () => context.go('/explore'),
-                  onMapCreated: (controller) =>
-                      _homeMapController = controller,
-                  onZoomIn: _zoomInHomeMap,
-                  onZoomOut: _zoomOutHomeMap,
-                )
-              else
-                SectionCard(
-                  child: ListTile(
-                    leading: const Icon(Icons.map_outlined),
-                    title: Text(loc.map),
-                    subtitle: Text(loc.mapsMissingApiKey),
-                    trailing: const Icon(Icons.chevron_right),
-                    onTap: () => context.go('/explore'),
-                  ),
-                ),
-              const SizedBox(height: 20),
-              AppSectionHeader(
-                title: loc.activeTripTitle,
-                actionLabel: loc.seeAllAction,
-                onAction: () => context.push('/luggage'),
-              ),
-              const SizedBox(height: 12),
-              ActiveTripCard(
-                title: loc.myLuggages,
-                subtitle: loc.luggagesSectionSubtitle,
-                loading: _controller.luggageLoading,
-                errorMessage: _luggageError,
-                onRetry: () {
-                  final userId = _controller.userId;
-                  if (userId != null) _loadLuggages(userId);
-                },
-                luggage: latestLuggage,
-                onShowQr: () {
-                  if (latestLuggage != null) _openQrPreview(latestLuggage);
-                },
-                onDetails: _openLuggageCenter,
-                emptyLabel: loc.luggageEmptyStateNoItems,
-                emptyActionLabel: loc.quickAddLuggage,
-                onEmptyAction: _openAddLuggage,
-              ),
-              const SizedBox(height: 20),
-              AppSectionHeader(
-                title: loc.nearbyLocationsTitle,
-                actionLabel: loc.seeAllAction,
-                onAction: () => context.go('/explore'),
-              ),
-              const SizedBox(height: 12),
-              NearbyLocationsCarousel(
-                loading: _controller.locationsLoading,
-                errorMessage: _locationError,
-                locations: nearbyLocations,
-                onRetry: _loadLocations,
-                onLocationTap: _openLocationDetails,
-                emptyLabel: loc.mapNoLocations,
-              ),
-              const SizedBox(height: 20),
-              AppSectionHeader(
-                title: loc.campaignsTitle,
-                actionLabel: loc.seeAllAction,
-                onAction: () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(builder: (_) => const CampaignsPage()),
-                  );
-                },
-              ),
-              const SizedBox(height: 12),
-              CampaignCarousel(
-                loading: false,
-                errorMessage: null,
-                items: campaigns,
-                onRetry: () {},
-                emptyLabel: loc.campaignsEmptyState,
-              ),
-              const SizedBox(height: 20),
-              SectionCard(
-                child: _IconActionCard(
-                  title: loc.myLuggages,
-                  subtitle: loc.luggagesSectionSubtitle,
-                  icon: Icons.luggage_outlined,
-                  accent: const Color(0xFF5B7CFA),
-                  onTap: _openLuggageCenter,
-                ),
-              ),
-              if (_profileLoading)
-                const SizedBox(height: 16)
-              else if (_profileError != null)
-                Padding(
-                  padding: const EdgeInsets.only(top: 12),
-                  child: AppErrorState(
-                    message: _profileError!,
-                    onRetry: () {
-                      final userId = _controller.userId;
-                      if (userId != null) _loadProfile(userId);
+      backgroundColor: Colors.transparent,
+      body: Stack(
+        children: [
+          const AppMeshBackground(),
+          SafeArea(
+            child: RefreshIndicator(
+              onRefresh: () async {
+                if (_controller.userId != null) {
+                  await _loadProfile(_controller.userId!);
+                  await _loadLuggages(_controller.userId!);
+                }
+                await _loadLocations();
+              },
+              child: ListView(
+                padding: const EdgeInsets.fromLTRB(16, 18, 16, 32),
+                children: [
+                  ValueListenableBuilder<String?>(
+                    valueListenable: ProfileAvatarCache.notifier,
+                    builder: (context, avatarPath, _) {
+                      return DashboardTopBar(
+                        title: loc.dashboardGreeting(displayName),
+                        subtitle: loc.dashboardSubtitle,
+                        onAvatarTap: () => context.go('/profile'),
+                        avatarPath: avatarPath,
+                      );
                     },
                   ),
-                ),
-            ],
+                  const SizedBox(height: 16),
+                  DashboardSearchBar(
+                    hintText: loc.findLocation,
+                    onTap: () => context.go('/explore'),
+                  ),
+                  const SizedBox(height: 18),
+                  QuickActionsGrid(actions: _buildQuickActions(loc)),
+                  const SizedBox(height: 18),
+                  if (_homeMapReady)
+                    _HomeMapCard(
+                      title: loc.map,
+                      subtitle: loc.mapIntro,
+                      locations: _controller.locations,
+                      selected: _homeMapSelected,
+                      onSelect: (location) =>
+                          setState(() => _homeMapSelected = location),
+                      onOpenDetails: _openLocationDetails,
+                      onOpenExplore: () => context.go('/explore'),
+                      onMapCreated: (controller) =>
+                          _homeMapController = controller,
+                      onZoomIn: _zoomInHomeMap,
+                      onZoomOut: _zoomOutHomeMap,
+                    )
+                  else
+                    SectionCard(
+                      child: ListTile(
+                        leading: const Icon(Icons.map_outlined),
+                        title: Text(loc.map),
+                        subtitle: Text(loc.mapsMissingApiKey),
+                        trailing: const Icon(Icons.chevron_right),
+                        onTap: () => context.go('/explore'),
+                      ),
+                    ),
+                  const SizedBox(height: 20),
+                  AppSectionHeader(
+                    title: loc.activeTripTitle,
+                    actionLabel: loc.seeAllAction,
+                    onAction: () => context.push('/luggage'),
+                  ),
+                  const SizedBox(height: 12),
+                  ActiveTripCard(
+                    title: loc.myLuggages,
+                    subtitle: loc.luggagesSectionSubtitle,
+                    loading: _controller.luggageLoading,
+                    errorMessage: _luggageError,
+                    onRetry: () {
+                      final userId = _controller.userId;
+                      if (userId != null) _loadLuggages(userId);
+                    },
+                    luggage: latestLuggage,
+                    onShowQr: () {
+                      if (latestLuggage != null) _openQrPreview(latestLuggage);
+                    },
+                    onDetails: _openLuggageCenter,
+                    emptyLabel: loc.luggageEmptyStateNoItems,
+                    emptyActionLabel: loc.quickAddLuggage,
+                    onEmptyAction: _openAddLuggage,
+                  ),
+                  const SizedBox(height: 20),
+                  AppSectionHeader(
+                    title: loc.nearbyLocationsTitle,
+                    actionLabel: loc.seeAllAction,
+                    onAction: () => context.go('/explore'),
+                  ),
+                  const SizedBox(height: 12),
+                  NearbyLocationsCarousel(
+                    loading: _controller.locationsLoading,
+                    errorMessage: _locationError,
+                    locations: nearbyLocations,
+                    onRetry: _loadLocations,
+                    onLocationTap: _openLocationDetails,
+                    emptyLabel: loc.mapNoLocations,
+                  ),
+                  const SizedBox(height: 20),
+                  AppSectionHeader(
+                    title: loc.campaignsTitle,
+                    actionLabel: loc.seeAllAction,
+                    onAction: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(builder: (_) => const CampaignsPage()),
+                      );
+                    },
+                  ),
+                  const SizedBox(height: 12),
+                  CampaignCarousel(
+                    loading: false,
+                    errorMessage: null,
+                    items: campaigns,
+                    onRetry: () {},
+                    emptyLabel: loc.campaignsEmptyState,
+                  ),
+                  const SizedBox(height: 20),
+                  SectionCard(
+                    child: _IconActionCard(
+                      title: loc.myLuggages,
+                      subtitle: loc.luggagesSectionSubtitle,
+                      icon: Icons.luggage_outlined,
+                      accent: const Color(0xFF5B7CFA),
+                      onTap: _openLuggageCenter,
+                    ),
+                  ),
+                  if (_profileLoading)
+                    const SizedBox(height: 16)
+                  else if (_profileError != null)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 12),
+                      child: AppErrorState(
+                        message: _profileError!,
+                        onRetry: () {
+                          final userId = _controller.userId;
+                          if (userId != null) _loadProfile(userId);
+                        },
+                      ),
+                    ),
+                ],
+              ),
+            ),
           ),
-        ),
+        ],
       ),
     );
   }

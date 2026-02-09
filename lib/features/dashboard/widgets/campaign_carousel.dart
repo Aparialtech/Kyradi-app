@@ -7,11 +7,15 @@ class CampaignItem {
     required this.title,
     required this.subtitle,
     required this.tag,
+    required this.icon,
+    required this.gradient,
   });
 
   final String title;
   final String subtitle;
   final String tag;
+  final IconData icon;
+  final List<Color> gradient;
 }
 
 class CampaignCarousel extends StatelessWidget {
@@ -42,7 +46,7 @@ class CampaignCarousel extends StatelessWidget {
       return Text(emptyLabel);
     }
     return SizedBox(
-      height: 140,
+      height: 160,
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         itemCount: items.length,
@@ -54,39 +58,65 @@ class CampaignCarousel extends StatelessWidget {
             padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
               gradient: LinearGradient(
-                colors: [
-                  Theme.of(context).colorScheme.primary.withValues(alpha: 0.12),
-                  Theme.of(context).colorScheme.secondary.withValues(alpha: 0.1),
-                ],
+                colors: item.gradient,
               ),
               borderRadius: BorderRadius.circular(18),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.start,
               children: [
+                Container(
+                  height: 40,
+                  width: 40,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: LinearGradient(
+                      colors: [
+                        Colors.white.withValues(alpha: 0.45),
+                        Colors.white.withValues(alpha: 0.1),
+                      ],
+                    ),
+                    border: Border.all(
+                      color: Colors.white.withValues(alpha: 0.4),
+                    ),
+                  ),
+                  child: Icon(
+                    item.icon,
+                    color: Colors.white,
+                  ),
+                ),
+                const SizedBox(height: 8),
                 Text(
                   item.tag,
                   style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                        color: Theme.of(context).colorScheme.primary,
+                        color: Colors.white,
                         fontWeight: FontWeight.w700,
                       ),
                 ),
                 const SizedBox(height: 8),
                 Text(
                   item.title,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
                   style: Theme.of(context)
                       .textTheme
                       .titleSmall
-                      ?.copyWith(fontWeight: FontWeight.w700),
+                      ?.copyWith(
+                        fontWeight: FontWeight.w700,
+                        color: Colors.white,
+                      ),
                 ),
                 const SizedBox(height: 6),
-                Text(
-                  item.subtitle,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
-                      ),
+                Expanded(
+                  child: Text(
+                    item.subtitle,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: Colors.white.withValues(alpha: 0.8),
+                        ),
+                  ),
                 ),
               ],
             ),

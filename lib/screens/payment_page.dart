@@ -10,6 +10,8 @@ import '../models/pricing_models.dart';
 import '../l10n/app_localizations.dart';
 import 'payment_result_page.dart';
 import '../utils/crash_log.dart';
+import '../widgets/section_card.dart';
+import '../widgets/app_mesh_background.dart';
 
 class PaymentPage extends StatefulWidget {
   const PaymentPage({
@@ -289,129 +291,163 @@ class _PaymentPageState extends State<PaymentPage> {
     final canSubmit = !_loading && _quoteError == null && !_loadingQuote;
 
     return Scaffold(
+      backgroundColor: Colors.transparent,
       appBar: AppBar(title: Text(loc.paymentPageTitle)),
-      body: SafeArea(
-        child: LayoutBuilder(
-          builder: (context, constraints) {
-            return SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(16, 16, 16, 140),
-              child: Column(
+      body: Stack(
+        children: [
+          const AppMeshBackground(),
+          SafeArea(
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                return SingleChildScrollView(
+                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 140),
+                  child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   _buildQuoteSummaryCard(theme, loc, quotePrice),
                   const SizedBox(height: 16),
-                  _buildProtectionSection(loc, theme),
+                  SectionCard(
+                    backgroundColor:
+                        theme.colorScheme.surface.withValues(alpha: 0.95),
+                    child: _buildProtectionSection(loc, theme),
+                  ),
                   const SizedBox(height: 12),
-                  _buildPaymentMethodSection(loc, theme),
+                  SectionCard(
+                    backgroundColor:
+                        theme.colorScheme.surface.withValues(alpha: 0.95),
+                    child: _buildPaymentMethodSection(loc, theme),
+                  ),
                   const SizedBox(height: 16),
                   if (_paymentMethod == 'pay_at_hotel') ...[
-                    Text(
-                      loc.paymentPayAtHotelTitle,
-                      style: theme.textTheme.titleMedium,
+                    SectionCard(
+                      backgroundColor:
+                          theme.colorScheme.surface.withValues(alpha: 0.92),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            loc.paymentPayAtHotelTitle,
+                            style: theme.textTheme.titleMedium,
+                          ),
+                          const SizedBox(height: 8),
+                          Text(loc.paymentPayAtHotelBody),
+                        ],
+                      ),
                     ),
-                    const SizedBox(height: 8),
-                    Text(loc.paymentPayAtHotelBody),
                     const SizedBox(height: 16),
                   ] else ...[
-                    Text(
-                      loc.paymentPageSubtitle,
-                      style: theme.textTheme.bodyMedium,
-                    ),
-                    const SizedBox(height: 16),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      children: [
-                        _CardBrandPill(
-                          label: 'VISA',
-                          color: const Color(0xFF1A1F71),
-                        ),
-                        const SizedBox(width: 8),
-                        _CardBrandPill(
-                          label: 'MC',
-                          color: const Color(0xFFEB001B),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 10),
-                    TextField(
-                      controller: _cardNumberCtrl,
-                      focusNode: _cardNumberFocus,
-                      keyboardType: TextInputType.number,
-                      textInputAction: TextInputAction.next,
-                      maxLength: 19,
-                      inputFormatters: [
-                        FilteringTextInputFormatter.digitsOnly,
-                        CardNumberInputFormatter(),
-                      ],
-                      decoration: InputDecoration(
-                        labelText: loc.paymentCardNumberLabel,
-                        hintText: '1234 5678 9012 3456',
-                        prefixIcon: const Icon(Icons.credit_card_outlined),
-                      ),
-                      onSubmitted: (_) => _nameFocus.requestFocus(),
-                    ),
-                    const SizedBox(height: 12),
-                    TextField(
-                      controller: _nameCtrl,
-                      focusNode: _nameFocus,
-                      textCapitalization: TextCapitalization.characters,
-                      textInputAction: TextInputAction.next,
-                      inputFormatters: [
-                        FilteringTextInputFormatter.allow(
-                          RegExp(r"[A-Za-zÀ-ÖØ-öø-ÿ\s]"),
-                        ),
-                        UpperCaseTextFormatter(),
-                      ],
-                      decoration: InputDecoration(
-                        labelText: loc.paymentCardNameLabel,
-                        hintText: 'AD SOYAD',
-                        prefixIcon: const Icon(Icons.person_outline),
-                      ),
-                      onSubmitted: (_) => _expiryFocus.requestFocus(),
-                    ),
-                    const SizedBox(height: 12),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: TextField(
-                            controller: _expiryCtrl,
-                            focusNode: _expiryFocus,
+                    SectionCard(
+                      backgroundColor:
+                          theme.colorScheme.surface.withValues(alpha: 0.95),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            loc.paymentPageSubtitle,
+                            style: theme.textTheme.bodyMedium,
+                          ),
+                          const SizedBox(height: 16),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.end,
+                            children: [
+                              _CardBrandPill(
+                                label: 'VISA',
+                                color: const Color(0xFF1A1F71),
+                              ),
+                              const SizedBox(width: 8),
+                              _CardBrandPill(
+                                label: 'MC',
+                                color: const Color(0xFFEB001B),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 10),
+                          TextField(
+                            controller: _cardNumberCtrl,
+                            focusNode: _cardNumberFocus,
                             keyboardType: TextInputType.number,
                             textInputAction: TextInputAction.next,
-                            maxLength: 5,
+                            maxLength: 19,
                             inputFormatters: [
                               FilteringTextInputFormatter.digitsOnly,
-                              ExpiryDateInputFormatter(),
+                              CardNumberInputFormatter(),
                             ],
                             decoration: InputDecoration(
-                              labelText: loc.paymentExpiryLabel,
-                              hintText: 'MM/YY',
-                              prefixIcon: const Icon(Icons.calendar_today_outlined),
+                              labelText: loc.paymentCardNumberLabel,
+                              hintText: '1234 5678 9012 3456',
+                              prefixIcon:
+                                  const Icon(Icons.credit_card_outlined),
                             ),
-                            onSubmitted: (_) => _cvcFocus.requestFocus(),
+                            onSubmitted: (_) => _nameFocus.requestFocus(),
                           ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: TextField(
-                            controller: _cvcCtrl,
-                            focusNode: _cvcFocus,
-                            keyboardType: TextInputType.number,
-                            textInputAction: TextInputAction.done,
-                            maxLength: 4,
-                            obscureText: true,
+                          const SizedBox(height: 12),
+                          TextField(
+                            controller: _nameCtrl,
+                            focusNode: _nameFocus,
+                            textCapitalization: TextCapitalization.characters,
+                            textInputAction: TextInputAction.next,
                             inputFormatters: [
-                              FilteringTextInputFormatter.digitsOnly,
+                              FilteringTextInputFormatter.allow(
+                                RegExp(r"[A-Za-zÀ-ÖØ-öø-ÿ\s]"),
+                              ),
+                              UpperCaseTextFormatter(),
                             ],
                             decoration: InputDecoration(
-                              labelText: loc.paymentCvcLabel,
-                              hintText: 'CVV',
-                              prefixIcon: const Icon(Icons.lock_outline),
+                              labelText: loc.paymentCardNameLabel,
+                              hintText: 'AD SOYAD',
+                              prefixIcon: const Icon(Icons.person_outline),
                             ),
-                            onSubmitted: (_) => _completePayment(),
+                            onSubmitted: (_) => _expiryFocus.requestFocus(),
                           ),
-                        ),
-                      ],
+                          const SizedBox(height: 12),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: TextField(
+                                  controller: _expiryCtrl,
+                                  focusNode: _expiryFocus,
+                                  keyboardType: TextInputType.number,
+                                  textInputAction: TextInputAction.next,
+                                  maxLength: 5,
+                                  inputFormatters: [
+                                    FilteringTextInputFormatter.digitsOnly,
+                                    ExpiryDateInputFormatter(),
+                                  ],
+                                  decoration: InputDecoration(
+                                    labelText: loc.paymentExpiryLabel,
+                                    hintText: 'MM/YY',
+                                    prefixIcon: const Icon(
+                                      Icons.calendar_today_outlined,
+                                    ),
+                                  ),
+                                  onSubmitted: (_) => _cvcFocus.requestFocus(),
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: TextField(
+                                  controller: _cvcCtrl,
+                                  focusNode: _cvcFocus,
+                                  keyboardType: TextInputType.number,
+                                  textInputAction: TextInputAction.done,
+                                  maxLength: 4,
+                                  obscureText: true,
+                                  inputFormatters: [
+                                    FilteringTextInputFormatter.digitsOnly,
+                                  ],
+                                  decoration: InputDecoration(
+                                    labelText: loc.paymentCvcLabel,
+                                    hintText: 'CVV',
+                                    prefixIcon:
+                                        const Icon(Icons.lock_outline),
+                                  ),
+                                  onSubmitted: (_) => _completePayment(),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
                     ),
                     const SizedBox(height: 16),
                   ],
@@ -439,10 +475,12 @@ class _PaymentPageState extends State<PaymentPage> {
                     ),
                   const SizedBox(height: 12),
                 ],
-              ),
-            );
-          },
-        ),
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
       ),
       bottomNavigationBar: SafeArea(
         minimum: const EdgeInsets.fromLTRB(16, 0, 16, 16),
@@ -709,10 +747,10 @@ class _PaymentPageState extends State<PaymentPage> {
     final premiumFee = _premiumFeeValue();
     final total = _totalPrice();
 
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Column(
+    return SectionCard(
+      backgroundColor: theme.colorScheme.surface.withValues(alpha: 0.95),
+      padding: const EdgeInsets.all(12),
+      child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
@@ -799,7 +837,6 @@ class _PaymentPageState extends State<PaymentPage> {
             ),
           ],
         ),
-      ),
     );
   }
 
@@ -1070,13 +1107,17 @@ class _ReservationEditPageState extends State<ReservationEditPage> {
         : loc.pickupTimeLabel(_formatDateTime(_pickupAt));
 
     return Scaffold(
+      backgroundColor: Colors.transparent,
       appBar: AppBar(title: Text(loc.reservationEditTitle)),
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
+      body: Stack(
+        children: [
+          const AppMeshBackground(),
+          SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
               DropdownButtonFormField<String>(
                 value: _size,
                 items: ['Küçük', 'Orta', 'Büyük']
@@ -1126,20 +1167,22 @@ class _ReservationEditPageState extends State<ReservationEditPage> {
                         }
                       },
               ),
-              const Spacer(),
-              FilledButton(
-                onPressed: _saving ? null : _save,
-                child: _saving
-                    ? const SizedBox(
-                        height: 18,
-                        width: 18,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : Text(loc.save),
+                  const Spacer(),
+                  FilledButton(
+                    onPressed: _saving ? null : _save,
+                    child: _saving
+                        ? const SizedBox(
+                            height: 18,
+                            width: 18,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : Text(loc.save),
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
-        ),
+        ],
       ),
     );
   }

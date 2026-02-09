@@ -1283,5 +1283,40 @@
   "walletDebitCardSubtitle": "Banka kartlarını görüntüle ve yönet.",
   "walletCardSavedMessage": "Kart kaydedildi.",
   "walletCardInvalidMessage": "Kart bilgilerini eksiksiz girin.",
-  "walletCardExpiryInvalidMessage": "Son kullanma tarihi geçersiz."
+  "walletCardExpiryInvalidMessage": "Son kullanma tarihi geçersiz.",
+
+  "identityVerificationTitle": "Kimlik Doğrulama",
+  "identityVerificationSubtitle": "Kimlik bilgilerini ve belgelerini yükle.",
+  "emailVerificationTitle": "E-posta Doğrulama",
+  "emailVerificationSubtitle": "E-postana gönderilen kod ile doğrula.",
+
+  "emailVerifiedLabel": "E-posta doğrulandı",
+  "emailPendingLabel": "E-posta doğrulama bekleniyor",
+  "emailVerificationNeededLabel": "E-posta doğrulaması gerekli",
+  "identityVerifiedLabel": "Kimlik doğrulandı",
+  "identityVerificationNeededLabel": "Kimlik doğrulaması gerekli",
+
+  "personalInfoTitle": "Kişisel Bilgiler",
+  "identityPhotosTitle": "Kimlik Fotoğrafları",
+  "identityFrontLabel": "Kimlik Ön Yüz",
+  "identityBackLabel": "Kimlik Arka Yüz",
+  "selfieStepTitle": "Selfie",
+  "selfieLabel": "Selfie",
+  "selfieNotRequiredMessage": "Selfie bu doğrulama için gerekli değil.",
+  "reviewAndSubmitTitle": "Onay ve Gönder",
+  "reviewHint": "Bilgileri kontrol edin ve doğrulama için gönderin.",
+  "uploadedLabel": "Yüklendi",
+  "missingLabel": "Eksik",
+  "nextAction": "Devam Et",
+  "back": "Geri",
+  "cancel": "Vazgeç",
+  "submit": "Gönder",
+  "identityPhotoLabel": "Kimlik Fotoğrafı",
+
+  "identityVerifiedTitle": "Hesabın kimlikle onaylandı",
+  "identityPendingReviewTitle": "Kimlik doğrulama incelemede",
+  "submittedForReviewMessage": "Kimlik doğrulama inceleme için gönderildi.",
+  "uploadSuccessMessage": "Yükleme tamamlandı.",
+  "saveSuccessMessage": "Kaydedildi.",
+  "nationalIdInvalidMessage": "T.C. kimlik numarası geçersiz."
 }

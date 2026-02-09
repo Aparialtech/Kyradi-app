@@ -3081,4 +3081,101 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get walletCardExpiryInvalidMessage => 'Son kullanma tarihi geçersiz.';
+
+  @override
+  String get identityVerificationTitle => 'Kimlik Doğrulama';
+
+  @override
+  String get identityVerificationSubtitle =>
+      'Kimlik bilgilerini ve belgelerini yükle.';
+
+  @override
+  String get emailVerificationTitle => 'E-posta Doğrulama';
+
+  @override
+  String get emailVerificationSubtitle =>
+      'E-postana gönderilen kod ile doğrula.';
+
+  @override
+  String get emailVerifiedLabel => 'E-posta doğrulandı';
+
+  @override
+  String get emailPendingLabel => 'E-posta doğrulama bekleniyor';
+
+  @override
+  String get emailVerificationNeededLabel => 'E-posta doğrulaması gerekli';
+
+  @override
+  String get identityVerifiedLabel => 'Kimlik doğrulandı';
+
+  @override
+  String get identityVerificationNeededLabel => 'Kimlik doğrulaması gerekli';
+
+  @override
+  String get personalInfoTitle => 'Kişisel Bilgiler';
+
+  @override
+  String get identityPhotosTitle => 'Kimlik Fotoğrafları';
+
+  @override
+  String get identityFrontLabel => 'Kimlik Ön Yüz';
+
+  @override
+  String get identityBackLabel => 'Kimlik Arka Yüz';
+
+  @override
+  String get selfieStepTitle => 'Selfie';
+
+  @override
+  String get selfieLabel => 'Selfie';
+
+  @override
+  String get selfieNotRequiredMessage =>
+      'Selfie bu doğrulama için gerekli değil.';
+
+  @override
+  String get reviewAndSubmitTitle => 'Onay ve Gönder';
+
+  @override
+  String get reviewHint => 'Bilgileri kontrol edin ve doğrulama için gönderin.';
+
+  @override
+  String get uploadedLabel => 'Yüklendi';
+
+  @override
+  String get missingLabel => 'Eksik';
+
+  @override
+  String get nextAction => 'Devam Et';
+
+  @override
+  String get back => 'Geri';
+
+  @override
+  String get cancel => 'Vazgeç';
+
+  @override
+  String get submit => 'Gönder';
+
+  @override
+  String get identityPhotoLabel => 'Kimlik Fotoğrafı';
+
+  @override
+  String get identityVerifiedTitle => 'Hesabın kimlikle onaylandı';
+
+  @override
+  String get identityPendingReviewTitle => 'Kimlik doğrulama incelemede';
+
+  @override
+  String get submittedForReviewMessage =>
+      'Kimlik doğrulama inceleme için gönderildi.';
+
+  @override
+  String get uploadSuccessMessage => 'Yükleme tamamlandı.';
+
+  @override
+  String get saveSuccessMessage => 'Kaydedildi.';
+
+  @override
+  String get nationalIdInvalidMessage => 'T.C. kimlik numarası geçersiz.';
 }

@@ -1,4 +1,5 @@
 import { Body, Controller, Post, BadRequestException, UsePipes, ValidationPipe } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import { AuthService } from './auth.service';
 import { CreateUserDto } from '../users/dto/create-user.dto';
 import { LoginDto } from './dto/login.dto';
@@ -17,6 +18,7 @@ export class AuthController {
 
   @Post('register')
   @Public()
+  @Throttle(10, 60)
   @UsePipes(new ValidationPipe({ transform: true, whitelist: true }))
   register(@Body() dto: CreateUserDto) {
     return this.authService.register(dto);
@@ -24,18 +26,21 @@ export class AuthController {
 
   @Post('login')
   @Public()
+  @Throttle(10, 60)
   login(@Body() dto: LoginDto) {
     return this.authService.login(dto);
   }
 
   @Post('forgot')
   @Public()
+  @Throttle(3, 300)
   forgot(@Body() dto: ForgotPasswordDto) {
     return this.authService.forgot(dto);
   }
 
   @Post('reset')
   @Public()
+  @Throttle(3, 300)
   reset(@Body() dto: ResetPasswordDto) {
     return this.authService.reset(dto);
   }
@@ -47,18 +52,21 @@ export class AuthController {
 
   @Post('verify')
   @Public()
+  @Throttle(3, 300)
   verify(@Body() dto: VerifyCodeDto) {
     return this.authService.verifyCode(dto);
   }
 
   @Post('resend-verify')
   @Public()
+  @Throttle(3, 300)
   resendVerify(@Body() dto: ResendVerifyDto) {
     return this.authService.resendVerification(dto);
   }
 
   @Post('social')
   @Public()
+  @Throttle(10, 60)
   socialLogin(@Body() dto: SocialLoginDto) {
     console.log('AUTH_SOCIAL_HIT_FROM_NEW_CODE');
     return this.authService.socialLogin(dto);
@@ -66,6 +74,7 @@ export class AuthController {
 
   @Post('social/google')
   @Public()
+  @Throttle(10, 60)
   socialGoogle(@Body() dto: SocialProviderLoginDto) {
     if (!dto.idToken) {
       throw new BadRequestException('SOCIAL_TOKEN_INVALID');
@@ -80,6 +89,7 @@ export class AuthController {
 
   @Post('social/apple')
   @Public()
+  @Throttle(10, 60)
   socialApple(@Body() dto: SocialProviderLoginDto) {
     return this.authService.socialLogin({
       provider: 'apple',

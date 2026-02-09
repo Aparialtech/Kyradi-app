@@ -19,6 +19,7 @@ import '../core/auth/google_oauth_config.dart';
 import '../ui/components/app_back_app_bar.dart';
 import '../widgets/app_logo_overlay.dart';
 import '../ui/components/rainbow_bar.dart';
+import '../widgets/auth_mesh_background.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -230,7 +231,6 @@ class _LoginPageState extends State<LoginPage> {
           type: AppNotificationType.success,
         );
         if (!mounted) return;
-        AppLogoOverlayController.show();
         context.go('/home');
       } else if (msg.toLowerCase().contains('popup_closed') ||
           msg.toLowerCase().contains('login cancelled')) {
@@ -378,7 +378,6 @@ class _LoginPageState extends State<LoginPage> {
         await _persistRememberedEmail(email);
         _notify(l10n.loginSuccess, type: AppNotificationType.success);
         if (!mounted) return;
-        AppLogoOverlayController.show();
         context.go('/home');
       } else if (status == 401) {
         _notify(l10n.loginInvalidCredentials, type: AppNotificationType.error);
@@ -444,366 +443,384 @@ class _LoginPageState extends State<LoginPage> {
     final l10n = AppLocalizations.of(context)!;
     final rememberLabel = l10n.rememberMeLabel;
     return Scaffold(
+      extendBodyBehindAppBar: true,
+      backgroundColor: Colors.transparent,
       appBar: buildBackAppBar(context),
-      body: DecoratedBox(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            colors: [Color(0xFFF7F8FC), Color(0xFFEFF2F7)],
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-          ),
-        ),
-        child: SafeArea(
-          child: LayoutBuilder(
-            builder: (context, constraints) {
-              return SingleChildScrollView(
-                padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
-                child: ConstrainedBox(
-                  constraints: BoxConstraints(
-                    minHeight: constraints.maxHeight - 48,
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      const SizedBox(height: 16),
-                      const RainbowBar(height: 4),
-                      const SizedBox(height: 12),
-                      SectionCard(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 26,
-                          vertical: 24,
-                        ),
-                        child: Column(
-                          children: [
-                            Container(
-                              height: 72,
-                              width: 72,
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                gradient: const LinearGradient(
-                                  colors: [
-                                    Color(0xFF2C2966),
-                                    Color(0xFF005C99),
-                                  ],
-                                  begin: Alignment.topLeft,
-                                  end: Alignment.bottomRight,
-                                ),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: const Color(
-                                      0xFF2C3E50,
-                                    ).withValues(alpha: 0.18),
-                                    blurRadius: 24,
-                                    offset: const Offset(0, 12),
-                                  ),
-                                ],
-                              ),
-                              child: Padding(
-                                padding: const EdgeInsets.all(12),
-                                child: Image.asset(
-                                  'assets/images/kyradi_logo.png',
-                                  fit: BoxFit.contain,
-                                ),
-                              ),
-                            ),
-                            const SizedBox(height: 18),
-                            Text(
-                              l10n.appTitle,
-                              style: theme.textTheme.headlineMedium?.copyWith(
-                                fontWeight: FontWeight.w800,
-                                letterSpacing: 1.1,
-                              ),
-                            ),
-                            const SizedBox(height: 6),
-                            Text(
-                              l10n.loginHeroSubtitle,
-                              style: theme.textTheme.bodyMedium?.copyWith(
-                                color: theme.colorScheme.onSurface.withValues(
-                                  alpha: 0.7,
-                                ),
-                              ),
-                              textAlign: TextAlign.center,
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 22),
-                      SectionCard(
-                        child: Form(
-                          key: _formKey,
+      body: Stack(
+        fit: StackFit.expand,
+        children: [
+          const AuthMeshBackground(),
+          SafeArea(
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                return SingleChildScrollView(
+                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(
+                      minHeight: constraints.maxHeight - 48,
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        const SizedBox(height: 16),
+                        const RainbowBar(height: 4),
+                        const SizedBox(height: 12),
+                        SectionCard(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 26,
+                            vertical: 24,
+                          ),
+                          backgroundColor: theme.colorScheme.surface.withValues(
+                            alpha: 0.92,
+                          ),
                           child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              SectionHeader(
-                                title: l10n.loginFormTitle,
-                                subtitle: l10n.loginFormSubtitle,
-                                icon: Icons.key_rounded,
-                              ),
-                              const SizedBox(height: 18),
-                              TextFormField(
-                                controller: _emailCtrl,
-                                keyboardType: TextInputType.emailAddress,
-                                decoration: InputDecoration(
-                                  labelText: l10n.email,
-                                  hintText: l10n.emailHint,
-                                  prefixIcon: _FieldIcon(
-                                    icon: Icons.alternate_email,
-                                  ),
-                                ),
-                                validator: (v) {
-                                  if (v == null || v.trim().isEmpty) {
-                                    return l10n.validationEmailRequired;
-                                  }
-                                  final ok = RegExp(
-                                    r'^\S+@\S+\.\S+$',
-                                  ).hasMatch(v.trim());
-                                  if (!ok) return l10n.validationEmailInvalid;
-                                  return null;
-                                },
-                              ),
-                              const SizedBox(height: 16),
-                              TextFormField(
-                                controller: _passCtrl,
-                                obscureText: _obscure,
-                                enableSuggestions: false,
-                                autocorrect: false,
-                                inputFormatters: [
-                                  FilteringTextInputFormatter.deny(
-                                    RegExp(r'\s'),
-                                  ),
-                                ],
-                                decoration: InputDecoration(
-                                  labelText: l10n.passwordLabel,
-                                  hintText: l10n.passwordHint,
-                                  prefixIcon: _FieldIcon(
-                                    icon: Icons.lock_outline,
-                                  ),
-                                  suffixIcon: IconButton(
-                                    onPressed: () =>
-                                        setState(() => _obscure = !_obscure),
-                                    icon: Icon(
-                                      _obscure
-                                          ? Icons.visibility
-                                          : Icons.visibility_off,
-                                    ),
-                                  ),
-                                ),
-                                validator: (v) {
-                                  if (v == null || v.isEmpty) {
-                                    return l10n.validationPasswordRequired;
-                                  }
-                                  if (v.length < 6) {
-                                    return l10n.validationMinChars('6');
-                                  }
-                                  return null;
-                                },
-                              ),
-                              const SizedBox(height: 12),
-                              Row(
-                                children: [
-                                  Checkbox(
-                                    value: _rememberMe,
-                                    onChanged: (value) {
-                                      setState(
-                                        () => _rememberMe = value ?? false,
-                                      );
-                                      if (!(value ?? false)) {
-                                        _secureStorage.delete(
-                                          key: _rememberEmailKey,
-                                        );
-                                      }
-                                    },
-                                  ),
-                                  Text(rememberLabel),
-                                ],
-                              ),
-                              Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
-                                  TextButton(
-                                    onPressed: () {
-                                      context.push('/forgot');
-                                    },
-                                    child: Text(l10n.loginForgotPassword),
-                                  ),
-                                  TextButton.icon(
-                                    onPressed: () =>
-                                        setState(() => _passCtrl.clear()),
-                                    icon: const Icon(Icons.clear),
-                                    label: Text(l10n.clearButton),
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: 4),
-                              GradientButton(
-                                text: l10n.loginButtonLabel,
-                                onPressed: _loading ? null : _submit,
-                                loading: _loading,
-                                gradient: _warmGradient,
-                                glass: true,
-                              ),
-                              const SizedBox(height: 18),
-                              Row(
-                                children: [
-                                  const Expanded(child: Divider()),
-                                  Padding(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 12,
-                                    ),
-                                    child: Text(
-                                      l10n.loginSocialDivider,
-                                      style: theme.textTheme.bodySmall
-                                          ?.copyWith(
-                                            color: theme.colorScheme.onSurface
-                                                .withValues(alpha: 0.6),
-                                          ),
-                                    ),
-                                  ),
-                                  const Expanded(child: Divider()),
-                                ],
-                              ),
-                              const SizedBox(height: 14),
-                              Align(
-                                alignment: Alignment.center,
-                                child: ConstrainedBox(
-                                  constraints: const BoxConstraints(
-                                    maxWidth: 360,
-                                  ),
-                                  child: Row(
-                                    children: [
-                                      Expanded(
-                                        child: OutlinedButton.icon(
-                                          onPressed:
-                                              _loading ||
-                                                  !_googleConfigOk ||
-                                                  !_firebaseReady
-                                              ? null
-                                              : () => _handleSocialAuth(
-                                                  _signInWithGoogle,
-                                                  provider: 'google',
-                                                ),
-                                          icon: const CircleAvatar(
-                                            radius: 10,
-                                            backgroundColor: Color(0xFFEA4335),
-                                            child: Text(
-                                              'G',
-                                              style: TextStyle(
-                                                color: Colors.white,
-                                                fontSize: 12,
-                                                fontWeight: FontWeight.w700,
-                                              ),
-                                            ),
-                                          ),
-                                          label: Text(
-                                            l10n.loginContinueWithGoogle,
-                                          ),
-                                          style: OutlinedButton.styleFrom(
-                                            padding: const EdgeInsets.symmetric(
-                                              vertical: 12,
-                                              horizontal: 10,
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                      const SizedBox(width: 12),
-                                      Expanded(
-                                        child: OutlinedButton.icon(
-                                          onPressed:
-                                              _loading ||
-                                                  !_appleConfigOk ||
-                                                  !_firebaseReady
-                                              ? null
-                                              : () => _handleSocialAuth(
-                                                  _signInWithApple,
-                                                  provider: 'apple',
-                                                ),
-                                          icon: const Icon(Icons.apple),
-                                          label: Text(
-                                            l10n.loginContinueWithApple,
-                                          ),
-                                          style: OutlinedButton.styleFrom(
-                                            padding: const EdgeInsets.symmetric(
-                                              vertical: 12,
-                                              horizontal: 10,
-                                            ),
-                                          ),
-                                        ),
-                                      ),
+                              Container(
+                                height: 72,
+                                width: 72,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  gradient: const LinearGradient(
+                                    colors: [
+                                      Color(0xFF2C2966),
+                                      Color(0xFF005C99),
                                     ],
+                                    begin: Alignment.topLeft,
+                                    end: Alignment.bottomRight,
+                                  ),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: const Color(
+                                        0xFF2C3E50,
+                                      ).withValues(alpha: 0.18),
+                                      blurRadius: 24,
+                                      offset: const Offset(0, 12),
+                                    ),
+                                  ],
+                                ),
+                                child: Padding(
+                                  padding: const EdgeInsets.all(12),
+                                  child: Image.asset(
+                                    'assets/images/kyradi_logo.png',
+                                    fit: BoxFit.contain,
                                   ),
                                 ),
                               ),
-                              if (!_firebaseReady ||
-                                  !_googleConfigOk ||
-                                  !_appleConfigOk) ...[
-                                const SizedBox(height: 10),
-                                Text(
-                                  !_firebaseReady
-                                      ? l10n.firebaseConfigMissing
-                                      : (!_googleConfigOk
-                                            ? l10n.googleConfigMissingIosScheme
-                                            : l10n.appleConfigMissing),
-                                  style: theme.textTheme.bodySmall?.copyWith(
-                                    color: theme.colorScheme.error,
-                                  ),
-                                  textAlign: TextAlign.center,
+                              const SizedBox(height: 18),
+                              Text(
+                                l10n.appTitle,
+                                style:
+                                    theme.textTheme.headlineMedium?.copyWith(
+                                  fontWeight: FontWeight.w800,
+                                  letterSpacing: 1.1,
                                 ),
-                              ],
+                              ),
+                              const SizedBox(height: 6),
+                              Text(
+                                l10n.loginHeroSubtitle,
+                                style: theme.textTheme.bodyMedium?.copyWith(
+                                  color: theme.colorScheme.onSurface.withValues(
+                                    alpha: 0.7,
+                                  ),
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
                             ],
                           ),
                         ),
-                      ),
-                      const SizedBox(height: 18),
-                      SectionCard(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 18,
-                          vertical: 14,
-                        ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text(
-                              l10n.loginNoAccount,
-                              style: theme.textTheme.bodyMedium,
-                            ),
-                            const SizedBox(width: 8),
-                            TextButton(
-                              onPressed: () {
-                                context.push('/register');
-                              },
-                              child: Text(l10n.registerButtonLabel),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 20),
-                      SectionCard(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 18,
-                          vertical: 12,
-                        ),
-                        child: Text(
-                          l10n.copyrightNotice,
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: theme.colorScheme.onSurface.withValues(
-                              alpha: 0.6,
+                        const SizedBox(height: 22),
+                        SectionCard(
+                          backgroundColor:
+                              theme.colorScheme.surface.withValues(alpha: 0.95),
+                          child: Form(
+                            key: _formKey,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                SectionHeader(
+                                  title: l10n.loginFormTitle,
+                                  subtitle: l10n.loginFormSubtitle,
+                                  icon: Icons.key_rounded,
+                                ),
+                                const SizedBox(height: 18),
+                                TextFormField(
+                                  controller: _emailCtrl,
+                                  keyboardType: TextInputType.emailAddress,
+                                  decoration: InputDecoration(
+                                    labelText: l10n.email,
+                                    hintText: l10n.emailHint,
+                                    prefixIcon: _FieldIcon(
+                                      icon: Icons.alternate_email,
+                                    ),
+                                  ),
+                                  validator: (v) {
+                                    if (v == null || v.trim().isEmpty) {
+                                      return l10n.validationEmailRequired;
+                                    }
+                                    final ok = RegExp(
+                                      r'^\S+@\S+\.\S+$',
+                                    ).hasMatch(v.trim());
+                                    if (!ok) {
+                                      return l10n.validationEmailInvalid;
+                                    }
+                                    return null;
+                                  },
+                                ),
+                                const SizedBox(height: 16),
+                                TextFormField(
+                                  controller: _passCtrl,
+                                  obscureText: _obscure,
+                                  enableSuggestions: false,
+                                  autocorrect: false,
+                                  inputFormatters: [
+                                    FilteringTextInputFormatter.deny(
+                                      RegExp(r'\s'),
+                                    ),
+                                  ],
+                                  decoration: InputDecoration(
+                                    labelText: l10n.passwordLabel,
+                                    hintText: l10n.passwordHint,
+                                    prefixIcon: _FieldIcon(
+                                      icon: Icons.lock_outline,
+                                    ),
+                                    suffixIcon: IconButton(
+                                      onPressed: () =>
+                                          setState(() => _obscure = !_obscure),
+                                      icon: Icon(
+                                        _obscure
+                                            ? Icons.visibility
+                                            : Icons.visibility_off,
+                                      ),
+                                    ),
+                                  ),
+                                  validator: (v) {
+                                    if (v == null || v.isEmpty) {
+                                      return l10n.validationPasswordRequired;
+                                    }
+                                    if (v.length < 6) {
+                                      return l10n.validationMinChars('6');
+                                    }
+                                    return null;
+                                  },
+                                ),
+                                const SizedBox(height: 12),
+                                Row(
+                                  children: [
+                                    Checkbox(
+                                      value: _rememberMe,
+                                      onChanged: (value) {
+                                        setState(
+                                          () => _rememberMe = value ?? false,
+                                        );
+                                        if (!(value ?? false)) {
+                                          _secureStorage.delete(
+                                            key: _rememberEmailKey,
+                                          );
+                                        }
+                                      },
+                                    ),
+                                    Text(rememberLabel),
+                                  ],
+                                ),
+                                Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    TextButton(
+                                      onPressed: () {
+                                        context.push('/forgot');
+                                      },
+                                      child: Text(l10n.loginForgotPassword),
+                                    ),
+                                    TextButton.icon(
+                                      onPressed: () =>
+                                          setState(() => _passCtrl.clear()),
+                                      icon: const Icon(Icons.clear),
+                                      label: Text(l10n.clearButton),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 4),
+                                GradientButton(
+                                  text: l10n.loginButtonLabel,
+                                  onPressed: _loading ? null : _submit,
+                                  loading: _loading,
+                                  gradient: _warmGradient,
+                                  glass: true,
+                                ),
+                                const SizedBox(height: 18),
+                                Row(
+                                  children: [
+                                    const Expanded(child: Divider()),
+                                    Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 12,
+                                      ),
+                                      child: Text(
+                                        l10n.loginSocialDivider,
+                                        style: theme.textTheme.bodySmall
+                                            ?.copyWith(
+                                              color: theme
+                                                  .colorScheme.onSurface
+                                                  .withValues(alpha: 0.6),
+                                            ),
+                                      ),
+                                    ),
+                                    const Expanded(child: Divider()),
+                                  ],
+                                ),
+                                const SizedBox(height: 14),
+                                Align(
+                                  alignment: Alignment.center,
+                                  child: ConstrainedBox(
+                                    constraints: const BoxConstraints(
+                                      maxWidth: 360,
+                                    ),
+                                    child: Row(
+                                      children: [
+                                        Expanded(
+                                          child: OutlinedButton.icon(
+                                            onPressed:
+                                                _loading ||
+                                                        !_googleConfigOk ||
+                                                        !_firebaseReady
+                                                    ? null
+                                                    : () => _handleSocialAuth(
+                                                          _signInWithGoogle,
+                                                          provider: 'google',
+                                                        ),
+                                            icon: const CircleAvatar(
+                                              radius: 10,
+                                              backgroundColor: Color(
+                                                0xFFEA4335,
+                                              ),
+                                              child: Text(
+                                                'G',
+                                                style: TextStyle(
+                                                  color: Colors.white,
+                                                  fontSize: 12,
+                                                  fontWeight: FontWeight.w700,
+                                                ),
+                                              ),
+                                            ),
+                                            label: Text(
+                                              l10n.loginContinueWithGoogle,
+                                            ),
+                                            style: OutlinedButton.styleFrom(
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                vertical: 12,
+                                                horizontal: 10,
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                        const SizedBox(width: 12),
+                                        Expanded(
+                                          child: OutlinedButton.icon(
+                                            onPressed:
+                                                _loading ||
+                                                        !_appleConfigOk ||
+                                                        !_firebaseReady
+                                                    ? null
+                                                    : () => _handleSocialAuth(
+                                                          _signInWithApple,
+                                                          provider: 'apple',
+                                                        ),
+                                            icon: const Icon(Icons.apple),
+                                            label: Text(
+                                              l10n.loginContinueWithApple,
+                                            ),
+                                            style: OutlinedButton.styleFrom(
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                vertical: 12,
+                                                horizontal: 10,
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                                if (!_firebaseReady ||
+                                    !_googleConfigOk ||
+                                    !_appleConfigOk) ...[
+                                  const SizedBox(height: 10),
+                                  Text(
+                                    !_firebaseReady
+                                        ? l10n.firebaseConfigMissing
+                                        : (!_googleConfigOk
+                                            ? l10n
+                                                .googleConfigMissingIosScheme
+                                            : l10n.appleConfigMissing),
+                                    style: theme.textTheme.bodySmall?.copyWith(
+                                      color: theme.colorScheme.error,
+                                    ),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                ],
+                              ],
                             ),
                           ),
-                          textAlign: TextAlign.center,
                         ),
-                      ),
-                    ],
+                        const SizedBox(height: 18),
+                        SectionCard(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 18,
+                            vertical: 14,
+                          ),
+                          backgroundColor:
+                              theme.colorScheme.surface.withValues(alpha: 0.9),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                l10n.loginNoAccount,
+                                style: theme.textTheme.bodyMedium,
+                              ),
+                              const SizedBox(width: 8),
+                              TextButton(
+                                onPressed: () {
+                                  context.push('/register');
+                                },
+                                child: Text(l10n.registerButtonLabel),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 20),
+                        SectionCard(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 18,
+                            vertical: 12,
+                          ),
+                          backgroundColor:
+                              theme.colorScheme.surface.withValues(alpha: 0.86),
+                          child: Text(
+                            l10n.copyrightNotice,
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: theme.colorScheme.onSurface.withValues(
+                                alpha: 0.6,
+                              ),
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-              );
-            },
+                );
+              },
+            ),
           ),
-        ),
+        ],
       ),
     );
   }
 }
+
 
 class _FieldIcon extends StatelessWidget {
   const _FieldIcon({required this.icon});

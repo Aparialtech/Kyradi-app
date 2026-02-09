@@ -516,6 +516,71 @@ class ApiService {
     return response;
   }
 
+  // ───────────────────────────────────────────────────────────────────────────
+  // KYC / Identity verification (feature-flagged on backend)
+  static Future<Map<String, dynamic>> kycIdentityStart() async {
+    if (_usingMockBackend) {
+      return {
+        'ok': true,
+        'status': 'pending',
+        'requireSelfie': false,
+        'verificationId': 'mock-kyc',
+      };
+    }
+    final response = await _post('/me/verification/identity/start', {});
+    response['statusCode'] ??= response['_httpStatus'];
+    return response;
+  }
+
+  static Future<Map<String, dynamic>> kycIdentityStatus() async {
+    if (_usingMockBackend) {
+      return {
+        'ok': true,
+        'status': 'unverified',
+        'requireSelfie': false,
+        'missing': ['personal', 'id_front', 'id_back'],
+      };
+    }
+    final response = await _get('/me/verification/identity/status');
+    response['statusCode'] ??= response['_httpStatus'];
+    return response;
+  }
+
+  static Future<Map<String, dynamic>> kycSaveIdentityPersonal({
+    required String name,
+    required String surname,
+    required String tcNo,
+    required String birthDate, // YYYY-MM-DD
+  }) async {
+    if (_usingMockBackend) {
+      return {
+        'ok': true,
+        'status': 'pending',
+        'missing': ['id_front', 'id_back'],
+      };
+    }
+    final response = await _put('/me/verification/identity/personal', {
+      'name': name,
+      'surname': surname,
+      'tcNo': tcNo,
+      'birthDate': birthDate,
+    });
+    response['statusCode'] ??= response['_httpStatus'];
+    return response;
+  }
+
+  static Future<Map<String, dynamic>> kycSubmitIdentity() async {
+    if (_usingMockBackend) {
+      return {
+        'ok': true,
+        'status': 'pending_review',
+      };
+    }
+    final response = await _post('/me/verification/identity/submit', {});
+    response['statusCode'] ??= response['_httpStatus'];
+    return response;
+  }
+
   static Future<Map<String, dynamic>> getLocations() async {
     if (_usingMockBackend) return MockServer.getLocations();
     final result = await _get('/locations');
@@ -953,6 +1018,7 @@ class ApiService {
   static Future<Map<String, dynamic>> uploadIdentityDocument({
     required List<int> bytes,
     required String filename,
+    String? type,
   }) async {
     if (_usingMockBackend) {
       return {
@@ -961,9 +1027,15 @@ class ApiService {
         'filename': filename,
       };
     }
-    final uri = _buildUri('/uploads/identity');
+    var uri = _buildUri('/uploads/identity');
     if (uri == null) {
       return _missingBaseUrlError();
+    }
+    if (type != null && type.trim().isNotEmpty) {
+      uri = uri.replace(queryParameters: {
+        ...uri.queryParameters,
+        'type': type.trim(),
+      });
     }
     final request = http.MultipartRequest('POST', uri)
       ..headers.addAll(_plainHeaders())

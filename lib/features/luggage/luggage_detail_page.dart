@@ -13,7 +13,9 @@ import '../../services/api_service.dart';
 import '../bookings/widgets/trip_timeline_sheet.dart';
 import '../../widgets/app_notification.dart';
 import '../../widgets/section_card.dart';
+import '../../widgets/app_mesh_background.dart';
 import '../../utils/crash_log.dart';
+import '../../core/travel_companion_store.dart';
 import 'package:go_router/go_router.dart';
 import '../../screens/payment_page.dart';
 
@@ -40,6 +42,8 @@ class _LuggageDetailPageState extends State<LuggageDetailPage> {
   String? _userId;
   String? _customerName;
   String? _customerEmail;
+  FlightInfo? _flightInfo;
+  TravelSuggestion? _travelSuggestion;
 
   @override
   void initState() {
@@ -85,9 +89,18 @@ class _LuggageDetailPageState extends State<LuggageDetailPage> {
         (item) => item.id == widget.luggageId,
         orElse: () => widget.initial ?? items.first,
       );
+      final flight = await TravelCompanionStore.loadFlightInfo(match.id);
+      final suggestion = flight == null
+          ? null
+          : TravelCompanionStore.buildSuggestion(
+              locationName: match.dropLocationName,
+              flightAt: flight.flightAt,
+            );
       if (!mounted) return;
       setState(() {
         _luggage = match;
+        _flightInfo = flight;
+        _travelSuggestion = suggestion;
         _loading = false;
       });
     } catch (e) {
@@ -210,211 +223,271 @@ class _LuggageDetailPageState extends State<LuggageDetailPage> {
     final loc = AppLocalizations.of(context)!;
     if (_loading) {
       return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
+        backgroundColor: Colors.transparent,
+        body: Stack(
+          children: [
+            AppMeshBackground(),
+            Center(child: CircularProgressIndicator()),
+          ],
+        ),
       );
     }
     if (_error != null || _luggage == null) {
       return Scaffold(
+        backgroundColor: Colors.transparent,
         appBar: AppBar(title: Text(loc.myLuggages)),
-        body: Center(
-          child: Text(
-            _error == 'USER_ID_MISSING'
-                ? loc.userIdMissing
-                : loc.luggageEmptyStateNoItems,
-          ),
+        body: Stack(
+          children: [
+            const AppMeshBackground(),
+            Center(
+              child: Text(
+                _error == 'USER_ID_MISSING'
+                    ? loc.userIdMissing
+                    : loc.luggageEmptyStateNoItems,
+              ),
+            ),
+          ],
         ),
       );
     }
     final luggage = _luggage!;
     return Scaffold(
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
         title: Text(luggage.displayLabel),
       ),
-      body: ListView(
-        padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
+      body: Stack(
         children: [
-          SectionCard(
-            child: Theme(
-              data: Theme.of(context).copyWith(
-                dividerColor: Colors.transparent,
-              ),
-              child: ExpansionTile(
-                tilePadding: EdgeInsets.zero,
-                childrenPadding: const EdgeInsets.only(top: 12),
-                title: Text(
-                  loc.reservationInfoTitle,
-                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                        fontWeight: FontWeight.w700,
-                      ),
-                ),
-                subtitle: Text(loc.reservationInfoSubtitle),
-                leading: const ThreeDIconBadge(
-                  icon: Icons.info_outline,
-                ),
-                children: [
-                  _InfoRow(
-                    label: loc.luggageIdLabel,
-                    value: luggage.id,
+          const AppMeshBackground(),
+          ListView(
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
+            children: [
+              SectionCard(
+                child: Theme(
+                  data: Theme.of(context).copyWith(
+                    dividerColor: Colors.transparent,
                   ),
-                  _InfoRow(
-                    label: loc.statusLabel,
-                    value: _statusLabel(loc, luggage.status),
-                  ),
-                  _InfoRow(
-                    label: loc.paymentStatusLabel,
-                    value: _paymentStatusLabel(loc, luggage.paymentStatus),
-                  ),
-                  _InfoRow(
-                    label: loc.paymentMethodTitle,
-                    value: _paymentMethodLabel(loc, luggage),
-                  ),
-                  _InfoRow(
-                    label: loc.createdAtTitle,
-                    value: _formatDateTime(luggage.createdAt, context),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          const SizedBox(height: 16),
-          SectionCard(
-            child: Theme(
-              data: Theme.of(context).copyWith(
-                dividerColor: Colors.transparent,
-              ),
-              child: ExpansionTile(
-                tilePadding: EdgeInsets.zero,
-                childrenPadding: const EdgeInsets.only(top: 12),
-                title: Text(
-                  loc.luggageInfoSectionTitle,
-                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                        fontWeight: FontWeight.w700,
-                      ),
-                ),
-                subtitle: Text(loc.luggageInfoSectionSubtitle),
-                leading: const ThreeDIconBadge(
-                  icon: Icons.inventory_2_outlined,
-                ),
-                children: [
-                  _InfoRow(
-                    label: loc.luggageInfoLabelSize,
-                    value: _sizeLabel(loc, luggage.size),
-                  ),
-                  _InfoRow(
-                    label: loc.luggageInfoLabelWeight,
-                    value: luggage.weight ?? '-',
-                  ),
-                  _InfoRow(
-                    label: loc.luggageInfoLabelColor,
-                    value: _colorLabel(loc, luggage.color),
-                  ),
-                  _InfoRow(
-                    label: loc.locationLabel,
-                    value: luggage.dropLocationName.isNotEmpty
-                        ? luggage.dropLocationName
-                        : luggage.dropLocationId,
-                  ),
-                  _InfoRow(
-                    label: loc.dropTimeTitle,
-                    value: luggage.scheduledDropTime == null
-                        ? '-'
-                        : _formatDateTime(luggage.scheduledDropTime!, context),
-                  ),
-                  _InfoRow(
-                    label: loc.pickupTimeTitle,
-                    value: luggage.scheduledPickupTime == null
-                        ? '-'
-                        : _formatDateTime(luggage.scheduledPickupTime!, context),
-                  ),
-                  if ((luggage.note ?? '').isNotEmpty)
-                    _InfoRow(
-                      label: loc.note,
-                      value: luggage.note ?? '',
+                  child: ExpansionTile(
+                    tilePadding: EdgeInsets.zero,
+                    childrenPadding: const EdgeInsets.only(top: 12),
+                    title: Text(
+                      loc.reservationInfoTitle,
+                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                            fontWeight: FontWeight.w700,
+                          ),
                     ),
-                ],
-              ),
-            ),
-          ),
-          const SizedBox(height: 16),
-          ListTile(
-            contentPadding: EdgeInsets.zero,
-            title: Text(_statusLabel(loc, luggage.status)),
-            subtitle: Text(luggage.dropLocationName.isNotEmpty
-                ? luggage.dropLocationName
-                : luggage.dropLocationId),
-          ),
-          const SizedBox(height: 12),
-          FilledButton.icon(
-            onPressed: () {
-              context.push('/luggage/${luggage.id}/qr', extra: luggage);
-            },
-            icon: const Icon(Icons.qr_code),
-            label: Text(loc.luggageShowQr),
-          ),
-          const SizedBox(height: 12),
-          OutlinedButton.icon(
-            onPressed: () => _showTimeline(luggage),
-            icon: const Icon(Icons.timeline),
-            label: Text(loc.detailsAction),
-          ),
-          const SizedBox(height: 12),
-          SectionCard(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                SectionHeader(
-                  title: loc.invoiceSectionTitle,
-                  subtitle: loc.invoiceSectionSubtitle,
-                  iconWidget: const ThreeDIconBadge(
-                    icon: Icons.receipt_long_outlined,
+                    subtitle: Text(loc.reservationInfoSubtitle),
+                    leading: const ThreeDIconBadge(
+                      icon: Icons.info_outline,
+                    ),
+                    children: [
+                      _InfoRow(
+                        label: loc.luggageIdLabel,
+                        value: luggage.id,
+                      ),
+                      _InfoRow(
+                        label: loc.statusLabel,
+                        value: _statusLabel(loc, luggage.status),
+                      ),
+                      _InfoRow(
+                        label: loc.paymentStatusLabel,
+                        value: _paymentStatusLabel(loc, luggage.paymentStatus),
+                      ),
+                      _InfoRow(
+                        label: loc.paymentMethodTitle,
+                        value: _paymentMethodLabel(loc, luggage),
+                      ),
+                      _InfoRow(
+                        label: loc.createdAtTitle,
+                        value: _formatDateTime(luggage.createdAt, context),
+                      ),
+                    ],
                   ),
                 ),
-                const SizedBox(height: 12),
-                _InfoRow(
-                  label: loc.invoiceAmountLabel,
-                  value: luggage.totalPrice == null
-                      ? '-'
-                      : '${luggage.totalPrice} ₺',
+              ),
+              const SizedBox(height: 16),
+              if (_flightInfo != null && _travelSuggestion != null)
+                SectionCard(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const SectionHeader(
+                        title: 'Travel Companion',
+                        subtitle: 'Uçuşuna göre hatırlatma ve öneriler.',
+                        iconWidget: ThreeDIconBadge(
+                          icon: Icons.flight_takeoff_rounded,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      _InfoRow(
+                        label: 'Havayolu',
+                        value: _flightInfo!.airline,
+                      ),
+                      _InfoRow(
+                        label: 'Uçuş Saati',
+                        value: _formatDateTime(_flightInfo!.flightAt, context),
+                      ),
+                      _InfoRow(
+                        label: 'Önerilen Bavul Alma',
+                        value: _formatDateTime(
+                          _travelSuggestion!.recommendedPickup,
+                          context,
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        'Öneri: ${_travelSuggestion!.typeLabel} bölgesinde ortalama ${_travelSuggestion!.transferMinutes} dk transfer süresi.',
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              color:
+                                  Theme.of(context).colorScheme.onSurfaceVariant,
+                            ),
+                      ),
+                    ],
+                  ),
                 ),
-                _InfoRow(
-                  label: loc.invoicePaymentMethodLabel,
-                  value: _paymentMethodLabel(loc, luggage),
+              if (_flightInfo != null && _travelSuggestion != null)
+                const SizedBox(height: 16),
+              SectionCard(
+                child: Theme(
+                  data: Theme.of(context).copyWith(
+                    dividerColor: Colors.transparent,
+                  ),
+                  child: ExpansionTile(
+                    tilePadding: EdgeInsets.zero,
+                    childrenPadding: const EdgeInsets.only(top: 12),
+                    title: Text(
+                      loc.luggageInfoSectionTitle,
+                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                            fontWeight: FontWeight.w700,
+                          ),
+                    ),
+                    subtitle: Text(loc.luggageInfoSectionSubtitle),
+                    leading: const ThreeDIconBadge(
+                      icon: Icons.inventory_2_outlined,
+                    ),
+                    children: [
+                      _InfoRow(
+                        label: loc.luggageInfoLabelSize,
+                        value: _sizeLabel(loc, luggage.size),
+                      ),
+                      _InfoRow(
+                        label: loc.luggageInfoLabelWeight,
+                        value: luggage.weight ?? '-',
+                      ),
+                      _InfoRow(
+                        label: loc.luggageInfoLabelColor,
+                        value: _colorLabel(loc, luggage.color),
+                      ),
+                      _InfoRow(
+                        label: loc.locationLabel,
+                        value: luggage.dropLocationName.isNotEmpty
+                            ? luggage.dropLocationName
+                            : luggage.dropLocationId,
+                      ),
+                      _InfoRow(
+                        label: loc.dropTimeTitle,
+                        value: luggage.scheduledDropTime == null
+                            ? '-'
+                            : _formatDateTime(luggage.scheduledDropTime!, context),
+                      ),
+                      _InfoRow(
+                        label: loc.pickupTimeTitle,
+                        value: luggage.scheduledPickupTime == null
+                            ? '-'
+                            : _formatDateTime(
+                                luggage.scheduledPickupTime!, context),
+                      ),
+                      if ((luggage.note ?? '').isNotEmpty)
+                        _InfoRow(
+                          label: loc.note,
+                          value: luggage.note ?? '',
+                        ),
+                    ],
+                  ),
                 ),
-                _InfoRow(
-                  label: loc.invoicePaymentStatusLabel,
-                  value: _paymentStatusLabel(loc, luggage.paymentStatus),
+              ),
+              const SizedBox(height: 16),
+              ListTile(
+                contentPadding: EdgeInsets.zero,
+                title: Text(_statusLabel(loc, luggage.status)),
+                subtitle: Text(luggage.dropLocationName.isNotEmpty
+                    ? luggage.dropLocationName
+                    : luggage.dropLocationId),
+              ),
+              const SizedBox(height: 12),
+              FilledButton.icon(
+                onPressed: () {
+                  context.push('/luggage/${luggage.id}/qr', extra: luggage);
+                },
+                icon: const Icon(Icons.qr_code),
+                label: Text(loc.luggageShowQr),
+              ),
+              const SizedBox(height: 12),
+              OutlinedButton.icon(
+                onPressed: () => _showTimeline(luggage),
+                icon: const Icon(Icons.timeline),
+                label: Text(loc.detailsAction),
+              ),
+              const SizedBox(height: 12),
+              SectionCard(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    SectionHeader(
+                      title: loc.invoiceSectionTitle,
+                      subtitle: loc.invoiceSectionSubtitle,
+                      iconWidget: const ThreeDIconBadge(
+                        icon: Icons.receipt_long_outlined,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    _InfoRow(
+                      label: loc.invoiceAmountLabel,
+                      value: luggage.totalPrice == null
+                          ? '-'
+                          : '${luggage.totalPrice} ₺',
+                    ),
+                    _InfoRow(
+                      label: loc.invoicePaymentMethodLabel,
+                      value: _paymentMethodLabel(loc, luggage),
+                    ),
+                    _InfoRow(
+                      label: loc.invoicePaymentStatusLabel,
+                      value: _paymentStatusLabel(loc, luggage.paymentStatus),
+                    ),
+                    const SizedBox(height: 12),
+                    FilledButton.icon(
+                      onPressed: () => _showInvoice(context, luggage),
+                      icon: const Icon(Icons.picture_as_pdf_outlined),
+                      label: Text(loc.invoiceShowAction),
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 12),
-                FilledButton.icon(
-                  onPressed: () => _showInvoice(context, luggage),
-                  icon: const Icon(Icons.picture_as_pdf_outlined),
-                  label: Text(loc.invoiceShowAction),
+              ),
+              if (luggage.isAwaitingDrop)
+                FilledButton(
+                  onPressed: _updating ? null : () => _updateStatus('dropped'),
+                  child: _updating
+                      ? const SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : Text(loc.luggageDropAction),
                 ),
-              ],
-            ),
+              if (luggage.isDropped)
+                FilledButton(
+                  onPressed: _updating ? null : () => _updateStatus('picked_up'),
+                  child: _updating
+                      ? const SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : Text(loc.luggagePickupAction),
+                ),
+            ],
           ),
-          if (luggage.isAwaitingDrop)
-            FilledButton(
-              onPressed: _updating ? null : () => _updateStatus('dropped'),
-              child: _updating
-                  ? const SizedBox(
-                      height: 20,
-                      width: 20,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : Text(loc.luggageDropAction),
-            ),
-          if (luggage.isDropped)
-            FilledButton(
-              onPressed: _updating ? null : () => _updateStatus('picked_up'),
-              child: _updating
-                  ? const SizedBox(
-                      height: 20,
-                      width: 20,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : Text(loc.luggagePickupAction),
-            ),
         ],
       ),
     );

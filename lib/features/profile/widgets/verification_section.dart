@@ -7,10 +7,12 @@ class VerificationSection extends StatelessWidget {
   const VerificationSection({
     super.key,
     required this.status,
+    this.identityVerified = false,
     required this.onManage,
   });
 
   final String status;
+  final bool identityVerified;
   final VoidCallback onManage;
 
   @override
@@ -18,9 +20,9 @@ class VerificationSection extends StatelessWidget {
     final theme = Theme.of(context);
     final loc = AppLocalizations.of(context)!;
     final resolved = status.isEmpty ? 'unverified' : status;
-    final isVerified = resolved == 'verified';
+    final isEmailVerified = resolved == 'verified';
     final isPending = resolved == 'pending';
-    final statusColor = isVerified
+    final emailColor = isEmailVerified
         ? theme.colorScheme.primary
         : isPending
             ? theme.colorScheme.tertiary
@@ -37,39 +39,63 @@ class VerificationSection extends StatelessWidget {
           Row(
             children: [
               Icon(
-                isVerified
-                    ? Icons.verified
+                isEmailVerified
+                    ? Icons.mark_email_read_outlined
                     : isPending
                         ? Icons.pending_actions
-                        : Icons.warning_amber_outlined,
-                color: statusColor,
+                        : Icons.mark_email_unread_outlined,
+                color: emailColor,
               ),
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
-                  isVerified
-                      ? loc.verificationStatusVerified
+                  isEmailVerified
+                      ? loc.emailVerifiedLabel
                       : isPending
-                          ? loc.verificationStatusPending
-                          : loc.verificationStatusRequired,
+                          ? loc.emailPendingLabel
+                          : loc.emailVerificationNeededLabel,
                   style: theme.textTheme.bodySmall?.copyWith(
-                    color: statusColor,
+                    color: emailColor,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
               ),
               AppBadge(
-                label: isVerified
+                label: isEmailVerified
                     ? loc.verificationBadgeVerified
                     : isPending
                         ? loc.verificationBadgePending
                         : loc.verificationBadgeNew,
-                color: statusColor,
+                color: emailColor,
               ),
-              const SizedBox(width: 6),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              Icon(
+                identityVerified ? Icons.verified : Icons.badge_outlined,
+                color: identityVerified
+                    ? theme.colorScheme.primary
+                    : theme.colorScheme.onSurfaceVariant,
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  identityVerified
+                      ? loc.identityVerifiedLabel
+                      : loc.identityVerificationNeededLabel,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: identityVerified
+                        ? theme.colorScheme.primary
+                        : theme.colorScheme.onSurfaceVariant,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
               TextButton(
                 onPressed: onManage,
-                child: Text(isVerified ? loc.viewAction : loc.manageAction),
+                child: Text(loc.manageAction),
               ),
             ],
           ),

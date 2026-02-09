@@ -7,6 +7,7 @@ import '../../models/luggage.dart';
 import '../../services/luggage_service.dart';
 import '../../screens/payment_page.dart';
 import '../../widgets/app_notification.dart';
+import '../../widgets/app_mesh_background.dart';
 
 class QrScanPage extends StatefulWidget {
   const QrScanPage({
@@ -252,67 +253,75 @@ class _QrScanPageState extends State<QrScanPage> {
     final loc = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
     return Scaffold(
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
         title: Text(loc.qrScanTitle),
       ),
-      body: Column(
+      body: Stack(
         children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
-            child: Text(
-              widget.autoReturn ? loc.qrScanTip : loc.qrScanGuide,
-              textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.bodyMedium,
-            ),
-          ),
-          if (!widget.autoReturn)
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 4, 16, 12),
-              child: SegmentedButton<_QrMode>(
-                segments: [
-                  ButtonSegment(
-                    value: _QrMode.scan,
-                    icon: const Icon(Icons.qr_code_scanner),
-                    label: Text(loc.qrScanAction),
+          const AppMeshBackground(),
+          SafeArea(
+            child: Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+                  child: Text(
+                    widget.autoReturn ? loc.qrScanTip : loc.qrScanGuide,
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context).textTheme.bodyMedium,
                   ),
-                  ButtonSegment(
-                    value: _QrMode.manual,
-                    icon: const Icon(Icons.edit),
-                    label: Text(loc.qrManualEntry),
-                  ),
-                ],
-                selected: {_mode},
-                onSelectionChanged: (value) {
-                  setState(() => _mode = value.first);
-                },
-              ),
-            ),
-          Expanded(
-            child: _mode == _QrMode.scan || widget.autoReturn
-                ? MobileScanner(
-                    controller: _controller,
-                    onDetect: _onDetect,
-                  )
-                : _ManualEntryPanel(
-                    controller: _manualController,
-                    focusNode: _manualFocus,
-                    onSubmit: _manualSubmit,
-                  ),
-          ),
-          if (!widget.autoReturn)
-            AnimatedSwitcher(
-              duration: const Duration(milliseconds: 200),
-              child: _loading
-                  ? Padding(
-                      padding: const EdgeInsets.only(bottom: 16),
-                      child: CircularProgressIndicator(
-                        valueColor: AlwaysStoppedAnimation<Color>(
-                          theme.colorScheme.primary,
+                ),
+                if (!widget.autoReturn)
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 4, 16, 12),
+                    child: SegmentedButton<_QrMode>(
+                      segments: [
+                        ButtonSegment(
+                          value: _QrMode.scan,
+                          icon: const Icon(Icons.qr_code_scanner),
+                          label: Text(loc.qrScanAction),
                         ),
-                      ),
-                    )
-                  : _buildResultCard(context),
+                        ButtonSegment(
+                          value: _QrMode.manual,
+                          icon: const Icon(Icons.edit),
+                          label: Text(loc.qrManualEntry),
+                        ),
+                      ],
+                      selected: {_mode},
+                      onSelectionChanged: (value) {
+                        setState(() => _mode = value.first);
+                      },
+                    ),
+                  ),
+                Expanded(
+                  child: _mode == _QrMode.scan || widget.autoReturn
+                      ? MobileScanner(
+                          controller: _controller,
+                          onDetect: _onDetect,
+                        )
+                      : _ManualEntryPanel(
+                          controller: _manualController,
+                          focusNode: _manualFocus,
+                          onSubmit: _manualSubmit,
+                        ),
+                ),
+                if (!widget.autoReturn)
+                  AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 200),
+                    child: _loading
+                        ? Padding(
+                            padding: const EdgeInsets.only(bottom: 16),
+                            child: CircularProgressIndicator(
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                theme.colorScheme.primary,
+                              ),
+                            ),
+                          )
+                        : _buildResultCard(context),
+                  ),
+              ],
             ),
+          ),
         ],
       ),
     );

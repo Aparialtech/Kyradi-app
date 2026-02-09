@@ -3,7 +3,10 @@ import { NestExpressApplication } from '@nestjs/platform-express';
 import { AppModule } from './app.module';
 import { join } from 'path';
 import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
-import { Logger } from '@nestjs/common';
+import { Logger, ValidationPipe } from '@nestjs/common';
+import helmet from 'helmet';
+import mongoSanitize from 'express-mongo-sanitize';
+import express from 'express';
 
 async function bootstrap() {
   const logger = new Logger('Bootstrap');
@@ -32,6 +35,12 @@ async function bootstrap() {
     'CHAT_TIMEOUT_MS',
     'EXPOSE_RESET_CODE',
     'EXPOSE_VERIFICATION_CODE',
+    'KYC_ENABLED',
+    'KYC_REQUIRE_SELFIE',
+    'KYC_AUTO_APPROVE_IN_DEV',
+    'KYC_DOC_RETENTION_DAYS',
+    'KYC_MAX_UPLOAD_MB',
+    'ADMIN_API_KEY',
     'BUILT_AT',
     'GIT_SHA',
     'RAILWAY_GIT_COMMIT_SHA',
@@ -57,7 +66,56 @@ async function bootstrap() {
   }
 
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
-  app.enableCors();
+  const trustProxy = (process.env.TRUST_PROXY ?? '1').toString();
+  if (trustProxy) {
+    app.set('trust proxy', trustProxy === 'true' ? 1 : Number(trustProxy) || 1);
+  }
+
+  app.disable('x-powered-by');
+  app.use(
+    helmet({
+      contentSecurityPolicy: false,
+      crossOriginEmbedderPolicy: false,
+      referrerPolicy: { policy: 'no-referrer' },
+      hsts: isProd
+        ? {
+            maxAge: 15552000,
+            includeSubDomains: true,
+          }
+        : false,
+    }),
+  );
+
+  const jsonLimitMb = Number(process.env.JSON_BODY_LIMIT_MB ?? 1);
+  const jsonLimit = `${jsonLimitMb}mb`;
+  app.use(express.json({ limit: jsonLimit }));
+  app.use(express.urlencoded({ extended: true, limit: jsonLimit }));
+  app.use(mongoSanitize());
+
+  const allowList = (process.env.CORS_ORIGINS ?? '')
+    .split(',')
+    .map((value) => value.trim())
+    .filter(Boolean);
+  app.enableCors({
+    origin: (origin, callback) => {
+      if (!origin) return callback(null, true);
+      if (allowList.length === 0) return callback(null, true);
+      if (allowList.includes(origin)) return callback(null, true);
+      return callback(new Error('CORS_NOT_ALLOWED'), false);
+    },
+    credentials: false,
+  });
+
+  const forbidUnknown =
+    (process.env.VALIDATION_FORBID_NON_WHITELISTED ?? '').toLowerCase() === 'true';
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true,
+      transform: true,
+      forbidNonWhitelisted: forbidUnknown,
+    }),
+  );
+
   app.useGlobalFilters(new AllExceptionsFilter());
   app.useStaticAssets(join(process.cwd(), 'uploads'), {
     prefix: '/uploads/',

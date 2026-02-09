@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../ui/components/app_back_app_bar.dart';
+import '../widgets/app_mesh_background.dart';
 
 class SplashPage extends StatefulWidget {
   const SplashPage({super.key});
@@ -52,11 +53,14 @@ class _SplashPageState extends State<SplashPage>
 
     return Scaffold(
       appBar: buildBackAppBar(context),
-      backgroundColor: const Color(0xFF2C3E50), // koyu arka plan
-      body: SafeArea(
-        child: Column(
-          children: [
-            const SizedBox(height: 24),
+      backgroundColor: Colors.transparent,
+      body: Stack(
+        children: [
+          const AppMeshBackground(),
+          SafeArea(
+            child: Column(
+              children: [
+                const SizedBox(height: 24),
 
             // LOGO + marka
             Expanded(
@@ -157,18 +161,20 @@ class _SplashPageState extends State<SplashPage>
             const SizedBox(height: 28),
 
             // FOOTER (her zaman görünsün)
-            Padding(
-              padding: const EdgeInsets.only(bottom: 16.0),
-              child: Text(
-                '2025 © aparial.com',
-                style: theme.textTheme.labelMedium?.copyWith(
-                  color: Colors.white.withValues(alpha: 0.65),
-                  letterSpacing: 0.2,
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 16.0),
+                  child: Text(
+                    '2025 © aparial.com',
+                    style: theme.textTheme.labelMedium?.copyWith(
+                      color: Colors.white.withValues(alpha: 0.65),
+                      letterSpacing: 0.2,
+                    ),
+                  ),
                 ),
-              ),
+              ],
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

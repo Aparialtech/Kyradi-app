@@ -12,6 +12,7 @@ import '../../ui/components/app_skeleton.dart';
 import '../../widgets/app_notification.dart';
 import '../../utils/crash_log.dart';
 import '../../core/ios/ios_config_service.dart';
+import '../../widgets/app_mesh_background.dart';
 import 'widgets/explore_filter_sheet.dart';
 import 'widgets/explore_toggle_bar.dart';
 import 'widgets/explore_top_bar.dart';
@@ -377,61 +378,67 @@ class _ExplorePageState extends State<ExplorePage> {
     final sorted = _sortedLocations(filtered);
     final paged = _pagedLocations(sorted);
     return Scaffold(
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
         toolbarHeight: 0,
         elevation: 0,
         backgroundColor: Colors.transparent,
         surfaceTintColor: Colors.transparent,
       ),
-      body: SafeArea(
-        bottom: false,
-        child: Column(
-          children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
-              child: Column(
-                children: [
-                  ExploreTopBar(
-                    controller: _searchCtrl,
-                    hintText: loc.findLocation,
-                    title: loc.findLocation,
-                    subtitle: 'Yakındaki KYRADI noktalarını keşfet',
-                    onFilterTap: _openFilterSheet,
-                    onChanged: (value) => setState(() {
-                      _query = value;
-                      _page = 1;
-                    }),
+      body: Stack(
+        children: [
+          const AppMeshBackground(),
+          SafeArea(
+            bottom: false,
+            child: Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+                  child: Column(
+                    children: [
+                      ExploreTopBar(
+                        controller: _searchCtrl,
+                        hintText: loc.findLocation,
+                        title: loc.findLocation,
+                        subtitle: 'Yakındaki KYRADI noktalarını keşfet',
+                        onFilterTap: _openFilterSheet,
+                        onChanged: (value) => setState(() {
+                          _query = value;
+                          _page = 1;
+                        }),
+                      ),
+                      const SizedBox(height: 12),
+                      ExploreToggleBar(
+                        showMap: _showMap,
+                        onChanged: _handleMapToggle,
+                        listLabel: 'Liste',
+                        mapLabel: 'Harita',
+                      ),
+                      const SizedBox(height: 12),
+                      _SortBar(
+                        selected: _sort,
+                        totalCount: filtered.length,
+                        onChanged: (value) => setState(() {
+                          _sort = value;
+                          _page = 1;
+                        }),
+                      ),
+                    ],
                   ),
-                  const SizedBox(height: 12),
-                  ExploreToggleBar(
-                    showMap: _showMap,
-                    onChanged: _handleMapToggle,
-                    listLabel: 'Liste',
-                    mapLabel: 'Harita',
+                ),
+                const Divider(height: 1),
+                Expanded(
+                  child: AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 250),
+                    child: _showMap
+                        ? _buildMapView(sorted)
+                        : _buildListView(paged, filtered.length),
                   ),
-                  const SizedBox(height: 12),
-                  _SortBar(
-                    selected: _sort,
-                    totalCount: filtered.length,
-                    onChanged: (value) => setState(() {
-                      _sort = value;
-                      _page = 1;
-                    }),
-                  ),
-                ],
-              ),
+                ),
+              ],
             ),
-            const Divider(height: 1),
-            Expanded(
-              child: AnimatedSwitcher(
-                duration: const Duration(milliseconds: 250),
-                child: _showMap
-                    ? _buildMapView(sorted)
-                    : _buildListView(paged, filtered.length),
-              ),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

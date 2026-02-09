@@ -5,6 +5,7 @@ import 'package:path_provider/path_provider.dart';
 import '../../../models/user.dart';
 import '../../../services/api_service.dart';
 import '../../../widgets/app_notification.dart';
+import '../../../widgets/app_mesh_background.dart';
 import '../../../widgets/section_card.dart';
 import '../../../core/profile_avatar_cache.dart';
 import '../../../l10n/app_localizations.dart';
@@ -147,7 +148,8 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
       if (!mounted) return;
       if (res['ok'] == true || (res['statusCode'] ?? 0) == 200) {
         final cacheValue = (avatarUrl.isNotEmpty) ? avatarUrl : _avatarPath;
-        await ProfileAvatarCache.set(widget.user.id, cacheValue);
+        final resolvedCache = cacheValue != null ? _resolveAvatarUrl(cacheValue) : null;
+        await ProfileAvatarCache.set(widget.user.id, resolvedCache);
         AppNotification.show(
           context,
           message: loc.profileSavedMessage,
@@ -175,11 +177,26 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
     }
   }
 
+  String _resolveAvatarUrl(String value) {
+    final trimmed = value.trim();
+    if (trimmed.isEmpty) return trimmed;
+    if (trimmed.startsWith('http')) return trimmed;
+    if (File(trimmed).existsSync()) return trimmed;
+    final base = ApiService.baseUrl;
+    if (base.isEmpty) return trimmed;
+    if (trimmed.startsWith('/')) {
+      return base.endsWith('/')
+          ? '${base.substring(0, base.length - 1)}$trimmed'
+          : '$base$trimmed';
+    }
+    return trimmed;
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final loc = AppLocalizations.of(context)!;
-    final resolvedPath = _avatarPath?.trim() ?? '';
+    final resolvedPath = _resolveAvatarUrl(_avatarPath ?? '');
     final isRemote = resolvedPath.startsWith('http');
     final hasLocal = resolvedPath.isNotEmpty && File(resolvedPath).existsSync();
     final hasAvatar = isRemote || hasLocal;
@@ -187,6 +204,7 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
         ? NetworkImage(resolvedPath)
         : (hasLocal ? FileImage(File(resolvedPath)) : null);
     return Scaffold(
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
         title: Text(loc.profileEditTitle),
         actions: [
@@ -202,173 +220,184 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
           ),
         ],
       ),
-      body: ListView(
-        padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
+      body: Stack(
         children: [
-          SectionCard(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                SectionHeader(
-                  title: loc.profilePhotoSectionTitle,
-                  subtitle: loc.profilePhotoSectionSubtitle,
-                  icon: Icons.photo_camera_outlined,
-                ),
-                const SizedBox(height: 14),
-                Row(
+          const AppMeshBackground(),
+          ListView(
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
+            children: [
+              SectionCard(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    CircleAvatar(
-                      radius: 36,
-                      backgroundColor: Colors.transparent,
-                      child: Container(
-                        padding: const EdgeInsets.all(2),
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          gradient: LinearGradient(
-                            colors: [
-                              theme.colorScheme.primary.withValues(alpha: 0.9),
-                              theme.colorScheme.secondary.withValues(alpha: 0.8),
-                            ],
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                          ),
-                        ),
-                        child: CircleAvatar(
-                          radius: 34,
-                          backgroundColor:
-                              theme.colorScheme.primary.withValues(alpha: 0.12),
-                          backgroundImage: avatarImage,
-                          child: _avatarPath == null || _avatarPath!.isEmpty
-                              ? Icon(
-                                  Icons.person,
-                                  color: theme.colorScheme.primary,
-                                  size: 30,
-                                )
-                              : null,
-                        ),
-                      ),
+                    SectionHeader(
+                      title: loc.profilePhotoSectionTitle,
+                      subtitle: loc.profilePhotoSectionSubtitle,
+                      icon: Icons.photo_camera_outlined,
                     ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            loc.profilePhotoUploadTitle,
-                            style: theme.textTheme.titleSmall?.copyWith(
-                              fontWeight: FontWeight.w700,
+                    const SizedBox(height: 14),
+                    Row(
+                      children: [
+                        CircleAvatar(
+                          radius: 36,
+                          backgroundColor: Colors.transparent,
+                          child: Container(
+                            padding: const EdgeInsets.all(2),
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              gradient: LinearGradient(
+                                colors: [
+                                  theme.colorScheme.primary
+                                      .withValues(alpha: 0.9),
+                                  theme.colorScheme.secondary
+                                      .withValues(alpha: 0.8),
+                                ],
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                              ),
+                            ),
+                            child: CircleAvatar(
+                              radius: 34,
+                              backgroundColor: theme.colorScheme.primary
+                                  .withValues(alpha: 0.12),
+                              backgroundImage: avatarImage,
+                              child: _avatarPath == null || _avatarPath!.isEmpty
+                                  ? Icon(
+                                      Icons.person,
+                                      color: theme.colorScheme.primary,
+                                      size: 30,
+                                    )
+                                  : null,
                             ),
                           ),
-                          const SizedBox(height: 6),
-                          Text(
-                            loc.profilePhotoUploadHint,
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              color: theme.colorScheme.onSurfaceVariant,
-                            ),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                loc.profilePhotoUploadTitle,
+                                style: theme.textTheme.titleSmall?.copyWith(
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                              const SizedBox(height: 6),
+                              Text(
+                                loc.profilePhotoUploadHint,
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                  color: theme.colorScheme.onSurfaceVariant,
+                                ),
+                              ),
+                              const SizedBox(height: 10),
+                              OutlinedButton.icon(
+                                onPressed: _saving ? null : _pickAvatar,
+                                icon: const Icon(Icons.upload),
+                                label: Text(loc.profilePhotoSelectAction),
+                              ),
+                            ],
                           ),
-                          const SizedBox(height: 10),
-                          OutlinedButton.icon(
-                            onPressed: _saving ? null : _pickAvatar,
-                            icon: const Icon(Icons.upload),
-                            label: Text(loc.profilePhotoSelectAction),
-                          ),
-                        ],
+                        ),
+                      ],
+                    ),
+                    if (_saving) ...[
+                      const SizedBox(height: 12),
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(999),
+                        child: const LinearProgressIndicator(),
                       ),
+                    ],
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
+              SectionCard(
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      SectionHeader(
+                        title: loc.profilePersonalSectionTitle,
+                        subtitle: loc.profilePersonalSectionSubtitle,
+                        icon: Icons.badge_outlined,
+                      ),
+                      const SizedBox(height: 16),
+                      TextFormField(
+                        controller: _nameCtrl,
+                        decoration:
+                            InputDecoration(labelText: loc.profileFirstNameLabel),
+                        validator: (value) {
+                          if (value == null || value.trim().isEmpty) {
+                            return loc.validationRequired;
+                          }
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 12),
+                      TextFormField(
+                        controller: _surCtrl,
+                        decoration:
+                            InputDecoration(labelText: loc.profileLastNameLabel),
+                        validator: (value) {
+                          if (value == null || value.trim().isEmpty) {
+                            return loc.validationRequired;
+                          }
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 12),
+                      TextFormField(
+                        controller: _birthCtrl,
+                        decoration:
+                            InputDecoration(labelText: loc.profileBirthDateLabel),
+                      ),
+                      const SizedBox(height: 12),
+                      TextFormField(
+                        controller: _nationalIdCtrl,
+                        decoration: InputDecoration(
+                            labelText: loc.profileNationalIdLabel),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              SectionCard(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    SectionHeader(
+                      title: loc.profileContactSectionTitle,
+                      subtitle: loc.profileContactSectionSubtitle,
+                      icon: Icons.contact_phone_outlined,
+                    ),
+                    const SizedBox(height: 16),
+                    TextFormField(
+                      controller: _phoneCtrl,
+                      decoration: InputDecoration(labelText: loc.profilePhoneLabel),
+                    ),
+                    const SizedBox(height: 12),
+                    TextFormField(
+                      controller: _addressCtrl,
+                      decoration: InputDecoration(labelText: loc.profileAddressLabel),
+                      maxLines: 2,
                     ),
                   ],
                 ),
-                if (_saving) ...[
-                  const SizedBox(height: 12),
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(999),
-                    child: const LinearProgressIndicator(),
-                  ),
-                ],
-              ],
-            ),
-          ),
-          const SizedBox(height: 16),
-          SectionCard(
-            child: Form(
-              key: _formKey,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  SectionHeader(
-                    title: loc.profilePersonalSectionTitle,
-                    subtitle: loc.profilePersonalSectionSubtitle,
-                    icon: Icons.badge_outlined,
-                  ),
-                  const SizedBox(height: 16),
-                  TextFormField(
-                    controller: _nameCtrl,
-                    decoration: InputDecoration(labelText: loc.profileFirstNameLabel),
-                    validator: (value) {
-                      if (value == null || value.trim().isEmpty) {
-                        return loc.validationRequired;
-                      }
-                      return null;
-                    },
-                  ),
-                  const SizedBox(height: 12),
-                  TextFormField(
-                    controller: _surCtrl,
-                    decoration: InputDecoration(labelText: loc.profileLastNameLabel),
-                    validator: (value) {
-                      if (value == null || value.trim().isEmpty) {
-                        return loc.validationRequired;
-                      }
-                      return null;
-                    },
-                  ),
-                  const SizedBox(height: 12),
-                  TextFormField(
-                    controller: _birthCtrl,
-                    decoration: InputDecoration(labelText: loc.profileBirthDateLabel),
-                  ),
-                  const SizedBox(height: 12),
-                  TextFormField(
-                    controller: _nationalIdCtrl,
-                    decoration: InputDecoration(labelText: loc.profileNationalIdLabel),
-                  ),
-                ],
               ),
-            ),
-          ),
-          const SizedBox(height: 16),
-          SectionCard(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                SectionHeader(
-                  title: loc.profileContactSectionTitle,
-                  subtitle: loc.profileContactSectionSubtitle,
-                  icon: Icons.contact_phone_outlined,
-                ),
-                const SizedBox(height: 16),
-                TextFormField(
-                  controller: _phoneCtrl,
-                  decoration: InputDecoration(labelText: loc.profilePhoneLabel),
-                ),
-                const SizedBox(height: 12),
-                TextFormField(
-                  controller: _addressCtrl,
-                  decoration: InputDecoration(labelText: loc.profileAddressLabel),
-                  maxLines: 2,
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 20),
-          FilledButton(
-            onPressed: _saving ? null : _save,
-            child: _saving
-                ? const SizedBox(
-                    height: 20,
-                    width: 20,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : Text(loc.profileSaveAction),
+              const SizedBox(height: 20),
+              FilledButton(
+                onPressed: _saving ? null : _save,
+                child: _saving
+                    ? const SizedBox(
+                        height: 20,
+                        width: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : Text(loc.profileSaveAction),
+              ),
+            ],
           ),
         ],
       ),

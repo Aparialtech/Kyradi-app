@@ -25,7 +25,7 @@ class WalletHeader extends StatelessWidget {
             children: [
               Container(
                 height: 4,
-                width: 26,
+                width: 28,
                 margin: const EdgeInsets.only(bottom: 8),
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(999),
@@ -53,10 +53,17 @@ class WalletHeader extends StatelessWidget {
             ],
           ),
         ),
-        TextButton.icon(
+        FilledButton.icon(
           onPressed: onRulesTap,
-          icon: const Icon(Icons.info_outline),
+          icon: const Icon(Icons.info_outline, size: 18),
           label: Text(loc.walletRulesAction),
+          style: FilledButton.styleFrom(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            textStyle: theme.textTheme.labelMedium?.copyWith(
+              fontWeight: FontWeight.w600,
+            ),
+            backgroundColor: theme.colorScheme.primary.withValues(alpha: 0.9),
+          ),
         ),
       ],
     );
