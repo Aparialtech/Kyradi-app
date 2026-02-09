@@ -312,9 +312,19 @@ class ApiService {
     if (_usingMockBackend) {
       return MockServer.login(email, password);
     }
+    final normalizedEmail = email.trim();
+    final normalizedPassword = password.trim();
+    if (normalizedEmail.isEmpty || normalizedPassword.isEmpty) {
+      return {
+        'ok': false,
+        'statusCode': 400,
+        'message': 'EMAIL_PASSWORD_REQUIRED',
+        'error': 'EMAIL_PASSWORD_REQUIRED',
+      };
+    }
     final result = await _post('/auth/login', {
-      'email': email,
-      'password': password,
+      'email': normalizedEmail,
+      'password': normalizedPassword,
     });
     result['statusCode'] ??= result['_httpStatus'];
     if (result['ok'] == true) {

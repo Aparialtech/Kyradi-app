@@ -63,13 +63,18 @@ export class AuthService {
       !!(dto as any)?.idToken ||
       !!(dto as any)?.accessToken ||
       !!(dto as any)?.authorizationCode;
-    console.log(
-      'LOGIN_REQ',
-      `hasEmail=${hasEmail}`,
-      `hasPassword=${hasPassword}`,
-      `email=${this.maskEmail(dto.email)}`,
-      `hasSocialFields=${hasSocialFields}`,
-    );
+    const isProd = (process.env.NODE_ENV ?? '').toLowerCase() === 'production';
+    const debugAuth =
+      (process.env.AUTH_DEBUG_LOGS ?? '').toLowerCase() === 'true' || !isProd;
+    if (debugAuth) {
+      console.log(
+        'LOGIN_REQ',
+        `hasEmail=${hasEmail}`,
+        `hasPassword=${hasPassword}`,
+        `email=${this.maskEmail(dto.email)}`,
+        `hasSocialFields=${hasSocialFields}`,
+      );
+    }
     if (hasSocialFields) {
       throw new BadRequestException('WRONG_AUTH_FLOW');
     }
