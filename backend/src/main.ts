@@ -90,7 +90,25 @@ async function bootstrap() {
   const jsonLimit = `${jsonLimitMb}mb`;
   app.use(express.json({ limit: jsonLimit }));
   app.use(express.urlencoded({ extended: true, limit: jsonLimit }));
-  app.use(mongoSanitize());
+  // express-mongo-sanitize's built-in middleware tries to re-assign req.query.
+  // With newer Express/Nest request objects, req.query may be getter-only, causing 500s.
+  // We sanitize in-place to avoid any reassignment while keeping the protection.
+  app.use((req, _res, next) => {
+    try {
+      const sanitize = (mongoSanitize as any).sanitize as
+        | ((target: any, options?: any) => any)
+        | undefined;
+      if (typeof sanitize !== 'function') return next();
+      const opts = { replaceWith: '_' };
+      if ((req as any).body) sanitize((req as any).body, opts);
+      if ((req as any).params) sanitize((req as any).params, opts);
+      if ((req as any).headers) sanitize((req as any).headers, opts);
+      if ((req as any).query) sanitize((req as any).query, opts);
+      return next();
+    } catch (e) {
+      return next(e);
+    }
+  });
 
   const allowList = (process.env.CORS_ORIGINS ?? '')
     .split(',')
