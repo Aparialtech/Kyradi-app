@@ -27,7 +27,13 @@ import { WalletModule } from './wallet/wallet.module';
     ThrottlerModule.forRoot({
       throttlers: [
         {
-          ttl: Number(process.env.THROTTLE_TTL ?? 60),
+          // @nestjs/throttler v5+ expects ttl in milliseconds.
+          // Backward compatible: if env is given in seconds (<= 1000), convert to ms.
+          ttl: (() => {
+            const raw = Number(process.env.THROTTLE_TTL ?? 60);
+            if (!Number.isFinite(raw) || raw <= 0) return 60_000;
+            return raw <= 1000 ? raw * 1000 : raw;
+          })(),
           limit: Number(process.env.THROTTLE_LIMIT ?? 60),
         },
       ],

@@ -18,7 +18,7 @@ export class AuthController {
 
   @Post('register')
   @Public()
-  @Throttle(10, 60)
+  @Throttle({ default: { limit: 10, ttl: 60_000 } })
   @UsePipes(new ValidationPipe({ transform: true, whitelist: true }))
   register(@Body() dto: CreateUserDto) {
     return this.authService.register(dto);
@@ -26,21 +26,21 @@ export class AuthController {
 
   @Post('login')
   @Public()
-  @Throttle(10, 60)
+  @Throttle({ default: { limit: 10, ttl: 60_000 } })
   login(@Body() dto: LoginDto) {
     return this.authService.login(dto);
   }
 
   @Post('forgot')
   @Public()
-  @Throttle(3, 300)
+  @Throttle({ default: { limit: 3, ttl: 300_000 } })
   forgot(@Body() dto: ForgotPasswordDto) {
     return this.authService.forgot(dto);
   }
 
   @Post('reset')
   @Public()
-  @Throttle(3, 300)
+  @Throttle({ default: { limit: 3, ttl: 300_000 } })
   reset(@Body() dto: ResetPasswordDto) {
     return this.authService.reset(dto);
   }
@@ -52,21 +52,21 @@ export class AuthController {
 
   @Post('verify')
   @Public()
-  @Throttle(3, 300)
+  @Throttle({ default: { limit: 3, ttl: 300_000 } })
   verify(@Body() dto: VerifyCodeDto) {
     return this.authService.verifyCode(dto);
   }
 
   @Post('resend-verify')
   @Public()
-  @Throttle(3, 300)
+  @Throttle({ default: { limit: 3, ttl: 300_000 } })
   resendVerify(@Body() dto: ResendVerifyDto) {
     return this.authService.resendVerification(dto);
   }
 
   @Post('social')
   @Public()
-  @Throttle(10, 60)
+  @Throttle({ default: { limit: 10, ttl: 60_000 } })
   socialLogin(@Body() dto: SocialLoginDto) {
     console.log('AUTH_SOCIAL_HIT_FROM_NEW_CODE');
     return this.authService.socialLogin(dto);
@@ -74,7 +74,7 @@ export class AuthController {
 
   @Post('social/google')
   @Public()
-  @Throttle(10, 60)
+  @Throttle({ default: { limit: 10, ttl: 60_000 } })
   socialGoogle(@Body() dto: SocialProviderLoginDto) {
     if (!dto.idToken) {
       throw new BadRequestException('SOCIAL_TOKEN_INVALID');
@@ -89,7 +89,7 @@ export class AuthController {
 
   @Post('social/apple')
   @Public()
-  @Throttle(10, 60)
+  @Throttle({ default: { limit: 10, ttl: 60_000 } })
   socialApple(@Body() dto: SocialProviderLoginDto) {
     return this.authService.socialLogin({
       provider: 'apple',
