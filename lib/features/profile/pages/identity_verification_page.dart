@@ -3,6 +3,7 @@ import 'dart:typed_data';
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/rendering.dart';
 import 'package:image_picker/image_picker.dart';
 
@@ -86,6 +87,37 @@ class _IdentityVerificationPageState extends State<IdentityVerificationPage> {
       if (statusRes['ok'] == true) {
         _status = (statusRes['status'] ?? 'unverified').toString();
         _requireSelfie = statusRes['requireSelfie'] == true || _requireSelfie;
+        final personal = statusRes['personal'] as Map<String, dynamic>? ?? {};
+        final docs = statusRes['documents'] as Map<String, dynamic>? ?? {};
+        if (_nameCtrl.text.trim().isEmpty && (personal['name'] ?? '').toString().isNotEmpty) {
+          _nameCtrl.text = personal['name'].toString();
+        }
+        if (_surnameCtrl.text.trim().isEmpty && (personal['surname'] ?? '').toString().isNotEmpty) {
+          _surnameCtrl.text = personal['surname'].toString();
+        }
+        if (_tcCtrl.text.trim().isEmpty && (personal['tcNo'] ?? '').toString().isNotEmpty) {
+          _tcCtrl.text = personal['tcNo'].toString();
+        }
+        final birthRaw = (personal['birthDate'] ?? '').toString().trim();
+        if (_birthDate == null && birthRaw.isNotEmpty) {
+          final parsed = DateTime.tryParse(birthRaw);
+          if (parsed != null) _birthDate = parsed;
+        }
+        _frontUrl = (docs['idFrontUrl'] ?? '').toString();
+        _backUrl = (docs['idBackUrl'] ?? '').toString();
+        _selfieUrl = (docs['selfieUrl'] ?? '').toString();
+        final missing = (statusRes['missing'] as List?)?.map((e) => e.toString()).toList() ?? <String>[];
+        if (_status != 'verified' && _status != 'pending_otp') {
+          if (missing.contains('personal')) {
+            _step = 0;
+          } else if (missing.contains('id_front') || missing.contains('id_back')) {
+            _step = 1;
+          } else if (_requireSelfie && missing.contains('selfie')) {
+            _step = 2;
+          } else {
+            _step = 3;
+          }
+        }
       }
       setState(() => _loading = false);
     } catch (e) {
@@ -202,13 +234,28 @@ class _IdentityVerificationPageState extends State<IdentityVerificationPage> {
   }) async {
     final loc = AppLocalizations.of(context)!;
     final picker = ImagePicker();
-    final file = await picker.pickImage(
-      source: ImageSource.gallery,
-      imageQuality: 92,
-      maxWidth: 2400,
-    );
+    XFile? file;
+    try {
+      file = await picker.pickImage(
+        source: ImageSource.camera,
+        imageQuality: 92,
+        maxWidth: 2400,
+      );
+    } catch (_) {
+      file = null;
+    }
+    if (file == null && kDebugMode) {
+      file = await picker.pickImage(
+        source: ImageSource.gallery,
+        imageQuality: 92,
+        maxWidth: 2400,
+      );
+    }
     if (!mounted) return;
-    if (file == null) return;
+    if (file == null) {
+      _notify(loc.identityCameraRequiredMessage, type: AppNotificationType.warning);
+      return;
+    }
 
     final raw = await file.readAsBytes();
     if (!mounted) return;
@@ -328,6 +375,7 @@ class _IdentityVerificationPageState extends State<IdentityVerificationPage> {
   Widget build(BuildContext context) {
     final loc = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
+    final locked = _status == 'verified' || _status == 'pending_otp';
 
     return Scaffold(
       appBar: AppBar(
@@ -435,186 +483,199 @@ class _IdentityVerificationPageState extends State<IdentityVerificationPage> {
                       ),
                     ),
                   const SizedBox(height: 12),
-                  SectionCard(
-                    child: Stepper(
-                      currentStep: _step,
-                      onStepContinue: () async {
-                        if (_step == 0) {
-                          await _savePersonal();
-                          if (!mounted) return;
-                          setState(() => _step = 1);
-                          return;
-                        }
-                        if (_step == 1) {
-                          if (_frontUrl == null || _backUrl == null) {
-                            _notify('Kimlik ön/arka fotoğrafı gerekli.', type: AppNotificationType.warning);
-                            return;
-                          }
-                          if (_requireSelfie) {
-                            setState(() => _step = 2);
-                          } else {
-                            setState(() => _step = 3);
-                          }
-                          return;
-                        }
-                        if (_step == 2) {
-                          if (_requireSelfie && (_selfieUrl == null || _selfieUrl!.isEmpty)) {
-                            _notify('Selfie gerekli.', type: AppNotificationType.warning);
-                            return;
-                          }
-                          setState(() => _step = 3);
-                          return;
-                        }
-                        if (_step == 3) {
-                          await _submit();
-                        }
-                      },
-                      onStepCancel: () {
-                        if (_step == 0) {
-                          Navigator.of(context).pop();
-                        } else {
-                          setState(() => _step -= 1);
-                        }
-                      },
-                      controlsBuilder: (context, details) {
-                        final isLast = details.currentStep == 3;
-                        return Row(
-                          children: [
-                            FilledButton(
-                              onPressed: _submitting ? null : details.onStepContinue,
-                              child: _submitting && isLast
-                                  ? const SizedBox(
-                                      width: 18,
-                                      height: 18,
-                                      child: CircularProgressIndicator(strokeWidth: 2),
-                                    )
-                                  : Text(isLast ? loc.submit : loc.nextAction),
-                            ),
-                            const SizedBox(width: 12),
-                            OutlinedButton(
-                              onPressed: details.onStepCancel,
-                              child: Text(details.currentStep == 0 ? loc.cancel : loc.back),
-                            ),
-                          ],
-                        );
-                      },
-                      steps: [
-                        Step(
-                          title: Text(loc.personalInfoTitle),
-                          isActive: _step >= 0,
-                          state: _step > 0 ? StepState.complete : StepState.indexed,
-                          content: Form(
-                            key: _formKey,
-                            child: Column(
+                  if (_status != 'verified')
+                    SectionCard(
+                      child: IgnorePointer(
+                        ignoring: locked,
+                        child: Stepper(
+                          currentStep: _step,
+                          onStepContinue: () async {
+                            if (_step == 0) {
+                              await _savePersonal();
+                              if (!mounted) return;
+                              setState(() => _step = 1);
+                              return;
+                            }
+                            if (_step == 1) {
+                              if (_frontUrl == null || _backUrl == null) {
+                                _notify('Kimlik ön/arka fotoğrafı gerekli.', type: AppNotificationType.warning);
+                                return;
+                              }
+                              if (_requireSelfie) {
+                                setState(() => _step = 2);
+                              } else {
+                                setState(() => _step = 3);
+                              }
+                              return;
+                            }
+                            if (_step == 2) {
+                              if (_requireSelfie && (_selfieUrl == null || _selfieUrl!.isEmpty)) {
+                                _notify('Selfie gerekli.', type: AppNotificationType.warning);
+                                return;
+                              }
+                              setState(() => _step = 3);
+                              return;
+                            }
+                            if (_step == 3) {
+                              await _submit();
+                            }
+                          },
+                          onStepCancel: () {
+                            if (_step == 0) {
+                              Navigator.of(context).pop();
+                            } else {
+                              setState(() => _step -= 1);
+                            }
+                          },
+                          controlsBuilder: (context, details) {
+                            final isLast = details.currentStep == 3;
+                            return Row(
                               children: [
-                                TextFormField(
-                                  controller: _nameCtrl,
-                                  decoration: InputDecoration(labelText: loc.firstName),
-                                  validator: (v) => (v == null || v.trim().length < 2)
-                                      ? loc.requiredFieldLabel
-                                      : null,
+                                FilledButton(
+                                  onPressed: _submitting ? null : details.onStepContinue,
+                                  child: _submitting && isLast
+                                      ? const SizedBox(
+                                          width: 18,
+                                          height: 18,
+                                          child: CircularProgressIndicator(strokeWidth: 2),
+                                        )
+                                      : Text(isLast ? loc.submit : loc.nextAction),
                                 ),
-                                const SizedBox(height: 12),
-                                TextFormField(
-                                  controller: _surnameCtrl,
-                                  decoration: InputDecoration(labelText: loc.lastName),
-                                  validator: (v) => (v == null || v.trim().length < 2)
-                                      ? loc.requiredFieldLabel
-                                      : null,
-                                ),
-                                const SizedBox(height: 12),
-                                TextFormField(
-                                  controller: _tcCtrl,
-                                  keyboardType: TextInputType.number,
-                                  decoration: InputDecoration(labelText: loc.nationalIdLabel),
-                                  validator: (v) {
-                                    final raw = (v ?? '').trim();
-                                    if (raw.isEmpty) return loc.requiredFieldLabel;
-                                    if (!isValidTurkishId(raw)) return loc.nationalIdInvalidMessage;
-                                    return null;
-                                  },
-                                ),
-                                const SizedBox(height: 12),
-                                ListTile(
-                                  contentPadding: EdgeInsets.zero,
-                                  title: Text(
-                                    _birthDate == null
-                                        ? loc.birthDateSelectLabel
-                                        : _birthDateYmd(_birthDate!),
-                                  ),
-                                  trailing: const Icon(Icons.calendar_today_outlined),
-                                  onTap: _pickBirthDate,
+                                const SizedBox(width: 12),
+                                OutlinedButton(
+                                  onPressed: details.onStepCancel,
+                                  child: Text(details.currentStep == 0 ? loc.cancel : loc.back),
                                 ),
                               ],
+                            );
+                          },
+                          steps: [
+                            Step(
+                              title: Text(loc.personalInfoTitle),
+                              isActive: _step >= 0,
+                              state: _step > 0 ? StepState.complete : StepState.indexed,
+                              content: Form(
+                                key: _formKey,
+                                child: Column(
+                                  children: [
+                                    TextFormField(
+                                      controller: _nameCtrl,
+                                      enabled: !locked,
+                                      decoration: InputDecoration(labelText: loc.firstName),
+                                      validator: (v) => (v == null || v.trim().length < 2)
+                                          ? loc.requiredFieldLabel
+                                          : null,
+                                    ),
+                                    const SizedBox(height: 12),
+                                    TextFormField(
+                                      controller: _surnameCtrl,
+                                      enabled: !locked,
+                                      decoration: InputDecoration(labelText: loc.lastName),
+                                      validator: (v) => (v == null || v.trim().length < 2)
+                                          ? loc.requiredFieldLabel
+                                          : null,
+                                    ),
+                                    const SizedBox(height: 12),
+                                    TextFormField(
+                                      controller: _tcCtrl,
+                                      keyboardType: TextInputType.number,
+                                      enabled: !locked,
+                                      decoration: InputDecoration(labelText: loc.nationalIdLabel),
+                                      validator: (v) {
+                                        final raw = (v ?? '').trim();
+                                        if (raw.isEmpty) return loc.requiredFieldLabel;
+                                        if (!isValidTurkishId(raw)) return loc.nationalIdInvalidMessage;
+                                        return null;
+                                      },
+                                    ),
+                                    const SizedBox(height: 12),
+                                    ListTile(
+                                      contentPadding: EdgeInsets.zero,
+                                      title: Text(
+                                        _birthDate == null
+                                            ? loc.birthDateSelectLabel
+                                            : _birthDateYmd(_birthDate!),
+                                      ),
+                                      trailing: const Icon(Icons.calendar_today_outlined),
+                                      onTap: locked ? null : _pickBirthDate,
+                                    ),
+                                  ],
+                                ),
+                              ),
                             ),
-                          ),
-                        ),
-                        Step(
-                          title: Text(loc.identityPhotosTitle),
-                          isActive: _step >= 1,
-                          state: _docsOk && !_requireSelfie ? StepState.complete : StepState.indexed,
-                          content: Column(
-                            children: [
-                              _DocRow(
-                                title: loc.identityFrontLabel,
-                                ok: _frontUrl?.isNotEmpty == true,
-                                loading: _uploadingFront,
-                                onPick: () => _pickAndUpload(type: 'id_front', aspectRatio: 4 / 3),
+                            Step(
+                              title: Text(loc.identityPhotosTitle),
+                              isActive: _step >= 1,
+                              state: _docsOk && !_requireSelfie ? StepState.complete : StepState.indexed,
+                              content: Column(
+                                children: [
+                                  _DocRow(
+                                    title: loc.identityFrontLabel,
+                                    ok: _frontUrl?.isNotEmpty == true,
+                                    loading: _uploadingFront,
+                                    onPick: locked
+                                        ? null
+                                        : () => _pickAndUpload(type: 'id_front', aspectRatio: 4 / 3),
+                                  ),
+                                  const SizedBox(height: 10),
+                                  _DocRow(
+                                    title: loc.identityBackLabel,
+                                    ok: _backUrl?.isNotEmpty == true,
+                                    loading: _uploadingBack,
+                                    onPick: locked
+                                        ? null
+                                        : () => _pickAndUpload(type: 'id_back', aspectRatio: 4 / 3),
+                                  ),
+                                ],
                               ),
-                              const SizedBox(height: 10),
-                              _DocRow(
-                                title: loc.identityBackLabel,
-                                ok: _backUrl?.isNotEmpty == true,
-                                loading: _uploadingBack,
-                                onPick: () => _pickAndUpload(type: 'id_back', aspectRatio: 4 / 3),
+                            ),
+                            Step(
+                              title: Text(loc.selfieStepTitle),
+                              isActive: _step >= 2,
+                              state: _requireSelfie
+                                  ? (_selfieUrl?.isNotEmpty == true ? StepState.complete : StepState.indexed)
+                                  : StepState.disabled,
+                              content: _requireSelfie
+                                  ? _DocRow(
+                                      title: loc.selfieLabel,
+                                      ok: _selfieUrl?.isNotEmpty == true,
+                                      loading: _uploadingSelfie,
+                                      onPick: locked
+                                          ? null
+                                          : () => _pickAndUpload(type: 'selfie', aspectRatio: 1),
+                                    )
+                                  : Text(loc.selfieNotRequiredMessage),
+                            ),
+                            Step(
+                              title: Text(loc.reviewAndSubmitTitle),
+                              isActive: _step >= 3,
+                              state: StepState.indexed,
+                              content: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(loc.reviewHint, style: theme.textTheme.bodySmall),
+                                  const SizedBox(height: 10),
+                                  _ReviewLine(label: loc.firstName, value: _nameCtrl.text.trim()),
+                                  _ReviewLine(label: loc.lastName, value: _surnameCtrl.text.trim()),
+                                  _ReviewLine(label: loc.nationalIdLabel, value: _tcCtrl.text.trim()),
+                                  _ReviewLine(
+                                    label: loc.birthDateSelectLabel,
+                                    value: _birthDate == null ? '-' : _birthDateYmd(_birthDate!),
+                                  ),
+                                  const SizedBox(height: 6),
+                                  Divider(color: theme.colorScheme.outlineVariant),
+                                  const SizedBox(height: 6),
+                                  _ReviewLine(label: loc.identityFrontLabel, value: _frontUrl != null ? loc.uploadedLabel : loc.missingLabel),
+                                  _ReviewLine(label: loc.identityBackLabel, value: _backUrl != null ? loc.uploadedLabel : loc.missingLabel),
+                                  if (_requireSelfie)
+                                    _ReviewLine(label: loc.selfieLabel, value: _selfieUrl != null ? loc.uploadedLabel : loc.missingLabel),
+                                ],
                               ),
-                            ],
-                          ),
+                            ),
+                          ],
                         ),
-                        Step(
-                          title: Text(loc.selfieStepTitle),
-                          isActive: _step >= 2,
-                          state: _requireSelfie
-                              ? (_selfieUrl?.isNotEmpty == true ? StepState.complete : StepState.indexed)
-                              : StepState.disabled,
-                          content: _requireSelfie
-                              ? _DocRow(
-                                  title: loc.selfieLabel,
-                                  ok: _selfieUrl?.isNotEmpty == true,
-                                  loading: _uploadingSelfie,
-                                  onPick: () => _pickAndUpload(type: 'selfie', aspectRatio: 1),
-                                )
-                              : Text(loc.selfieNotRequiredMessage),
-                        ),
-                        Step(
-                          title: Text(loc.reviewAndSubmitTitle),
-                          isActive: _step >= 3,
-                          state: StepState.indexed,
-                          content: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(loc.reviewHint, style: theme.textTheme.bodySmall),
-                              const SizedBox(height: 10),
-                              _ReviewLine(label: loc.firstName, value: _nameCtrl.text.trim()),
-                              _ReviewLine(label: loc.lastName, value: _surnameCtrl.text.trim()),
-                              _ReviewLine(label: loc.nationalIdLabel, value: _tcCtrl.text.trim()),
-                              _ReviewLine(
-                                label: loc.birthDateSelectLabel,
-                                value: _birthDate == null ? '-' : _birthDateYmd(_birthDate!),
-                              ),
-                              const SizedBox(height: 6),
-                              Divider(color: theme.colorScheme.outlineVariant),
-                              const SizedBox(height: 6),
-                              _ReviewLine(label: loc.identityFrontLabel, value: _frontUrl != null ? loc.uploadedLabel : loc.missingLabel),
-                              _ReviewLine(label: loc.identityBackLabel, value: _backUrl != null ? loc.uploadedLabel : loc.missingLabel),
-                              if (_requireSelfie)
-                                _ReviewLine(label: loc.selfieLabel, value: _selfieUrl != null ? loc.uploadedLabel : loc.missingLabel),
-                            ],
-                          ),
-                        ),
-                      ],
+                      ),
                     ),
-                  ),
                 ],
               ),
             ),
@@ -635,7 +696,7 @@ class _DocRow extends StatelessWidget {
   final String title;
   final bool ok;
   final bool loading;
-  final VoidCallback onPick;
+  final VoidCallback? onPick;
 
   @override
   Widget build(BuildContext context) {

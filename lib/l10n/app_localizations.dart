@@ -1718,6 +1718,12 @@ abstract class AppLocalizations {
   /// **'Galeriden seç'**
   String get identityPickFromGallery;
 
+  /// No description provided for @identityCameraRequiredMessage.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kimlik doğrulama için kamera ile fotoğraf çekilmesi gerekir.'**
+  String get identityCameraRequiredMessage;
+
   /// No description provided for @identityDelete.
   ///
   /// In tr, this message translates to:

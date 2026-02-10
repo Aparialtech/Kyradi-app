@@ -134,15 +134,31 @@ export class IdentityVerificationService {
         status: 'unverified' as IdentityVerificationStatus,
         requireSelfie: this.requireSelfie(),
         missing: ['personal', 'id_front', 'id_back'],
+        personal: {},
+        documents: {},
       };
     }
     const missing = this.computeMissing(record);
+    const personal = record.personal ?? {};
+    const documents = record.documents ?? {};
     return {
       verificationId: (record as any)._id?.toString(),
       status: record.status,
       requireSelfie: this.requireSelfie(),
       missing,
       review: record.review ?? {},
+      personal: {
+        name: personal.name ?? '',
+        surname: personal.surname ?? '',
+        tcNo: personal.tcNo ?? '',
+        birthDate: personal.birthDate ?? '',
+      },
+      documents: {
+        idFrontUrl: documents.idFront?.url ?? '',
+        idBackUrl: documents.idBack?.url ?? '',
+        selfieUrl: documents.selfie?.url ?? '',
+      },
+      audit: record.audit ?? {},
     };
   }
 

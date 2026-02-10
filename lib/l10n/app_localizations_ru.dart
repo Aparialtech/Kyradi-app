@@ -888,6 +888,10 @@ class AppLocalizationsRu extends AppLocalizations {
   String get identityPickFromGallery => 'Выбрать из галереи';
 
   @override
+  String get identityCameraRequiredMessage =>
+      'Kimlik doğrulama için kamera ile fotoğraf çekilmesi gerekir.';
+
+  @override
   String get identityDelete => 'Удалить документ';
 
   @override

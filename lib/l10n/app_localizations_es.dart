@@ -895,6 +895,10 @@ class AppLocalizationsEs extends AppLocalizations {
   String get identityPickFromGallery => 'Elegir de la galería';
 
   @override
+  String get identityCameraRequiredMessage =>
+      'Kimlik doğrulama için kamera ile fotoğraf çekilmesi gerekir.';
+
+  @override
   String get identityDelete => 'Eliminar documento';
 
   @override

@@ -893,6 +893,10 @@ class AppLocalizationsDe extends AppLocalizations {
   String get identityPickFromGallery => 'Aus Galerie wählen';
 
   @override
+  String get identityCameraRequiredMessage =>
+      'Kimlik doğrulama için kamera ile fotoğraf çekilmesi gerekir.';
+
+  @override
   String get identityDelete => 'Dokument löschen';
 
   @override

@@ -359,6 +359,7 @@
   "identityMissing": "Henüz belge yüklenmedi. Teslimat için kimlik veya pasaport fotoğrafı zorunlu.",
   "identityTakePhoto": "Kameradan çek",
   "identityPickFromGallery": "Galeriden seç",
+  "identityCameraRequiredMessage": "Kimlik doğrulama için kamera ile fotoğraf çekilmesi gerekir.",
   "identityDelete": "Belgeyi sil",
   "identityPhotoSaved": "{docType} fotoğrafı kaydedildi ✅",
   "@identityPhotoSaved": {

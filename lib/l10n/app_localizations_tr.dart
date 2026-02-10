@@ -884,6 +884,10 @@ class AppLocalizationsTr extends AppLocalizations {
   String get identityPickFromGallery => 'Galeriden seç';
 
   @override
+  String get identityCameraRequiredMessage =>
+      'Kimlik doğrulama için kamera ile fotoğraf çekilmesi gerekir.';
+
+  @override
   String get identityDelete => 'Belgeyi sil';
 
   @override

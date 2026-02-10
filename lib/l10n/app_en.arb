@@ -359,6 +359,7 @@
   "identityMissing": "No document uploaded yet. ID or passport photo is required for deliveries.",
   "identityTakePhoto": "Capture from camera",
   "identityPickFromGallery": "Choose from gallery",
+  "identityCameraRequiredMessage": "Camera capture is required for identity verification.",
   "identityDelete": "Delete document",
   "identityPhotoSaved": "{docType} photo saved ✅",
   "@identityPhotoSaved": {

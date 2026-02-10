@@ -882,6 +882,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get identityPickFromGallery => 'Choose from gallery';
 
   @override
+  String get identityCameraRequiredMessage =>
+      'Camera capture is required for identity verification.';
+
+  @override
   String get identityDelete => 'Delete document';
 
   @override
