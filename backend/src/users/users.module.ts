@@ -11,6 +11,10 @@ import {
   IdentityVerification,
   IdentityVerificationSchema,
 } from './schemas/identity-verification.schema';
+import {
+  KycVerificationCode,
+  KycVerificationCodeSchema,
+} from './schemas/kyc-verification.schema';
 import { MailService } from '../common/mail/mail.service';
 import { MeController } from './me.controller';
 import { ProfileVerificationService } from './verification.service';
@@ -24,6 +28,7 @@ import { UploadsModule } from '../uploads/uploads.module';
       { name: User.name, schema: UserSchema },
       { name: ProfileVerificationCode.name, schema: ProfileVerificationCodeSchema },
       { name: IdentityVerification.name, schema: IdentityVerificationSchema },
+      { name: KycVerificationCode.name, schema: KycVerificationCodeSchema },
     ]),
     forwardRef(() => UploadsModule),
   ],

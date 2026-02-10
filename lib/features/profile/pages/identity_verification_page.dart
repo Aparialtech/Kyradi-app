@@ -33,6 +33,7 @@ class _IdentityVerificationPageState extends State<IdentityVerificationPage> {
   final _nameCtrl = TextEditingController();
   final _surnameCtrl = TextEditingController();
   final _tcCtrl = TextEditingController();
+  final _otpCtrl = TextEditingController();
   DateTime? _birthDate;
 
   String? _frontUrl;
@@ -42,6 +43,9 @@ class _IdentityVerificationPageState extends State<IdentityVerificationPage> {
   bool _uploadingFront = false;
   bool _uploadingBack = false;
   bool _uploadingSelfie = false;
+
+  Timer? _otpTimer;
+  int _otpSecondsLeft = 0;
 
   @override
   void initState() {
@@ -54,6 +58,8 @@ class _IdentityVerificationPageState extends State<IdentityVerificationPage> {
     _nameCtrl.dispose();
     _surnameCtrl.dispose();
     _tcCtrl.dispose();
+    _otpCtrl.dispose();
+    _otpTimer?.cancel();
     super.dispose();
   }
 
@@ -93,6 +99,63 @@ class _IdentityVerificationPageState extends State<IdentityVerificationPage> {
 
   void _notify(String message, {AppNotificationType type = AppNotificationType.info}) {
     AppNotification.show(context, message: message, type: type);
+  }
+
+  void _startOtpTimer(int minutes) {
+    _otpTimer?.cancel();
+    _otpSecondsLeft = minutes * 60;
+    _otpTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (!mounted) return;
+      if (_otpSecondsLeft <= 1) {
+        timer.cancel();
+        setState(() => _otpSecondsLeft = 0);
+        return;
+      }
+      setState(() => _otpSecondsLeft -= 1);
+    });
+  }
+
+  Future<void> _verifyOtp() async {
+    final loc = AppLocalizations.of(context)!;
+    final code = _otpCtrl.text.trim();
+    if (code.length != 6) {
+      _notify(loc.verificationCodeInvalidMessage, type: AppNotificationType.warning);
+      return;
+    }
+    try {
+      final res = await ApiService.kycVerifyOtp(code);
+      if (!mounted) return;
+      if (res['ok'] == true) {
+        _status = (res['status'] ?? 'verified').toString();
+        setState(() {});
+        _notify(loc.identityVerifiedTitle, type: AppNotificationType.success);
+      } else {
+        final msg = (res['message'] ?? res['error'] ?? loc.verificationErrorMessage).toString();
+        _notify(msg, type: AppNotificationType.error);
+      }
+    } catch (e) {
+      if (!mounted) return;
+      _notify('${loc.verificationErrorMessage}: $e', type: AppNotificationType.error);
+    }
+  }
+
+  Future<void> _resendOtp() async {
+    final loc = AppLocalizations.of(context)!;
+    try {
+      final res = await ApiService.kycResendOtp();
+      if (!mounted) return;
+      if (res['ok'] == true) {
+        final ttl = (res['otpTtlMin'] is num) ? (res['otpTtlMin'] as num).toInt() : 10;
+        _startOtpTimer(ttl);
+        _notify(loc.verificationResentMessage, type: AppNotificationType.success);
+      } else {
+        final msg = (res['message'] ?? res['error'] ?? loc.verificationSendErrorMessage).toString();
+        _notify(msg, type: AppNotificationType.error);
+      }
+    } catch (e) {
+      if (!mounted) return;
+      _notify('${loc.verificationSendErrorMessage}: $e', type: AppNotificationType.error);
+    }
   }
 
   Future<void> _pickBirthDate() async {
@@ -241,9 +304,13 @@ class _IdentityVerificationPageState extends State<IdentityVerificationPage> {
       final res = await ApiService.kycSubmitIdentity();
       if (!mounted) return;
       if (res['ok'] == true) {
-        _status = (res['status'] ?? 'pending_review').toString();
+        _status = (res['status'] ?? 'pending_otp').toString();
+        if (_status == 'pending_otp') {
+          final ttl = (res['otpTtlMin'] is num) ? (res['otpTtlMin'] as num).toInt() : 10;
+          _startOtpTimer(ttl);
+        }
         setState(() {});
-        _notify(loc.submittedForReviewMessage, type: AppNotificationType.success);
+        _notify(loc.verificationCodeSentMessage, type: AppNotificationType.success);
       } else {
         final msg = (res['message'] ?? res['error'] ?? 'Gönderim başarısız').toString();
         _notify(msg, type: AppNotificationType.error);
@@ -313,6 +380,56 @@ class _IdentityVerificationPageState extends State<IdentityVerificationPage> {
                               loc.identityPendingReviewTitle,
                               style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
                             ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  if (_status == 'pending_otp')
+                    SectionCard(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              ThreeDIconBadge(icon: Icons.mark_email_read, accent: theme.colorScheme.primary),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Text(
+                                  loc.verificationTitle,
+                                  style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+                          Text(loc.kycOtpHint, style: theme.textTheme.bodySmall),
+                          const SizedBox(height: 12),
+                          TextField(
+                            controller: _otpCtrl,
+                            keyboardType: TextInputType.number,
+                            maxLength: 6,
+                            decoration: InputDecoration(
+                              labelText: loc.verificationCodeLabel,
+                              counterText: '',
+                            ),
+                          ),
+                          const SizedBox(height: 10),
+                          Row(
+                            children: [
+                              FilledButton(
+                                onPressed: _verifyOtp,
+                                child: Text(loc.verifyAction),
+                              ),
+                              const SizedBox(width: 12),
+                              OutlinedButton(
+                                onPressed: _otpSecondsLeft > 0 ? null : _resendOtp,
+                                child: Text(
+                                  _otpSecondsLeft > 0
+                                      ? loc.verificationCountdownLabel(_otpSecondsLeft)
+                                      : loc.verificationResendButton,
+                                ),
+                              ),
+                            ],
                           ),
                         ],
                       ),

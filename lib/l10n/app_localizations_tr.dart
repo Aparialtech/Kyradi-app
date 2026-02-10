@@ -662,6 +662,17 @@ class AppLocalizationsTr extends AppLocalizations {
   String get verificationCodeInvalidMessage => 'Kod 6 haneli olmalı';
 
   @override
+  String get verificationCodeSentMessage =>
+      'Kimlik doğrulama kodu e-postana gönderildi.';
+
+  @override
+  String get kycOtpHint =>
+      'E-postana gönderilen 6 haneli kimlik doğrulama kodunu gir.';
+
+  @override
+  String get verifyAction => 'Doğrula';
+
+  @override
   String get validationVerificationCodeRequired => 'Kod gerekli';
 
   @override

@@ -5,7 +5,9 @@ import * as crypto from 'crypto';
 
 @Injectable()
 export class UploadsService {
-  private readonly uploadDir = path.join(process.cwd(), 'uploads', 'identity');
+  private readonly baseUploadDir =
+    process.env.UPLOADS_DIR ?? path.join(process.cwd(), 'uploads');
+  private readonly uploadDir = path.join(this.baseUploadDir, 'identity');
 
   constructor() {
     fs.mkdirSync(this.uploadDir, { recursive: true });
@@ -22,6 +24,10 @@ export class UploadsService {
 
   getIdentityPath(filename: string) {
     return path.join(this.uploadDir, filename);
+  }
+
+  getBaseDir() {
+    return this.baseUploadDir;
   }
 
   async sha256(filePath: string): Promise<string> {

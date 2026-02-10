@@ -667,6 +667,17 @@ class AppLocalizationsEs extends AppLocalizations {
   String get verificationCodeInvalidMessage => 'El código debe tener 6 dígitos';
 
   @override
+  String get verificationCodeSentMessage =>
+      'Kimlik doğrulama kodu e-postana gönderildi.';
+
+  @override
+  String get kycOtpHint =>
+      'E-postana gönderilen 6 haneli kimlik doğrulama kodunu gir.';
+
+  @override
+  String get verifyAction => 'Doğrula';
+
+  @override
   String get validationVerificationCodeRequired => 'El código es obligatorio';
 
   @override

@@ -532,7 +532,7 @@ class ApiService {
     if (_usingMockBackend) {
       return {
         'ok': true,
-        'status': 'pending',
+        'status': 'draft',
         'requireSelfie': false,
         'verificationId': 'mock-kyc',
       };
@@ -565,7 +565,7 @@ class ApiService {
     if (_usingMockBackend) {
       return {
         'ok': true,
-        'status': 'pending',
+        'status': 'draft',
         'missing': ['id_front', 'id_back'],
       };
     }
@@ -583,10 +583,32 @@ class ApiService {
     if (_usingMockBackend) {
       return {
         'ok': true,
-        'status': 'pending_review',
+        'status': 'pending_otp',
+        'delivered': true,
+        'otpTtlMin': 10,
       };
     }
     final response = await _post('/me/verification/identity/submit', {});
+    response['statusCode'] ??= response['_httpStatus'];
+    return response;
+  }
+
+  static Future<Map<String, dynamic>> kycVerifyOtp(String code) async {
+    if (_usingMockBackend) {
+      return {'ok': true, 'status': 'verified'};
+    }
+    final response = await _post('/me/verification/identity/verify-otp', {
+      'code': code,
+    });
+    response['statusCode'] ??= response['_httpStatus'];
+    return response;
+  }
+
+  static Future<Map<String, dynamic>> kycResendOtp() async {
+    if (_usingMockBackend) {
+      return {'ok': true, 'status': 'pending_otp', 'delivered': true, 'otpTtlMin': 10};
+    }
+    final response = await _post('/me/verification/identity/resend-otp', {});
     response['statusCode'] ??= response['_httpStatus'];
     return response;
   }

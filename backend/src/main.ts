@@ -40,6 +40,8 @@ async function bootstrap() {
     'KYC_AUTO_APPROVE_IN_DEV',
     'KYC_DOC_RETENTION_DAYS',
     'KYC_MAX_UPLOAD_MB',
+    'KYC_OTP_TTL_MIN',
+    'KYC_OTP_RATE_LIMIT',
     'ADMIN_API_KEY',
     'BUILT_AT',
     'GIT_SHA',
@@ -135,7 +137,8 @@ async function bootstrap() {
   );
 
   app.useGlobalFilters(new AllExceptionsFilter());
-  app.useStaticAssets(join(process.cwd(), 'uploads'), {
+  const uploadsDir = process.env.UPLOADS_DIR ?? join(process.cwd(), 'uploads');
+  app.useStaticAssets(uploadsDir, {
     prefix: '/uploads/',
   });
   const port = Number(process.env.PORT) || 3000;

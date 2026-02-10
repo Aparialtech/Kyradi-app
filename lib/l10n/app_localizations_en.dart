@@ -660,6 +660,17 @@ class AppLocalizationsEn extends AppLocalizations {
   String get verificationCodeInvalidMessage => 'Code must be 6 digits';
 
   @override
+  String get verificationCodeSentMessage =>
+      'Identity verification code sent to your email.';
+
+  @override
+  String get kycOtpHint =>
+      'Enter the 6-digit identity verification code sent to your email.';
+
+  @override
+  String get verifyAction => 'Verify';
+
+  @override
   String get validationVerificationCodeRequired => 'Code is required';
 
   @override

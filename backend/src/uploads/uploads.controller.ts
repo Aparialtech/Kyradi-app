@@ -42,7 +42,8 @@ export class UploadsController {
   @UseInterceptors(
     FileInterceptor('file', {
       storage: diskStorage({
-        destination: (_req, _file, cb) => cb(null, path.join(process.cwd(), 'uploads', 'identity')),
+        destination: (_req, _file, cb) =>
+          cb(null, path.join(process.env.UPLOADS_DIR ?? path.join(process.cwd(), 'uploads'), 'identity')),
         filename: (_req, file, cb) => {
           const ext = path.extname(file.originalname);
           cb(null, `${randomUUID()}${ext}`);

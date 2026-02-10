@@ -3,7 +3,9 @@ import { Document } from 'mongoose';
 
 export type IdentityVerificationStatus =
   | 'unverified'
+  | 'draft'
   | 'pending'
+  | 'pending_otp'
   | 'pending_review'
   | 'verified'
   | 'rejected'
@@ -80,6 +82,9 @@ export class IdentityAudit {
   submittedAt?: Date;
 
   @Prop()
+  verifiedAt?: Date;
+
+  @Prop()
   expiresAt?: Date;
 }
 
@@ -119,8 +124,21 @@ export class IdentityVerification extends Document {
 
   @Prop({ type: IdentitySecuritySchema, default: {} })
   security: IdentitySecurity;
+
+  @Prop({
+    type: {
+      otpSendCount: { type: Number, default: 0 },
+      otpVerifyFailCount: { type: Number, default: 0 },
+      lastOtpSentAt: { type: Date },
+    },
+    default: {},
+  })
+  attempts: {
+    otpSendCount?: number;
+    otpVerifyFailCount?: number;
+    lastOtpSentAt?: Date;
+  };
 }
 
 export const IdentityVerificationSchema =
   SchemaFactory.createForClass(IdentityVerification);
-

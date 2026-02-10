@@ -1,12 +1,15 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
+import { createHash } from 'crypto';
 import {
   IdentityVerification,
   IdentityVerificationStatus,
 } from './schemas/identity-verification.schema';
 import { IdentityPersonalDto } from './dto/identity-personal.dto';
 import { User } from './schemas/user.schema';
+import { KycVerificationCode } from './schemas/kyc-verification.schema';
+import { MailService } from '../common/mail/mail.service';
 
 type IdentityDocType = 'id_front' | 'id_back' | 'selfie';
 
@@ -17,6 +20,9 @@ export class IdentityVerificationService {
     private readonly identityModel: Model<IdentityVerification>,
     @InjectModel(User.name)
     private readonly userModel: Model<User>,
+    @InjectModel(KycVerificationCode.name)
+    private readonly kycCodeModel: Model<KycVerificationCode>,
+    private readonly mailService: MailService,
   ) {}
 
   isEnabled(): boolean {
@@ -36,6 +42,16 @@ export class IdentityVerificationService {
   retentionDays(): number {
     const raw = Number(process.env.KYC_DOC_RETENTION_DAYS ?? 30);
     return Number.isFinite(raw) && raw > 0 ? raw : 30;
+  }
+
+  otpTtlMin(): number {
+    const raw = Number(process.env.KYC_OTP_TTL_MIN ?? 10);
+    return Number.isFinite(raw) && raw > 0 ? raw : 10;
+  }
+
+  otpRateLimit(): number {
+    const raw = Number(process.env.KYC_OTP_RATE_LIMIT ?? 3);
+    return Number.isFinite(raw) && raw > 0 ? raw : 3;
   }
 
   private _maskTc(tcNo: string): string {
@@ -86,6 +102,7 @@ export class IdentityVerificationService {
     const existing = await this.identityModel.findOne({ userId }).exec();
     if (existing) {
       this.ensureSchema(existing);
+      if (!existing.attempts) existing.attempts = {};
       if (meta?.ip || meta?.userAgent) {
         existing.security = {
           ...(existing.security ?? {}),
@@ -99,8 +116,9 @@ export class IdentityVerificationService {
     const expiresAt = new Date(Date.now() + this.retentionDays() * 86400 * 1000);
     return this.identityModel.create({
       userId,
-      status: 'pending',
+      status: 'draft',
       audit: { expiresAt },
+      attempts: {},
       security: {
         ip: meta?.ip,
         userAgent: meta?.userAgent?.slice(0, 180),
@@ -159,7 +177,9 @@ export class IdentityVerificationService {
       tcNo,
       birthDate,
     };
-    if (record.status === 'unverified') record.status = 'pending';
+    if (record.status === 'unverified' || record.status === 'draft') {
+      record.status = 'draft';
+    }
     record.security = {
       ...(record.security ?? {}),
       ...(meta?.ip ? { ip: meta.ip } : {}),
@@ -193,7 +213,9 @@ export class IdentityVerificationService {
     if (params.type === 'id_front') (record.documents as any).idFront = meta;
     if (params.type === 'id_back') (record.documents as any).idBack = meta;
     if (params.type === 'selfie') (record.documents as any).selfie = meta;
-    if (record.status === 'unverified') record.status = 'pending';
+    if (record.status === 'unverified' || record.status === 'draft') {
+      record.status = 'draft';
+    }
     await record.save();
     return {
       verificationId: record._id.toString(),
@@ -202,13 +224,71 @@ export class IdentityVerificationService {
     };
   }
 
+  private _hashOtp(code: string, userId: string): string {
+    const secret = process.env.JWT_SECRET || 'super-secret-key';
+    return createHash('sha256').update(`${code}:${secret}:${userId}`).digest('hex');
+  }
+
+  private _generateOtp(): string {
+    return Math.floor(100000 + Math.random() * 900000).toString();
+  }
+
+  async sendOtp(userId: string, email: string) {
+    const ttlMs = this.otpTtlMin() * 60 * 1000;
+    const rateLimit = this.otpRateLimit();
+    const now = new Date();
+    let record = await this.kycCodeModel
+      .findOne({ userId, purpose: 'kyc_identity' })
+      .exec();
+    if (record?.lastSentAt) {
+      const delta = now.getTime() - new Date(record.lastSentAt).getTime();
+      if (delta < ttlMs && (record.sendCount ?? 0) >= rateLimit) {
+        throw new BadRequestException('OTP_RATE_LIMIT');
+      }
+      if (delta >= ttlMs) {
+        record.sendCount = 0;
+      }
+    }
+    const code = this._generateOtp();
+    const codeHash = this._hashOtp(code, userId);
+    const expiresAt = new Date(now.getTime() + ttlMs);
+    if (!record) {
+      record = await this.kycCodeModel.create({
+        userId,
+        purpose: 'kyc_identity',
+        codeHash,
+        expiresAt,
+        usedAt: undefined,
+        sendCount: 1,
+        verifyFailCount: 0,
+        lastSentAt: now,
+      });
+    } else {
+      record.codeHash = codeHash;
+      record.expiresAt = expiresAt;
+      record.usedAt = undefined;
+      record.lastSentAt = now;
+      record.sendCount = (record.sendCount ?? 0) + 1;
+      record.verifyFailCount = 0;
+      await record.save();
+    }
+    const delivered = await this.mailService.sendKycIdentityCode(
+      email,
+      code,
+      this.otpTtlMin(),
+    );
+    return { delivered, ttlMin: this.otpTtlMin() };
+  }
+
   async submit(userId: string) {
     const record = await this.ensureDraft(userId);
     const missing = this.computeMissing(record);
     if (missing.length > 0) {
       throw new BadRequestException('MISSING_KYC_FIELDS');
     }
-    record.status = 'pending_review';
+    const user = await this.userModel.findById(userId).exec();
+    if (!user) throw new BadRequestException('USER_NOT_FOUND');
+    record.status = 'pending_otp';
     record.audit = {
       ...(record.audit ?? {}),
       submittedAt: new Date(),
@@ -216,20 +296,89 @@ export class IdentityVerificationService {
         record.audit?.expiresAt ??
         new Date(Date.now() + this.retentionDays() * 86400 * 1000),
     };
+    record.attempts = {
+      ...(record.attempts ?? {}),
+      otpSendCount: (record.attempts?.otpSendCount ?? 0) + 1,
+      lastOtpSentAt: new Date(),
+    };
     await record.save();
-
-    if (this.autoApproveInDev()) {
-      await this.approve(userId, 'dev-auto');
-      const refreshed = await this.identityModel.findOne({ userId }).lean().exec();
-      return {
-        status: refreshed?.status ?? 'verified',
-        autoApproved: true,
-      };
-    }
-
+    const otp = await this.sendOtp(userId, user.email);
     return {
       status: record.status,
-      autoApproved: false,
+      delivered: otp.delivered,
+      otpTtlMin: otp.ttlMin,
+    };
+  }
+
+  async verifyOtp(userId: string, code: string) {
+    this.ensureEnabled();
+    const record = await this.identityModel.findOne({ userId }).exec();
+    if (!record) throw new BadRequestException('KYC_NOT_STARTED');
+    if (record.status !== 'pending_otp') {
+      throw new BadRequestException('INVALID_STATE');
+    }
+    const otp = await this.kycCodeModel
+      .findOne({ userId, purpose: 'kyc_identity' })
+      .exec();
+    if (!otp) throw new BadRequestException('OTP_INVALID');
+    if (otp.usedAt) throw new BadRequestException('OTP_EXPIRED');
+    if (otp.expiresAt < new Date()) throw new BadRequestException('OTP_EXPIRED');
+    if ((otp.verifyFailCount ?? 0) >= 5) {
+      throw new BadRequestException('OTP_ATTEMPTS_EXCEEDED');
+    }
+    const hash = this._hashOtp(code, userId);
+    if (otp.codeHash !== hash) {
+      otp.verifyFailCount = (otp.verifyFailCount ?? 0) + 1;
+      await otp.save();
+      record.attempts = {
+        ...(record.attempts ?? {}),
+        otpVerifyFailCount: (record.attempts?.otpVerifyFailCount ?? 0) + 1,
+      };
+      await record.save();
+      throw new BadRequestException('OTP_INVALID');
+    }
+    otp.usedAt = new Date();
+    await otp.save();
+    record.status = 'verified';
+    record.audit = {
+      ...(record.audit ?? {}),
+      verifiedAt: new Date(),
+    };
+    await record.save();
+    await this.userModel
+      .findByIdAndUpdate(
+        userId,
+        {
+          $set: {
+            identityVerified: true,
+          },
+        },
+        { new: true },
+      )
+      .exec();
+    return { status: record.status };
+  }
+
+  async resendOtp(userId: string) {
+    this.ensureEnabled();
+    const record = await this.identityModel.findOne({ userId }).exec();
+    if (!record) throw new BadRequestException('KYC_NOT_STARTED');
+    if (record.status !== 'pending_otp') {
+      throw new BadRequestException('INVALID_STATE');
+    }
+    const user = await this.userModel.findById(userId).exec();
+    if (!user) throw new BadRequestException('USER_NOT_FOUND');
+    const otp = await this.sendOtp(userId, user.email);
+    record.attempts = {
+      ...(record.attempts ?? {}),
+      otpSendCount: (record.attempts?.otpSendCount ?? 0) + 1,
+      lastOtpSentAt: new Date(),
+    };
+    await record.save();
+    return {
+      status: record.status,
+      delivered: otp.delivered,
+      otpTtlMin: otp.ttlMin,
     };
   }
 

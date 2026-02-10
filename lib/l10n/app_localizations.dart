@@ -1310,6 +1310,24 @@ abstract class AppLocalizations {
   /// **'Kod 6 haneli olmalı'**
   String get verificationCodeInvalidMessage;
 
+  /// No description provided for @verificationCodeSentMessage.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kimlik doğrulama kodu e-postana gönderildi.'**
+  String get verificationCodeSentMessage;
+
+  /// No description provided for @kycOtpHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'E-postana gönderilen 6 haneli kimlik doğrulama kodunu gir.'**
+  String get kycOtpHint;
+
+  /// No description provided for @verifyAction.
+  ///
+  /// In tr, this message translates to:
+  /// **'Doğrula'**
+  String get verifyAction;
+
   /// No description provided for @validationVerificationCodeRequired.
   ///
   /// In tr, this message translates to:

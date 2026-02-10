@@ -5,6 +5,7 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import { ProfileVerificationService } from './verification.service';
 import { IdentityVerificationService } from './identity-verification.service';
 import { IdentityPersonalDto } from './dto/identity-personal.dto';
+import { IdentityOtpDto } from './dto/identity-otp.dto';
 
 class EmailVerifyDto {
   code: string;
@@ -63,6 +64,16 @@ export class MeController {
   @Post('verification/identity/submit')
   submitIdentity(@Req() req: any) {
     return this.identityService.submit(req.user.id);
+  }
+
+  @Post('verification/identity/verify-otp')
+  verifyIdentityOtp(@Req() req: any, @Body() dto: IdentityOtpDto) {
+    return this.identityService.verifyOtp(req.user.id, dto.code);
+  }
+
+  @Post('verification/identity/resend-otp')
+  resendIdentityOtp(@Req() req: any) {
+    return this.identityService.resendOtp(req.user.id);
   }
 
   @Get('verification/identity/status')
