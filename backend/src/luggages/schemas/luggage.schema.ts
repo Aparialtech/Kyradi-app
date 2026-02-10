@@ -139,6 +139,8 @@ export class Luggage extends Document {
     notifiedAt?: Date;
     lastError?: string;
     retryCount?: number;
+    saasReservationId?: string;
+    externalReservationId?: string;
   };
 }
 

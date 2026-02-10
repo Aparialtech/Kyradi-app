@@ -11,6 +11,12 @@ import { SaasReservationPayload, SaasStatusUpdate } from './saas.types';
 export class SaasIntegrationService {
   private readonly logger = new Logger(SaasIntegrationService.name);
 
+  private extractExternalReservationId(note?: string): string | undefined {
+    if (!note) return undefined;
+    const match = note.match(/SUPERAPP_EXTERNAL_RES_ID:([A-Za-z0-9-_]+)/);
+    return match?.[1];
+  }
+
   constructor(
     @InjectModel(Luggage.name)
     private readonly luggageModel: Model<Luggage>,
@@ -41,7 +47,11 @@ export class SaasIntegrationService {
 
     const payload: SaasReservationPayload = {
       reservationId: luggage._id?.toString() ?? reservationId,
-      externalReservationId: luggage._id?.toString() ?? reservationId,
+      externalReservationId:
+        this.extractExternalReservationId(luggage.note) ??
+        luggage.integration?.externalReservationId ??
+        luggage._id?.toString() ??
+        reservationId,
       user: {
         id: luggage.userId ?? '',
         name: user?.name ?? undefined,
@@ -95,7 +105,11 @@ export class SaasIntegrationService {
             'integration.notifiedAt': new Date(),
             'integration.lastError': null,
             'integration.retryCount': 0,
-            'integration.externalReservationId': luggage._id?.toString() ?? reservationId,
+            'integration.externalReservationId':
+              this.extractExternalReservationId(luggage.note) ??
+              luggage.integration?.externalReservationId ??
+              luggage._id?.toString() ??
+              reservationId,
             ...(saasReservationId ? { 'integration.saasReservationId': saasReservationId } : {}),
             ...(storageUnit ? { storageUnit } : {}),
           },
@@ -156,7 +170,12 @@ export class SaasIntegrationService {
     );
 
     if (!luggage) {
-      throw new NotFoundException({ errorCode: 'RESERVATION_NOT_FOUND' });
+      throw new NotFoundException({
+        errorCode: 'RESERVATION_NOT_FOUND',
+        reservationId: reservationId ?? null,
+        externalReservationId: externalReservationId ?? null,
+        lookupTried: ['saasReservationId', 'externalReservationId'],
+      });
     }
 
     const mapStatus = (status: SaasStatusUpdate['status']): LuggageStatus => {
