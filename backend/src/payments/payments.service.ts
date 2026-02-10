@@ -4,6 +4,7 @@ import { Model } from 'mongoose';
 import { Luggage, PaymentMethod, PaymentStatus } from '../luggages/schemas/luggage.schema';
 import { PaymentCheckoutDto } from './dto/payment-checkout.dto';
 import { PaymentWebhookDto } from './dto/payment-webhook.dto';
+import { SaasIntegrationService } from '../integrations/saas/saas.service';
 
 @Injectable()
 export class PaymentsService {
@@ -12,6 +13,7 @@ export class PaymentsService {
   constructor(
     @InjectModel(Luggage.name)
     private readonly luggageModel: Model<Luggage>,
+    private readonly saasIntegration: SaasIntegrationService,
   ) {}
 
   async createCheckout(dto: PaymentCheckoutDto, checkoutBaseUrl: string | null) {
@@ -70,6 +72,13 @@ export class PaymentsService {
       throw new BadRequestException('INVALID_PAYMENT_STATUS');
     }
     await luggage.save();
+    if (luggage.paymentStatus === PaymentStatus.PAID) {
+      try {
+        await this.saasIntegration.notifyReservationPaid(luggage._id?.toString() ?? '');
+      } catch (err) {
+        this.logger.warn(`[SAAS_NOTIFY_ERR] ${(err as Error)?.message || err}`);
+      }
+    }
 
     return {
       ok: true,
@@ -113,6 +122,11 @@ export class PaymentsService {
       luggage.totalPrice = Math.round(amount);
     }
     await luggage.save();
+    try {
+      await this.saasIntegration.notifyReservationPaid(luggage._id?.toString() ?? '');
+    } catch (err) {
+      this.logger.warn(`[SAAS_NOTIFY_ERR] ${(err as Error)?.message || err}`);
+    }
     return true;
   }
 

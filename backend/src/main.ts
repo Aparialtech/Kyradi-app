@@ -29,6 +29,10 @@ async function bootstrap() {
     'GOOGLE_DIRECTIONS_API_KEY',
     'MAGICPAY_WEBHOOK_SECRET',
     'PAYMENTS_DEMO_MODE',
+    'SAAS_BASE_URL',
+    'SAAS_INTEGRATION_SECRET',
+    'SAAS_TIMEOUT_MS',
+    'SAAS_RETRY_COUNT',
     'CHAT_PROVIDER',
     'CHAT_API_KEY',
     'CHAT_MODEL',
@@ -90,8 +94,13 @@ async function bootstrap() {
 
   const jsonLimitMb = Number(process.env.JSON_BODY_LIMIT_MB ?? 1);
   const jsonLimit = `${jsonLimitMb}mb`;
-  app.use(express.json({ limit: jsonLimit }));
-  app.use(express.urlencoded({ extended: true, limit: jsonLimit }));
+  const rawBodySaver = (req: any, _res: any, buf: Buffer) => {
+    if (buf && buf.length > 0) {
+      req.rawBody = buf.toString('utf8');
+    }
+  };
+  app.use(express.json({ limit: jsonLimit, verify: rawBodySaver }));
+  app.use(express.urlencoded({ extended: true, limit: jsonLimit, verify: rawBodySaver }));
   // express-mongo-sanitize's built-in middleware tries to re-assign req.query.
   // With newer Express/Nest request objects, req.query may be getter-only, causing 500s.
   // We sanitize in-place to avoid any reassignment while keeping the protection.

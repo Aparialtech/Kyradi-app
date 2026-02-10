@@ -4,6 +4,7 @@ import { WalletController } from './wallet.controller';
 import { WalletService } from './wallet.service';
 import { Wallet, WalletSchema, WalletTransaction, WalletTransactionSchema } from './schemas/wallet.schema';
 import { Luggage, LuggageSchema } from '../luggages/schemas/luggage.schema';
+import { SaasModule } from '../integrations/saas/saas.module';
 
 @Module({
   imports: [
@@ -12,6 +13,7 @@ import { Luggage, LuggageSchema } from '../luggages/schemas/luggage.schema';
       { name: WalletTransaction.name, schema: WalletTransactionSchema },
       { name: Luggage.name, schema: LuggageSchema },
     ]),
+    SaasModule,
   ],
   controllers: [WalletController],
   providers: [WalletService],

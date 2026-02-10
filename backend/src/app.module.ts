@@ -17,6 +17,7 @@ import { AuthGuard } from './common/guards/auth.guard';
 import { ChatModule } from './chat/chat.module';
 import { ReservationsModule } from './reservations/reservations.module';
 import { WalletModule } from './wallet/wallet.module';
+import { SaasModule } from './integrations/saas/saas.module';
 
 @Module({
   imports: [
@@ -50,6 +51,7 @@ import { WalletModule } from './wallet/wallet.module';
     ChatModule,
     ReservationsModule,
     WalletModule,
+    SaasModule,
   ],
   controllers: [AppController],
   providers: [

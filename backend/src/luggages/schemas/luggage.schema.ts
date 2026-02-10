@@ -129,6 +129,17 @@ export class Luggage extends Document {
 
   @Prop()
   pickupConfirmedAt?: Date;
+
+  @Prop()
+  storageUnit?: string;
+
+  @Prop({ type: Object })
+  integration?: {
+    saasNotified?: boolean;
+    notifiedAt?: Date;
+    lastError?: string;
+    retryCount?: number;
+  };
 }
 
 export const LuggageSchema = SchemaFactory.createForClass(Luggage);

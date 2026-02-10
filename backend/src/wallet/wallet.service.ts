@@ -3,6 +3,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Luggage, PaymentMethod, PaymentStatus } from '../luggages/schemas/luggage.schema';
 import { Wallet, WalletTransaction } from './schemas/wallet.schema';
+import { SaasIntegrationService } from '../integrations/saas/saas.service';
 
 @Injectable()
 export class WalletService {
@@ -13,6 +14,7 @@ export class WalletService {
     private readonly transactionModel: Model<WalletTransaction>,
     @InjectModel(Luggage.name)
     private readonly luggageModel: Model<Luggage>,
+    private readonly saasIntegration: SaasIntegrationService,
   ) {}
 
   private async getOrCreateWallet(userId: string) {
@@ -63,6 +65,11 @@ export class WalletService {
     luggage.paymentStatus = PaymentStatus.PAID;
     luggage.paidAt = new Date();
     await luggage.save();
+    try {
+      await this.saasIntegration.notifyReservationPaid(luggage._id?.toString() ?? '');
+    } catch {
+      // Never fail wallet payment on SaaS notification errors.
+    }
     return { balance: wallet.balance, paymentStatus: luggage.paymentStatus };
   }
 }
