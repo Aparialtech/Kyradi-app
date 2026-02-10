@@ -133,6 +133,13 @@ export class Luggage extends Document {
   @Prop()
   storageUnit?: string;
 
+  // SaaS integration mapping (top-level for fast lookups + indexes; optional/backward compatible).
+  @Prop({ index: true })
+  saasReservationId?: string;
+
+  @Prop({ index: true })
+  externalReservationId?: string;
+
   @Prop({ type: Object })
   integration?: {
     saasNotified?: boolean;
@@ -145,3 +152,5 @@ export class Luggage extends Document {
 }
 
 export const LuggageSchema = SchemaFactory.createForClass(Luggage);
+LuggageSchema.index({ 'integration.saasReservationId': 1 });
+LuggageSchema.index({ 'integration.externalReservationId': 1 });

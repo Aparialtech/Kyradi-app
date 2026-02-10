@@ -17,6 +17,10 @@ export class SaasIntegrationService {
     return match?.[1];
   }
 
+  private escapeRegex(value: string): string {
+    return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  }
+
   constructor(
     @InjectModel(Luggage.name)
     private readonly luggageModel: Model<Luggage>,
@@ -45,13 +49,16 @@ export class SaasIntegrationService {
       ? await this.locationModel.findById(luggage.dropLocationId).lean().exec()
       : null;
 
+    const externalReservationIdToSend =
+      this.extractExternalReservationId(luggage.note) ??
+      (luggage as any)?.externalReservationId ??
+      luggage.integration?.externalReservationId ??
+      luggage._id?.toString() ??
+      reservationId;
+
     const payload: SaasReservationPayload = {
       reservationId: luggage._id?.toString() ?? reservationId,
-      externalReservationId:
-        this.extractExternalReservationId(luggage.note) ??
-        luggage.integration?.externalReservationId ??
-        luggage._id?.toString() ??
-        reservationId,
+      externalReservationId: externalReservationIdToSend,
       user: {
         id: luggage.userId ?? '',
         name: user?.name ?? undefined,
@@ -97,24 +104,33 @@ export class SaasIntegrationService {
         data.storage_id?.toString() ??
         data.storageId?.toString() ??
         data.storage_unit?.toString();
-      await this.luggageModel.updateOne(
-        { _id: luggage._id },
-        {
-          $set: {
-            'integration.saasNotified': true,
-            'integration.notifiedAt': new Date(),
-            'integration.lastError': null,
-            'integration.retryCount': 0,
-            'integration.externalReservationId':
-              this.extractExternalReservationId(luggage.note) ??
-              luggage.integration?.externalReservationId ??
-              luggage._id?.toString() ??
-              reservationId,
-            ...(saasReservationId ? { 'integration.saasReservationId': saasReservationId } : {}),
-            ...(storageUnit ? { storageUnit } : {}),
+      try {
+        await this.luggageModel.updateOne(
+          { _id: luggage._id },
+          {
+            $set: {
+              'integration.saasNotified': true,
+              'integration.notifiedAt': new Date(),
+              'integration.lastError': null,
+              'integration.retryCount': 0,
+              // Persist mapping in both integration.* (legacy) and top-level fields (indexed).
+              'integration.externalReservationId': externalReservationIdToSend,
+              externalReservationId: externalReservationIdToSend,
+              ...(saasReservationId ? { 'integration.saasReservationId': saasReservationId } : {}),
+              ...(saasReservationId ? { saasReservationId } : {}),
+              ...(storageUnit ? { storageUnit } : {}),
+            },
           },
-        },
-      );
+        );
+        this.logger.log(
+          `[SAAS_MAPPING_SAVED] luggageId=${luggage._id?.toString()} hasSaasId=${!!saasReservationId} hasExternalId=${!!externalReservationIdToSend}`,
+        );
+      } catch (e) {
+        // Never break payment flow due to integration persistence failure.
+        this.logger.warn(
+          `[SAAS_MAPPING_SAVE_FAIL] luggageId=${luggage._id?.toString()} err=${(e as Error)?.message ?? e}`,
+        );
+      }
       return { ok: true };
     }
 
@@ -133,9 +149,14 @@ export class SaasIntegrationService {
   }
 
   async applyStatusUpdate(body: SaasStatusUpdate) {
-    const reservationId = body?.reservationId?.toString().trim();
-    const saasReservationId = body?.saasReservationId?.toString().trim();
-    const externalReservationIdRaw = body?.externalReservationId?.toString().trim();
+    const raw: any = body as any;
+    const reservationId = raw?.reservationId?.toString().trim() ?? raw?.reservation_id?.toString().trim();
+    const saasReservationId =
+      raw?.saasReservationId?.toString().trim() ?? raw?.saas_reservation_id?.toString().trim();
+    const externalReservationIdRaw =
+      raw?.externalReservationId?.toString().trim() ??
+      raw?.external_reservation_id?.toString().trim() ??
+      raw?.externalReservationID?.toString().trim();
 
     const isObjectId =
       !!reservationId &&
@@ -164,17 +185,26 @@ export class SaasIntegrationService {
     }
     if (!luggage && saasIdCandidate) {
       lookupTried.push('saasReservationId');
-      luggage = await this.luggageModel
-        .findOne({ 'integration.saasReservationId': saasIdCandidate })
-        .exec();
+      luggage = await this.luggageModel.findOne({
+        $or: [{ saasReservationId: saasIdCandidate }, { 'integration.saasReservationId': saasIdCandidate }],
+      }).exec();
       if (luggage) matchedBy = 'saasReservationId';
     }
     if (!luggage && externalReservationId) {
       lookupTried.push('externalReservationId');
-      luggage = await this.luggageModel
-        .findOne({ 'integration.externalReservationId': externalReservationId })
-        .exec();
+      luggage = await this.luggageModel.findOne({
+        $or: [
+          { externalReservationId },
+          { 'integration.externalReservationId': externalReservationId },
+        ],
+      }).exec();
       if (luggage) matchedBy = 'externalReservationId';
+    }
+    if (!luggage && externalReservationId) {
+      lookupTried.push('noteRegex');
+      const re = new RegExp(`SUPERAPP_EXTERNAL_RES_ID:${this.escapeRegex(externalReservationId)}`);
+      luggage = await this.luggageModel.findOne({ note: re }).exec();
+      if (luggage) matchedBy = 'noteRegex';
     }
 
     console.log(
@@ -223,12 +253,18 @@ export class SaasIntegrationService {
     }
 
     luggage.status = nextStatus;
-    if (saasReservationId || externalReservationId) {
+    if (saasIdCandidate || externalReservationId) {
       (luggage as any).integration = {
         ...(luggage as any).integration,
-        ...(saasReservationId ? { saasReservationId } : {}),
+        ...(saasIdCandidate ? { saasReservationId: saasIdCandidate } : {}),
         ...(externalReservationId ? { externalReservationId } : {}),
       };
+    }
+    if (saasIdCandidate) {
+      (luggage as any).saasReservationId = saasIdCandidate;
+    }
+    if (externalReservationId) {
+      (luggage as any).externalReservationId = externalReservationId;
     }
     if (body.storageUnit) {
       (luggage as any).storageUnit = body.storageUnit;
