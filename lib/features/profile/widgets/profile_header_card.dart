@@ -4,6 +4,7 @@ import '../../../models/user.dart';
 import '../../../services/api_service.dart';
 import '../../../widgets/section_card.dart';
 import '../../../l10n/app_localizations.dart';
+import '../../../widgets/avatar_image.dart';
 
 class ProfileHeaderCard extends StatelessWidget {
   const ProfileHeaderCard({
@@ -23,12 +24,6 @@ class ProfileHeaderCard extends StatelessWidget {
     final loc = AppLocalizations.of(context)!;
     final fullName = '${user.name} ${user.surname}'.trim();
     final resolvedPath = _resolveAvatarUrl(avatarPath ?? '');
-    final isRemote = resolvedPath.startsWith('http');
-    final hasLocal = resolvedPath.isNotEmpty && File(resolvedPath).existsSync();
-    final hasAvatar = isRemote || hasLocal;
-    final ImageProvider? avatarImage = isRemote
-        ? NetworkImage(resolvedPath)
-        : (hasLocal ? FileImage(File(resolvedPath)) : null);
     // Backward compatible:
     // - Older users may be considered verified via email verificationStatus.
     // - New KYC flow sets identityVerified (and backend may also keep legacy `verified` true).
@@ -56,14 +51,14 @@ class ProfileHeaderCard extends StatelessWidget {
               child: CircleAvatar(
                 radius: 28,
                 backgroundColor: theme.colorScheme.primary.withValues(alpha: 0.12),
-                backgroundImage: avatarImage,
-                child: !hasAvatar
-                    ? Icon(
-                        Icons.person,
-                        color: theme.colorScheme.primary,
-                        size: 28,
-                      )
-                    : null,
+                child: AvatarImage(
+                  path: resolvedPath,
+                  size: 56,
+                  icon: Icons.person,
+                  iconColor: theme.colorScheme.primary,
+                  backgroundColor:
+                      theme.colorScheme.primary.withValues(alpha: 0.12),
+                ),
               ),
             ),
           ),

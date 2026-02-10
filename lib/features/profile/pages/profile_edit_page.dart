@@ -7,6 +7,7 @@ import '../../../services/api_service.dart';
 import '../../../widgets/app_notification.dart';
 import '../../../widgets/app_mesh_background.dart';
 import '../../../widgets/section_card.dart';
+import '../../../widgets/avatar_image.dart';
 import '../../../core/profile_avatar_cache.dart';
 import '../../../l10n/app_localizations.dart';
 
@@ -197,12 +198,6 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
     final theme = Theme.of(context);
     final loc = AppLocalizations.of(context)!;
     final resolvedPath = _resolveAvatarUrl(_avatarPath ?? '');
-    final isRemote = resolvedPath.startsWith('http');
-    final hasLocal = resolvedPath.isNotEmpty && File(resolvedPath).existsSync();
-    final hasAvatar = isRemote || hasLocal;
-    final ImageProvider? avatarImage = isRemote
-        ? NetworkImage(resolvedPath)
-        : (hasLocal ? FileImage(File(resolvedPath)) : null);
     return Scaffold(
       backgroundColor: Colors.transparent,
       appBar: AppBar(
@@ -256,18 +251,13 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
                                 end: Alignment.bottomRight,
                               ),
                             ),
-                            child: CircleAvatar(
-                              radius: 34,
+                            child: AvatarImage(
+                              path: resolvedPath,
+                              size: 68,
+                              icon: Icons.person,
+                              iconColor: theme.colorScheme.primary,
                               backgroundColor: theme.colorScheme.primary
                                   .withValues(alpha: 0.12),
-                              backgroundImage: avatarImage,
-                              child: _avatarPath == null || _avatarPath!.isEmpty
-                                  ? Icon(
-                                      Icons.person,
-                                      color: theme.colorScheme.primary,
-                                      size: 30,
-                                    )
-                                  : null,
                             ),
                           ),
                         ),

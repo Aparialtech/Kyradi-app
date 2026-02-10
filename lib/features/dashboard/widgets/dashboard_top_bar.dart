@@ -1,6 +1,6 @@
-import 'dart:io';
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import '../../../widgets/avatar_image.dart';
 
 class DashboardTopBar extends StatelessWidget {
   const DashboardTopBar({
@@ -19,13 +19,6 @@ class DashboardTopBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final resolvedPath = avatarPath?.trim() ?? '';
-    final isRemote = resolvedPath.startsWith('http');
-    final hasLocal = resolvedPath.isNotEmpty && File(resolvedPath).existsSync();
-    final hasAvatar = isRemote || hasLocal;
-    final ImageProvider? avatarImage = isRemote
-        ? NetworkImage(resolvedPath)
-        : (hasLocal ? FileImage(File(resolvedPath)) : null);
     final isDark = theme.brightness == Brightness.dark;
     return ClipRRect(
       borderRadius: BorderRadius.circular(22),
@@ -98,13 +91,14 @@ class DashboardTopBar extends StatelessWidget {
                     radius: 20,
                     backgroundColor:
                         theme.colorScheme.primary.withValues(alpha: 0.12),
-                    backgroundImage: avatarImage,
-                    child: !hasAvatar
-                        ? Icon(
-                            Icons.person,
-                            color: theme.colorScheme.primary,
-                          )
-                        : null,
+                    child: AvatarImage(
+                      path: avatarPath,
+                      size: 40,
+                      icon: Icons.person,
+                      iconColor: theme.colorScheme.primary,
+                      backgroundColor:
+                          theme.colorScheme.primary.withValues(alpha: 0.12),
+                    ),
                   ),
                 ),
               ),

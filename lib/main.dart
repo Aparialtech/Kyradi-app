@@ -18,6 +18,19 @@ import 'ui/theme/app_typography.dart';
 
 final _appRouter = buildAppRouter();
 
+bool _isBenignImageError(FlutterErrorDetails details) {
+  final message = details.exceptionAsString();
+  if (message.contains('NetworkImageLoadException')) return true;
+  if (message.contains('HTTP request failed, statusCode: 404')) return true;
+  if (message.contains('Invalid statusCode')) return true;
+  if (message.contains('Failed to load network image')) return true;
+  if (message.contains('ImageCodecException')) return true;
+  final lib = (details.library ?? '').toLowerCase();
+  if (lib.contains('image resource')) return true;
+  if (lib.contains('image') && message.contains('HttpException')) return true;
+  return false;
+}
+
 Future<void> main() async {
   // Run app with error zone to keep crash diagnostics.
   runZonedGuarded(
@@ -28,6 +41,14 @@ Future<void> main() async {
       // Global error handlers to surface iOS/TestFlight crashes with context.
       FlutterError.onError = (FlutterErrorDetails details) {
         FlutterError.presentError(details);
+        if (_isBenignImageError(details)) {
+          appLog(
+            'flutter',
+            'Non-fatal image error: ${details.exception}',
+            level: AppLogLevel.warn,
+          );
+          return;
+        }
         appLog(
           'flutter',
           '${details.exception}\n${details.stack ?? ''}',
@@ -613,6 +634,9 @@ class MyApp extends StatelessWidget {
                 }
                 // Error widget builder to avoid silent crashes on iOS/TestFlight.
                 ErrorWidget.builder = (FlutterErrorDetails details) {
+                  if (_isBenignImageError(details)) {
+                    return const SizedBox.shrink();
+                  }
                   appLog(
                     'flutter',
                     '${details.exception}\n${details.stack ?? ''}',
