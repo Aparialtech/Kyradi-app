@@ -106,6 +106,7 @@ export class SaasIntegrationService {
 
   async applyStatusUpdate(body: SaasStatusUpdate) {
     const reservationId = body?.reservationId?.toString().trim();
+    const externalReservationId = body?.externalReservationId?.toString().trim();
     if (!reservationId) {
       throw new BadRequestException({ errorCode: 'RESERVATION_ID_REQUIRED' });
     }
@@ -149,7 +150,37 @@ export class SaasIntegrationService {
       }
     }
 
-    console.log({ reservationId, isObjectId, matchedBy });
+    let matchedByReservationId = false;
+    if (luggage) matchedByReservationId = true;
+
+    let matchedByExternalId = false;
+    if (!luggage && externalReservationId) {
+      const externalIsObjectId =
+        Types.ObjectId.isValid(externalReservationId) &&
+        new Types.ObjectId(externalReservationId).toString() === externalReservationId;
+      if (externalIsObjectId) {
+        luggage = await this.luggageModel.findById(externalReservationId).exec();
+        if (luggage) {
+          matchedBy = 'externalId';
+          matchedByExternalId = true;
+        }
+      }
+      if (!luggage) {
+        luggage = await this.luggageModel
+          .findOne({ 'integration.externalReservationId': externalReservationId })
+          .exec();
+        if (luggage) {
+          matchedBy = 'integration.externalReservationId';
+          matchedByExternalId = true;
+        }
+      }
+    }
+
+    console.log(
+      `SAAS_STATUS_UPDATE lookup: byReservationId=${matchedByReservationId} ` +
+        `byExternalId=${matchedByExternalId} reservationId=${reservationId} ` +
+        `externalReservationId=${externalReservationId ?? ''}`,
+    );
 
     if (!luggage) {
       throw new NotFoundException({ errorCode: 'RESERVATION_NOT_FOUND' });
@@ -173,6 +204,15 @@ export class SaasIntegrationService {
 
     const nextStatus = mapStatus(body.status);
     luggage.status = nextStatus;
+    if (externalReservationId) {
+      const existing = (luggage as any).integration?.externalReservationId;
+      if (!existing) {
+        (luggage as any).integration = {
+          ...(luggage as any).integration,
+          externalReservationId,
+        };
+      }
+    }
     if (body.storageUnit) {
       (luggage as any).storageUnit = body.storageUnit;
     }

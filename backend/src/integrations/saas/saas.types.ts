@@ -33,6 +33,7 @@ export type SaasReservationPayload = {
 
 export type SaasStatusUpdate = {
   reservationId: string;
+  externalReservationId?: string;
   status: 'assigned' | 'dropped' | 'picked_up' | 'cancelled' | 'rejected';
   storageUnit?: string;
   operator?: { id?: string; name?: string } | string;
