@@ -136,9 +136,6 @@ export class SaasIntegrationService {
     const reservationId = body?.reservationId?.toString().trim();
     const saasReservationId = body?.saasReservationId?.toString().trim();
     const externalReservationIdRaw = body?.externalReservationId?.toString().trim();
-    if (!reservationId && !saasReservationId && !externalReservationId) {
-      throw new BadRequestException({ errorCode: 'RESERVATION_ID_REQUIRED' });
-    }
 
     const isObjectId =
       !!reservationId &&
@@ -146,6 +143,10 @@ export class SaasIntegrationService {
       new Types.ObjectId(reservationId).toString() === reservationId;
     const externalReservationId =
       externalReservationIdRaw || (!isObjectId && reservationId ? reservationId : undefined);
+
+    if (!reservationId && !saasReservationId && !externalReservationId) {
+      throw new BadRequestException({ errorCode: 'RESERVATION_ID_REQUIRED' });
+    }
     let luggage: Luggage | null = null;
     let matchedBy: string = 'none';
 
