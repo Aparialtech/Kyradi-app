@@ -3,9 +3,9 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { SaasClient } from './saas.client';
 import { SaasIntegrationService } from './saas.service';
 import { SaasController } from './saas.controller';
-import { Luggage, LuggageSchema } from '../luggages/schemas/luggage.schema';
-import { User, UserSchema } from '../users/schemas/user.schema';
-import { Location, LocationSchema } from '../locations/schemas/location.schema';
+import { Luggage, LuggageSchema } from '../../luggages/schemas/luggage.schema';
+import { User, UserSchema } from '../../users/schemas/user.schema';
+import { Location, LocationSchema } from '../../locations/schemas/location.schema';
 
 @Module({
   imports: [

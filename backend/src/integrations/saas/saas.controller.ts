@@ -1,8 +1,8 @@
 import { BadRequestException, Body, Controller, Post, Req, UnauthorizedException } from '@nestjs/common';
-import { Public } from '../common/decorators/public.decorator';
+import { Public } from '../../common/decorators/public.decorator';
 import { SaasClient } from './saas.client';
 import { SaasIntegrationService } from './saas.service';
-import { SaasStatusUpdate } from './saas.types';
+import type { SaasStatusUpdate } from './saas.types';
 
 @Controller('integrations/saas')
 export class SaasController {

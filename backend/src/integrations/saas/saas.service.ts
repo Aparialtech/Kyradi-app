@@ -1,9 +1,9 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { Luggage, LuggageStatus } from '../luggages/schemas/luggage.schema';
-import { User } from '../users/schemas/user.schema';
-import { Location } from '../locations/schemas/location.schema';
+import { Luggage, LuggageStatus } from '../../luggages/schemas/luggage.schema';
+import { User } from '../../users/schemas/user.schema';
+import { Location } from '../../locations/schemas/location.schema';
 import { SaasClient } from './saas.client';
 import { SaasReservationPayload, SaasStatusUpdate } from './saas.types';
 
