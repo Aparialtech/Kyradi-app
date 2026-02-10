@@ -71,7 +71,7 @@ async function bootstrap() {
     }
   }
 
-  const app = await NestFactory.create<NestExpressApplication>(AppModule);
+  const app = await NestFactory.create<NestExpressApplication>(AppModule, { bodyParser: false });
   const trustProxy = (process.env.TRUST_PROXY ?? '1').toString();
   if (trustProxy) {
     app.set('trust proxy', trustProxy === 'true' ? 1 : Number(trustProxy) || 1);
