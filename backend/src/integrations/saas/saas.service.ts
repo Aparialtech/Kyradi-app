@@ -128,24 +128,24 @@ export class SaasIntegrationService {
     if (luggage) matchedByReservationId = true;
 
     let matchedByExternalId = false;
-    const candidateSaasId =
-      saasReservationId ?? (!isObjectId && reservationId ? reservationId : undefined);
-    if (!luggage && candidateSaasId) {
+    const candidateExternalId =
+      externalReservationId ?? (!isObjectId && reservationId ? reservationId : undefined);
+    if (!luggage && candidateExternalId) {
       luggage = await this.luggageModel
-        .findOne({ 'integration.saasReservationId': candidateSaasId })
-        .exec();
-      if (luggage) {
-        matchedBy = 'integration.saasReservationId';
-        matchedByReservationId = true;
-      }
-    }
-    if (!luggage && externalReservationId) {
-      luggage = await this.luggageModel
-        .findOne({ 'integration.externalReservationId': externalReservationId })
+        .findOne({ 'integration.externalReservationId': candidateExternalId })
         .exec();
       if (luggage) {
         matchedBy = 'integration.externalReservationId';
         matchedByExternalId = true;
+      }
+    }
+    if (!luggage && saasReservationId) {
+      luggage = await this.luggageModel
+        .findOne({ 'integration.saasReservationId': saasReservationId })
+        .exec();
+      if (luggage) {
+        matchedBy = 'integration.saasReservationId';
+        matchedByReservationId = true;
       }
     }
     if (!luggage && reservationId) {
@@ -161,18 +161,11 @@ export class SaasIntegrationService {
     console.log(
       `SAAS_STATUS_UPDATE lookup: byReservationId=${matchedByReservationId} ` +
         `byExternalId=${matchedByExternalId} reservationId=${reservationId ?? ''} ` +
-        `externalReservationId=${externalReservationId ?? ''}`,
+        `externalReservationId=${externalReservationId ?? ''} lookupBy=${matchedBy}`,
     );
 
     if (!luggage) {
-      throw new NotFoundException({
-        errorCode: 'RESERVATION_NOT_FOUND',
-        received: {
-          reservationId: reservationId ?? null,
-          saasReservationId: saasReservationId ?? null,
-          externalReservationId: externalReservationId ?? null,
-        },
-      });
+      throw new NotFoundException({ errorCode: 'RESERVATION_NOT_FOUND' });
     }
 
     const mapStatus = (status: SaasStatusUpdate['status']): LuggageStatus => {
@@ -202,11 +195,15 @@ export class SaasIntegrationService {
     }
 
     luggage.status = nextStatus;
-    if (saasReservationId || externalReservationId) {
+    if (saasReservationId || externalReservationId || candidateExternalId) {
       (luggage as any).integration = {
         ...(luggage as any).integration,
         ...(saasReservationId ? { saasReservationId } : {}),
-        ...(externalReservationId ? { externalReservationId } : {}),
+        ...(externalReservationId
+          ? { externalReservationId }
+          : candidateExternalId
+            ? { externalReservationId: candidateExternalId }
+            : {}),
       };
     }
     if (body.storageUnit) {
