@@ -208,7 +208,7 @@ export class SaasIntegrationService {
     }
     if (!luggage && externalReservationId) {
       lookupTried.push('noteRegex');
-      const re = new RegExp(`SUPERAPP_EXTERNAL_RES_ID:${this.escapeRegex(externalReservationId)}`);
+      const re = new RegExp(`SUPERAPP_EXTERNAL_RES_ID:\\s*${this.escapeRegex(externalReservationId)}`);
       luggage = await this.luggageModel.findOne({ note: re }).exec();
       if (luggage) matchedBy = 'noteRegex';
     }
