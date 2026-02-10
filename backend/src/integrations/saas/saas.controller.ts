@@ -18,6 +18,13 @@ export class SaasController {
       throw new BadRequestException('SAAS_DISABLED');
     }
     const sig = req?.headers?.['x-kyradi-signature']?.toString();
+    const keys = body && typeof body === 'object' ? Object.keys(body as any) : [];
+    console.log('[SAAS_BODY]', {
+      keys,
+      reservationId: (body as any)?.reservationId ?? null,
+      saasReservationId: (body as any)?.saasReservationId ?? null,
+      externalReservationId: (body as any)?.externalReservationId ?? null,
+    });
     console.log('[SAAS_SIG]', {
       hasRawBody: !!req?.rawBody,
       rawLen: req?.rawBody?.length,

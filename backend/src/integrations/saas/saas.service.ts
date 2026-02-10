@@ -141,26 +141,36 @@ export class SaasIntegrationService {
       !!reservationId &&
       Types.ObjectId.isValid(reservationId) &&
       new Types.ObjectId(reservationId).toString() === reservationId;
+    // If SaaS sends only reservationId (UUID), treat it as the SaaS id.
+    const saasIdCandidate = saasReservationId || (!isObjectId ? reservationId : undefined);
+    // If SaaS doesn't send externalReservationId explicitly, fallback to reservationId as legacy.
     const externalReservationId =
       externalReservationIdRaw || (!isObjectId && reservationId ? reservationId : undefined);
 
-    if (!reservationId && !saasReservationId && !externalReservationId) {
-      throw new BadRequestException({ errorCode: 'RESERVATION_ID_REQUIRED' });
+    if (!reservationId && !saasIdCandidate && !externalReservationId) {
+      throw new BadRequestException({
+        message: 'reservationId_or_externalReservationId_required',
+        errorCode: 'RESERVATION_ID_REQUIRED',
+      });
     }
     let luggage: Luggage | null = null;
     let matchedBy: string = 'none';
+    const lookupTried: string[] = [];
 
     if (reservationId && isObjectId) {
+      lookupTried.push('id');
       luggage = await this.luggageModel.findById(reservationId).exec();
       if (luggage) matchedBy = 'id';
     }
-    if (!luggage && saasReservationId) {
+    if (!luggage && saasIdCandidate) {
+      lookupTried.push('saasReservationId');
       luggage = await this.luggageModel
-        .findOne({ 'integration.saasReservationId': saasReservationId })
+        .findOne({ 'integration.saasReservationId': saasIdCandidate })
         .exec();
       if (luggage) matchedBy = 'saasReservationId';
     }
     if (!luggage && externalReservationId) {
+      lookupTried.push('externalReservationId');
       luggage = await this.luggageModel
         .findOne({ 'integration.externalReservationId': externalReservationId })
         .exec();
@@ -168,17 +178,21 @@ export class SaasIntegrationService {
     }
 
     console.log(
-      `SAAS_STATUS_UPDATE lookup: lookupBy=${matchedBy} reservationId=${reservationId ?? ''} ` +
-        `saasReservationId=${saasReservationId ?? ''} externalReservationId=${externalReservationId ?? ''}`,
+      `SAAS_STATUS_UPDATE lookup: lookupBy=${matchedBy} tried=${lookupTried.join(
+        ',',
+      )} reservationId=${reservationId ?? ''} ` +
+        `saasReservationId=${saasIdCandidate ?? ''} externalReservationId=${externalReservationId ?? ''}`,
     );
 
     if (!luggage) {
       throw new NotFoundException({
+        message: 'RESERVATION_NOT_FOUND',
         errorCode: 'RESERVATION_NOT_FOUND',
         reservationId: reservationId ?? null,
-        saasReservationId: saasReservationId ?? null,
+        saasReservationId: saasIdCandidate ?? null,
         externalReservationId: externalReservationId ?? null,
-        lookupTried: ['id', 'saasReservationId', 'externalReservationId'],
+        lookupBy: matchedBy,
+        lookupTried,
       });
     }
 
