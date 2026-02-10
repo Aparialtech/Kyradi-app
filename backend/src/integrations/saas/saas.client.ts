@@ -41,8 +41,8 @@ export class SaasClient {
 
   verifyIncomingSignature(rawBody: string | undefined, body: unknown, signature?: string): boolean {
     if (!this.secret) return false;
-    const bodyString = resolveBodyString(rawBody, body);
-    return verifySignature(bodyString, signature, this.secret);
+    if (!rawBody || rawBody.length === 0) return false;
+    return verifySignature(rawBody, signature, this.secret);
   }
 
   async postReservation(payload: SaasReservationPayload): Promise<SaasPostResult> {

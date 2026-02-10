@@ -17,6 +17,13 @@ export class SaasController {
     if (!this.saasClient.isEnabled()) {
       throw new BadRequestException('SAAS_DISABLED');
     }
+    console.log({
+      hasRawBody: !!req?.rawBody,
+      rawBodyLength: req?.rawBody?.length,
+    });
+    if (!req?.rawBody || req.rawBody.length === 0) {
+      throw new UnauthorizedException('RAW_BODY_MISSING');
+    }
     const signature = req?.headers?.['x-kyradi-signature']?.toString();
     const ok = this.saasClient.verifyIncomingSignature(req?.rawBody, body, signature);
     if (!ok) {
