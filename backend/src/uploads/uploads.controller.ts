@@ -23,10 +23,13 @@ type UploadedIdentityFile = {
 
 const ALLOWED_MIME = new Set([
   'image/jpeg',
+  'image/jpg',
   'image/png',
   'image/webp',
   'image/heic',
   'image/heif',
+  'application/octet-stream',
+  'binary/octet-stream',
 ]);
 
 type IdentityDocType = 'id_front' | 'id_back' | 'selfie';
@@ -42,18 +45,28 @@ export class UploadsController {
   @UseInterceptors(
     FileInterceptor('file', {
       storage: diskStorage({
-        destination: (_req, _file, cb) =>
-          cb(null, path.join(process.env.UPLOADS_DIR ?? path.join(process.cwd(), 'uploads'), 'identity')),
+        destination: (_req, _file, cb) => {
+          const base = process.env.UPLOADS_DIR ?? path.join(process.cwd(), 'uploads');
+          const target = path.join(base, 'identity');
+          try {
+            fs.mkdirSync(target, { recursive: true });
+          } catch {
+            // ignore mkdir errors; multer will surface if it cannot write
+          }
+          cb(null, target);
+        },
         filename: (_req, file, cb) => {
           const ext = path.extname(file.originalname);
           cb(null, `${randomUUID()}${ext}`);
         },
       }),
       fileFilter: (_req, file, cb) => {
-        if (!ALLOWED_MIME.has(file.mimetype)) {
-          return cb(new Error('INVALID_FILE_TYPE'), false);
+        const mime = (file.mimetype ?? '').toLowerCase();
+        // Allow unknown mime from some clients; verify via magic bytes after upload.
+        if (mime.isEmpty || mime.startsWith('image/') || ALLOWED_MIME.has(mime)) {
+          return cb(null, true);
         }
-        return cb(null, true);
+        return cb(new Error('INVALID_FILE_TYPE'), false);
       },
       limits: {
         fileSize:
