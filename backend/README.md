@@ -76,6 +76,26 @@ curl -i -X POST http://localhost:3000/auth/register \
   -d '{"email":"test3@example.com","password":"Password123"}'
 ```
 
+## SaaS status-update smoke tests
+
+```bash
+# 1) reservationId (SaaS UUID) + storageUnit
+BODY='{"reservationId":"9d7876ff-ffa0-4a3f-8ebf-d97236749413","status":"dropped","storageUnit":"LVN-3412"}'
+SIG=$(printf '%s' "$BODY" | openssl dgst -sha256 -hmac "$SAAS_INTEGRATION_SECRET" | awk '{print $2}')
+curl -i -X POST http://localhost:3000/integrations/saas/status-update \
+  -H "Content-Type: application/json" \
+  -H "x-kyradi-signature: $SIG" \
+  -d "$BODY"
+
+# 2) externalReservationId fallback
+BODY='{"externalReservationId":"R-001","status":"dropped","storageUnit":"LVN-3412"}'
+SIG=$(printf '%s' "$BODY" | openssl dgst -sha256 -hmac "$SAAS_INTEGRATION_SECRET" | awk '{print $2}')
+curl -i -X POST http://localhost:3000/integrations/saas/status-update \
+  -H "Content-Type: application/json" \
+  -H "x-kyradi-signature: $SIG" \
+  -d "$BODY"
+```
+
 ## Deployment
 
 When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.

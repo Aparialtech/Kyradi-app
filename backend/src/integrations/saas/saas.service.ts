@@ -133,77 +133,26 @@ export class SaasIntegrationService {
     let luggage: Luggage | null = null;
     let matchedBy: string = 'none';
 
-    if (reservationId && isObjectId) {
+    if (reservationId) {
+      luggage = await this.luggageModel
+        .findOne({ 'integration.saasReservationId': reservationId })
+        .exec();
+      if (luggage) matchedBy = 'saasReservationId';
+    }
+    if (!luggage && isObjectId) {
       luggage = await this.luggageModel.findById(reservationId).exec();
       if (luggage) matchedBy = 'id';
     }
-
-    let matchedByReservationId = false;
-    if (luggage) matchedByReservationId = true;
-
-    let matchedByExternalId = false;
-    const candidateExternalId =
-      externalReservationId ?? (!isObjectId && reservationId ? reservationId : undefined);
-    if (!luggage && candidateExternalId) {
+    if (!luggage && externalReservationId) {
       luggage = await this.luggageModel
-        .findOne({ 'integration.externalReservationId': candidateExternalId })
+        .findOne({ 'integration.externalReservationId': externalReservationId })
         .exec();
-      if (luggage) {
-        matchedBy = 'integration.externalReservationId';
-        matchedByExternalId = true;
-      }
-    }
-    if (!luggage && candidateExternalId) {
-      luggage = await this.luggageModel.findOne({ externalReservationId: candidateExternalId }).exec();
-      if (luggage) {
-        matchedBy = 'externalReservationId';
-        matchedByExternalId = true;
-      }
-    }
-    if (!luggage && candidateExternalId) {
-      luggage = await this.luggageModel.findOne({ reservationCode: candidateExternalId }).exec();
-      if (luggage) {
-        matchedBy = 'reservationCode';
-        matchedByExternalId = true;
-      }
-    }
-    if (!luggage && candidateExternalId) {
-      luggage = await this.luggageModel.findOne({ code: candidateExternalId }).exec();
-      if (luggage) {
-        matchedBy = 'code';
-        matchedByExternalId = true;
-      }
-    }
-    if (!luggage && candidateExternalId) {
-      luggage = await this.luggageModel.findOne({ qrCode: candidateExternalId }).exec();
-      if (luggage) {
-        matchedBy = 'qrCode';
-        matchedByExternalId = true;
-      }
-    }
-    if (!luggage && saasReservationId) {
-      luggage = await this.luggageModel
-        .findOne({ 'integration.saasReservationId': saasReservationId })
-        .exec();
-      if (luggage) {
-        matchedBy = 'integration.saasReservationId';
-        matchedByReservationId = true;
-      }
-    }
-    if (!luggage && reservationId) {
-      const escaped = reservationId.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-      const pattern = new RegExp(`SUPERAPP_EXTERNAL_RES_ID:${escaped}`);
-      luggage = await this.luggageModel.findOne({ note: { $regex: pattern } }).exec();
-      if (luggage) {
-        matchedBy = 'note';
-        matchedByReservationId = true;
-      }
+      if (luggage) matchedBy = 'externalReservationId';
     }
 
     console.log(
-      `SAAS_STATUS_UPDATE lookup: byReservationId=${matchedByReservationId} ` +
-        `byExternalId=${matchedByExternalId} reservationId=${reservationId ?? ''} ` +
-        `externalReservationId=${externalReservationId ?? ''} lookupBy=${matchedBy}`,
+      `SAAS_STATUS_UPDATE lookup: lookupBy=${matchedBy} reservationId=${reservationId ?? ''} ` +
+        `externalReservationId=${externalReservationId ?? ''}`,
     );
 
     if (!luggage) {
@@ -237,15 +186,11 @@ export class SaasIntegrationService {
     }
 
     luggage.status = nextStatus;
-    if (saasReservationId || externalReservationId || candidateExternalId) {
+    if (saasReservationId || externalReservationId) {
       (luggage as any).integration = {
         ...(luggage as any).integration,
         ...(saasReservationId ? { saasReservationId } : {}),
-        ...(externalReservationId
-          ? { externalReservationId }
-          : candidateExternalId
-            ? { externalReservationId: candidateExternalId }
-            : {}),
+        ...(externalReservationId ? { externalReservationId } : {}),
       };
     }
     if (body.storageUnit) {
