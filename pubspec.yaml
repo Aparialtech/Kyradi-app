@@ -83,5 +83,5 @@ package_rename_config:
 flutter_launcher_icons:
   android: true
   ios: true
-  image_path: "assets/icons/kyradi_app_icon.png"
+  image_path: "assets/images/kyradi_logo.png"
   remove_alpha_ios: true
