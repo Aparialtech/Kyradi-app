@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart'
     show kIsWeb, defaultTargetPlatform, TargetPlatform;
 import 'package:http/http.dart' as http;
+import 'package:http_parser/http_parser.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
@@ -1069,9 +1070,17 @@ class ApiService {
         'type': type.trim(),
       });
     }
+    final contentType = _guessImageMediaType(filename);
     final request = http.MultipartRequest('POST', uri)
       ..headers.addAll(_plainHeaders())
-      ..files.add(http.MultipartFile.fromBytes('file', bytes, filename: filename));
+      ..files.add(
+        http.MultipartFile.fromBytes(
+          'file',
+          bytes,
+          filename: filename,
+          contentType: contentType,
+        ),
+      );
     try {
       final response = await request.send().timeout(const Duration(seconds: 20));
       final responseBody = await response.stream.bytesToString();
@@ -1088,6 +1097,19 @@ class ApiService {
         'statusCode': 500,
       };
     }
+  }
+
+  static MediaType _guessImageMediaType(String filename) {
+    final lower = filename.toLowerCase();
+    if (lower.endsWith('.png')) return MediaType('image', 'png');
+    if (lower.endsWith('.webp')) return MediaType('image', 'webp');
+    if (lower.endsWith('.heic')) return MediaType('image', 'heic');
+    if (lower.endsWith('.heif')) return MediaType('image', 'heif');
+    if (lower.endsWith('.jpg') || lower.endsWith('.jpeg')) {
+      return MediaType('image', 'jpeg');
+    }
+    // Fallback to jpeg so multer receives a valid image/* mime.
+    return MediaType('image', 'jpeg');
   }
 
   static String? _normalizeBaseUrl(String? value) {
