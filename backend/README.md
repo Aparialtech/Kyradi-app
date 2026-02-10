@@ -79,10 +79,13 @@ curl -i -X POST http://localhost:3000/auth/register \
 ## SaaS status-update smoke tests
 
 ```bash
+# Local base URL. For production, use: https://kyradi-app-production.up.railway.app
+API="http://localhost:3000"
+
 # 1) reservationId (SaaS UUID) + storageUnit
 BODY='{"reservationId":"9d7876ff-ffa0-4a3f-8ebf-d97236749413","status":"dropped","storageUnit":"LVN-3412"}'
 SIG=$(printf '%s' "$BODY" | openssl dgst -sha256 -hmac "$SAAS_INTEGRATION_SECRET" | awk '{print $2}')
-curl -i -X POST http://localhost:3000/integrations/saas/status-update \
+curl -i -X POST "$API/integrations/saas/status-update" \
   -H "Content-Type: application/json" \
   -H "x-kyradi-signature: $SIG" \
   -d "$BODY"
@@ -90,7 +93,15 @@ curl -i -X POST http://localhost:3000/integrations/saas/status-update \
 # 2) externalReservationId fallback
 BODY='{"externalReservationId":"R-001","status":"dropped","storageUnit":"LVN-3412"}'
 SIG=$(printf '%s' "$BODY" | openssl dgst -sha256 -hmac "$SAAS_INTEGRATION_SECRET" | awk '{print $2}')
-curl -i -X POST http://localhost:3000/integrations/saas/status-update \
+curl -i -X POST "$API/integrations/saas/status-update" \
+  -H "Content-Type: application/json" \
+  -H "x-kyradi-signature: $SIG" \
+  -d "$BODY"
+
+# 3) Diagnose: find which luggage is mapped (PII-free response)
+BODY='{"externalReservationId":"R-001"}'
+SIG=$(printf '%s' "$BODY" | openssl dgst -sha256 -hmac "$SAAS_INTEGRATION_SECRET" | awk '{print $2}')
+curl -i -X POST "$API/integrations/saas/diagnose" \
   -H "Content-Type: application/json" \
   -H "x-kyradi-signature: $SIG" \
   -d "$BODY"
