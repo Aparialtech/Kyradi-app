@@ -41,6 +41,7 @@ export class SaasIntegrationService {
 
     const payload: SaasReservationPayload = {
       reservationId: luggage._id?.toString() ?? reservationId,
+      externalReservationId: luggage._id?.toString() ?? reservationId,
       user: {
         id: luggage.userId ?? '',
         name: user?.name ?? undefined,
@@ -76,6 +77,16 @@ export class SaasIntegrationService {
 
     const res = await this.saasClient.postReservation(payload);
     if (res.ok) {
+      const data = res.data ?? {};
+      const saasReservationId =
+        data.saasReservationId?.toString() ??
+        data.reservationId?.toString() ??
+        data.id?.toString();
+      const storageUnit =
+        data.storageUnit?.toString() ??
+        data.storage_id?.toString() ??
+        data.storageId?.toString() ??
+        data.storage_unit?.toString();
       await this.luggageModel.updateOne(
         { _id: luggage._id },
         {
@@ -84,6 +95,9 @@ export class SaasIntegrationService {
             'integration.notifiedAt': new Date(),
             'integration.lastError': null,
             'integration.retryCount': 0,
+            'integration.externalReservationId': luggage._id?.toString() ?? reservationId,
+            ...(saasReservationId ? { 'integration.saasReservationId': saasReservationId } : {}),
+            ...(storageUnit ? { storageUnit } : {}),
           },
         },
       );

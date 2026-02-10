@@ -1,5 +1,6 @@
 export type SaasReservationPayload = {
   reservationId: string;
+  externalReservationId?: string;
   user: {
     id: string;
     name?: string;

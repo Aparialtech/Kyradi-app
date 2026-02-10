@@ -3,7 +3,7 @@ import { SaasReservationPayload } from './saas.types';
 import { resolveBodyString, signBody, verifySignature } from './saas.sign';
 
 type SaasPostResult =
-  | { ok: true; status: number }
+  | { ok: true; status: number; data?: Record<string, any> }
   | { ok: false; status?: number; error: string };
 
 @Injectable()
@@ -66,7 +66,16 @@ export class SaasClient {
           body: bodyString,
           signal: controller.signal,
         });
-        if (res.ok) return { ok: true, status: res.status };
+        if (res.ok) {
+          let data: Record<string, any> | undefined;
+          try {
+            const json = await res.json();
+            if (json && typeof json === 'object') data = json as Record<string, any>;
+          } catch {
+            data = undefined;
+          }
+          return { ok: true, status: res.status, data };
+        }
         const text = await res.text();
         return { ok: false, status: res.status, error: text || 'SAAS_BAD_RESPONSE' };
       } catch (err) {
