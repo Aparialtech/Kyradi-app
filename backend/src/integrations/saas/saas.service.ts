@@ -40,7 +40,13 @@ export class SaasIntegrationService {
     const luggage = await this.luggageModel.findById(reservationId).lean().exec();
     if (!luggage) return { ok: false, reason: 'RESERVATION_NOT_FOUND' };
 
-    if (luggage.integration?.saasNotified) {
+    const alreadyMapped =
+      !!(luggage as any)?.saasReservationId || !!luggage.integration?.saasReservationId;
+    // If we previously notified SaaS but never persisted mapping, retry a few times.
+    // This relies on SaaS being idempotent for the same `reservationId` we send (SuperApp luggage _id).
+    const mappingRetryCount = Number(luggage.integration?.retryCount ?? 0);
+    const shouldRetryBecauseMappingMissing = luggage.integration?.saasNotified && !alreadyMapped;
+    if (luggage.integration?.saasNotified && (!shouldRetryBecauseMappingMissing || mappingRetryCount >= 3)) {
       return { ok: true, skipped: true };
     }
 
