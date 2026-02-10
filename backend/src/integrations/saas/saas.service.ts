@@ -135,7 +135,7 @@ export class SaasIntegrationService {
   async applyStatusUpdate(body: SaasStatusUpdate) {
     const reservationId = body?.reservationId?.toString().trim();
     const saasReservationId = body?.saasReservationId?.toString().trim();
-    const externalReservationId = body?.externalReservationId?.toString().trim();
+    const externalReservationIdRaw = body?.externalReservationId?.toString().trim();
     if (!reservationId && !saasReservationId && !externalReservationId) {
       throw new BadRequestException({ errorCode: 'RESERVATION_ID_REQUIRED' });
     }
@@ -144,18 +144,20 @@ export class SaasIntegrationService {
       !!reservationId &&
       Types.ObjectId.isValid(reservationId) &&
       new Types.ObjectId(reservationId).toString() === reservationId;
+    const externalReservationId =
+      externalReservationIdRaw || (!isObjectId && reservationId ? reservationId : undefined);
     let luggage: Luggage | null = null;
     let matchedBy: string = 'none';
 
-    if (reservationId) {
-      luggage = await this.luggageModel
-        .findOne({ 'integration.saasReservationId': reservationId })
-        .exec();
-      if (luggage) matchedBy = 'saasReservationId';
-    }
-    if (!luggage && isObjectId) {
+    if (reservationId && isObjectId) {
       luggage = await this.luggageModel.findById(reservationId).exec();
       if (luggage) matchedBy = 'id';
+    }
+    if (!luggage && saasReservationId) {
+      luggage = await this.luggageModel
+        .findOne({ 'integration.saasReservationId': saasReservationId })
+        .exec();
+      if (luggage) matchedBy = 'saasReservationId';
     }
     if (!luggage && externalReservationId) {
       luggage = await this.luggageModel
@@ -166,15 +168,16 @@ export class SaasIntegrationService {
 
     console.log(
       `SAAS_STATUS_UPDATE lookup: lookupBy=${matchedBy} reservationId=${reservationId ?? ''} ` +
-        `externalReservationId=${externalReservationId ?? ''}`,
+        `saasReservationId=${saasReservationId ?? ''} externalReservationId=${externalReservationId ?? ''}`,
     );
 
     if (!luggage) {
       throw new NotFoundException({
         errorCode: 'RESERVATION_NOT_FOUND',
         reservationId: reservationId ?? null,
+        saasReservationId: saasReservationId ?? null,
         externalReservationId: externalReservationId ?? null,
-        lookupTried: ['saasReservationId', 'externalReservationId'],
+        lookupTried: ['id', 'saasReservationId', 'externalReservationId'],
       });
     }
 
