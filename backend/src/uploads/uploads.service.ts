@@ -53,20 +53,32 @@ export class UploadsService {
 
   isMagicValid(mime: string, magic: Buffer): boolean {
     const m = (mime ?? '').toLowerCase();
-    if (m === 'image/jpeg') {
-      return magic[0] === 0xff && magic[1] === 0xd8;
+    const isJpeg = magic[0] === 0xff && magic[1] === 0xd8;
+    const isPng =
+      magic[0] === 0x89 &&
+      magic[1] === 0x50 &&
+      magic[2] === 0x4e &&
+      magic[3] === 0x47;
+    const isWebp =
+      magic.subarray(0, 4).toString('ascii') === 'RIFF' &&
+      magic.subarray(8, 12).toString('ascii') === 'WEBP';
+    const ascii = magic.toString('ascii');
+    const isHeic =
+      ascii.includes('ftypheic') ||
+      ascii.includes('ftypheif') ||
+      ascii.includes('ftypmif1');
+
+    const isAnyImage = isJpeg || isPng || isWebp || isHeic;
+
+    if (!m || m === 'application/octet-stream' || m === 'binary/octet-stream') {
+      return isAnyImage;
     }
-    if (m === 'image/png') {
-      return magic[0] === 0x89 && magic[1] === 0x50 && magic[2] === 0x4e && magic[3] === 0x47;
-    }
-    if (m === 'image/webp') {
-      return magic.subarray(0, 4).toString('ascii') === 'RIFF' && magic.subarray(8, 12).toString('ascii') === 'WEBP';
-    }
-    if (m === 'image/heic' || m === 'image/heif') {
-      const ascii = magic.toString('ascii');
-      return ascii.includes('ftypheic') || ascii.includes('ftypheif') || ascii.includes('ftypmif1');
-    }
-    return true;
+    if (m === 'image/jpeg' || m === 'image/jpg') return isJpeg;
+    if (m === 'image/png') return isPng;
+    if (m === 'image/webp') return isWebp;
+    if (m === 'image/heic' || m === 'image/heif') return isHeic;
+    if (m.startsWith('image/')) return isAnyImage;
+    return false;
   }
 
   getDestination() {

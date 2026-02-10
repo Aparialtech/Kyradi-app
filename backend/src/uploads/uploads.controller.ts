@@ -21,17 +21,6 @@ type UploadedIdentityFile = {
   originalname?: string;
 };
 
-const ALLOWED_MIME = new Set([
-  'image/jpeg',
-  'image/jpg',
-  'image/png',
-  'image/webp',
-  'image/heic',
-  'image/heif',
-  'application/octet-stream',
-  'binary/octet-stream',
-]);
-
 type IdentityDocType = 'id_front' | 'id_back' | 'selfie';
 
 @Controller('uploads')
@@ -61,12 +50,8 @@ export class UploadsController {
         },
       }),
       fileFilter: (_req, file, cb) => {
-        const mime = (file.mimetype ?? '').toLowerCase();
-        // Allow unknown mime from some clients; verify via magic bytes after upload.
-        if (mime.isEmpty || mime.startsWith('image/') || ALLOWED_MIME.has(mime)) {
-          return cb(null, true);
-        }
-        return cb(new Error('INVALID_FILE_TYPE'), false);
+        // Defer strict validation to magic-bytes check after upload.
+        return cb(null, true);
       },
       limits: {
         fileSize:
