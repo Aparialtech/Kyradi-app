@@ -153,6 +153,34 @@ export class SaasIntegrationService {
         matchedByExternalId = true;
       }
     }
+    if (!luggage && candidateExternalId) {
+      luggage = await this.luggageModel.findOne({ externalReservationId: candidateExternalId }).exec();
+      if (luggage) {
+        matchedBy = 'externalReservationId';
+        matchedByExternalId = true;
+      }
+    }
+    if (!luggage && candidateExternalId) {
+      luggage = await this.luggageModel.findOne({ reservationCode: candidateExternalId }).exec();
+      if (luggage) {
+        matchedBy = 'reservationCode';
+        matchedByExternalId = true;
+      }
+    }
+    if (!luggage && candidateExternalId) {
+      luggage = await this.luggageModel.findOne({ code: candidateExternalId }).exec();
+      if (luggage) {
+        matchedBy = 'code';
+        matchedByExternalId = true;
+      }
+    }
+    if (!luggage && candidateExternalId) {
+      luggage = await this.luggageModel.findOne({ qrCode: candidateExternalId }).exec();
+      if (luggage) {
+        matchedBy = 'qrCode';
+        matchedByExternalId = true;
+      }
+    }
     if (!luggage && saasReservationId) {
       luggage = await this.luggageModel
         .findOne({ 'integration.saasReservationId': saasReservationId })
