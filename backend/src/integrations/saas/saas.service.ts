@@ -1,7 +1,7 @@
 import { BadRequestException, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
-import { Luggage, LuggageStatus } from '../../luggages/schemas/luggage.schema';
+import { Luggage, LuggageStatus, PaymentStatus } from '../../luggages/schemas/luggage.schema';
 import { User } from '../../users/schemas/user.schema';
 import { Location } from '../../locations/schemas/location.schema';
 import { SaasClient } from './saas.client';
@@ -106,84 +106,73 @@ export class SaasIntegrationService {
 
   async applyStatusUpdate(body: SaasStatusUpdate) {
     const reservationId = body?.reservationId?.toString().trim();
+    const saasReservationId = body?.saasReservationId?.toString().trim();
     const externalReservationId = body?.externalReservationId?.toString().trim();
-    if (!reservationId) {
+    if (!reservationId && !saasReservationId && !externalReservationId) {
       throw new BadRequestException({ errorCode: 'RESERVATION_ID_REQUIRED' });
     }
 
     const isObjectId =
+      !!reservationId &&
       Types.ObjectId.isValid(reservationId) &&
       new Types.ObjectId(reservationId).toString() === reservationId;
     let luggage: Luggage | null = null;
     let matchedBy: string = 'none';
 
-    if (isObjectId) {
+    if (reservationId && isObjectId) {
       luggage = await this.luggageModel.findById(reservationId).exec();
       if (luggage) matchedBy = 'id';
-    } else {
-      luggage = await this.luggageModel
-        .findOne({ 'integration.saasReservationId': reservationId })
-        .exec();
-      if (luggage) {
-        matchedBy = 'integration.saasReservationId';
-      } else {
-        luggage = await this.luggageModel
-          .findOne({ 'integration.externalReservationId': reservationId })
-          .exec();
-        if (luggage) {
-          matchedBy = 'integration.externalReservationId';
-        } else {
-          luggage = await this.luggageModel
-            .findOne({ 'integration.reservationId': reservationId })
-            .exec();
-          if (luggage) {
-            matchedBy = 'integration.reservationId';
-          } else {
-            const escaped = reservationId.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-            const pattern = new RegExp(`SUPERAPP_EXTERNAL_RES_ID:${escaped}`);
-            luggage = await this.luggageModel.findOne({ note: { $regex: pattern } }).exec();
-            if (luggage) {
-              matchedBy = 'note';
-            }
-          }
-        }
-      }
     }
 
     let matchedByReservationId = false;
     if (luggage) matchedByReservationId = true;
 
     let matchedByExternalId = false;
-    if (!luggage && externalReservationId) {
-      const externalIsObjectId =
-        Types.ObjectId.isValid(externalReservationId) &&
-        new Types.ObjectId(externalReservationId).toString() === externalReservationId;
-      if (externalIsObjectId) {
-        luggage = await this.luggageModel.findById(externalReservationId).exec();
-        if (luggage) {
-          matchedBy = 'externalId';
-          matchedByExternalId = true;
-        }
+    const candidateSaasId =
+      saasReservationId ?? (!isObjectId && reservationId ? reservationId : undefined);
+    if (!luggage && candidateSaasId) {
+      luggage = await this.luggageModel
+        .findOne({ 'integration.saasReservationId': candidateSaasId })
+        .exec();
+      if (luggage) {
+        matchedBy = 'integration.saasReservationId';
+        matchedByReservationId = true;
       }
-      if (!luggage) {
-        luggage = await this.luggageModel
-          .findOne({ 'integration.externalReservationId': externalReservationId })
-          .exec();
-        if (luggage) {
-          matchedBy = 'integration.externalReservationId';
-          matchedByExternalId = true;
-        }
+    }
+    if (!luggage && externalReservationId) {
+      luggage = await this.luggageModel
+        .findOne({ 'integration.externalReservationId': externalReservationId })
+        .exec();
+      if (luggage) {
+        matchedBy = 'integration.externalReservationId';
+        matchedByExternalId = true;
+      }
+    }
+    if (!luggage && reservationId) {
+      const escaped = reservationId.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const pattern = new RegExp(`SUPERAPP_EXTERNAL_RES_ID:${escaped}`);
+      luggage = await this.luggageModel.findOne({ note: { $regex: pattern } }).exec();
+      if (luggage) {
+        matchedBy = 'note';
+        matchedByReservationId = true;
       }
     }
 
     console.log(
       `SAAS_STATUS_UPDATE lookup: byReservationId=${matchedByReservationId} ` +
-        `byExternalId=${matchedByExternalId} reservationId=${reservationId} ` +
+        `byExternalId=${matchedByExternalId} reservationId=${reservationId ?? ''} ` +
         `externalReservationId=${externalReservationId ?? ''}`,
     );
 
     if (!luggage) {
-      throw new NotFoundException({ errorCode: 'RESERVATION_NOT_FOUND' });
+      throw new NotFoundException({
+        errorCode: 'RESERVATION_NOT_FOUND',
+        received: {
+          reservationId: reservationId ?? null,
+          saasReservationId: saasReservationId ?? null,
+          externalReservationId: externalReservationId ?? null,
+        },
+      });
     }
 
     const mapStatus = (status: SaasStatusUpdate['status']): LuggageStatus => {
@@ -192,6 +181,7 @@ export class SaasIntegrationService {
           return LuggageStatus.AWAITING;
         case 'dropped':
           return LuggageStatus.DROPPED;
+        case 'completed':
         case 'picked_up':
           return LuggageStatus.PICKED;
         case 'cancelled':
@@ -203,15 +193,21 @@ export class SaasIntegrationService {
     };
 
     const nextStatus = mapStatus(body.status);
+    const isPaid =
+      luggage.paymentStatus === PaymentStatus.PAID ||
+      !!luggage.paidAt ||
+      (!!luggage.transactionId && luggage.transactionId.trim().length > 0);
+    if (nextStatus === LuggageStatus.DROPPED && !isPaid) {
+      return { ok: true, status: luggage.status, storageUnit: (luggage as any).storageUnit };
+    }
+
     luggage.status = nextStatus;
-    if (externalReservationId) {
-      const existing = (luggage as any).integration?.externalReservationId;
-      if (!existing) {
-        (luggage as any).integration = {
-          ...(luggage as any).integration,
-          externalReservationId,
-        };
-      }
+    if (saasReservationId || externalReservationId) {
+      (luggage as any).integration = {
+        ...(luggage as any).integration,
+        ...(saasReservationId ? { saasReservationId } : {}),
+        ...(externalReservationId ? { externalReservationId } : {}),
+      };
     }
     if (body.storageUnit) {
       (luggage as any).storageUnit = body.storageUnit;

@@ -32,7 +32,8 @@ export type SaasReservationPayload = {
 };
 
 export type SaasStatusUpdate = {
-  reservationId: string;
+  reservationId?: string;
+  saasReservationId?: string;
   externalReservationId?: string;
   status: 'assigned' | 'dropped' | 'picked_up' | 'cancelled' | 'rejected';
   storageUnit?: string;
