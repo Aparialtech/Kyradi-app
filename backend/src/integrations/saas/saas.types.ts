@@ -41,3 +41,9 @@ export type SaasStatusUpdate = {
   operator?: { id?: string; name?: string } | string;
   note?: string;
 };
+
+export type SaasDiagnoseRequest = {
+  reservationId?: string;
+  saasReservationId?: string;
+  externalReservationId?: string;
+};

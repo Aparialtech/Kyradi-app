@@ -5,7 +5,7 @@ import { Luggage, LuggageStatus, PaymentStatus } from '../../luggages/schemas/lu
 import { User } from '../../users/schemas/user.schema';
 import { Location } from '../../locations/schemas/location.schema';
 import { SaasClient } from './saas.client';
-import { SaasReservationPayload, SaasStatusUpdate } from './saas.types';
+import { SaasDiagnoseRequest, SaasReservationPayload, SaasStatusUpdate } from './saas.types';
 
 @Injectable()
 export class SaasIntegrationService {
@@ -285,5 +285,106 @@ export class SaasIntegrationService {
     await luggage.save();
 
     return { ok: true, status: luggage.status, storageUnit: (luggage as any).storageUnit };
+  }
+
+  async diagnoseStatusUpdate(body: SaasDiagnoseRequest) {
+    const raw: any = body as any;
+    const reservationId =
+      raw?.reservationId?.toString().trim() ?? raw?.reservation_id?.toString().trim();
+    const saasReservationId =
+      raw?.saasReservationId?.toString().trim() ?? raw?.saas_reservation_id?.toString().trim();
+    const externalReservationIdRaw =
+      raw?.externalReservationId?.toString().trim() ??
+      raw?.external_reservation_id?.toString().trim() ??
+      raw?.externalReservationID?.toString().trim();
+
+    const isObjectId =
+      !!reservationId &&
+      Types.ObjectId.isValid(reservationId) &&
+      new Types.ObjectId(reservationId).toString() === reservationId;
+    const saasIdCandidate = saasReservationId || (!isObjectId ? reservationId : undefined);
+    const externalReservationId =
+      externalReservationIdRaw || (!isObjectId && reservationId ? reservationId : undefined);
+
+    if (!reservationId && !saasIdCandidate && !externalReservationId) {
+      throw new BadRequestException({
+        message: 'reservationId_or_externalReservationId_required',
+        errorCode: 'RESERVATION_ID_REQUIRED',
+      });
+    }
+
+    let luggage: Luggage | null = null;
+    let matchedBy: string = 'none';
+    const lookupTried: string[] = [];
+
+    if (reservationId && isObjectId) {
+      lookupTried.push('id');
+      luggage = await this.luggageModel.findById(reservationId).exec();
+      if (luggage) matchedBy = 'id';
+    }
+    if (!luggage && saasIdCandidate) {
+      lookupTried.push('saasReservationId');
+      luggage = await this.luggageModel
+        .findOne({
+          $or: [
+            { saasReservationId: saasIdCandidate },
+            { 'integration.saasReservationId': saasIdCandidate },
+          ],
+        })
+        .exec();
+      if (luggage) matchedBy = 'saasReservationId';
+    }
+    if (!luggage && externalReservationId) {
+      lookupTried.push('externalReservationId');
+      luggage = await this.luggageModel
+        .findOne({
+          $or: [
+            { externalReservationId },
+            { 'integration.externalReservationId': externalReservationId },
+          ],
+        })
+        .exec();
+      if (luggage) matchedBy = 'externalReservationId';
+    }
+    if (!luggage && externalReservationId) {
+      lookupTried.push('noteRegex');
+      const re = new RegExp(`SUPERAPP_EXTERNAL_RES_ID:\\s*${this.escapeRegex(externalReservationId)}`);
+      luggage = await this.luggageModel.findOne({ note: re }).exec();
+      if (luggage) matchedBy = 'noteRegex';
+    }
+
+    console.log(
+      `SAAS_DIAG lookup: lookupBy=${matchedBy} tried=${lookupTried.join(
+        ',',
+      )} reservationId=${reservationId ?? ''} saasReservationId=${saasIdCandidate ?? ''} externalReservationId=${externalReservationId ?? ''}`,
+    );
+
+    if (!luggage) {
+      throw new NotFoundException({
+        message: 'RESERVATION_NOT_FOUND',
+        errorCode: 'RESERVATION_NOT_FOUND',
+        reservationId: reservationId ?? null,
+        saasReservationId: saasIdCandidate ?? null,
+        externalReservationId: externalReservationId ?? null,
+        lookupBy: matchedBy,
+        lookupTried,
+      });
+    }
+
+    // Return minimal fields only (no PII).
+    return {
+      ok: true,
+      lookupBy: matchedBy,
+      lookupTried,
+      luggage: {
+        id: luggage._id?.toString() ?? null,
+        status: luggage.status ?? null,
+        storageUnit: (luggage as any).storageUnit ?? null,
+        saasReservationId: (luggage as any).saasReservationId ?? luggage.integration?.saasReservationId ?? null,
+        externalReservationId:
+          (luggage as any).externalReservationId ?? luggage.integration?.externalReservationId ?? null,
+        updatedAt: (luggage as any).updatedAt ?? null,
+      },
+    };
   }
 }
