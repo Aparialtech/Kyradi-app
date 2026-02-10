@@ -1,6 +1,6 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { BadRequestException, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
 import { Luggage, LuggageStatus } from '../../luggages/schemas/luggage.schema';
 import { User } from '../../users/schemas/user.schema';
 import { Location } from '../../locations/schemas/location.schema';
@@ -107,11 +107,52 @@ export class SaasIntegrationService {
   async applyStatusUpdate(body: SaasStatusUpdate) {
     const reservationId = body?.reservationId?.toString().trim();
     if (!reservationId) {
-      return { ok: false, message: 'RESERVATION_ID_REQUIRED' };
+      throw new BadRequestException({ errorCode: 'RESERVATION_ID_REQUIRED' });
     }
-    const luggage = await this.luggageModel.findById(reservationId).exec();
+
+    const isObjectId =
+      Types.ObjectId.isValid(reservationId) &&
+      new Types.ObjectId(reservationId).toString() === reservationId;
+    let luggage: Luggage | null = null;
+    let matchedBy: string = 'none';
+
+    if (isObjectId) {
+      luggage = await this.luggageModel.findById(reservationId).exec();
+      if (luggage) matchedBy = 'id';
+    } else {
+      luggage = await this.luggageModel
+        .findOne({ 'integration.saasReservationId': reservationId })
+        .exec();
+      if (luggage) {
+        matchedBy = 'integration.saasReservationId';
+      } else {
+        luggage = await this.luggageModel
+          .findOne({ 'integration.externalReservationId': reservationId })
+          .exec();
+        if (luggage) {
+          matchedBy = 'integration.externalReservationId';
+        } else {
+          luggage = await this.luggageModel
+            .findOne({ 'integration.reservationId': reservationId })
+            .exec();
+          if (luggage) {
+            matchedBy = 'integration.reservationId';
+          } else {
+            const escaped = reservationId.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            const pattern = new RegExp(`SUPERAPP_EXTERNAL_RES_ID:${escaped}`);
+            luggage = await this.luggageModel.findOne({ note: { $regex: pattern } }).exec();
+            if (luggage) {
+              matchedBy = 'note';
+            }
+          }
+        }
+      }
+    }
+
+    console.log({ reservationId, isObjectId, matchedBy });
+
     if (!luggage) {
-      return { ok: false, message: 'RESERVATION_NOT_FOUND' };
+      throw new NotFoundException({ errorCode: 'RESERVATION_NOT_FOUND' });
     }
 
     const mapStatus = (status: SaasStatusUpdate['status']): LuggageStatus => {
