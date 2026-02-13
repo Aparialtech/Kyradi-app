@@ -24,6 +24,10 @@ export class LuggagesService {
     private readonly mailService: MailService,
   ) {}
 
+  private _escapeRegex(value: string) {
+    return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  }
+
   estimatePricing(dto: PricingEstimateDto) {
     const dropAt = new Date(dto.dropAt);
     const pickupAt = new Date(dto.pickupAt);
@@ -88,11 +92,23 @@ export class LuggagesService {
   }
 
   async create(userId: string, dto: CreateLuggageDto) {
-    const location = await this.locationModel
-      .findById(dto.dropLocationId)
-      .lean()
-      .exec();
+    const requestedLocationId = (dto.dropLocationId ?? '').toString().trim();
+    const requestedLocationName = (dto.dropLocationName ?? '').toString().trim();
+    let location = requestedLocationId
+      ? await this.locationModel.findById(requestedLocationId).lean().exec()
+      : null;
+    if (!location && requestedLocationName) {
+      const exactName = new RegExp(`^${this._escapeRegex(requestedLocationName)}$`, 'i');
+      location = await this.locationModel.findOne({ name: exactName }).lean().exec();
+    }
+    if (!location && requestedLocationId) {
+      const byName = new RegExp(`^${this._escapeRegex(requestedLocationId)}$`, 'i');
+      location = await this.locationModel.findOne({ name: byName }).lean().exec();
+    }
     if (!location) {
+      this.logger.warn(
+        `LOCATION_NOT_FOUND user=${userId} id=${requestedLocationId || '-'} name=${requestedLocationName || '-'}`,
+      );
       throw new NotFoundException('LOCATION_NOT_FOUND');
     }
     if (location.isActive === false) {
@@ -131,6 +147,8 @@ export class LuggagesService {
     const created = await this.luggageModel.create({
       userId,
       ...dto,
+      dropLocationId: (location as any)._id?.toString?.() ?? requestedLocationId,
+      dropLocationName: (location as any).name ?? requestedLocationName,
       qrCode,
       pickupPinHash,
       scheduledDropTime: dto.scheduledDropTime ? new Date(dto.scheduledDropTime) : undefined,
