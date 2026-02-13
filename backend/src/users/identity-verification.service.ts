@@ -351,20 +351,24 @@ export class IdentityVerificationService {
     if (record.status !== 'pending_otp') {
       throw new BadRequestException('INVALID_STATE');
     }
-    const otp = await this.kycCodeModel
-      .findOne({ userId, purpose: 'kyc_identity' })
+    const now = new Date();
+    const recentCodes = await this.kycCodeModel
+      .find({ userId, purpose: 'kyc_identity' })
       .sort({ updatedAt: -1, createdAt: -1 })
+      .limit(10)
       .exec();
-    if (!otp) throw new BadRequestException('OTP_INVALID');
-    if (otp.usedAt) throw new BadRequestException('OTP_EXPIRED');
-    if (otp.expiresAt < new Date()) throw new BadRequestException('OTP_EXPIRED');
-    if ((otp.verifyFailCount ?? 0) >= 5) {
+    if (recentCodes.length === 0) throw new BadRequestException('OTP_INVALID');
+    const activeCode = recentCodes.find((item) => !item.usedAt) ?? recentCodes[0];
+    if ((activeCode.verifyFailCount ?? 0) >= 5) {
       throw new BadRequestException('OTP_ATTEMPTS_EXCEEDED');
     }
     const hash = this._hashOtp(normalizedCode, userId);
-    if (otp.codeHash !== hash) {
-      otp.verifyFailCount = (otp.verifyFailCount ?? 0) + 1;
-      await otp.save();
+    const matched = recentCodes.find(
+      (item) => !item.usedAt && item.expiresAt >= now && item.codeHash === hash,
+    );
+    if (!matched) {
+      activeCode.verifyFailCount = (activeCode.verifyFailCount ?? 0) + 1;
+      await activeCode.save();
       record.attempts = {
         ...(record.attempts ?? {}),
         otpVerifyFailCount: (record.attempts?.otpVerifyFailCount ?? 0) + 1,
@@ -372,12 +376,13 @@ export class IdentityVerificationService {
       await record.save();
       throw new BadRequestException('OTP_INVALID');
     }
-    otp.usedAt = new Date();
-    await otp.save();
+    matched.usedAt = now;
+    matched.verifyFailCount = 0;
+    await matched.save();
     record.status = 'verified';
     record.audit = {
       ...(record.audit ?? {}),
-      verifiedAt: new Date(),
+      verifiedAt: now,
     };
     await record.save();
     await this.userModel
