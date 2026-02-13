@@ -6,8 +6,11 @@ import { ProfileVerificationService } from './verification.service';
 import { IdentityVerificationService } from './identity-verification.service';
 import { IdentityPersonalDto } from './dto/identity-personal.dto';
 import { IdentityOtpDto } from './dto/identity-otp.dto';
+import { IsString, Length } from 'class-validator';
 
 class EmailVerifyDto {
+  @IsString()
+  @Length(6, 6)
   code: string;
 }
 
