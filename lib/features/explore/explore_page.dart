@@ -89,6 +89,11 @@ class _ExplorePageState extends State<ExplorePage> {
   }
 
   Future<void> _loadPosition() async {
+    await _ensureCurrentPosition(showError: false);
+  }
+
+  Future<bool> _ensureCurrentPosition({required bool showError}) async {
+    final loc = AppLocalizations.of(context)!;
     try {
       final permission = await Geolocator.checkPermission();
       LocationPermission resolved = permission;
@@ -97,14 +102,45 @@ class _ExplorePageState extends State<ExplorePage> {
       }
       if (resolved == LocationPermission.denied ||
           resolved == LocationPermission.deniedForever) {
-        return;
+        if (showError && mounted) {
+          final message = resolved == LocationPermission.deniedForever
+              ? loc.permissionDeniedForever(loc.permissionNameLocation)
+              : loc.permissionDenied(loc.permissionNameLocation);
+          AppNotification.show(
+            context,
+            message: message,
+            type: AppNotificationType.warning,
+          );
+        }
+        return false;
       }
       final position = await Geolocator.getCurrentPosition(
         desiredAccuracy: LocationAccuracy.medium,
       );
-      if (!mounted) return;
+      if (!mounted) return false;
       setState(() => _currentPosition = position);
-    } catch (_) {}
+      return true;
+    } catch (_) {
+      if (showError && mounted) {
+        AppNotification.show(
+          context,
+          message: loc.exploreEmptyTitle,
+          type: AppNotificationType.warning,
+        );
+      }
+      return false;
+    }
+  }
+
+  Future<void> _toggleNearbyFilter() async {
+    if (_nearbyOnly) {
+      setState(() => _nearbyOnly = false);
+      return;
+    }
+    final hasPosition = await _ensureCurrentPosition(showError: true);
+    if (!mounted) return;
+    if (!hasPosition) return;
+    setState(() => _nearbyOnly = true);
   }
 
   List<DropLocation> get _filteredLocations {
@@ -347,6 +383,8 @@ class _ExplorePageState extends State<ExplorePage> {
   }
 
   Future<void> _centerOnMyLocation() async {
+    final hasPosition = await _ensureCurrentPosition(showError: true);
+    if (!mounted || !hasPosition) return;
     final controller = _mapController;
     final current = _currentPosition;
     if (controller == null || current == null) return;
@@ -469,7 +507,7 @@ class _ExplorePageState extends State<ExplorePage> {
         label: 'Yakınımda',
         icon: Icons.near_me_outlined,
         selected: _nearbyOnly,
-        onTap: () => setState(() => _nearbyOnly = !_nearbyOnly),
+        onTap: _toggleNearbyFilter,
       ),
       ExploreFilterChipData(
         label: 'Müsait',
@@ -535,14 +573,22 @@ class _ExplorePageState extends State<ExplorePage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  'Harita',
-                  style: const TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.w800,
-                    color: Color(0xFF0F172A),
-                    letterSpacing: -0.2,
-                  ),
+                Row(
+                  children: [
+                    _MapBackButton(
+                      onTap: () => setState(() => _showMap = false),
+                    ),
+                    const SizedBox(width: 10),
+                    const Text(
+                      'Harita',
+                      style: TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.w800,
+                        color: Color(0xFF0F172A),
+                        letterSpacing: -0.2,
+                      ),
+                    ),
+                  ],
                 ),
                 const SizedBox(height: 8),
                 GlassSearchBar(
@@ -649,25 +695,36 @@ class _ExplorePageState extends State<ExplorePage> {
                     ),
             ),
           ),
-          if (_showMap)
-            Positioned(
-              left: 16,
-              right: 16,
-              bottom: 12,
-              child: SafeArea(
-                top: false,
-                child: Align(
-                  alignment: Alignment.bottomCenter,
-                  child: ExploreToggleBar(
-                    showMap: _showMap,
-                    onChanged: _handleMapToggle,
-                    listLabel: 'Liste',
-                    mapLabel: 'Harita',
-                  ),
-                ),
-              ),
-            ),
         ],
+      ),
+    );
+  }
+}
+
+class _MapBackButton extends StatelessWidget {
+  const _MapBackButton({required this.onTap});
+
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: 44,
+      height: 44,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(22),
+        child: Material(
+          color: Colors.white.withValues(alpha: 0.72),
+          child: InkWell(
+            onTap: onTap,
+            borderRadius: BorderRadius.circular(22),
+            child: const Icon(
+              Icons.arrow_back_ios_new_rounded,
+              size: 18,
+              color: Color(0xFF0F172A),
+            ),
+          ),
+        ),
       ),
     );
   }

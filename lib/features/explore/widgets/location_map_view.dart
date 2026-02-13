@@ -41,6 +41,8 @@ class _LocationMapViewState extends State<LocationMapView> {
 
   @override
   Widget build(BuildContext context) {
+    final topInset = MediaQuery.viewPaddingOf(context).top;
+    final controlsTop = topInset + 176;
     return Stack(
       children: [
         Positioned.fill(
@@ -68,7 +70,7 @@ class _LocationMapViewState extends State<LocationMapView> {
           ),
         ),
         Positioned(
-          top: 116,
+          top: controlsTop,
           right: 16,
           child: SafeArea(
             child: Column(

@@ -61,12 +61,14 @@ class GlassSearchBar extends StatelessWidget {
                       controller: controller,
                       focusNode: focusNode,
                       onChanged: onChanged,
+                      textInputAction: TextInputAction.search,
                       style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w500,
                         color: Color(0xFF0F172A),
                       ),
                       decoration: InputDecoration(
+                        filled: false,
                         isCollapsed: true,
                         hintText: hintText,
                         hintStyle: const TextStyle(

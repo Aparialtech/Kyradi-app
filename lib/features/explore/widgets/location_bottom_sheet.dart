@@ -53,6 +53,8 @@ class _LocationBottomSheetState extends State<LocationBottomSheet> {
         snap: true,
         snapSizes: const [0.18, 0.55],
         builder: (context, controller) {
+          final bottomInset = MediaQuery.viewPaddingOf(context).bottom;
+          final safeBottom = math.max(28.0, bottomInset + 92);
           return RepaintBoundary(
             child: ClipRRect(
               borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
@@ -85,7 +87,7 @@ class _LocationBottomSheetState extends State<LocationBottomSheet> {
                   ),
                   ListView(
                     controller: controller,
-                    padding: const EdgeInsets.fromLTRB(16, 10, 16, 28),
+                    padding: EdgeInsets.fromLTRB(16, 10, 16, safeBottom),
                     children: [
                       Center(
                         child: Container(
