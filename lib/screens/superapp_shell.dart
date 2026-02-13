@@ -123,6 +123,7 @@ class _GlassBottomBar extends StatelessWidget {
     final isDark = theme.brightness == Brightness.dark;
     final bottomInset = MediaQuery.viewPaddingOf(context).bottom;
     final bottomOffset = (bottomInset * 0.10).clamp(2.0, 6.0).toDouble();
+    const contentPadding = EdgeInsets.symmetric(horizontal: 7, vertical: 4);
     return SafeArea(
       top: false,
       left: false,
@@ -133,31 +134,116 @@ class _GlassBottomBar extends StatelessWidget {
         child: RepaintBoundary(
           child: SizedBox(
             height: 62,
-            child: Stack(
-              children: [
-                Positioned.fill(
-                  child: _GlassBottomBarBackground(isDark: isDark),
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final itemWidth =
+                    (constraints.maxWidth - contentPadding.horizontal) / items.length;
+                final pillHeight = constraints.maxHeight - contentPadding.vertical - 2;
+                final pillLeft = contentPadding.left + (itemWidth * currentIndex);
+                return Stack(
+                  children: [
+                    Positioned.fill(
+                      child: _GlassBottomBarBackground(isDark: isDark),
+                    ),
+                    AnimatedPositioned(
+                      duration: const Duration(milliseconds: 240),
+                      curve: Curves.easeOutCubic,
+                      left: pillLeft,
+                      top: contentPadding.top + 1,
+                      width: itemWidth,
+                      height: pillHeight,
+                      child: _LiquidActivePill(isDark: isDark),
+                    ),
+                    Positioned.fill(
+                      child: Padding(
+                        padding: contentPadding,
+                        child: Row(
+                          children: [
+                            for (var i = 0; i < items.length; i++)
+                              Expanded(
+                                child: _LiquidNavDestination(
+                                  item: items[i],
+                                  isActive: i == currentIndex,
+                                  onTap: () => onSelect(i),
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                );
+              },
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _LiquidActivePill extends StatelessWidget {
+  const _LiquidActivePill({required this.isDark});
+
+  final bool isDark;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 1),
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(999),
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFF14B8A6).withValues(alpha: 0.08),
+              blurRadius: 18,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(999),
+          child: Stack(
+            children: [
+              Positioned.fill(
+                child: BackdropFilter(
+                  filter: ImageFilter.blur(sigmaX: 22, sigmaY: 22),
+                  child: const SizedBox.expand(),
                 ),
-                Positioned.fill(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 4),
-                    child: Row(
-                      children: [
-                        for (var i = 0; i < items.length; i++)
-                          Expanded(
-                            child: _LiquidNavDestination(
-                              item: items[i],
-                              isActive: i == currentIndex,
-                              isDark: isDark,
-                              onTap: () => onSelect(i),
-                            ),
-                          ),
-                      ],
+              ),
+              Positioned.fill(
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: isDark ? 0.12 : 0.10),
+                    border: Border.all(
+                      color: Colors.white.withValues(alpha: isDark ? 0.24 : 0.20),
+                      width: 1,
+                    ),
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                ),
+              ),
+              Positioned.fill(
+                child: IgnorePointer(
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(999),
+                      gradient: LinearGradient(
+                        begin: Alignment.topRight,
+                        end: Alignment.bottomLeft,
+                        colors: [
+                          Colors.white.withValues(alpha: 0.16),
+                          Colors.white.withValues(alpha: 0.02),
+                          Colors.transparent,
+                        ],
+                        stops: const [0.0, 0.35, 1.0],
+                      ),
                     ),
                   ),
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),
@@ -241,26 +327,6 @@ class _GlassBottomBarBackground extends StatelessWidget {
               ),
             ),
             Positioned(
-              right: -6,
-              top: 8,
-              child: Transform.rotate(
-                angle: -0.30,
-                child: Container(
-                  width: 88,
-                  height: 15,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(12),
-                    gradient: LinearGradient(
-                      colors: [
-                        Colors.white.withValues(alpha: isDark ? 0.30 : 0.42),
-                        Colors.white.withValues(alpha: isDark ? 0.02 : 0.06),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ),
-            Positioned(
               left: 10,
               right: 10,
               top: 1,
@@ -292,118 +358,69 @@ class _LiquidNavDestination extends StatelessWidget {
   const _LiquidNavDestination({
     required this.item,
     required this.isActive,
-    required this.isDark,
     required this.onTap,
   });
 
   final _NavItem item;
   final bool isActive;
-  final bool isDark;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    const deepTeal = Color(0xFF0F766E);
-    const activeGlow = Color(0xFF14B8A6);
+    final foreground = Colors.white.withValues(alpha: isActive ? 0.98 : 0.66);
     return AnimatedScale(
-      scale: isActive ? 1.04 : 1.0,
-      duration: const Duration(milliseconds: 320),
+      scale: isActive ? 1.05 : 1.0,
+      duration: const Duration(milliseconds: 240),
       curve: Curves.easeOutCubic,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 1.5),
-        child: Material(
-          color: Colors.transparent,
-          child: InkWell(
-            borderRadius: BorderRadius.circular(20),
-            onTap: onTap,
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 280),
-              curve: Curves.easeOutCubic,
-              padding: const EdgeInsets.symmetric(vertical: 3.5, horizontal: 7),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(20),
-                gradient: LinearGradient(
-                  colors: [
-                    isActive
-                        ? Colors.white.withValues(alpha: isDark ? 0.22 : 0.34)
-                        : Colors.white.withValues(alpha: isDark ? 0.05 : 0.12),
-                    isActive
-                        ? deepTeal.withValues(alpha: isDark ? 0.26 : 0.18)
-                        : Colors.white.withValues(alpha: isDark ? 0.02 : 0.05),
-                  ],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(20),
+          onTap: onTap,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              AnimatedSwitcher(
+                duration: const Duration(milliseconds: 220),
+                switchInCurve: Curves.easeOutCubic,
+                switchOutCurve: Curves.easeInCubic,
+                transitionBuilder: (child, animation) {
+                  return FadeTransition(
+                    opacity: animation,
+                    child: SlideTransition(
+                      position: Tween<Offset>(
+                        begin: const Offset(0.0, 0.14),
+                        end: Offset.zero,
+                      ).animate(animation),
+                      child: child,
+                    ),
+                  );
+                },
+                child: Icon(
+                  isActive ? item.activeIcon : item.icon,
+                  key: ValueKey('${item.label}-$isActive'),
+                  size: 18.5,
+                  color: foreground,
                 ),
-                border: Border.all(
-                  color: isActive
-                      ? Colors.white.withValues(alpha: isDark ? 0.36 : 0.46)
-                      : Colors.white.withValues(alpha: isDark ? 0.14 : 0.24),
-                  width: 0.9,
+              ),
+              const SizedBox(height: 1),
+              AnimatedDefaultTextStyle(
+                duration: const Duration(milliseconds: 220),
+                curve: Curves.easeOutCubic,
+                style: TextStyle(
+                  fontSize: 10.2,
+                  height: 1.1,
+                  letterSpacing: 0.1,
+                  color: foreground,
+                  fontWeight: isActive ? FontWeight.w500 : FontWeight.w400,
                 ),
-                boxShadow: [
-                  if (isActive)
-                    BoxShadow(
-                      color: activeGlow.withValues(alpha: isDark ? 0.24 : 0.20),
-                      blurRadius: 14,
-                      spreadRadius: -2,
-                      offset: const Offset(0, 5),
-                    ),
-                ],
+                child: Text(
+                  item.label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
               ),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  AnimatedSwitcher(
-                    duration: const Duration(milliseconds: 240),
-                    switchInCurve: Curves.easeOutCubic,
-                    switchOutCurve: Curves.easeInCubic,
-                    transitionBuilder: (child, animation) {
-                      return FadeTransition(
-                        opacity: animation,
-                        child: SlideTransition(
-                          position: Tween<Offset>(
-                            begin: const Offset(0.0, 0.16),
-                            end: Offset.zero,
-                          ).animate(animation),
-                          child: child,
-                        ),
-                      );
-                    },
-                    child: Icon(
-                      isActive ? item.activeIcon : item.icon,
-                      key: ValueKey('${item.label}-$isActive'),
-                      size: 18.5,
-                      color: isActive
-                          ? Colors.white.withValues(alpha: 0.96)
-                          : (isDark
-                              ? Colors.white.withValues(alpha: 0.66)
-                              : const Color(0xFF334155).withValues(alpha: 0.72)),
-                    ),
-                  ),
-                  const SizedBox(height: 1),
-                  AnimatedDefaultTextStyle(
-                    duration: const Duration(milliseconds: 240),
-                    curve: Curves.easeOutCubic,
-                    style: TextStyle(
-                      fontSize: 10.2,
-                      height: 1.1,
-                      letterSpacing: 0.1,
-                      color: isActive
-                          ? Colors.white.withValues(alpha: 0.96)
-                          : (isDark
-                              ? Colors.white.withValues(alpha: 0.66)
-                              : const Color(0xFF334155).withValues(alpha: 0.72)),
-                      fontWeight: isActive ? FontWeight.w500 : FontWeight.w400,
-                    ),
-                    child: Text(
-                      item.label,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                ],
-              ),
-            ),
+            ],
           ),
         ),
       ),

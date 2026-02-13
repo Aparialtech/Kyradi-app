@@ -13,10 +13,13 @@ import '../../widgets/app_notification.dart';
 import '../../utils/crash_log.dart';
 import '../../core/ios/ios_config_service.dart';
 import '../../widgets/app_mesh_background.dart';
+import 'widgets/filter_chips_row.dart';
+import 'widgets/glass_search_bar.dart';
 import 'widgets/explore_filter_sheet.dart';
 import 'widgets/explore_toggle_bar.dart';
 import 'widgets/explore_top_bar.dart';
 import 'widgets/location_list_card.dart';
+import 'widgets/location_bottom_sheet.dart';
 import 'widgets/location_map_view.dart';
 
 class ExplorePage extends StatefulWidget {
@@ -28,6 +31,7 @@ class ExplorePage extends StatefulWidget {
 
 class _ExplorePageState extends State<ExplorePage> {
   final TextEditingController _searchCtrl = TextEditingController();
+  final FocusNode _searchFocusNode = FocusNode();
   bool _showMap = false;
   bool _loading = false;
   String? _errorMessage;
@@ -36,9 +40,13 @@ class _ExplorePageState extends State<ExplorePage> {
   bool _openNow = false;
   bool _availableOnly = false;
   bool _activeOnly = true;
+  bool _nearbyOnly = false;
+  bool _alwaysOpenOnly = false;
+  bool _sortCheapest = false; // UI stub until price data is available.
   String _query = '';
   DropLocation? _selectedLocation;
-  final Map<String, Marker> _markerCache = {};
+  GoogleMapController? _mapController;
+  RouteMode _routeMode = RouteMode.drive;
   int _page = 1;
   static const int _pageSize = 6;
   ExploreSort _sort = ExploreSort.nearby;
@@ -53,6 +61,7 @@ class _ExplorePageState extends State<ExplorePage> {
   @override
   void dispose() {
     _searchCtrl.dispose();
+    _searchFocusNode.dispose();
     super.dispose();
   }
 
@@ -68,7 +77,6 @@ class _ExplorePageState extends State<ExplorePage> {
       setState(() {
         _locations =
             remote.isNotEmpty ? remote : DropLocationsRepository.locations;
-        _syncMarkers(_locations);
       });
     } catch (e) {
       errorMessage = e.toString();
@@ -105,6 +113,11 @@ class _ExplorePageState extends State<ExplorePage> {
       if (_activeOnly && !location.isActive) return false;
       if (_openNow && !location.isOpenNow) return false;
       if (_availableOnly && location.availableSlots <= 0) return false;
+      if (_nearbyOnly) {
+        final distance = _distanceFor(location);
+        if (distance == null || distance > 5) return false;
+      }
+      if (_alwaysOpenOnly && !_isAlwaysOpen(location)) return false;
       if (normalized.isEmpty) return true;
       return location.name.toLowerCase().contains(normalized) ||
           location.address.toLowerCase().contains(normalized);
@@ -115,6 +128,14 @@ class _ExplorePageState extends State<ExplorePage> {
 
   List<DropLocation> _sortedLocations(List<DropLocation> items) {
     final list = List<DropLocation>.from(items);
+    if (_sortCheapest) {
+      list.sort((a, b) {
+        final rateA = _priceProxyFor(a);
+        final rateB = _priceProxyFor(b);
+        return rateA.compareTo(rateB);
+      });
+      return list;
+    }
     switch (_sort) {
       case ExploreSort.nearby:
         list.sort((a, b) {
@@ -139,26 +160,22 @@ class _ExplorePageState extends State<ExplorePage> {
     return items.take(max).toList();
   }
 
-  void _syncMarkers(List<DropLocation> locations) {
-    for (final location in locations) {
-      final lat = location.position.latitude;
-      final lng = location.position.longitude;
-      if (lat == 0 && lng == 0) {
-        continue;
-      }
-      if (!lat.isFinite || !lng.isFinite) {
-        // Prevent iOS crash by skipping invalid coordinates.
-        continue;
-      }
-      _markerCache.putIfAbsent(
-        location.id,
-        () => Marker(
-          markerId: MarkerId(location.id),
-          position: location.position,
-          onTap: () => setState(() => _selectedLocation = location),
-        ),
-      );
+  bool _isAlwaysOpen(DropLocation location) {
+    if (location.openingHours.isEmpty) return true;
+    const dayKeys = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
+    for (final key in dayKeys) {
+      final ranges = location.openingHours[key];
+      if (ranges == null || ranges.isEmpty) return false;
+      final hasFullDay = ranges.any((range) => range.start == '00:00' && range.end == '23:59');
+      if (!hasFullDay) return false;
     }
+    return true;
+  }
+
+  double _priceProxyFor(DropLocation location) {
+    final occupancyPenalty = location.occupancyRate * 100;
+    final slotsBonus = location.availableSlots * 2.5;
+    return (100 - slotsBonus) + occupancyPenalty;
   }
 
   double? _distanceFor(DropLocation location) {
@@ -329,6 +346,108 @@ class _ExplorePageState extends State<ExplorePage> {
         .showSnackBar(SnackBar(content: Text(loc.mapsOpenFailed)));
   }
 
+  Future<void> _centerOnMyLocation() async {
+    final controller = _mapController;
+    final current = _currentPosition;
+    if (controller == null || current == null) return;
+    await controller.animateCamera(
+      CameraUpdate.newCameraPosition(
+        CameraPosition(
+          target: LatLng(current.latitude, current.longitude),
+          zoom: 14.2,
+        ),
+      ),
+    );
+  }
+
+  Future<void> _focusLocation(DropLocation location) async {
+    setState(() => _selectedLocation = location);
+    final controller = _mapController;
+    if (controller == null) return;
+    await controller.animateCamera(
+      CameraUpdate.newCameraPosition(
+        CameraPosition(target: location.position, zoom: 14.8),
+      ),
+    );
+  }
+
+  Future<void> _callSupport() async {
+    final uri = Uri.parse('tel:+905000000000');
+    await launchUrl(uri, mode: LaunchMode.externalApplication);
+  }
+
+  Set<Marker> _buildMapMarkers(List<DropLocation> locations) {
+    final selectedId = _selectedLocation?.id;
+    return {
+      for (final location in locations)
+        Marker(
+          markerId: MarkerId(location.id),
+          position: location.position,
+          zIndexInt: selectedId == location.id ? 2 : 1,
+          icon: BitmapDescriptor.defaultMarkerWithHue(
+            selectedId == location.id
+                ? BitmapDescriptor.hueAzure
+                : location.availableSlots > 0
+                    ? BitmapDescriptor.hueCyan
+                    : BitmapDescriptor.hueViolet,
+          ),
+          infoWindow: InfoWindow(
+            title: location.name,
+            snippet: '${location.availableSlots} slot',
+          ),
+          onTap: () => _focusLocation(location),
+        ),
+    };
+  }
+
+  Widget _buildSearchSuggestions(List<DropLocation> locations) {
+    final suggestions = _sortedLocations(locations).take(4).toList();
+    if (!_searchFocusNode.hasFocus) return const SizedBox.shrink();
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(18),
+      child: Material(
+        color: Colors.white.withValues(alpha: 0.90),
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxHeight: 260),
+          child: ListView.separated(
+            shrinkWrap: true,
+            padding: const EdgeInsets.symmetric(vertical: 6),
+            itemCount: suggestions.length,
+            separatorBuilder: (_, __) => Divider(
+              height: 1,
+              color: const Color(0xFFCBD5E1).withValues(alpha: 0.5),
+            ),
+            itemBuilder: (context, index) {
+              final location = suggestions[index];
+              return ListTile(
+                leading: const Icon(Icons.location_on_outlined, size: 20),
+                title: Text(
+                  location.name,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                subtitle: Text(
+                  location.address,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                onTap: () {
+                  _searchCtrl.text = location.name;
+                  _searchCtrl.selection = TextSelection.collapsed(
+                    offset: _searchCtrl.text.length,
+                  );
+                  _query = location.name;
+                  _searchFocusNode.unfocus();
+                  _focusLocation(location);
+                },
+              );
+            },
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildMapView(List<DropLocation> locations) {
     final loc = AppLocalizations.of(context)!;
     if (_loading) {
@@ -344,30 +463,120 @@ class _ExplorePageState extends State<ExplorePage> {
     final center = _currentPosition == null
         ? locations.first.position
         : LatLng(_currentPosition!.latitude, _currentPosition!.longitude);
+    final selected = _selectedLocation;
+    final chips = <ExploreFilterChipData>[
+      ExploreFilterChipData(
+        label: 'Yakınımda',
+        icon: Icons.near_me_outlined,
+        selected: _nearbyOnly,
+        onTap: () => setState(() => _nearbyOnly = !_nearbyOnly),
+      ),
+      ExploreFilterChipData(
+        label: 'Müsait',
+        icon: Icons.check_circle_outline_rounded,
+        selected: _availableOnly,
+        onTap: () => setState(() => _availableOnly = !_availableOnly),
+      ),
+      ExploreFilterChipData(
+        label: 'En ucuz',
+        icon: Icons.savings_outlined,
+        selected: _sortCheapest,
+        onTap: () => setState(() {
+          _sortCheapest = !_sortCheapest;
+          if (_sortCheapest) _sort = ExploreSort.nearby;
+        }),
+      ),
+      ExploreFilterChipData(
+        label: 'En yakın',
+        icon: Icons.route_outlined,
+        selected: _sort == ExploreSort.nearby && !_sortCheapest,
+        onTap: () => setState(() {
+          _sortCheapest = false;
+          _sort = ExploreSort.nearby;
+        }),
+      ),
+      ExploreFilterChipData(
+        label: '24 saat',
+        icon: Icons.schedule_outlined,
+        selected: _alwaysOpenOnly,
+        onTap: () => setState(() => _alwaysOpenOnly = !_alwaysOpenOnly),
+      ),
+      ExploreFilterChipData(
+        label: 'Bagaj kapasitesi',
+        icon: Icons.inventory_2_outlined,
+        selected: _sort == ExploreSort.availability,
+        onTap: () => setState(() {
+          _sortCheapest = false;
+          _sort = ExploreSort.availability;
+        }),
+      ),
+    ];
 
-    final markerSet = {
-      for (final location in locations)
-        _markerCache[location.id] ??
-            Marker(
-              markerId: MarkerId(location.id),
-              position: location.position,
-              onTap: () => setState(() => _selectedLocation = location),
+    return Stack(
+      children: [
+        Positioned.fill(
+          child: LocationMapView(
+            markers: _buildMapMarkers(locations),
+            center: center,
+            showMyLocation: _currentPosition != null,
+            onRecenterTap: _centerOnMyLocation,
+            onMapCreated: (controller) {
+              _mapController = controller;
+              appLog('map', 'MAP_OPEN_START', level: AppLogLevel.info);
+            },
+          ),
+        ),
+        Positioned(
+          left: 16,
+          right: 16,
+          top: 8,
+          child: SafeArea(
+            bottom: false,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Harita',
+                  style: const TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.w800,
+                    color: Color(0xFF0F172A),
+                    letterSpacing: -0.2,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                GlassSearchBar(
+                  controller: _searchCtrl,
+                  focusNode: _searchFocusNode,
+                  hintText: 'Konum ara / Otel ara',
+                  onChanged: (value) => setState(() {
+                    _query = value;
+                    _page = 1;
+                  }),
+                  onLocateTap: _centerOnMyLocation,
+                ),
+                const SizedBox(height: 10),
+                FilterChipsRow(chips: chips),
+                const SizedBox(height: 8),
+                _buildSearchSuggestions(locations),
+              ],
             ),
-    };
-
-    return LocationMapView(
-      markers: markerSet,
-      selectedLocation: _selectedLocation,
-      onMarkerTap: (location) => setState(() => _selectedLocation = location),
-      onDetailsTap: () {
-        final selected = _selectedLocation;
-        if (selected != null) _openLocationDetail(selected);
-      },
-      center: center,
-      showMyLocation: _currentPosition != null,
-      onMapCreated: (_) {
-        appLog('map', 'MAP_OPEN_START', level: AppLogLevel.info);
-      },
+          ),
+        ),
+        if (selected != null)
+          Positioned.fill(
+            child: LocationBottomSheet(
+              location: selected,
+              distanceKm: _distanceFor(selected),
+              routeMode: _routeMode,
+              onRouteModeChanged: (value) => setState(() => _routeMode = value),
+              onReserve: () => context.push('/luggage/add'),
+              onDirections: () => _openDirections(selected),
+              onCall: _callSupport,
+              onDetails: () => _openLocationDetail(selected),
+            ),
+          ),
+      ],
     );
   }
 
@@ -390,54 +599,74 @@ class _ExplorePageState extends State<ExplorePage> {
           const AppMeshBackground(),
           SafeArea(
             bottom: false,
-            child: Column(
-              children: [
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
-                  child: Column(
-                    children: [
-                      ExploreTopBar(
-                        controller: _searchCtrl,
-                        hintText: loc.findLocation,
-                        title: loc.findLocation,
-                        subtitle: 'Yakındaki KYRADI noktalarını keşfet',
-                        onFilterTap: _openFilterSheet,
-                        onChanged: (value) => setState(() {
-                          _query = value;
-                          _page = 1;
-                        }),
-                      ),
-                      const SizedBox(height: 12),
-                      ExploreToggleBar(
-                        showMap: _showMap,
-                        onChanged: _handleMapToggle,
-                        listLabel: 'Liste',
-                        mapLabel: 'Harita',
-                      ),
-                      const SizedBox(height: 12),
-                      _SortBar(
-                        selected: _sort,
-                        totalCount: filtered.length,
-                        onChanged: (value) => setState(() {
-                          _sort = value;
-                          _page = 1;
-                        }),
-                      ),
-                    ],
-                  ),
-                ),
-                const Divider(height: 1),
-                Expanded(
-                  child: AnimatedSwitcher(
-                    duration: const Duration(milliseconds: 250),
-                    child: _showMap
-                        ? _buildMapView(sorted)
-                        : _buildListView(paged, filtered.length),
-                  ),
-                ),
-              ],
+            child: AnimatedSwitcher(
+              duration: const Duration(milliseconds: 240),
+              child: _showMap
+                  ? _buildMapView(sorted)
+                  : Column(
+                      key: const ValueKey('explore-list'),
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+                          child: Column(
+                            children: [
+                              ExploreTopBar(
+                                controller: _searchCtrl,
+                                hintText: loc.findLocation,
+                                title: loc.findLocation,
+                                subtitle: 'Yakındaki KYRADI noktalarını keşfet',
+                                onFilterTap: _openFilterSheet,
+                                onChanged: (value) => setState(() {
+                                  _query = value;
+                                  _page = 1;
+                                }),
+                              ),
+                              const SizedBox(height: 12),
+                              ExploreToggleBar(
+                                showMap: _showMap,
+                                onChanged: _handleMapToggle,
+                                listLabel: 'Liste',
+                                mapLabel: 'Harita',
+                              ),
+                              const SizedBox(height: 12),
+                              _SortBar(
+                                selected: _sort,
+                                totalCount: filtered.length,
+                                onChanged: (value) => setState(() {
+                                  _sortCheapest = false;
+                                  _sort = value;
+                                  _page = 1;
+                                }),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const Divider(height: 1),
+                        Expanded(
+                          child: _buildListView(paged, filtered.length),
+                        ),
+                      ],
+                    ),
             ),
           ),
+          if (_showMap)
+            Positioned(
+              left: 16,
+              right: 16,
+              bottom: 12,
+              child: SafeArea(
+                top: false,
+                child: Align(
+                  alignment: Alignment.bottomCenter,
+                  child: ExploreToggleBar(
+                    showMap: _showMap,
+                    onChanged: _handleMapToggle,
+                    listLabel: 'Liste',
+                    mapLabel: 'Harita',
+                  ),
+                ),
+              ),
+            ),
         ],
       ),
     );
