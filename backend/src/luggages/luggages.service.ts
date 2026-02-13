@@ -24,6 +24,11 @@ import { hashPassword, verifyPassword } from '../common/utils/password.util';
 export class LuggagesService {
   private readonly logger = new Logger(LuggagesService.name);
 
+  private pickupPinEmailEnabled(): boolean {
+    const raw = (process.env.PICKUP_PIN_EMAIL_ENABLED ?? 'false').toString().trim().toLowerCase();
+    return raw === '1' || raw === 'true' || raw === 'yes' || raw === 'on';
+  }
+
   constructor(
     @InjectModel(Luggage.name)
     private readonly luggageModel: Model<Luggage>,
@@ -216,7 +221,7 @@ export class LuggagesService {
     let pinSent = false;
     let pinSentTo = '';
     const user = await this.userModel.findById(userId).lean().exec();
-    if (user?.email) {
+    if (this.pickupPinEmailEnabled() && user?.email) {
       pinSentTo = user.email;
       try {
         console.log('[PIN_MAIL] about to send', {
