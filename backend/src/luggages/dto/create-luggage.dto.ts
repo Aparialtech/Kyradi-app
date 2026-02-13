@@ -8,7 +8,7 @@ export class CreateLuggageDto {
   ownerName?: string;
   ownerPhone?: string;
   ownerEmail?: string;
-  paymentMethod?: 'card' | 'installment' | 'pay_at_hotel';
+  paymentMethod?: 'card' | 'installment' | 'pay_at_hotel' | 'transfer';
   totalPrice?: number;
   dropLocationId: string;
   dropLocationName: string;

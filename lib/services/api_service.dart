@@ -713,7 +713,25 @@ class ApiService {
     Map<String, dynamic> payload,
   ) async {
     if (_usingMockBackend) return MockServer.createLuggage(userId, payload);
-    final body = Map<String, dynamic>.from(payload);
+    final allowedKeys = <String>{
+      'qrCode',
+      'label',
+      'size',
+      'weight',
+      'color',
+      'note',
+      'ownerName',
+      'ownerPhone',
+      'ownerEmail',
+      'paymentMethod',
+      'totalPrice',
+      'dropLocationId',
+      'dropLocationName',
+      'scheduledDropTime',
+      'scheduledPickupTime',
+    };
+    final body = Map<String, dynamic>.from(payload)
+      ..removeWhere((key, _) => !allowedKeys.contains(key));
     if (body['scheduledDropTime'] is DateTime) {
       body['scheduledDropTime'] =
           (body['scheduledDropTime'] as DateTime).toIso8601String();

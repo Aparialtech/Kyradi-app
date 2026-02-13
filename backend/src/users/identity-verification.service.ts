@@ -249,13 +249,27 @@ export class IdentityVerificationService {
     return Math.floor(100000 + Math.random() * 900000).toString();
   }
 
+  private _normalizeOtp(code: string): string {
+    return (code ?? '').replace(/[^0-9]/g, '');
+  }
+
   async sendOtp(userId: string, email: string) {
     const ttlMs = this.otpTtlMin() * 60 * 1000;
     const rateLimit = this.otpRateLimit();
     const now = new Date();
     let record = await this.kycCodeModel
       .findOne({ userId, purpose: 'kyc_identity' })
+      .sort({ updatedAt: -1, createdAt: -1 })
       .exec();
+    if (record?._id) {
+      await this.kycCodeModel
+        .deleteMany({
+          userId,
+          purpose: 'kyc_identity',
+          _id: { $ne: record._id },
+        })
+        .exec();
+    }
     if (record?.lastSentAt) {
       const delta = now.getTime() - new Date(record.lastSentAt).getTime();
       if (delta < ttlMs && (record.sendCount ?? 0) >= rateLimit) {
@@ -328,6 +342,10 @@ export class IdentityVerificationService {
 
   async verifyOtp(userId: string, code: string) {
     this.ensureEnabled();
+    const normalizedCode = this._normalizeOtp(code);
+    if (normalizedCode.length !== 6) {
+      throw new BadRequestException('OTP_INVALID');
+    }
     const record = await this.identityModel.findOne({ userId }).exec();
     if (!record) throw new BadRequestException('KYC_NOT_STARTED');
     if (record.status !== 'pending_otp') {
@@ -335,6 +353,7 @@ export class IdentityVerificationService {
     }
     const otp = await this.kycCodeModel
       .findOne({ userId, purpose: 'kyc_identity' })
+      .sort({ updatedAt: -1, createdAt: -1 })
       .exec();
     if (!otp) throw new BadRequestException('OTP_INVALID');
     if (otp.usedAt) throw new BadRequestException('OTP_EXPIRED');
@@ -342,7 +361,7 @@ export class IdentityVerificationService {
     if ((otp.verifyFailCount ?? 0) >= 5) {
       throw new BadRequestException('OTP_ATTEMPTS_EXCEEDED');
     }
-    const hash = this._hashOtp(code, userId);
+    const hash = this._hashOtp(normalizedCode, userId);
     if (otp.codeHash !== hash) {
       otp.verifyFailCount = (otp.verifyFailCount ?? 0) + 1;
       await otp.save();

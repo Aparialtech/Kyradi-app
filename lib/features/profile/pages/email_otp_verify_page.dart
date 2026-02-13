@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../services/api_service.dart';
 import '../../../widgets/app_notification.dart';
@@ -50,7 +51,7 @@ class _EmailOtpVerifyPageState extends State<EmailOtpVerifyPage> {
   }
 
   Future<void> _verify() async {
-    final code = _codeCtrl.text.trim();
+    final code = _codeCtrl.text.replaceAll(RegExp(r'[^0-9]'), '');
     if (code.length != 6) {
       _notify('6 haneli kod girin', type: AppNotificationType.warning);
       return;
@@ -105,6 +106,10 @@ class _EmailOtpVerifyPageState extends State<EmailOtpVerifyPage> {
                   TextField(
                     controller: _codeCtrl,
                     keyboardType: TextInputType.number,
+                    inputFormatters: [
+                      FilteringTextInputFormatter.digitsOnly,
+                      LengthLimitingTextInputFormatter(6),
+                    ],
                     decoration:
                         InputDecoration(labelText: loc.verificationCodeLabel),
                     maxLength: 6,

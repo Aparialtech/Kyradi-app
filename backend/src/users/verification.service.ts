@@ -51,8 +51,19 @@ export class ProfileVerificationService {
     };
   }
 
+  private normalizeOtp(code: string): string {
+    return (code ?? '').replace(/[^0-9]/g, '');
+  }
+
   async verifyEmailCode(userId: string, code: string) {
-    const record = await this.verificationModel.findOne({ userId }).exec();
+    const normalizedCode = this.normalizeOtp(code);
+    if (normalizedCode.length !== 6) {
+      throw new BadRequestException('OTP_INVALID');
+    }
+    const record = await this.verificationModel
+      .findOne({ userId })
+      .sort({ lastSentAt: -1, createdAt: -1 })
+      .exec();
     if (!record) throw new BadRequestException('OTP_INVALID');
     if (record.expiresAt < new Date()) {
       throw new BadRequestException('OTP_EXPIRED');
@@ -60,7 +71,7 @@ export class ProfileVerificationService {
     if ((record.attempts ?? 0) >= 5) {
       throw new BadRequestException('OTP_ATTEMPTS_EXCEEDED');
     }
-    if (record.code !== code) {
+    if (record.code !== normalizedCode) {
       record.attempts = (record.attempts ?? 0) + 1;
       await record.save();
       throw new BadRequestException('OTP_INVALID');

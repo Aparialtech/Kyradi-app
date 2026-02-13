@@ -1,10 +1,10 @@
 import 'dart:async';
-import 'dart:typed_data';
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/rendering.dart';
+import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../../../l10n/app_localizations.dart';
@@ -149,7 +149,7 @@ class _IdentityVerificationPageState extends State<IdentityVerificationPage> {
 
   Future<void> _verifyOtp() async {
     final loc = AppLocalizations.of(context)!;
-    final code = _otpCtrl.text.trim();
+    final code = _otpCtrl.text.replaceAll(RegExp(r'[^0-9]'), '');
     if (code.length != 6) {
       _notify(loc.verificationCodeInvalidMessage, type: AppNotificationType.warning);
       return;
@@ -456,6 +456,10 @@ class _IdentityVerificationPageState extends State<IdentityVerificationPage> {
                             controller: _otpCtrl,
                             keyboardType: TextInputType.number,
                             maxLength: 6,
+                            inputFormatters: [
+                              FilteringTextInputFormatter.digitsOnly,
+                              LengthLimitingTextInputFormatter(6),
+                            ],
                             decoration: InputDecoration(
                               labelText: loc.verificationCodeLabel,
                               counterText: '',

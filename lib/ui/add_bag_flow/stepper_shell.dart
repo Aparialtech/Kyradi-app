@@ -98,9 +98,9 @@ class _ReservationStepperShellState extends State<ReservationStepperShell> {
   Future<void> _submitPayment() async {
     if (_submitting) return;
     final loc = AppLocalizations.of(context)!;
+    final draft = _controller.draft;
     setState(() => _submitting = true);
     try {
-      final draft = _controller.draft;
       if (draft.paymentMethod == 'card') {
         final ok = _validateCard(loc, draft);
         if (!ok) {
@@ -148,6 +148,7 @@ class _ReservationStepperShellState extends State<ReservationStepperShell> {
           ok = fallback['ok'] == true || fallback['status'] == 'success';
         }
         if (!ok) {
+          if (!mounted) return;
           AppNotification.show(
             context,
             message: loc.paymentFailedMessage,
@@ -165,6 +166,7 @@ class _ReservationStepperShellState extends State<ReservationStepperShell> {
       }
       final userId = _userId;
       if (userId == null || userId.isEmpty) {
+        if (!mounted) return;
         AppNotification.show(
           context,
           message: loc.userIdMissing,
@@ -187,7 +189,11 @@ class _ReservationStepperShellState extends State<ReservationStepperShell> {
       if (!mounted) return;
       AppNotification.show(
         context,
-        message: loc.paymentFailedMessage,
+        message: _resolveSubmitErrorMessage(
+          loc: loc,
+          method: draft.paymentMethod,
+          error: e,
+        ),
         type: AppNotificationType.error,
       );
     } finally {
@@ -292,6 +298,9 @@ class _ReservationStepperShellState extends State<ReservationStepperShell> {
   ) {
     showModalBottomSheet(
       context: context,
+      useRootNavigator: true,
+      useSafeArea: true,
+      isScrollControlled: true,
       showDragHandle: true,
       builder: (context) {
         return Padding(
@@ -347,6 +356,36 @@ class _ReservationStepperShellState extends State<ReservationStepperShell> {
         );
       },
     );
+  }
+
+  String _resolveSubmitErrorMessage({
+    required AppLocalizations loc,
+    required String method,
+    required Object error,
+  }) {
+    final rawText = error.toString();
+    final raw = rawText.toUpperCase();
+    if (raw.contains('LOCATION_CLOSED')) return loc.locationClosedWarning;
+    if (raw.contains('LOCATION_FULL')) return loc.locationFullWarning;
+    if (raw.contains('LOCATION_INACTIVE')) return loc.locationInactiveWarning;
+    if (raw.contains('LOCATION_NOT_FOUND')) return loc.luggageLocationMissing;
+    if (raw.contains('PAYMENT_') || raw.contains('CHECKOUT')) {
+      return loc.paymentFailedMessage;
+    }
+    if (raw.contains('PAYMENTMETHOD')) {
+      return 'Geçersiz ödeme yöntemi. Lütfen tekrar seçim yapın.';
+    }
+    final compact = rawText.replaceFirst('Exception: ', '').trim();
+    if (compact.isNotEmpty &&
+        compact.length <= 120 &&
+        !compact.contains('{') &&
+        !compact.contains('[')) {
+      return compact;
+    }
+    if (method == 'pay_at_hotel' || method == 'transfer') {
+      return loc.paymentFailedMessage;
+    }
+    return loc.paymentFailedMessage;
   }
 
   @override

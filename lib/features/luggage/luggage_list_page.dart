@@ -14,6 +14,7 @@ import '../../ui/components/app_error_state.dart';
 import '../../ui/components/app_skeleton.dart';
 import '../../widgets/section_card.dart';
 import '../../widgets/app_mesh_background.dart';
+import 'widgets/active_luggage_bottom_sheet.dart';
 
 class LuggageListPage extends StatefulWidget {
   const LuggageListPage({super.key});
@@ -160,6 +161,19 @@ class _LuggageListPageState extends State<LuggageListPage> {
     final max = _page * _pageSize;
     if (items.length <= max) return items;
     return items.take(max).toList();
+  }
+
+  LuggageModel? get _activeLuggage {
+    final active = _items
+        .where(
+          (item) =>
+              item.status == LuggageStatus.awaitingDrop ||
+              item.status == LuggageStatus.dropped,
+        )
+        .toList()
+      ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+    if (active.isEmpty) return null;
+    return active.first;
   }
 
   void _openFilters() {
@@ -402,6 +416,10 @@ class _LuggageListPageState extends State<LuggageListPage> {
     final filtered = _filteredItems;
     final paged = _pagedItems;
     final hasMore = paged.length < filtered.length;
+    final activeLuggage = _activeLuggage;
+    final showActiveSheet =
+        !_loading && _error == null && activeLuggage != null && _items.isNotEmpty;
+    final activeSheetBottom = MediaQuery.viewPaddingOf(context).bottom + 84;
     return Scaffold(
       backgroundColor: Colors.transparent,
       appBar: AppBar(
@@ -419,7 +437,12 @@ class _LuggageListPageState extends State<LuggageListPage> {
           RefreshIndicator(
             onRefresh: _load,
             child: ListView(
-              padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
+              padding: EdgeInsets.fromLTRB(
+                16,
+                16,
+                16,
+                showActiveSheet ? 210 : 32,
+              ),
               children: [
                 SectionCard(
                   padding: const EdgeInsets.all(16),
@@ -604,6 +627,19 @@ class _LuggageListPageState extends State<LuggageListPage> {
                 color: Colors.black.withValues(alpha: 0.15),
                 child: const Center(
                   child: CircularProgressIndicator(),
+                ),
+              ),
+            ),
+          if (showActiveSheet)
+            Positioned(
+              left: 12,
+              right: 12,
+              bottom: activeSheetBottom,
+              child: SizedBox(
+                height: MediaQuery.sizeOf(context).height * 0.56,
+                child: ActiveLuggageBottomSheet(
+                  luggage: activeLuggage,
+                  onDetails: () => _openDetail(activeLuggage),
                 ),
               ),
             ),
