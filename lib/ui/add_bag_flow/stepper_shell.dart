@@ -33,6 +33,7 @@ class _ReservationStepperShellState extends State<ReservationStepperShell> {
   final _pageController = PageController();
   final _repo = const LuggageRepository();
   final _paymentRepo = DemoPaymentRepository();
+  List<DropLocation> _locations = DropLocationsRepository.locations;
   bool _submitting = false;
   String? _userId;
   LuggageModel? _created;
@@ -41,11 +42,37 @@ class _ReservationStepperShellState extends State<ReservationStepperShell> {
   void initState() {
     super.initState();
     _loadUserId();
+    _loadLocations();
   }
 
   Future<void> _loadUserId() async {
     final prefs = await SharedPreferences.getInstance();
     _userId = prefs.getString('userId');
+  }
+
+  Future<void> _loadLocations() async {
+    try {
+      final response = await ApiService.getLocations();
+      if (!mounted) return;
+      final rawList = response['locations'];
+      if (response['ok'] == true && rawList is List) {
+        final parsed = rawList
+            .whereType<Map>()
+            .map((raw) => DropLocation.fromJson(Map<String, dynamic>.from(raw)))
+            .where((loc) => loc.id.trim().isNotEmpty)
+            .toList();
+        if (parsed.isNotEmpty) {
+          setState(() => _locations = parsed);
+          final current = _controller.draft.location;
+          if (current == null || !parsed.any((loc) => loc.id == current.id)) {
+            final next = _controller.draft.copy()..location = parsed.first;
+            _controller.updateDraft(next);
+          }
+        }
+      }
+    } catch (e) {
+      appLog('reservation', 'locations load failed $e', level: AppLogLevel.warn);
+    }
   }
 
   void _next() {
@@ -368,7 +395,9 @@ class _ReservationStepperShellState extends State<ReservationStepperShell> {
     if (raw.contains('LOCATION_CLOSED')) return loc.locationClosedWarning;
     if (raw.contains('LOCATION_FULL')) return loc.locationFullWarning;
     if (raw.contains('LOCATION_INACTIVE')) return loc.locationInactiveWarning;
-    if (raw.contains('LOCATION_NOT_FOUND')) return loc.luggageLocationMissing;
+    if (raw.contains('LOCATION_NOT_FOUND')) {
+      return 'Seçilen lokasyon bulunamadı. Lütfen lokasyonu yeniden seçin.';
+    }
     if (raw.contains('PAYMENT_') || raw.contains('CHECKOUT')) {
       return loc.paymentFailedMessage;
     }
@@ -447,7 +476,7 @@ class _ReservationStepperShellState extends State<ReservationStepperShell> {
                     ),
                     StepScheduleLocation(
                       draft: _controller.draft,
-                      locations: DropLocationsRepository.locations,
+                      locations: _locations,
                       onChanged: _controller.updateDraft,
                     ),
                     StepPricingOptions(
