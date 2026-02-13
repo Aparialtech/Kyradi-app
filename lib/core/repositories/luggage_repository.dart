@@ -26,7 +26,7 @@ class LuggageRepository {
         Map<String, dynamic>.from(result['luggage'] as Map),
       );
     }
-    final message = (result['error'] ?? result['message'] ?? 'LUGGAGE_CREATE_FAILED')
+    final message = (result['message'] ?? result['error'] ?? 'LUGGAGE_CREATE_FAILED')
         .toString();
     throw Exception(message);
   }

@@ -29,6 +29,7 @@ async function bootstrap() {
     'GOOGLE_DIRECTIONS_API_KEY',
     'MAGICPAY_WEBHOOK_SECRET',
     'PAYMENTS_DEMO_MODE',
+    'SAAS_ENABLED',
     'SAAS_BASE_URL',
     'SAAS_INTEGRATION_SECRET',
     'SAAS_TIMEOUT_MS',
@@ -53,13 +54,12 @@ async function bootstrap() {
   ];
 
   const missingRequired = requiredKeys.filter((key) => !process.env[key]);
-  const presence = [...requiredKeys, ...optionalKeys].reduce<Record<string, boolean>>(
-    (acc, key) => {
-      acc[key] = !!process.env[key];
-      return acc;
-    },
-    {},
-  );
+  const presence = [...requiredKeys, ...optionalKeys].reduce<
+    Record<string, boolean>
+  >((acc, key) => {
+    acc[key] = !!process.env[key];
+    return acc;
+  }, {});
   logger.log(`ENV presence: ${JSON.stringify(presence)}`);
   if (missingRequired.length > 0) {
     const msg = `Missing required env: ${missingRequired.join(', ')}`;
@@ -71,7 +71,9 @@ async function bootstrap() {
     }
   }
 
-  const app = await NestFactory.create<NestExpressApplication>(AppModule, { bodyParser: false });
+  const app = await NestFactory.create<NestExpressApplication>(AppModule, {
+    bodyParser: false,
+  });
   const trustProxy = (process.env.TRUST_PROXY ?? '1').toString();
   if (trustProxy) {
     app.set('trust proxy', trustProxy === 'true' ? 1 : Number(trustProxy) || 1);
@@ -100,7 +102,13 @@ async function bootstrap() {
     }
   };
   app.use(express.json({ limit: jsonLimit, verify: rawBodySaver }));
-  app.use(express.urlencoded({ extended: true, limit: jsonLimit, verify: rawBodySaver }));
+  app.use(
+    express.urlencoded({
+      extended: true,
+      limit: jsonLimit,
+      verify: rawBodySaver,
+    }),
+  );
   // express-mongo-sanitize's built-in middleware tries to re-assign req.query.
   // With newer Express/Nest request objects, req.query may be getter-only, causing 500s.
   // We sanitize in-place to avoid any reassignment while keeping the protection.
@@ -111,10 +119,10 @@ async function bootstrap() {
         | undefined;
       if (typeof sanitize !== 'function') return next();
       const opts = { replaceWith: '_' };
-      if ((req as any).body) sanitize((req as any).body, opts);
-      if ((req as any).params) sanitize((req as any).params, opts);
-      if ((req as any).headers) sanitize((req as any).headers, opts);
-      if ((req as any).query) sanitize((req as any).query, opts);
+      if (req.body) sanitize(req.body, opts);
+      if (req.params) sanitize(req.params, opts);
+      if (req.headers) sanitize(req.headers, opts);
+      if (req.query) sanitize(req.query, opts);
       return next();
     } catch (e) {
       return next(e);
@@ -136,7 +144,8 @@ async function bootstrap() {
   });
 
   const forbidUnknown =
-    (process.env.VALIDATION_FORBID_NON_WHITELISTED ?? '').toLowerCase() === 'true';
+    (process.env.VALIDATION_FORBID_NON_WHITELISTED ?? '').toLowerCase() ===
+    'true';
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
@@ -151,7 +160,7 @@ async function bootstrap() {
     prefix: '/uploads/',
   });
   const port = Number(process.env.PORT) || 3000;
-  console.log("BOOT OK - directions route should exist");
+  console.log('BOOT OK - directions route should exist');
   await app.listen(port, '0.0.0.0');
 }
 bootstrap();

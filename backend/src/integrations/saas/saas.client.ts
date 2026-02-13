@@ -10,6 +10,14 @@ type SaasPostResult =
 export class SaasClient {
   private readonly logger = new Logger(SaasClient.name);
 
+  private get enabledByFlag(): boolean {
+    const raw = (process.env.SAAS_ENABLED ?? '')
+      .toString()
+      .trim()
+      .toLowerCase();
+    return raw === '1' || raw === 'true' || raw === 'yes' || raw === 'on';
+  }
+
   private get baseUrl(): string | null {
     const raw = process.env.SAAS_BASE_URL?.trim();
     return raw ? raw.replace(/\/$/, '') : null;
@@ -31,7 +39,7 @@ export class SaasClient {
   }
 
   isEnabled(): boolean {
-    return !!this.baseUrl && !!this.secret;
+    return this.enabledByFlag && !!this.baseUrl && !!this.secret;
   }
 
   buildSignature(bodyString: string): string | null {
@@ -39,13 +47,19 @@ export class SaasClient {
     return signBody(bodyString, this.secret);
   }
 
-  verifyIncomingSignature(rawBody: string | undefined, body: unknown, signature?: string): boolean {
+  verifyIncomingSignature(
+    rawBody: string | undefined,
+    body: unknown,
+    signature?: string,
+  ): boolean {
     if (!this.secret) return false;
     if (!rawBody || rawBody.length === 0) return false;
     return verifySignature(rawBody, signature, this.secret);
   }
 
-  async postReservation(payload: SaasReservationPayload): Promise<SaasPostResult> {
+  async postReservation(
+    payload: SaasReservationPayload,
+  ): Promise<SaasPostResult> {
     if (!this.baseUrl || !this.secret) {
       return { ok: false, error: 'SAAS_NOT_CONFIGURED' };
     }
@@ -70,14 +84,19 @@ export class SaasClient {
           let data: Record<string, any> | undefined;
           try {
             const json = await res.json();
-            if (json && typeof json === 'object') data = json as Record<string, any>;
+            if (json && typeof json === 'object')
+              data = json as Record<string, any>;
           } catch {
             data = undefined;
           }
           return { ok: true, status: res.status, data };
         }
         const text = await res.text();
-        return { ok: false, status: res.status, error: text || 'SAAS_BAD_RESPONSE' };
+        return {
+          ok: false,
+          status: res.status,
+          error: text || 'SAAS_BAD_RESPONSE',
+        };
       } catch (err) {
         const message = (err as Error)?.message || 'SAAS_REQUEST_FAILED';
         return { ok: false, error: message };
@@ -91,7 +110,8 @@ export class SaasClient {
       last = await attemptOnce();
       if (last.ok) return last;
       const retryable =
-        !('status' in last) || (typeof last.status === 'number' && last.status >= 500);
+        !('status' in last) ||
+        (typeof last.status === 'number' && last.status >= 500);
       if (!retryable) break;
     }
 

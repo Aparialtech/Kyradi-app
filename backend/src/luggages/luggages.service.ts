@@ -1,7 +1,17 @@
-import { HttpException, Injectable, NotFoundException, BadRequestException, Logger } from '@nestjs/common';
+import {
+  HttpException,
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+  Logger,
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { Luggage, LuggageStatus, PaymentStatus } from './schemas/luggage.schema';
+import {
+  Luggage,
+  LuggageStatus,
+  PaymentStatus,
+} from './schemas/luggage.schema';
 import { CreateLuggageDto } from './dto/create-luggage.dto';
 import { UpdateLuggageDto } from './dto/update-luggage.dto';
 import { PricingEstimateDto } from './dto/pricing-estimate.dto';
@@ -72,11 +82,16 @@ export class LuggagesService {
 
     const pricingSubtotal = basePrice + premiumProtectionFee;
     const hotelCommissionFee =
-      dto.paymentMethod === 'pay_at_hotel' ? Math.round(pricingSubtotal * 0.1) : 0;
+      dto.paymentMethod === 'pay_at_hotel'
+        ? Math.round(pricingSubtotal * 0.1)
+        : 0;
     const installmentFee =
-      dto.paymentMethod === 'installment' ? Math.round(pricingSubtotal * 0.05) : 0;
+      dto.paymentMethod === 'installment'
+        ? Math.round(pricingSubtotal * 0.05)
+        : 0;
 
-    const total = basePrice + premiumProtectionFee + hotelCommissionFee + installmentFee;
+    const total =
+      basePrice + premiumProtectionFee + hotelCommissionFee + installmentFee;
 
     return {
       currency: 'TRY',
@@ -93,17 +108,55 @@ export class LuggagesService {
 
   async create(userId: string, dto: CreateLuggageDto) {
     const requestedLocationId = (dto.dropLocationId ?? '').toString().trim();
-    const requestedLocationName = (dto.dropLocationName ?? '').toString().trim();
+    const requestedLocationName = (dto.dropLocationName ?? '')
+      .toString()
+      .trim();
     let location = requestedLocationId
       ? await this.locationModel.findById(requestedLocationId).lean().exec()
       : null;
     if (!location && requestedLocationName) {
-      const exactName = new RegExp(`^${this._escapeRegex(requestedLocationName)}$`, 'i');
-      location = await this.locationModel.findOne({ name: exactName }).lean().exec();
+      const exactName = new RegExp(
+        `^${this._escapeRegex(requestedLocationName)}$`,
+        'i',
+      );
+      location = await this.locationModel
+        .findOne({ name: exactName })
+        .lean()
+        .exec();
     }
     if (!location && requestedLocationId) {
-      const byName = new RegExp(`^${this._escapeRegex(requestedLocationId)}$`, 'i');
-      location = await this.locationModel.findOne({ name: byName }).lean().exec();
+      const byName = new RegExp(
+        `^${this._escapeRegex(requestedLocationId)}$`,
+        'i',
+      );
+      location = await this.locationModel
+        .findOne({ name: byName })
+        .lean()
+        .exec();
+    }
+    if (!location && requestedLocationId) {
+      location = await this.locationModel
+        .findOne({
+          $or: [
+            { id: requestedLocationId } as any,
+            { slug: requestedLocationId } as any,
+            { code: requestedLocationId } as any,
+          ],
+        })
+        .lean()
+        .exec();
+    }
+    if (!location && requestedLocationName) {
+      const byAddress = new RegExp(
+        this._escapeRegex(requestedLocationName),
+        'i',
+      );
+      location = await this.locationModel
+        .findOne({
+          $or: [{ name: byAddress }, { address: byAddress }],
+        } as any)
+        .lean()
+        .exec();
     }
     if (!location) {
       this.logger.warn(
@@ -147,12 +200,17 @@ export class LuggagesService {
     const created = await this.luggageModel.create({
       userId,
       ...dto,
-      dropLocationId: (location as any)._id?.toString?.() ?? requestedLocationId,
+      dropLocationId:
+        (location as any)._id?.toString?.() ?? requestedLocationId,
       dropLocationName: (location as any).name ?? requestedLocationName,
       qrCode,
       pickupPinHash,
-      scheduledDropTime: dto.scheduledDropTime ? new Date(dto.scheduledDropTime) : undefined,
-      scheduledPickupTime: dto.scheduledPickupTime ? new Date(dto.scheduledPickupTime) : undefined,
+      scheduledDropTime: dto.scheduledDropTime
+        ? new Date(dto.scheduledDropTime)
+        : undefined,
+      scheduledPickupTime: dto.scheduledPickupTime
+        ? new Date(dto.scheduledPickupTime)
+        : undefined,
     });
     await this.refreshLocationOccupancy(created.dropLocationId);
     let pinSent = false;
@@ -207,9 +265,15 @@ export class LuggagesService {
     return this._decorateLuggage(item);
   }
 
-  async updateMetadata(userId: string, luggageId: string, dto: UpdateLuggageDto) {
+  async updateMetadata(
+    userId: string,
+    luggageId: string,
+    dto: UpdateLuggageDto,
+  ) {
     let delegateCode: string | undefined;
-    const existing = await this.luggageModel.findOne({ _id: luggageId, userId }).exec();
+    const existing = await this.luggageModel
+      .findOne({ _id: luggageId, userId })
+      .exec();
     if (!existing) throw new NotFoundException('Luggage not found');
     const shouldIssueDelegate =
       (dto.pickupDelegateFullName ?? '').trim().length > 0 ||
@@ -229,9 +293,15 @@ export class LuggagesService {
             ...(dto.color && { color: dto.color }),
             ...(dto.note && { note: dto.note }),
             ...(dto.dropLocationId && { dropLocationId: dto.dropLocationId }),
-            ...(dto.dropLocationName && { dropLocationName: dto.dropLocationName }),
-            ...(dto.scheduledDropTime && { scheduledDropTime: new Date(dto.scheduledDropTime) }),
-            ...(dto.scheduledPickupTime && { scheduledPickupTime: new Date(dto.scheduledPickupTime) }),
+            ...(dto.dropLocationName && {
+              dropLocationName: dto.dropLocationName,
+            }),
+            ...(dto.scheduledDropTime && {
+              scheduledDropTime: new Date(dto.scheduledDropTime),
+            }),
+            ...(dto.scheduledPickupTime && {
+              scheduledPickupTime: new Date(dto.scheduledPickupTime),
+            }),
             ...(shouldIssueDelegate && {
               pickupDelegate: {
                 fullName: dto.pickupDelegateFullName?.trim() ?? '',
@@ -266,7 +336,9 @@ export class LuggagesService {
     delegateCode?: string,
   ) {
     try {
-      const luggage = await this.luggageModel.findOne({ _id: luggageId, userId }).exec();
+      const luggage = await this.luggageModel
+        .findOne({ _id: luggageId, userId })
+        .exec();
       if (!luggage) {
         throw new NotFoundException('Luggage not found');
       }
@@ -332,7 +404,10 @@ export class LuggagesService {
       await this.refreshLocationOccupancy(saved.dropLocationId?.toString());
       return this._decorateLuggage(saved.toObject());
     } catch (error) {
-      this.logger.error('Luggage status update failed', (error as Error)?.stack);
+      this.logger.error(
+        'Luggage status update failed',
+        (error as Error)?.stack,
+      );
       if (error instanceof HttpException) {
         throw error;
       }
@@ -341,9 +416,13 @@ export class LuggagesService {
   }
 
   async cancelReservation(userId: string, luggageId: string) {
-    const existing = await this.luggageModel.findOne({ _id: luggageId, userId }).exec();
+    const existing = await this.luggageModel
+      .findOne({ _id: luggageId, userId })
+      .exec();
     if (!existing) throw new NotFoundException('Luggage not found');
-    if ([LuggageStatus.DROPPED, LuggageStatus.PICKED].includes(existing.status)) {
+    if (
+      [LuggageStatus.DROPPED, LuggageStatus.PICKED].includes(existing.status)
+    ) {
       throw new BadRequestException('CANCEL_NOT_ALLOWED');
     }
     existing.status = LuggageStatus.CANCELLED;
@@ -381,13 +460,16 @@ export class LuggagesService {
   private async refreshLocationOccupancy(locationId?: string | null) {
     if (!locationId) return;
     const normalized = locationId.toString();
-    const location = await this.locationModel.findById(normalized).lean().exec();
+    const location = await this.locationModel
+      .findById(normalized)
+      .lean()
+      .exec();
     if (!location) return;
     const usedSlots = await this._getLocationOccupancy(normalized);
     const capacity =
       typeof location.maxCapacity === 'number'
         ? location.maxCapacity
-        : location.totalSlots ?? 0;
+        : (location.totalSlots ?? 0);
     const availableSlots = Math.max(capacity - usedSlots, 0);
     await this.locationModel
       .updateOne(
@@ -437,11 +519,16 @@ export class LuggagesService {
       });
       parts = fallback.formatToParts(reference);
     }
-    const weekdayPart = parts.find((part) => part.type === 'weekday')?.value ?? '';
+    const weekdayPart =
+      parts.find((part) => part.type === 'weekday')?.value ?? '';
     const hourPart = parts.find((part) => part.type === 'hour')?.value ?? '00';
-    const minutePart = parts.find((part) => part.type === 'minute')?.value ?? '00';
+    const minutePart =
+      parts.find((part) => part.type === 'minute')?.value ?? '00';
     const dayKey = this._weekdayKey(weekdayPart);
-    const ranges = (openingHours?.[dayKey] ?? []) as { start: string; end: string }[];
+    const ranges = (openingHours?.[dayKey] ?? []) as {
+      start: string;
+      end: string;
+    }[];
     if (ranges.length === 0) return false;
     const nowMinutes = Number(hourPart) * 60 + Number(minutePart);
     return ranges.some((range) => {
@@ -502,5 +589,4 @@ export class LuggagesService {
       delegateActive: this._isDelegateActive(luggage as Luggage),
     };
   }
-
 }

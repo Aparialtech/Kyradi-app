@@ -60,6 +60,7 @@ class ReservationFlowController extends ChangeNotifier {
         endAt: end,
         insurance: _draft.insurance,
         paymentMethod: _draft.paymentMethod,
+        sizeClass: _draft.size,
       );
       final ok = result['ok'] == true;
       if (ok && result['pricing'] is Map) {

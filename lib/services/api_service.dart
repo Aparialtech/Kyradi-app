@@ -861,6 +861,7 @@ class ApiService {
     required DateTime endAt,
     required bool insurance,
     required String paymentMethod,
+    String sizeClass = 'medium',
   }) async {
     if (_usingMockBackend) {
       return MockServer.calculatePayment(
@@ -871,13 +872,37 @@ class ApiService {
       );
     }
     final body = <String, dynamic>{
-      'startAt': startAt.toUtc().toIso8601String(),
-      'endAt': endAt.toUtc().toIso8601String(),
-      'insurance': insurance,
+      'sizeClass': sizeClass,
+      'dropAt': startAt.toUtc().toIso8601String(),
+      'pickupAt': endAt.toUtc().toIso8601String(),
+      'protectionLevel': insurance ? 'premium' : 'standard',
       'paymentMethod': paymentMethod,
     };
-    final result = await _post('/payments/calculate', body);
+    final result = await _post('/pricing/estimate', body);
     result['statusCode'] ??= result['_httpStatus'];
+    if (result['ok'] == true && result['total'] is num) {
+      final durationMinutes = endAt.difference(startAt).inMinutes.clamp(60, 60 * 24 * 30);
+      final durationHours = (durationMinutes / 60).ceil();
+      final durationDays = (durationMinutes / (60 * 24)).ceil();
+      final breakdown = (result['breakdown'] is Map)
+          ? Map<String, dynamic>.from(result['breakdown'] as Map)
+          : const <String, dynamic>{};
+      final basePrice = (breakdown['basePrice'] as num?)?.toInt() ?? 0;
+      final premiumProtectionFee = (breakdown['premiumProtectionFee'] as num?)?.toInt() ?? 0;
+      final hotelCommissionFee = (breakdown['hotelCommissionFee'] as num?)?.toInt() ?? 0;
+      result['pricing'] = {
+        'durationMinutes': durationMinutes,
+        'durationHours': durationHours,
+        'durationDays': durationDays,
+        'hourlyCost': basePrice,
+        'dailyCost': basePrice,
+        'baseCost': basePrice,
+        'insuranceFee': premiumProtectionFee,
+        'hotelFee': hotelCommissionFee,
+        'total': (result['total'] as num).toInt(),
+        'chosen': (result['pricingBand'] ?? 'hourly').toString(),
+      };
+    }
     return result;
   }
 
