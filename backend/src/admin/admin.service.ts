@@ -35,6 +35,8 @@ export class AdminService {
       luggageTotal,
       paymentPending,
       statusRaw,
+      paymentRaw,
+      revenueRaw,
       recentLuggages,
     ] = await Promise.all([
       this.userModel.countDocuments().exec(),
@@ -53,6 +55,27 @@ export class AdminService {
         ])
         .exec(),
       this.luggageModel
+        .aggregate<{ _id: string; total: number }>([
+          { $group: { _id: '$paymentStatus', total: { $sum: 1 } } },
+        ])
+        .exec(),
+      this.luggageModel
+        .aggregate<{ _id: string; totalAmount: number }>([
+          {
+            $match: {
+              paymentStatus: 'paid',
+              totalPrice: { $type: 'number' },
+            },
+          },
+          {
+            $group: {
+              _id: null,
+              totalAmount: { $sum: '$totalPrice' },
+            },
+          },
+        ])
+        .exec(),
+      this.luggageModel
         .find()
         .sort({ updatedAt: -1 })
         .limit(20)
@@ -68,6 +91,12 @@ export class AdminService {
       acc[key] = item.total ?? 0;
       return acc;
     }, {});
+    const paymentCounts = paymentRaw.reduce<Record<string, number>>((acc, item) => {
+      const key = (item?._id ?? 'unknown').toString();
+      acc[key] = item.total ?? 0;
+      return acc;
+    }, {});
+    const totalRevenue = revenueRaw[0]?.totalAmount ?? 0;
 
     const userIds = Array.from(
       new Set(recentLuggages.map((item) => (item.userId ?? '').toString()).filter(Boolean)),
@@ -114,6 +143,8 @@ export class AdminService {
         total: luggageTotal,
         paymentPending,
         statusCounts,
+        paymentCounts,
+        totalRevenue,
       },
       recentActivity,
     };

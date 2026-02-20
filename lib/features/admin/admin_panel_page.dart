@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'dart:ui';
 
 import 'package:flutter/cupertino.dart';
@@ -447,6 +448,7 @@ class _AdminPanelPageState extends State<AdminPanelPage> {
 
   @override
   Widget build(BuildContext context) {
+    final recent = _asMapList(_overview['recentActivity']);
     return Scaffold(
       backgroundColor: Colors.transparent,
       appBar: AppBar(
@@ -528,7 +530,7 @@ class _AdminPanelPageState extends State<AdminPanelPage> {
                     padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
                     sliver: SliverList(
                       delegate: SliverChildListDelegate(
-                        _buildTabContent(context),
+                        _buildTabContent(context, recent),
                       ),
                     ),
                   ),
@@ -540,7 +542,10 @@ class _AdminPanelPageState extends State<AdminPanelPage> {
     );
   }
 
-  List<Widget> _buildTabContent(BuildContext context) {
+  List<Widget> _buildTabContent(
+    BuildContext context,
+    List<Map<String, dynamic>> recent,
+  ) {
     switch (_tab) {
       case 1:
         return [
@@ -607,20 +612,147 @@ class _AdminPanelPageState extends State<AdminPanelPage> {
           ),
         ];
       default:
-        final recent = _asMapList(_overview['recentActivity']);
-        return [
-          _HeaderAction(title: 'Son Hareketler'),
-          const SizedBox(height: 8),
-          ...recent.map(
-            (item) => _GlassTile(
-              title: item['userName']?.toString() ?? '-',
-              subtitle:
-                  '${item['dropLocationName'] ?? '-'} • ${item['status'] ?? '-'} • ${item['paymentStatus'] ?? '-'}',
-              badge: '₺${item['totalPrice'] ?? 0}',
+        return _buildDashboardSection(recent);
+    }
+  }
+
+  List<Widget> _buildDashboardSection(List<Map<String, dynamic>> recent) {
+    final users = Map<String, dynamic>.from(
+      _overview['users'] as Map? ?? const {},
+    );
+    final locations = Map<String, dynamic>.from(
+      _overview['locations'] as Map? ?? const {},
+    );
+    final campaigns = Map<String, dynamic>.from(
+      _overview['campaigns'] as Map? ?? const {},
+    );
+    final luggage = Map<String, dynamic>.from(
+      _overview['luggage'] as Map? ?? const {},
+    );
+    final statusCounts = Map<String, dynamic>.from(
+      luggage['statusCounts'] as Map? ?? const {},
+    );
+    final paymentCounts = Map<String, dynamic>.from(
+      luggage['paymentCounts'] as Map? ?? const {},
+    );
+
+    return [
+      _HeaderAction(title: 'Canli Dashboard'),
+      const SizedBox(height: 10),
+      _KpiGrid(
+        cards: [
+          _KpiCardData(
+            title: 'Kullanicilar',
+            value: _asInt(users['total']),
+            subtitle: 'Toplam hesap',
+            icon: Icons.people_alt_outlined,
+            gradient: const [Color(0xFF0EA5E9), Color(0xFF38BDF8)],
+          ),
+          _KpiCardData(
+            title: 'Yeni 7 gun',
+            value: _asInt(users['last7d']),
+            subtitle: 'Son kayitlar',
+            icon: Icons.person_add_alt_1_rounded,
+            gradient: const [Color(0xFF14B8A6), Color(0xFF2DD4BF)],
+          ),
+          _KpiCardData(
+            title: 'Rezervasyon',
+            value: _asInt(luggage['total']),
+            subtitle: 'Tum bavullar',
+            icon: Icons.luggage_outlined,
+            gradient: const [Color(0xFF6366F1), Color(0xFF818CF8)],
+          ),
+          _KpiCardData(
+            title: 'Odeme bekleyen',
+            value: _asInt(luggage['paymentPending']),
+            subtitle: 'Pending/failed',
+            icon: Icons.warning_amber_rounded,
+            gradient: const [Color(0xFFF59E0B), Color(0xFFFBBF24)],
+          ),
+          _KpiCardData(
+            title: 'Toplam gelir',
+            value: _asInt(luggage['totalRevenue']),
+            subtitle: 'Paid toplami (TRY)',
+            icon: Icons.payments_outlined,
+            gradient: const [Color(0xFF0F766E), Color(0xFF14B8A6)],
+            prefix: '₺',
+          ),
+          _KpiCardData(
+            title: 'Aktif lokasyon',
+            value: _asInt(locations['active']),
+            subtitle: '${_asInt(locations['total'])} icinde aktif',
+            icon: Icons.location_on_outlined,
+            gradient: const [Color(0xFF9333EA), Color(0xFFA855F7)],
+          ),
+        ],
+      ),
+      const SizedBox(height: 14),
+      _DashboardDualCharts(
+        statusCounts: statusCounts,
+        paymentCounts: paymentCounts,
+      ),
+      const SizedBox(height: 14),
+      _LocationUtilizationCard(locations: _locations),
+      const SizedBox(height: 14),
+      _HeaderAction(
+        title: 'Son Hareketler',
+        actionLabel: 'Tumunu Yenile',
+        onAction: _loadAll,
+      ),
+      const SizedBox(height: 8),
+      if (recent.isEmpty)
+        const _GlassTile(
+          title: 'Hareket yok',
+          subtitle: 'Heniz islem kaydi bulunmuyor.',
+        ),
+      ...recent.map(
+        (item) => _GlassTile(
+          title: item['userName']?.toString() ?? '-',
+          subtitle:
+              '${item['dropLocationName'] ?? '-'} • ${item['status'] ?? '-'} • ${item['paymentStatus'] ?? '-'}',
+          badge: '₺${item['totalPrice'] ?? 0}',
+        ),
+      ),
+      const SizedBox(height: 6),
+      _HeaderAction(title: 'Hizli Eylemler'),
+      const SizedBox(height: 8),
+      Row(
+        children: [
+          Expanded(
+            child: _QuickActionButton(
+              label: 'Lokasyon Ekle',
+              icon: Icons.add_location_alt_outlined,
+              onTap: () => _openLocationEditor(),
             ),
           ),
-        ];
-    }
+          const SizedBox(width: 10),
+          Expanded(
+            child: _QuickActionButton(
+              label: 'Kampanya Ekle',
+              icon: Icons.campaign_outlined,
+              onTap: () => _openCampaignEditor(),
+            ),
+          ),
+        ],
+      ),
+      const SizedBox(height: 8),
+      _QuickActionButton(
+        label: 'Kullanicilari Yenile',
+        icon: Icons.sync_rounded,
+        onTap: _loadAll,
+      ),
+      const SizedBox(height: 12),
+      _GlassTile(
+        title: 'Aktif kampanyalar',
+        subtitle:
+            '${_asInt(campaigns['active'])} aktif / ${_asInt(campaigns['total'])} toplam',
+      ),
+    ];
+  }
+
+  int _asInt(dynamic value) {
+    if (value is num) return value.toInt();
+    return int.tryParse((value ?? '0').toString()) ?? 0;
   }
 }
 
@@ -639,9 +771,6 @@ class _GlassHero extends StatelessWidget {
     );
     final campaigns = Map<String, dynamic>.from(
       overview['campaigns'] as Map? ?? const {},
-    );
-    final luggage = Map<String, dynamic>.from(
-      overview['luggage'] as Map? ?? const {},
     );
     return ClipRRect(
       borderRadius: BorderRadius.circular(24),
@@ -669,7 +798,7 @@ class _GlassHero extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Kyradi Admin',
+                'Kyradi Control Center',
                 style: Theme.of(context).textTheme.titleLarge?.copyWith(
                   fontWeight: FontWeight.w800,
                   color: const Color(0xFF0F172A),
@@ -677,12 +806,12 @@ class _GlassHero extends StatelessWidget {
               ),
               const SizedBox(height: 4),
               Text(
-                'Canli sistem ozetini buradan yonet.',
+                'Canli rezervasyon, odeme, lokasyon ve kampanya paneli',
                 style: Theme.of(
                   context,
                 ).textTheme.bodySmall?.copyWith(color: const Color(0xFF334155)),
               ),
-              const SizedBox(height: 14),
+              const SizedBox(height: 12),
               Wrap(
                 spacing: 8,
                 runSpacing: 8,
@@ -699,7 +828,6 @@ class _GlassHero extends StatelessWidget {
                     label: 'Kampanya',
                     value: '${campaigns['active'] ?? 0} aktif',
                   ),
-                  _StatChip(label: 'Bavul', value: '${luggage['total'] ?? 0}'),
                 ],
               ),
             ],
@@ -849,6 +977,676 @@ class _GlassTile extends StatelessWidget {
   }
 }
 
+class _KpiCardData {
+  const _KpiCardData({
+    required this.title,
+    required this.value,
+    required this.subtitle,
+    required this.icon,
+    required this.gradient,
+    this.prefix = '',
+  });
+
+  final String title;
+  final int value;
+  final String subtitle;
+  final IconData icon;
+  final List<Color> gradient;
+  final String prefix;
+}
+
+class _KpiGrid extends StatelessWidget {
+  const _KpiGrid({required this.cards});
+
+  final List<_KpiCardData> cards;
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final width = constraints.maxWidth;
+        final columns = width > 700
+            ? 3
+            : width > 460
+            ? 2
+            : 1;
+        final itemWidth = (width - (columns - 1) * 10) / columns;
+        return Wrap(
+          spacing: 10,
+          runSpacing: 10,
+          children: cards
+              .map(
+                (card) => SizedBox(
+                  width: itemWidth,
+                  child: _KpiCard(data: card),
+                ),
+              )
+              .toList(),
+        );
+      },
+    );
+  }
+}
+
+class _KpiCard extends StatelessWidget {
+  const _KpiCard({required this.data});
+
+  final _KpiCardData data;
+
+  @override
+  Widget build(BuildContext context) {
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: 0, end: 1),
+      duration: const Duration(milliseconds: 500),
+      curve: Curves.easeOutCubic,
+      builder: (context, t, child) {
+        return Transform.scale(
+          scale: 0.98 + (0.02 * t),
+          child: Opacity(opacity: t, child: child),
+        );
+      },
+      child: Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(18),
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              data.gradient.first.withValues(alpha: 0.18),
+              data.gradient.last.withValues(alpha: 0.12),
+            ],
+          ),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.85)),
+          boxShadow: [
+            BoxShadow(
+              color: data.gradient.first.withValues(alpha: 0.14),
+              blurRadius: 18,
+              offset: const Offset(0, 10),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  height: 32,
+                  width: 32,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.7),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Icon(data.icon, size: 18, color: data.gradient.first),
+                ),
+                const Spacer(),
+                Text(
+                  data.title,
+                  style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                    color: const Color(0xFF334155),
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            _AnimatedNumberText(prefix: data.prefix, value: data.value),
+            const SizedBox(height: 2),
+            Text(
+              data.subtitle,
+              style: Theme.of(
+                context,
+              ).textTheme.bodySmall?.copyWith(color: const Color(0xFF64748B)),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _AnimatedNumberText extends StatelessWidget {
+  const _AnimatedNumberText({required this.value, this.prefix = ''});
+
+  final int value;
+  final String prefix;
+
+  @override
+  Widget build(BuildContext context) {
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: 0, end: value.toDouble()),
+      duration: const Duration(milliseconds: 900),
+      curve: Curves.easeOutCubic,
+      builder: (context, v, _) {
+        return Text(
+          '$prefix${v.round()}',
+          style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+            fontWeight: FontWeight.w800,
+            color: const Color(0xFF0F172A),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _DashboardDualCharts extends StatelessWidget {
+  const _DashboardDualCharts({
+    required this.statusCounts,
+    required this.paymentCounts,
+  });
+
+  final Map<String, dynamic> statusCounts;
+  final Map<String, dynamic> paymentCounts;
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final vertical = constraints.maxWidth < 660;
+        final left = _StatusDistributionCard(statusCounts: statusCounts);
+        final right = _PaymentDistributionCard(paymentCounts: paymentCounts);
+        if (vertical) {
+          return Column(children: [left, const SizedBox(height: 10), right]);
+        }
+        return Row(
+          children: [
+            Expanded(child: left),
+            const SizedBox(width: 10),
+            Expanded(child: right),
+          ],
+        );
+      },
+    );
+  }
+}
+
+class _StatusDistributionCard extends StatelessWidget {
+  const _StatusDistributionCard({required this.statusCounts});
+
+  final Map<String, dynamic> statusCounts;
+
+  @override
+  Widget build(BuildContext context) {
+    final items =
+        statusCounts.entries
+            .map(
+              (e) => MapEntry(
+                _statusLabel(e.key),
+                e.value is num
+                    ? e.value.toInt()
+                    : int.tryParse('${e.value}') ?? 0,
+              ),
+            )
+            .toList()
+          ..sort((a, b) => b.value.compareTo(a.value));
+    final maxValue = items.isEmpty ? 1 : items.first.value;
+    return _PanelCard(
+      title: 'Rezervasyon Durum Dagilimi',
+      child: items.isEmpty
+          ? const Text('Veri bulunamadi')
+          : Column(
+              children: items
+                  .map(
+                    (item) => Padding(
+                      padding: const EdgeInsets.only(bottom: 10),
+                      child: _AnimatedBarRow(
+                        label: item.key,
+                        value: item.value,
+                        maxValue: maxValue,
+                      ),
+                    ),
+                  )
+                  .toList(),
+            ),
+    );
+  }
+
+  String _statusLabel(String raw) {
+    switch (raw) {
+      case 'awaiting_drop':
+        return 'Awaiting Drop';
+      case 'dropped':
+        return 'Dropped';
+      case 'picked_up':
+        return 'Picked Up';
+      case 'cancelled':
+        return 'Cancelled';
+      case 'assigned':
+        return 'Assigned';
+      default:
+        return raw;
+    }
+  }
+}
+
+class _AnimatedBarRow extends StatelessWidget {
+  const _AnimatedBarRow({
+    required this.label,
+    required this.value,
+    required this.maxValue,
+  });
+
+  final String label;
+  final int value;
+  final int maxValue;
+
+  @override
+  Widget build(BuildContext context) {
+    final ratio = maxValue <= 0
+        ? 0.0
+        : (value / maxValue).clamp(0, 1).toDouble();
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: Text(
+                label,
+                style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                  color: const Color(0xFF334155),
+                ),
+              ),
+            ),
+            Text(
+              '$value',
+              style: Theme.of(
+                context,
+              ).textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w700),
+            ),
+          ],
+        ),
+        const SizedBox(height: 6),
+        Container(
+          height: 8,
+          decoration: BoxDecoration(
+            color: const Color(0xFFE2E8F0),
+            borderRadius: BorderRadius.circular(99),
+          ),
+          clipBehavior: Clip.antiAlias,
+          child: TweenAnimationBuilder<double>(
+            tween: Tween(begin: 0, end: ratio),
+            duration: const Duration(milliseconds: 700),
+            curve: Curves.easeOutCubic,
+            builder: (context, t, _) {
+              return Align(
+                alignment: Alignment.centerLeft,
+                child: FractionallySizedBox(
+                  widthFactor: t,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(99),
+                      gradient: const LinearGradient(
+                        colors: [Color(0xFF0EA5E9), Color(0xFF3B82F6)],
+                      ),
+                    ),
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _PaymentDistributionCard extends StatelessWidget {
+  const _PaymentDistributionCard({required this.paymentCounts});
+
+  final Map<String, dynamic> paymentCounts;
+
+  @override
+  Widget build(BuildContext context) {
+    final List<MapEntry<String, int>> entries = paymentCounts.entries
+        .map<MapEntry<String, int>>(
+          (e) => MapEntry<String, int>(
+            e.key,
+            e.value is num ? e.value.toInt() : int.tryParse('${e.value}') ?? 0,
+          ),
+        )
+        .where((e) => e.value > 0)
+        .toList();
+    final total = entries.fold<int>(0, (sum, e) => sum + e.value);
+    return _PanelCard(
+      title: 'Odeme Dagilimi',
+      child: entries.isEmpty
+          ? const Text('Veri bulunamadi')
+          : Column(
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: SizedBox(
+                        height: 124,
+                        child: _AnimatedDonutChart(entries: entries),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: entries
+                            .asMap()
+                            .entries
+                            .map(
+                              (entry) => Padding(
+                                padding: const EdgeInsets.only(bottom: 8),
+                                child: _LegendRow(
+                                  color: _palette[entry.key % _palette.length],
+                                  label: _paymentLabel(entry.value.key),
+                                  value:
+                                      '${entry.value.value} (${((entry.value.value / total) * 100).toStringAsFixed(0)}%)',
+                                ),
+                              ),
+                            )
+                            .toList(),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+    );
+  }
+
+  String _paymentLabel(String raw) {
+    switch (raw) {
+      case 'paid':
+        return 'Paid';
+      case 'pending':
+        return 'Pending';
+      case 'failed':
+        return 'Failed';
+      case 'unpaid':
+        return 'Unpaid';
+      default:
+        return raw;
+    }
+  }
+}
+
+class _LegendRow extends StatelessWidget {
+  const _LegendRow({
+    required this.color,
+    required this.label,
+    required this.value,
+  });
+
+  final Color color;
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Container(
+          width: 9,
+          height: 9,
+          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Text(
+            label,
+            style: Theme.of(
+              context,
+            ).textTheme.bodySmall?.copyWith(color: const Color(0xFF334155)),
+          ),
+        ),
+        Text(
+          value,
+          style: Theme.of(
+            context,
+          ).textTheme.labelSmall?.copyWith(fontWeight: FontWeight.w700),
+        ),
+      ],
+    );
+  }
+}
+
+class _AnimatedDonutChart extends StatelessWidget {
+  const _AnimatedDonutChart({required this.entries});
+
+  final List<MapEntry<String, int>> entries;
+
+  @override
+  Widget build(BuildContext context) {
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: 0, end: 1),
+      duration: const Duration(milliseconds: 900),
+      curve: Curves.easeOutCubic,
+      builder: (context, progress, _) {
+        return CustomPaint(
+          painter: _DonutPainter(entries: entries, progress: progress),
+          child: Center(
+            child: Text(
+              '${entries.fold<int>(0, (sum, e) => sum + e.value)}',
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.w800,
+                color: const Color(0xFF0F172A),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _DonutPainter extends CustomPainter {
+  _DonutPainter({required this.entries, required this.progress});
+
+  final List<MapEntry<String, int>> entries;
+  final double progress;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final total = entries.fold<int>(0, (sum, e) => sum + e.value);
+    if (total <= 0) return;
+    final stroke = math.max(12.0, size.shortestSide * 0.13);
+    final rect = Rect.fromLTWH(
+      0,
+      0,
+      size.width,
+      size.height,
+    ).deflate(stroke / 2);
+    final paint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = stroke
+      ..strokeCap = StrokeCap.round;
+
+    var start = -math.pi / 2;
+    for (var i = 0; i < entries.length; i++) {
+      final sweep = (entries[i].value / total) * math.pi * 2 * progress;
+      paint.color = _palette[i % _palette.length];
+      canvas.drawArc(rect, start, sweep, false, paint);
+      start += sweep;
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _DonutPainter oldDelegate) {
+    return oldDelegate.progress != progress || oldDelegate.entries != entries;
+  }
+}
+
+class _LocationUtilizationCard extends StatelessWidget {
+  const _LocationUtilizationCard({required this.locations});
+
+  final List<Map<String, dynamic>> locations;
+
+  @override
+  Widget build(BuildContext context) {
+    final sorted = [...locations]
+      ..sort((a, b) {
+        final aTotal = _intValue(a['totalSlots']);
+        final aAvail = _intValue(a['availableSlots']);
+        final bTotal = _intValue(b['totalSlots']);
+        final bAvail = _intValue(b['availableSlots']);
+        final aRate = aTotal <= 0 ? 0.0 : 1 - (aAvail / aTotal);
+        final bRate = bTotal <= 0 ? 0.0 : 1 - (bAvail / bTotal);
+        return bRate.compareTo(aRate);
+      });
+    final top = sorted.take(4).toList();
+
+    return _PanelCard(
+      title: 'Lokasyon Doluluk',
+      child: top.isEmpty
+          ? const Text('Lokasyon verisi yok')
+          : Column(
+              children: top.map((item) {
+                final total = _intValue(item['totalSlots']);
+                final available = _intValue(item['availableSlots']);
+                final used = math.max(total - available, 0);
+                final ratio = total <= 0 ? 0.0 : used / total;
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 10),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              item['name']?.toString() ?? '-',
+                              style: Theme.of(context).textTheme.labelLarge
+                                  ?.copyWith(fontWeight: FontWeight.w700),
+                            ),
+                          ),
+                          Text(
+                            '$used/$total',
+                            style: Theme.of(context).textTheme.labelMedium,
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 6),
+                      Container(
+                        height: 8,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFE2E8F0),
+                          borderRadius: BorderRadius.circular(99),
+                        ),
+                        clipBehavior: Clip.antiAlias,
+                        child: TweenAnimationBuilder<double>(
+                          tween: Tween(begin: 0, end: ratio),
+                          duration: const Duration(milliseconds: 850),
+                          curve: Curves.easeOutCubic,
+                          builder: (context, value, _) {
+                            return Align(
+                              alignment: Alignment.centerLeft,
+                              child: FractionallySizedBox(
+                                widthFactor: value,
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(99),
+                                    gradient: const LinearGradient(
+                                      colors: [
+                                        Color(0xFF14B8A6),
+                                        Color(0xFF0EA5E9),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              }).toList(),
+            ),
+    );
+  }
+
+  int _intValue(dynamic value) {
+    if (value is num) return value.toInt();
+    return int.tryParse((value ?? '0').toString()) ?? 0;
+  }
+}
+
+class _PanelCard extends StatelessWidget {
+  const _PanelCard({required this.title, required this.child});
+
+  final String title;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return RepaintBoundary(
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(18),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
+          child: Container(
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.75),
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.8)),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.04),
+                  blurRadius: 16,
+                  offset: const Offset(0, 8),
+                ),
+              ],
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w800,
+                    color: const Color(0xFF0F172A),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                child,
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _QuickActionButton extends StatelessWidget {
+  const _QuickActionButton({
+    required this.label,
+    required this.icon,
+    required this.onTap,
+  });
+
+  final String label;
+  final IconData icon;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: 52,
+      child: FilledButton.tonalIcon(
+        onPressed: onTap,
+        icon: Icon(icon, size: 18),
+        label: Text(label),
+        style: FilledButton.styleFrom(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class _Field extends StatelessWidget {
   const _Field({
     required this.label,
@@ -878,3 +1676,12 @@ class _Field extends StatelessWidget {
     );
   }
 }
+
+const List<Color> _palette = [
+  Color(0xFF0EA5E9),
+  Color(0xFF14B8A6),
+  Color(0xFF6366F1),
+  Color(0xFFF59E0B),
+  Color(0xFFEF4444),
+  Color(0xFF9333EA),
+];
