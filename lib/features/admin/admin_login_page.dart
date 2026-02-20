@@ -7,7 +7,6 @@ import '../../widgets/app_notification.dart';
 import '../../widgets/auth_mesh_background.dart';
 import '../../widgets/gradient_button.dart';
 import '../../widgets/section_card.dart';
-import '../../ui/components/app_back_app_bar.dart';
 import '../../ui/components/rainbow_bar.dart';
 
 class AdminLoginPage extends StatefulWidget {
@@ -95,7 +94,23 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
     return Scaffold(
       extendBodyBehindAppBar: true,
       backgroundColor: Colors.transparent,
-      appBar: buildBackAppBar(context),
+      appBar: AppBar(
+        automaticallyImplyLeading: false,
+        backgroundColor: Colors.transparent,
+        surfaceTintColor: Colors.transparent,
+        elevation: 0,
+        scrolledUnderElevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new_rounded),
+          onPressed: () {
+            if (Navigator.of(context).canPop()) {
+              Navigator.of(context).maybePop();
+              return;
+            }
+            context.go('/login');
+          },
+        ),
+      ),
       body: Stack(
         fit: StackFit.expand,
         children: [
