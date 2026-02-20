@@ -3,6 +3,7 @@ import 'dart:ui';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../services/api_service.dart';
 import '../../widgets/app_mesh_background.dart';
@@ -457,6 +458,33 @@ class _AdminPanelPageState extends State<AdminPanelPage> {
     ).showSnackBar(SnackBar(content: Text(message)));
   }
 
+  Future<void> _confirmLogout() async {
+    final shouldLogout = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Yonetim panelinden cik'),
+        content: const Text(
+          'Oturumu kapatip admin giris ekranina donulsun mu?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Vazgec'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('Cikis yap'),
+          ),
+        ],
+      ),
+    );
+
+    if (shouldLogout != true || !mounted) return;
+    await ApiService.clearSession();
+    if (!mounted) return;
+    context.go('/admin/login');
+  }
+
   @override
   Widget build(BuildContext context) {
     final recent = _asMapList(_overview['recentActivity']);
@@ -476,6 +504,11 @@ class _AdminPanelPageState extends State<AdminPanelPage> {
           IconButton(
             onPressed: _loadAll,
             icon: const Icon(Icons.refresh_rounded, color: _adminTextPrimary),
+          ),
+          IconButton(
+            onPressed: _confirmLogout,
+            icon: const Icon(Icons.logout_rounded, color: _adminTextPrimary),
+            tooltip: 'Cikis yap',
           ),
         ],
       ),
