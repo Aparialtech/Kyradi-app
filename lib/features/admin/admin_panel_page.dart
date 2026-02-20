@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 
 import '../../services/api_service.dart';
 import '../../widgets/app_mesh_background.dart';
+import '../../widgets/section_card.dart';
 
 class AdminPanelPage extends StatefulWidget {
   const AdminPanelPage({super.key});
@@ -25,6 +26,10 @@ class _AdminPanelPageState extends State<AdminPanelPage> {
   List<Map<String, dynamic>> _users = const [];
 
   final TextEditingController _userSearchController = TextEditingController();
+  bool _showReservationInsights = true;
+  bool _showPaymentInsights = true;
+  bool _showLocationInsights = true;
+  bool _showActivityInsights = false;
 
   @override
   void initState() {
@@ -635,64 +640,158 @@ class _AdminPanelPageState extends State<AdminPanelPage> {
     final paymentCounts = Map<String, dynamic>.from(
       luggage['paymentCounts'] as Map? ?? const {},
     );
+    final metricCards = [
+      _KpiCardData(
+        id: 'users_total',
+        title: 'Kullanicilar',
+        value: _asInt(users['total']),
+        subtitle: 'Toplam hesap',
+        icon: Icons.people_alt_outlined,
+        gradient: const [Color(0xFF0EA5E9), Color(0xFF38BDF8)],
+      ),
+      _KpiCardData(
+        id: 'users_7d',
+        title: 'Yeni 7 gun',
+        value: _asInt(users['last7d']),
+        subtitle: 'Son kayitlar',
+        icon: Icons.person_add_alt_1_rounded,
+        gradient: const [Color(0xFF14B8A6), Color(0xFF2DD4BF)],
+      ),
+      _KpiCardData(
+        id: 'luggage_total',
+        title: 'Rezervasyon',
+        value: _asInt(luggage['total']),
+        subtitle: 'Tum bavullar',
+        icon: Icons.luggage_outlined,
+        gradient: const [Color(0xFF6366F1), Color(0xFF818CF8)],
+      ),
+      _KpiCardData(
+        id: 'payment_pending',
+        title: 'Odeme bekleyen',
+        value: _asInt(luggage['paymentPending']),
+        subtitle: 'Pending/failed',
+        icon: Icons.warning_amber_rounded,
+        gradient: const [Color(0xFFF59E0B), Color(0xFFFBBF24)],
+      ),
+      _KpiCardData(
+        id: 'revenue_total',
+        title: 'Toplam gelir',
+        value: _asInt(luggage['totalRevenue']),
+        subtitle: 'Paid toplami (TRY)',
+        icon: Icons.payments_outlined,
+        gradient: const [Color(0xFF0F766E), Color(0xFF14B8A6)],
+        prefix: '₺',
+      ),
+      _KpiCardData(
+        id: 'locations_active',
+        title: 'Aktif lokasyon',
+        value: _asInt(locations['active']),
+        subtitle: '${_asInt(locations['total'])} icinde aktif',
+        icon: Icons.location_on_outlined,
+        gradient: const [Color(0xFF9333EA), Color(0xFFA855F7)],
+      ),
+    ];
 
     return [
       _HeaderAction(title: 'Canli Dashboard'),
       const SizedBox(height: 10),
       _KpiGrid(
-        cards: [
-          _KpiCardData(
-            title: 'Kullanicilar',
-            value: _asInt(users['total']),
-            subtitle: 'Toplam hesap',
-            icon: Icons.people_alt_outlined,
-            gradient: const [Color(0xFF0EA5E9), Color(0xFF38BDF8)],
-          ),
-          _KpiCardData(
-            title: 'Yeni 7 gun',
-            value: _asInt(users['last7d']),
-            subtitle: 'Son kayitlar',
-            icon: Icons.person_add_alt_1_rounded,
-            gradient: const [Color(0xFF14B8A6), Color(0xFF2DD4BF)],
-          ),
-          _KpiCardData(
-            title: 'Rezervasyon',
-            value: _asInt(luggage['total']),
-            subtitle: 'Tum bavullar',
-            icon: Icons.luggage_outlined,
-            gradient: const [Color(0xFF6366F1), Color(0xFF818CF8)],
-          ),
-          _KpiCardData(
-            title: 'Odeme bekleyen',
-            value: _asInt(luggage['paymentPending']),
-            subtitle: 'Pending/failed',
-            icon: Icons.warning_amber_rounded,
-            gradient: const [Color(0xFFF59E0B), Color(0xFFFBBF24)],
-          ),
-          _KpiCardData(
-            title: 'Toplam gelir',
-            value: _asInt(luggage['totalRevenue']),
-            subtitle: 'Paid toplami (TRY)',
-            icon: Icons.payments_outlined,
-            gradient: const [Color(0xFF0F766E), Color(0xFF14B8A6)],
-            prefix: '₺',
-          ),
-          _KpiCardData(
-            title: 'Aktif lokasyon',
-            value: _asInt(locations['active']),
-            subtitle: '${_asInt(locations['total'])} icinde aktif',
-            icon: Icons.location_on_outlined,
-            gradient: const [Color(0xFF9333EA), Color(0xFFA855F7)],
-          ),
-        ],
+        cards: metricCards,
+        onTap: (card) => _showDashboardMetricSheet(
+          card: card,
+          users: users,
+          locations: locations,
+          luggage: luggage,
+          campaigns: campaigns,
+          statusCounts: statusCounts,
+          paymentCounts: paymentCounts,
+        ),
+      ),
+      const SizedBox(height: 12),
+      _PanelCard(
+        title: 'Dashboard Panelleri',
+        icon: Icons.tune_rounded,
+        child: Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: [
+            _InsightToggleChip(
+              label: 'Rezervasyon',
+              icon: Icons.bar_chart_rounded,
+              active: _showReservationInsights,
+              onTap: () => setState(
+                () => _showReservationInsights = !_showReservationInsights,
+              ),
+            ),
+            _InsightToggleChip(
+              label: 'Odeme',
+              icon: Icons.pie_chart_outline_rounded,
+              active: _showPaymentInsights,
+              onTap: () =>
+                  setState(() => _showPaymentInsights = !_showPaymentInsights),
+            ),
+            _InsightToggleChip(
+              label: 'Lokasyon',
+              icon: Icons.location_city_outlined,
+              active: _showLocationInsights,
+              onTap: () => setState(
+                () => _showLocationInsights = !_showLocationInsights,
+              ),
+            ),
+            _InsightToggleChip(
+              label: 'Akis',
+              icon: Icons.auto_graph_rounded,
+              active: _showActivityInsights,
+              onTap: () => setState(
+                () => _showActivityInsights = !_showActivityInsights,
+              ),
+            ),
+          ],
+        ),
       ),
       const SizedBox(height: 14),
-      _DashboardDualCharts(
-        statusCounts: statusCounts,
-        paymentCounts: paymentCounts,
+      _ExpandableInsightPanel(
+        title: 'Rezervasyon Analizi',
+        icon: Icons.bar_chart_rounded,
+        expanded: _showReservationInsights,
+        onToggle: () => setState(
+          () => _showReservationInsights = !_showReservationInsights,
+        ),
+        child: _StatusDistributionCard(statusCounts: statusCounts),
       ),
       const SizedBox(height: 14),
-      _LocationUtilizationCard(locations: _locations),
+      _ExpandableInsightPanel(
+        title: 'Odeme Analizi',
+        icon: Icons.pie_chart_outline_rounded,
+        expanded: _showPaymentInsights,
+        onToggle: () =>
+            setState(() => _showPaymentInsights = !_showPaymentInsights),
+        child: _PaymentDistributionCard(paymentCounts: paymentCounts),
+      ),
+      const SizedBox(height: 14),
+      const _PanelCard(
+        title: 'Dataset Donut Demo',
+        icon: Icons.donut_large_rounded,
+        child: _SampleDatasetPanel(),
+      ),
+      const SizedBox(height: 14),
+      _ExpandableInsightPanel(
+        title: 'Lokasyon Doluluk Analizi',
+        icon: Icons.location_city_outlined,
+        expanded: _showLocationInsights,
+        onToggle: () =>
+            setState(() => _showLocationInsights = !_showLocationInsights),
+        child: _LocationUtilizationCard(locations: _locations),
+      ),
+      const SizedBox(height: 14),
+      _ExpandableInsightPanel(
+        title: 'Hareket Akisi',
+        icon: Icons.auto_graph_rounded,
+        expanded: _showActivityInsights,
+        onToggle: () =>
+            setState(() => _showActivityInsights = !_showActivityInsights),
+        child: _ActivityTimelineCard(recent: recent),
+      ),
       const SizedBox(height: 14),
       _HeaderAction(
         title: 'Son Hareketler',
@@ -722,6 +821,7 @@ class _AdminPanelPageState extends State<AdminPanelPage> {
             child: _QuickActionButton(
               label: 'Lokasyon Ekle',
               icon: Icons.add_location_alt_outlined,
+              accent: const Color(0xFF0EA5E9),
               onTap: () => _openLocationEditor(),
             ),
           ),
@@ -730,6 +830,7 @@ class _AdminPanelPageState extends State<AdminPanelPage> {
             child: _QuickActionButton(
               label: 'Kampanya Ekle',
               icon: Icons.campaign_outlined,
+              accent: const Color(0xFF9333EA),
               onTap: () => _openCampaignEditor(),
             ),
           ),
@@ -739,6 +840,7 @@ class _AdminPanelPageState extends State<AdminPanelPage> {
       _QuickActionButton(
         label: 'Kullanicilari Yenile',
         icon: Icons.sync_rounded,
+        accent: const Color(0xFF0F766E),
         onTap: _loadAll,
       ),
       const SizedBox(height: 12),
@@ -753,6 +855,129 @@ class _AdminPanelPageState extends State<AdminPanelPage> {
   int _asInt(dynamic value) {
     if (value is num) return value.toInt();
     return int.tryParse((value ?? '0').toString()) ?? 0;
+  }
+
+  Future<void> _showDashboardMetricSheet({
+    required _KpiCardData card,
+    required Map<String, dynamic> users,
+    required Map<String, dynamic> locations,
+    required Map<String, dynamic> luggage,
+    required Map<String, dynamic> campaigns,
+    required Map<String, dynamic> statusCounts,
+    required Map<String, dynamic> paymentCounts,
+  }) async {
+    final paidCount = _asInt(paymentCounts['paid']);
+    final pendingCount = _asInt(paymentCounts['pending']);
+    final failedCount = _asInt(paymentCounts['failed']);
+    final totalLuggage = _asInt(luggage['total']);
+    final revenue = _asInt(luggage['totalRevenue']);
+    final avgTicket = paidCount <= 0 ? 0 : (revenue / paidCount).round();
+    final details = switch (card.id) {
+      'users_total' => [
+        'Toplam kayitli kullanici: ${_asInt(users['total'])}',
+        'Son 7 gun kayit: ${_asInt(users['last7d'])}',
+      ],
+      'users_7d' => [
+        'Son 7 gun kayit: ${_asInt(users['last7d'])}',
+        'Toplam kullanicilar: ${_asInt(users['total'])}',
+      ],
+      'luggage_total' => [
+        'Toplam rezervasyon: $totalLuggage',
+        'Dropped: ${_asInt(statusCounts['dropped'])}',
+        'Awaiting: ${_asInt(statusCounts['awaiting_drop'])}',
+        'Picked up: ${_asInt(statusCounts['picked_up'])}',
+      ],
+      'payment_pending' => [
+        'Bekleyen odeme: $pendingCount',
+        'Basarisiz odeme: $failedCount',
+        'Paid odeme: $paidCount',
+      ],
+      'revenue_total' => [
+        'Toplam gelir: ₺$revenue',
+        'Paid rezervasyon adedi: $paidCount',
+        'Ortalama bilet: ₺$avgTicket',
+      ],
+      'locations_active' => [
+        'Aktif lokasyon: ${_asInt(locations['active'])}',
+        'Toplam lokasyon: ${_asInt(locations['total'])}',
+        'Aktif kampanya: ${_asInt(campaigns['active'])}',
+      ],
+      _ => [card.subtitle],
+    };
+    if (!mounted) return;
+    await showModalBottomSheet<void>(
+      context: context,
+      showDragHandle: true,
+      useSafeArea: true,
+      builder: (context) {
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  ThreeDIconBadge(icon: card.icon, accent: card.gradient.first),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          card.title,
+                          style: Theme.of(context).textTheme.titleLarge
+                              ?.copyWith(fontWeight: FontWeight.w800),
+                        ),
+                        Text(
+                          card.subtitle,
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(color: const Color(0xFF64748B)),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Text(
+                    '${card.prefix}${card.value}',
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.w800,
+                      color: card.gradient.first,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 14),
+              ...details.map(
+                (line) => Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                        width: 6,
+                        height: 6,
+                        margin: const EdgeInsets.only(top: 7),
+                        decoration: BoxDecoration(
+                          color: card.gradient.first,
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          line,
+                          style: Theme.of(context).textTheme.bodyMedium,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
   }
 }
 
@@ -979,6 +1204,7 @@ class _GlassTile extends StatelessWidget {
 
 class _KpiCardData {
   const _KpiCardData({
+    required this.id,
     required this.title,
     required this.value,
     required this.subtitle,
@@ -987,6 +1213,7 @@ class _KpiCardData {
     this.prefix = '',
   });
 
+  final String id;
   final String title;
   final int value;
   final String subtitle;
@@ -996,42 +1223,28 @@ class _KpiCardData {
 }
 
 class _KpiGrid extends StatelessWidget {
-  const _KpiGrid({required this.cards});
+  const _KpiGrid({required this.cards, required this.onTap});
 
   final List<_KpiCardData> cards;
+  final ValueChanged<_KpiCardData> onTap;
 
   @override
   Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final width = constraints.maxWidth;
-        final columns = width > 700
-            ? 3
-            : width > 460
-            ? 2
-            : 1;
-        final itemWidth = (width - (columns - 1) * 10) / columns;
-        return Wrap(
-          spacing: 10,
-          runSpacing: 10,
-          children: cards
-              .map(
-                (card) => SizedBox(
-                  width: itemWidth,
-                  child: _KpiCard(data: card),
-                ),
-              )
-              .toList(),
-        );
-      },
+    return Wrap(
+      spacing: 10,
+      runSpacing: 10,
+      children: cards
+          .map((card) => _KpiCard(data: card, onTap: () => onTap(card)))
+          .toList(),
     );
   }
 }
 
 class _KpiCard extends StatelessWidget {
-  const _KpiCard({required this.data});
+  const _KpiCard({required this.data, required this.onTap});
 
   final _KpiCardData data;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -1045,119 +1258,68 @@ class _KpiCard extends StatelessWidget {
           child: Opacity(opacity: t, child: child),
         );
       },
-      child: Container(
-        padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
           borderRadius: BorderRadius.circular(18),
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              data.gradient.first.withValues(alpha: 0.18),
-              data.gradient.last.withValues(alpha: 0.12),
-            ],
-          ),
-          border: Border.all(color: Colors.white.withValues(alpha: 0.85)),
-          boxShadow: [
-            BoxShadow(
-              color: data.gradient.first.withValues(alpha: 0.14),
-              blurRadius: 18,
-              offset: const Offset(0, 10),
-            ),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Container(
-                  height: 32,
-                  width: 32,
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.7),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Icon(data.icon, size: 18, color: data.gradient.first),
+          onTap: onTap,
+          child: Container(
+            width: 104,
+            padding: const EdgeInsets.fromLTRB(10, 10, 10, 12),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(18),
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  data.gradient.first.withValues(alpha: 0.16),
+                  data.gradient.last.withValues(alpha: 0.1),
+                ],
+              ),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.85)),
+              boxShadow: [
+                BoxShadow(
+                  color: data.gradient.first.withValues(alpha: 0.14),
+                  blurRadius: 18,
+                  offset: const Offset(0, 10),
                 ),
-                const Spacer(),
+              ],
+            ),
+            child: Column(
+              children: [
+                ThreeDIconBadge(icon: data.icon, accent: data.gradient.first),
+                const SizedBox(height: 8),
                 Text(
                   data.title,
-                  style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                  textAlign: TextAlign.center,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
                     color: const Color(0xFF334155),
                     fontWeight: FontWeight.w700,
                   ),
                 ),
+                const SizedBox(height: 6),
+                Text(
+                  '${data.prefix}${data.value}',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w800,
+                    color: data.gradient.first,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                const Icon(
+                  Icons.open_in_full_rounded,
+                  size: 14,
+                  color: Color(0xFF64748B),
+                ),
               ],
             ),
-            const SizedBox(height: 12),
-            _AnimatedNumberText(prefix: data.prefix, value: data.value),
-            const SizedBox(height: 2),
-            Text(
-              data.subtitle,
-              style: Theme.of(
-                context,
-              ).textTheme.bodySmall?.copyWith(color: const Color(0xFF64748B)),
-            ),
-          ],
+          ),
         ),
       ),
-    );
-  }
-}
-
-class _AnimatedNumberText extends StatelessWidget {
-  const _AnimatedNumberText({required this.value, this.prefix = ''});
-
-  final int value;
-  final String prefix;
-
-  @override
-  Widget build(BuildContext context) {
-    return TweenAnimationBuilder<double>(
-      tween: Tween(begin: 0, end: value.toDouble()),
-      duration: const Duration(milliseconds: 900),
-      curve: Curves.easeOutCubic,
-      builder: (context, v, _) {
-        return Text(
-          '$prefix${v.round()}',
-          style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-            fontWeight: FontWeight.w800,
-            color: const Color(0xFF0F172A),
-          ),
-        );
-      },
-    );
-  }
-}
-
-class _DashboardDualCharts extends StatelessWidget {
-  const _DashboardDualCharts({
-    required this.statusCounts,
-    required this.paymentCounts,
-  });
-
-  final Map<String, dynamic> statusCounts;
-  final Map<String, dynamic> paymentCounts;
-
-  @override
-  Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final vertical = constraints.maxWidth < 660;
-        final left = _StatusDistributionCard(statusCounts: statusCounts);
-        final right = _PaymentDistributionCard(paymentCounts: paymentCounts);
-        if (vertical) {
-          return Column(children: [left, const SizedBox(height: 10), right]);
-        }
-        return Row(
-          children: [
-            Expanded(child: left),
-            const SizedBox(width: 10),
-            Expanded(child: right),
-          ],
-        );
-      },
     );
   }
 }
@@ -1182,25 +1344,22 @@ class _StatusDistributionCard extends StatelessWidget {
             .toList()
           ..sort((a, b) => b.value.compareTo(a.value));
     final maxValue = items.isEmpty ? 1 : items.first.value;
-    return _PanelCard(
-      title: 'Rezervasyon Durum Dagilimi',
-      child: items.isEmpty
-          ? const Text('Veri bulunamadi')
-          : Column(
-              children: items
-                  .map(
-                    (item) => Padding(
-                      padding: const EdgeInsets.only(bottom: 10),
-                      child: _AnimatedBarRow(
-                        label: item.key,
-                        value: item.value,
-                        maxValue: maxValue,
-                      ),
+    return items.isEmpty
+        ? const Text('Veri bulunamadi')
+        : Column(
+            children: items
+                .map(
+                  (item) => Padding(
+                    padding: const EdgeInsets.only(bottom: 10),
+                    child: _AnimatedBarRow(
+                      label: item.key,
+                      value: item.value,
+                      maxValue: maxValue,
                     ),
-                  )
-                  .toList(),
-            ),
-    );
+                  ),
+                )
+                .toList(),
+          );
   }
 
   String _statusLabel(String raw) {
@@ -1310,46 +1469,43 @@ class _PaymentDistributionCard extends StatelessWidget {
         .where((e) => e.value > 0)
         .toList();
     final total = entries.fold<int>(0, (sum, e) => sum + e.value);
-    return _PanelCard(
-      title: 'Odeme Dagilimi',
-      child: entries.isEmpty
-          ? const Text('Veri bulunamadi')
-          : Column(
-              children: [
-                Row(
-                  children: [
-                    Expanded(
-                      child: SizedBox(
-                        height: 124,
-                        child: _AnimatedDonutChart(entries: entries),
-                      ),
+    return entries.isEmpty
+        ? const Text('Veri bulunamadi')
+        : Column(
+            children: [
+              Row(
+                children: [
+                  Expanded(
+                    child: SizedBox(
+                      height: 124,
+                      child: _AnimatedDonutChart(entries: entries),
                     ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: entries
-                            .asMap()
-                            .entries
-                            .map(
-                              (entry) => Padding(
-                                padding: const EdgeInsets.only(bottom: 8),
-                                child: _LegendRow(
-                                  color: _palette[entry.key % _palette.length],
-                                  label: _paymentLabel(entry.value.key),
-                                  value:
-                                      '${entry.value.value} (${((entry.value.value / total) * 100).toStringAsFixed(0)}%)',
-                                ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: entries
+                          .asMap()
+                          .entries
+                          .map(
+                            (entry) => Padding(
+                              padding: const EdgeInsets.only(bottom: 8),
+                              child: _LegendRow(
+                                color: _palette[entry.key % _palette.length],
+                                label: _paymentLabel(entry.value.key),
+                                value:
+                                    '${entry.value.value} (${((entry.value.value / total) * 100).toStringAsFixed(0)}%)',
                               ),
-                            )
-                            .toList(),
-                      ),
+                            ),
+                          )
+                          .toList(),
                     ),
-                  ],
-                ),
-              ],
-            ),
-    );
+                  ),
+                ],
+              ),
+            ],
+          );
   }
 
   String _paymentLabel(String raw) {
@@ -1405,6 +1561,131 @@ class _LegendRow extends StatelessWidget {
         ),
       ],
     );
+  }
+}
+
+class _SampleDatasetPanel extends StatelessWidget {
+  const _SampleDatasetPanel();
+
+  static const List<_PieDatum> _data = [
+    _PieDatum(label: 'Red', value: 300, color: Color(0xFFFF6384)),
+    _PieDatum(label: 'Blue', value: 50, color: Color(0xFF36A2EB)),
+    _PieDatum(label: 'Yellow', value: 100, color: Color(0xFFFFCD56)),
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    final total = _data.fold<int>(0, (sum, item) => sum + item.value);
+    return Row(
+      children: [
+        Expanded(
+          child: SizedBox(
+            height: 148,
+            child: TweenAnimationBuilder<double>(
+              tween: Tween(begin: 0, end: 1),
+              duration: const Duration(milliseconds: 900),
+              curve: Curves.easeOutCubic,
+              builder: (context, progress, _) {
+                return CustomPaint(
+                  painter: _OffsetPiePainter(
+                    data: _data,
+                    progress: progress,
+                    offset: 4,
+                  ),
+                  child: Center(
+                    child: Text(
+                      '$total',
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.w800,
+                        color: const Color(0xFF0F172A),
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: _data
+                .map(
+                  (item) => Padding(
+                    padding: const EdgeInsets.only(bottom: 8),
+                    child: _LegendRow(
+                      color: item.color,
+                      label: item.label,
+                      value:
+                          '${item.value} (${((item.value / total) * 100).toStringAsFixed(0)}%)',
+                    ),
+                  ),
+                )
+                .toList(),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _PieDatum {
+  const _PieDatum({
+    required this.label,
+    required this.value,
+    required this.color,
+  });
+
+  final String label;
+  final int value;
+  final Color color;
+}
+
+class _OffsetPiePainter extends CustomPainter {
+  _OffsetPiePainter({
+    required this.data,
+    required this.progress,
+    required this.offset,
+  });
+
+  final List<_PieDatum> data;
+  final double progress;
+  final double offset;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final total = data.fold<int>(0, (sum, item) => sum + item.value);
+    if (total <= 0) return;
+    final stroke = math.max(13.0, size.shortestSide * 0.14);
+    final baseRect = Rect.fromLTWH(
+      0,
+      0,
+      size.width,
+      size.height,
+    ).deflate(stroke / 2 + offset);
+    final paint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = stroke
+      ..strokeCap = StrokeCap.round;
+
+    var start = -math.pi / 2;
+    for (final item in data) {
+      final rawSweep = (item.value / total) * math.pi * 2;
+      final sweep = rawSweep * progress;
+      final mid = start + (sweep / 2);
+      final dx = math.cos(mid) * offset;
+      final dy = math.sin(mid) * offset;
+      final rect = baseRect.shift(Offset(dx, dy));
+      paint.color = item.color;
+      canvas.drawArc(rect, start, sweep, false, paint);
+      start += sweep;
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _OffsetPiePainter oldDelegate) {
+    return oldDelegate.progress != progress || oldDelegate.data != data;
   }
 }
 
@@ -1493,75 +1774,72 @@ class _LocationUtilizationCard extends StatelessWidget {
       });
     final top = sorted.take(4).toList();
 
-    return _PanelCard(
-      title: 'Lokasyon Doluluk',
-      child: top.isEmpty
-          ? const Text('Lokasyon verisi yok')
-          : Column(
-              children: top.map((item) {
-                final total = _intValue(item['totalSlots']);
-                final available = _intValue(item['availableSlots']);
-                final used = math.max(total - available, 0);
-                final ratio = total <= 0 ? 0.0 : used / total;
-                return Padding(
-                  padding: const EdgeInsets.only(bottom: 10),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Expanded(
-                            child: Text(
-                              item['name']?.toString() ?? '-',
-                              style: Theme.of(context).textTheme.labelLarge
-                                  ?.copyWith(fontWeight: FontWeight.w700),
-                            ),
+    return top.isEmpty
+        ? const Text('Lokasyon verisi yok')
+        : Column(
+            children: top.map((item) {
+              final total = _intValue(item['totalSlots']);
+              final available = _intValue(item['availableSlots']);
+              final used = math.max(total - available, 0);
+              final ratio = total <= 0 ? 0.0 : used / total;
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 10),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            item['name']?.toString() ?? '-',
+                            style: Theme.of(context).textTheme.labelLarge
+                                ?.copyWith(fontWeight: FontWeight.w700),
                           ),
-                          Text(
-                            '$used/$total',
-                            style: Theme.of(context).textTheme.labelMedium,
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 6),
-                      Container(
-                        height: 8,
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFE2E8F0),
-                          borderRadius: BorderRadius.circular(99),
                         ),
-                        clipBehavior: Clip.antiAlias,
-                        child: TweenAnimationBuilder<double>(
-                          tween: Tween(begin: 0, end: ratio),
-                          duration: const Duration(milliseconds: 850),
-                          curve: Curves.easeOutCubic,
-                          builder: (context, value, _) {
-                            return Align(
-                              alignment: Alignment.centerLeft,
-                              child: FractionallySizedBox(
-                                widthFactor: value,
-                                child: Container(
-                                  decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(99),
-                                    gradient: const LinearGradient(
-                                      colors: [
-                                        Color(0xFF14B8A6),
-                                        Color(0xFF0EA5E9),
-                                      ],
-                                    ),
+                        Text(
+                          '$used/$total',
+                          style: Theme.of(context).textTheme.labelMedium,
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
+                    Container(
+                      height: 8,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFE2E8F0),
+                        borderRadius: BorderRadius.circular(99),
+                      ),
+                      clipBehavior: Clip.antiAlias,
+                      child: TweenAnimationBuilder<double>(
+                        tween: Tween(begin: 0, end: ratio),
+                        duration: const Duration(milliseconds: 850),
+                        curve: Curves.easeOutCubic,
+                        builder: (context, value, _) {
+                          return Align(
+                            alignment: Alignment.centerLeft,
+                            child: FractionallySizedBox(
+                              widthFactor: value,
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(99),
+                                  gradient: const LinearGradient(
+                                    colors: [
+                                      Color(0xFF14B8A6),
+                                      Color(0xFF0EA5E9),
+                                    ],
                                   ),
                                 ),
                               ),
-                            );
-                          },
-                        ),
+                            ),
+                          );
+                        },
                       ),
-                    ],
-                  ),
-                );
-              }).toList(),
-            ),
-    );
+                    ),
+                  ],
+                ),
+              );
+            }).toList(),
+          );
   }
 
   int _intValue(dynamic value) {
@@ -1571,10 +1849,17 @@ class _LocationUtilizationCard extends StatelessWidget {
 }
 
 class _PanelCard extends StatelessWidget {
-  const _PanelCard({required this.title, required this.child});
+  const _PanelCard({
+    required this.title,
+    required this.child,
+    this.icon,
+    this.action,
+  });
 
   final String title;
   final Widget child;
+  final IconData? icon;
+  final Widget? action;
 
   @override
   Widget build(BuildContext context) {
@@ -1600,12 +1885,26 @@ class _PanelCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  title,
-                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                    fontWeight: FontWeight.w800,
-                    color: const Color(0xFF0F172A),
-                  ),
+                Row(
+                  children: [
+                    if (icon != null) ...[
+                      ThreeDIconBadge(
+                        icon: icon!,
+                        accent: const Color(0xFF0F766E),
+                      ),
+                      const SizedBox(width: 10),
+                    ],
+                    Expanded(
+                      child: Text(
+                        title,
+                        style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.w800,
+                          color: const Color(0xFF0F172A),
+                        ),
+                      ),
+                    ),
+                    if (action != null) action!,
+                  ],
                 ),
                 const SizedBox(height: 12),
                 child,
@@ -1623,27 +1922,267 @@ class _QuickActionButton extends StatelessWidget {
     required this.label,
     required this.icon,
     required this.onTap,
+    required this.accent,
   });
 
   final String label;
   final IconData icon;
   final VoidCallback onTap;
+  final Color accent;
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      height: 52,
-      child: FilledButton.tonalIcon(
-        onPressed: onTap,
-        icon: Icon(icon, size: 18),
-        label: Text(label),
-        style: FilledButton.styleFrom(
-          shape: RoundedRectangleBorder(
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(14),
+        onTap: onTap,
+        child: Container(
+          height: 56,
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(14),
+            gradient: LinearGradient(
+              colors: [
+                accent.withValues(alpha: 0.14),
+                accent.withValues(alpha: 0.07),
+              ],
+            ),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.8)),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              ThreeDIconBadge(icon: icon, accent: accent),
+              const SizedBox(width: 10),
+              Flexible(
+                child: Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(
+                    context,
+                  ).textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w700),
+                ),
+              ),
+            ],
           ),
         ),
       ),
     );
+  }
+}
+
+class _ExpandableInsightPanel extends StatelessWidget {
+  const _ExpandableInsightPanel({
+    required this.title,
+    required this.icon,
+    required this.expanded,
+    required this.onToggle,
+    required this.child,
+  });
+
+  final String title;
+  final IconData icon;
+  final bool expanded;
+  final VoidCallback onToggle;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return _PanelCard(
+      title: title,
+      icon: icon,
+      action: TextButton.icon(
+        onPressed: onToggle,
+        icon: Icon(
+          expanded ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
+          size: 18,
+        ),
+        label: Text(expanded ? 'Gizle' : 'Ac'),
+      ),
+      child: AnimatedCrossFade(
+        duration: const Duration(milliseconds: 260),
+        firstCurve: Curves.easeOutCubic,
+        secondCurve: Curves.easeOutCubic,
+        sizeCurve: Curves.easeOutCubic,
+        crossFadeState: expanded
+            ? CrossFadeState.showFirst
+            : CrossFadeState.showSecond,
+        firstChild: child,
+        secondChild: const Padding(
+          padding: EdgeInsets.symmetric(vertical: 6),
+          child: Text(
+            'Panel gizli. Ac butonuna basarak detaylari gor.',
+            style: TextStyle(color: Color(0xFF64748B)),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _InsightToggleChip extends StatelessWidget {
+  const _InsightToggleChip({
+    required this.label,
+    required this.icon,
+    required this.active,
+    required this.onTap,
+  });
+
+  final String label;
+  final IconData icon;
+  final bool active;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(999),
+        onTap: onTap,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 220),
+          curve: Curves.easeOutCubic,
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+          decoration: BoxDecoration(
+            color: active
+                ? const Color(0xFF0F766E).withValues(alpha: 0.12)
+                : Colors.white.withValues(alpha: 0.65),
+            borderRadius: BorderRadius.circular(999),
+            border: Border.all(
+              color: active
+                  ? const Color(0xFF0F766E).withValues(alpha: 0.4)
+                  : Colors.white.withValues(alpha: 0.8),
+            ),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ThreeDIconBadge(
+                icon: icon,
+                accent: active
+                    ? const Color(0xFF0F766E)
+                    : const Color(0xFF64748B),
+              ),
+              const SizedBox(width: 8),
+              Text(
+                label,
+                style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                  fontWeight: FontWeight.w700,
+                  color: active
+                      ? const Color(0xFF0F766E)
+                      : const Color(0xFF334155),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _ActivityTimelineCard extends StatelessWidget {
+  const _ActivityTimelineCard({required this.recent});
+
+  final List<Map<String, dynamic>> recent;
+
+  @override
+  Widget build(BuildContext context) {
+    if (recent.isEmpty) return const Text('Hareket verisi bulunamadi');
+    final buckets = List<int>.filled(7, 0);
+    final now = DateTime.now();
+    for (final item in recent) {
+      final raw = (item['updatedAt'] ?? item['createdAt'])?.toString();
+      if (raw == null || raw.isEmpty) continue;
+      final parsed = DateTime.tryParse(raw);
+      if (parsed == null) continue;
+      final diff = now.difference(parsed.toLocal()).inDays;
+      if (diff >= 0 && diff < 7) buckets[6 - diff] += 1;
+    }
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SizedBox(
+          height: 120,
+          child: TweenAnimationBuilder<double>(
+            tween: Tween(begin: 0, end: 1),
+            duration: const Duration(milliseconds: 900),
+            curve: Curves.easeOutCubic,
+            builder: (context, progress, _) {
+              return CustomPaint(
+                painter: _ActivityChartPainter(
+                  values: buckets,
+                  progress: progress,
+                ),
+                child: const SizedBox.expand(),
+              );
+            },
+          ),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          'Son 7 gunde toplam ${buckets.fold<int>(0, (a, b) => a + b)} hareket izlendi.',
+          style: Theme.of(
+            context,
+          ).textTheme.bodySmall?.copyWith(color: const Color(0xFF475569)),
+        ),
+      ],
+    );
+  }
+}
+
+class _ActivityChartPainter extends CustomPainter {
+  _ActivityChartPainter({required this.values, required this.progress});
+
+  final List<int> values;
+  final double progress;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    if (values.isEmpty) return;
+    final maxValue = math.max(1, values.reduce(math.max));
+    final points = <Offset>[];
+    for (var i = 0; i < values.length; i++) {
+      final x = (i / (values.length - 1)) * size.width;
+      final y = size.height - ((values[i] / maxValue) * size.height * progress);
+      points.add(Offset(x, y));
+    }
+
+    final path = Path()..moveTo(points.first.dx, points.first.dy);
+    for (var i = 1; i < points.length; i++) {
+      final prev = points[i - 1];
+      final curr = points[i];
+      final cX = (prev.dx + curr.dx) / 2;
+      path.quadraticBezierTo(cX, prev.dy, curr.dx, curr.dy);
+    }
+
+    final glow = Paint()
+      ..color = const Color(0xFF0EA5E9).withValues(alpha: 0.18)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 10
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 8);
+    final line = Paint()
+      ..shader = const LinearGradient(
+        colors: [Color(0xFF0EA5E9), Color(0xFF14B8A6)],
+      ).createShader(Offset.zero & size)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 3
+      ..strokeCap = StrokeCap.round;
+
+    canvas.drawPath(path, glow);
+    canvas.drawPath(path, line);
+    for (final p in points) {
+      canvas.drawCircle(p, 3.2, Paint()..color = const Color(0xFF0EA5E9));
+      canvas.drawCircle(p, 1.4, Paint()..color = Colors.white);
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _ActivityChartPainter oldDelegate) {
+    return oldDelegate.progress != progress || oldDelegate.values != values;
   }
 }
 
