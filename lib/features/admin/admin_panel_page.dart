@@ -8,6 +8,12 @@ import '../../services/api_service.dart';
 import '../../widgets/app_mesh_background.dart';
 import '../../widgets/section_card.dart';
 
+const _adminTextPrimary = Color(0xFFF3F7FF);
+const _adminTextSecondary = Color(0xFFA9B7D3);
+const _adminCardBase = Color(0xFF112540);
+const _adminCardBaseSoft = Color(0xFF0D1C35);
+const _adminAccent = Color(0xFF14B8A6);
+
 class AdminPanelPage extends StatefulWidget {
   const AdminPanelPage({super.key});
 
@@ -457,11 +463,19 @@ class _AdminPanelPageState extends State<AdminPanelPage> {
     return Scaffold(
       backgroundColor: Colors.transparent,
       appBar: AppBar(
-        title: const Text('Yonetim Paneli'),
+        backgroundColor: Colors.transparent,
+        surfaceTintColor: Colors.transparent,
+        elevation: 0,
+        scrolledUnderElevation: 0,
+        foregroundColor: _adminTextPrimary,
+        title: const Text(
+          'Yonetim Paneli',
+          style: TextStyle(fontWeight: FontWeight.w800, letterSpacing: 0.2),
+        ),
         actions: [
           IconButton(
             onPressed: _loadAll,
-            icon: const Icon(Icons.refresh_rounded),
+            icon: const Icon(Icons.refresh_rounded, color: _adminTextPrimary),
           ),
         ],
       ),
@@ -493,6 +507,8 @@ class _AdminPanelPageState extends State<AdminPanelPage> {
                     child: Padding(
                       padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
                       child: CupertinoSlidingSegmentedControl<int>(
+                        backgroundColor: Colors.white.withValues(alpha: 0.11),
+                        thumbColor: Colors.white.withValues(alpha: 0.22),
                         groupValue: _tab,
                         children: const {
                           0: Padding(
@@ -500,28 +516,52 @@ class _AdminPanelPageState extends State<AdminPanelPage> {
                               vertical: 8,
                               horizontal: 12,
                             ),
-                            child: Text('Dashboard'),
+                            child: Text(
+                              'Dashboard',
+                              style: TextStyle(
+                                color: _adminTextPrimary,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
                           ),
                           1: Padding(
                             padding: EdgeInsets.symmetric(
                               vertical: 8,
                               horizontal: 12,
                             ),
-                            child: Text('Lokasyon'),
+                            child: Text(
+                              'Lokasyon',
+                              style: TextStyle(
+                                color: _adminTextPrimary,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
                           ),
                           2: Padding(
                             padding: EdgeInsets.symmetric(
                               vertical: 8,
                               horizontal: 12,
                             ),
-                            child: Text('Kampanya'),
+                            child: Text(
+                              'Kampanya',
+                              style: TextStyle(
+                                color: _adminTextPrimary,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
                           ),
                           3: Padding(
                             padding: EdgeInsets.symmetric(
                               vertical: 8,
                               horizontal: 12,
                             ),
-                            child: Text('Kullanicilar'),
+                            child: Text(
+                              'Kullanicilar',
+                              style: TextStyle(
+                                color: _adminTextPrimary,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
                           ),
                         },
                         onValueChanged: (value) {
@@ -1004,17 +1044,21 @@ class _GlassHero extends StatelessWidget {
         child: Container(
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(24),
-            gradient: const LinearGradient(
+            gradient: LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
-              colors: [Color(0xCCFFFFFF), Color(0x99F4F9FF)],
+              colors: [
+                _adminCardBase.withValues(alpha: 0.9),
+                _adminCardBaseSoft.withValues(alpha: 0.84),
+                const Color(0xFF143456).withValues(alpha: 0.82),
+              ],
             ),
-            border: Border.all(color: Colors.white.withValues(alpha: 0.55)),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha: 0.08),
-                blurRadius: 28,
-                offset: const Offset(0, 14),
+                color: Colors.black.withValues(alpha: 0.22),
+                blurRadius: 22,
+                offset: const Offset(0, 12),
               ),
             ],
           ),
@@ -1026,7 +1070,7 @@ class _GlassHero extends StatelessWidget {
                 'Kyradi Control Center',
                 style: Theme.of(context).textTheme.titleLarge?.copyWith(
                   fontWeight: FontWeight.w800,
-                  color: const Color(0xFF0F172A),
+                  color: _adminTextPrimary,
                 ),
               ),
               const SizedBox(height: 4),
@@ -1034,7 +1078,7 @@ class _GlassHero extends StatelessWidget {
                 'Canli rezervasyon, odeme, lokasyon ve kampanya paneli',
                 style: Theme.of(
                   context,
-                ).textTheme.bodySmall?.copyWith(color: const Color(0xFF334155)),
+                ).textTheme.bodySmall?.copyWith(color: _adminTextSecondary),
               ),
               const SizedBox(height: 12),
               Wrap(
@@ -1074,8 +1118,9 @@ class _StatChip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.58),
+        color: Colors.white.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.16)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1084,13 +1129,13 @@ class _StatChip extends StatelessWidget {
             label,
             style: Theme.of(
               context,
-            ).textTheme.labelSmall?.copyWith(color: const Color(0xFF475569)),
+            ).textTheme.labelSmall?.copyWith(color: _adminTextSecondary),
           ),
           Text(
             value,
             style: Theme.of(context).textTheme.labelLarge?.copyWith(
               fontWeight: FontWeight.w800,
-              color: const Color(0xFF0F172A),
+              color: _adminTextPrimary,
             ),
           ),
         ],
@@ -1113,13 +1158,21 @@ class _HeaderAction extends StatelessWidget {
         Expanded(
           child: Text(
             title,
-            style: Theme.of(
-              context,
-            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.w800,
+              color: _adminTextPrimary,
+            ),
           ),
         ),
         if (actionLabel != null && onAction != null)
-          FilledButton.tonal(onPressed: onAction, child: Text(actionLabel!)),
+          FilledButton.tonal(
+            style: FilledButton.styleFrom(
+              foregroundColor: _adminTextPrimary,
+              backgroundColor: Colors.white.withValues(alpha: 0.12),
+            ),
+            onPressed: onAction,
+            child: Text(actionLabel!),
+          ),
       ],
     );
   }
@@ -1149,9 +1202,9 @@ class _GlassTile extends StatelessWidget {
           onTap: onTap,
           child: Container(
             decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.78),
+              color: _adminCardBase.withValues(alpha: 0.76),
               borderRadius: BorderRadius.circular(18),
-              border: Border.all(color: Colors.white.withValues(alpha: 0.72)),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
             ),
             padding: const EdgeInsets.all(14),
             child: Row(
@@ -1163,13 +1216,16 @@ class _GlassTile extends StatelessWidget {
                       Text(
                         title,
                         style: Theme.of(context).textTheme.titleMedium
-                            ?.copyWith(fontWeight: FontWeight.w700),
+                            ?.copyWith(
+                              fontWeight: FontWeight.w700,
+                              color: _adminTextPrimary,
+                            ),
                       ),
                       const SizedBox(height: 4),
                       Text(
                         subtitle,
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: const Color(0xFF475569),
+                          color: _adminTextSecondary,
                         ),
                       ),
                     ],
@@ -1182,13 +1238,16 @@ class _GlassTile extends StatelessWidget {
                       vertical: 6,
                     ),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF0F766E).withValues(alpha: 0.12),
+                      color: _adminAccent.withValues(alpha: 0.18),
                       borderRadius: BorderRadius.circular(999),
+                      border: Border.all(
+                        color: _adminAccent.withValues(alpha: 0.34),
+                      ),
                     ),
                     child: Text(
                       badge!,
                       style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                        color: const Color(0xFF0F766E),
+                        color: _adminTextPrimary,
                         fontWeight: FontWeight.w700,
                       ),
                     ),
@@ -1230,12 +1289,29 @@ class _KpiGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Wrap(
-      spacing: 10,
-      runSpacing: 10,
-      children: cards
-          .map((card) => _KpiCard(data: card, onTap: () => onTap(card)))
-          .toList(),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        const gap = 10.0;
+        final columns = constraints.maxWidth >= 980
+            ? 4
+            : constraints.maxWidth >= 700
+            ? 3
+            : 2;
+        final itemWidth =
+            (constraints.maxWidth - (gap * (columns - 1))) / columns;
+        return Wrap(
+          spacing: gap,
+          runSpacing: gap,
+          children: cards
+              .map(
+                (card) => SizedBox(
+                  width: itemWidth,
+                  child: _KpiCard(data: card, onTap: () => onTap(card)),
+                ),
+              )
+              .toList(),
+        );
+      },
     );
   }
 }
@@ -1264,7 +1340,6 @@ class _KpiCard extends StatelessWidget {
           borderRadius: BorderRadius.circular(18),
           onTap: onTap,
           child: Container(
-            width: 104,
             padding: const EdgeInsets.fromLTRB(10, 10, 10, 12),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(18),
@@ -1272,48 +1347,53 @@ class _KpiCard extends StatelessWidget {
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
                 colors: [
+                  _adminCardBase.withValues(alpha: 0.88),
                   data.gradient.first.withValues(alpha: 0.16),
-                  data.gradient.last.withValues(alpha: 0.1),
+                  _adminCardBaseSoft.withValues(alpha: 0.88),
                 ],
               ),
-              border: Border.all(color: Colors.white.withValues(alpha: 0.85)),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.24)),
               boxShadow: [
                 BoxShadow(
-                  color: data.gradient.first.withValues(alpha: 0.14),
-                  blurRadius: 18,
-                  offset: const Offset(0, 10),
+                  color: Colors.black.withValues(alpha: 0.2),
+                  blurRadius: 16,
+                  offset: const Offset(0, 8),
                 ),
               ],
             ),
             child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 ThreeDIconBadge(icon: data.icon, accent: data.gradient.first),
                 const SizedBox(height: 8),
                 Text(
                   data.title,
-                  textAlign: TextAlign.center,
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                   style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                    color: const Color(0xFF334155),
+                    color: _adminTextSecondary,
                     fontWeight: FontWeight.w700,
                   ),
                 ),
-                const SizedBox(height: 6),
+                const SizedBox(height: 4),
                 Text(
                   '${data.prefix}${data.value}',
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: Theme.of(context).textTheme.titleSmall?.copyWith(
                     fontWeight: FontWeight.w800,
-                    color: data.gradient.first,
+                    color: _adminTextPrimary,
                   ),
                 ),
-                const SizedBox(height: 4),
-                const Icon(
-                  Icons.open_in_full_rounded,
-                  size: 14,
-                  color: Color(0xFF64748B),
+                const SizedBox(height: 3),
+                Text(
+                  data.subtitle,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                    color: data.gradient.last.withValues(alpha: 0.95),
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ],
             ),
@@ -1404,16 +1484,17 @@ class _AnimatedBarRow extends StatelessWidget {
             Expanded(
               child: Text(
                 label,
-                style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                  color: const Color(0xFF334155),
-                ),
+                style: Theme.of(
+                  context,
+                ).textTheme.labelLarge?.copyWith(color: _adminTextSecondary),
               ),
             ),
             Text(
               '$value',
-              style: Theme.of(
-                context,
-              ).textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w700),
+              style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                fontWeight: FontWeight.w700,
+                color: _adminTextPrimary,
+              ),
             ),
           ],
         ),
@@ -1421,7 +1502,7 @@ class _AnimatedBarRow extends StatelessWidget {
         Container(
           height: 8,
           decoration: BoxDecoration(
-            color: const Color(0xFFE2E8F0),
+            color: Colors.white.withValues(alpha: 0.12),
             borderRadius: BorderRadius.circular(99),
           ),
           clipBehavior: Clip.antiAlias,
@@ -1550,14 +1631,15 @@ class _LegendRow extends StatelessWidget {
             label,
             style: Theme.of(
               context,
-            ).textTheme.bodySmall?.copyWith(color: const Color(0xFF334155)),
+            ).textTheme.bodySmall?.copyWith(color: _adminTextSecondary),
           ),
         ),
         Text(
           value,
-          style: Theme.of(
-            context,
-          ).textTheme.labelSmall?.copyWith(fontWeight: FontWeight.w700),
+          style: Theme.of(context).textTheme.labelSmall?.copyWith(
+            fontWeight: FontWeight.w700,
+            color: _adminTextPrimary,
+          ),
         ),
       ],
     );
@@ -1597,7 +1679,7 @@ class _SampleDatasetPanel extends StatelessWidget {
                       '$total',
                       style: Theme.of(context).textTheme.titleLarge?.copyWith(
                         fontWeight: FontWeight.w800,
-                        color: const Color(0xFF0F172A),
+                        color: _adminTextPrimary,
                       ),
                     ),
                   ),
@@ -1708,7 +1790,7 @@ class _AnimatedDonutChart extends StatelessWidget {
               '${entries.fold<int>(0, (sum, e) => sum + e.value)}',
               style: Theme.of(context).textTheme.titleLarge?.copyWith(
                 fontWeight: FontWeight.w800,
-                color: const Color(0xFF0F172A),
+                color: _adminTextPrimary,
               ),
             ),
           ),
@@ -1793,12 +1875,16 @@ class _LocationUtilizationCard extends StatelessWidget {
                           child: Text(
                             item['name']?.toString() ?? '-',
                             style: Theme.of(context).textTheme.labelLarge
-                                ?.copyWith(fontWeight: FontWeight.w700),
+                                ?.copyWith(
+                                  fontWeight: FontWeight.w700,
+                                  color: _adminTextPrimary,
+                                ),
                           ),
                         ),
                         Text(
                           '$used/$total',
-                          style: Theme.of(context).textTheme.labelMedium,
+                          style: Theme.of(context).textTheme.labelMedium
+                              ?.copyWith(color: _adminTextSecondary),
                         ),
                       ],
                     ),
@@ -1806,7 +1892,7 @@ class _LocationUtilizationCard extends StatelessWidget {
                     Container(
                       height: 8,
                       decoration: BoxDecoration(
-                        color: const Color(0xFFE2E8F0),
+                        color: Colors.white.withValues(alpha: 0.12),
                         borderRadius: BorderRadius.circular(99),
                       ),
                       clipBehavior: Clip.antiAlias,
@@ -1871,13 +1957,13 @@ class _PanelCard extends StatelessWidget {
           child: Container(
             padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.75),
+              color: _adminCardBaseSoft.withValues(alpha: 0.76),
               borderRadius: BorderRadius.circular(18),
-              border: Border.all(color: Colors.white.withValues(alpha: 0.8)),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.04),
-                  blurRadius: 16,
+                  color: Colors.black.withValues(alpha: 0.2),
+                  blurRadius: 18,
                   offset: const Offset(0, 8),
                 ),
               ],
@@ -1899,7 +1985,7 @@ class _PanelCard extends StatelessWidget {
                         title,
                         style: Theme.of(context).textTheme.titleSmall?.copyWith(
                           fontWeight: FontWeight.w800,
-                          color: const Color(0xFF0F172A),
+                          color: _adminTextPrimary,
                         ),
                       ),
                     ),
@@ -1944,11 +2030,11 @@ class _QuickActionButton extends StatelessWidget {
             borderRadius: BorderRadius.circular(14),
             gradient: LinearGradient(
               colors: [
-                accent.withValues(alpha: 0.14),
-                accent.withValues(alpha: 0.07),
+                _adminCardBase.withValues(alpha: 0.8),
+                accent.withValues(alpha: 0.24),
               ],
             ),
-            border: Border.all(color: Colors.white.withValues(alpha: 0.8)),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.22)),
           ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -1960,9 +2046,10 @@ class _QuickActionButton extends StatelessWidget {
                   label,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: Theme.of(
-                    context,
-                  ).textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w700),
+                  style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                    color: _adminTextPrimary,
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
               ),
             ],
@@ -2014,7 +2101,7 @@ class _ExpandableInsightPanel extends StatelessWidget {
           padding: EdgeInsets.symmetric(vertical: 6),
           child: Text(
             'Panel gizli. Ac butonuna basarak detaylari gor.',
-            style: TextStyle(color: Color(0xFF64748B)),
+            style: TextStyle(color: _adminTextSecondary),
           ),
         ),
       ),
@@ -2048,13 +2135,13 @@ class _InsightToggleChip extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
           decoration: BoxDecoration(
             color: active
-                ? const Color(0xFF0F766E).withValues(alpha: 0.12)
-                : Colors.white.withValues(alpha: 0.65),
+                ? _adminAccent.withValues(alpha: 0.22)
+                : _adminCardBase.withValues(alpha: 0.72),
             borderRadius: BorderRadius.circular(999),
             border: Border.all(
               color: active
-                  ? const Color(0xFF0F766E).withValues(alpha: 0.4)
-                  : Colors.white.withValues(alpha: 0.8),
+                  ? _adminAccent.withValues(alpha: 0.52)
+                  : Colors.white.withValues(alpha: 0.18),
             ),
           ),
           child: Row(
@@ -2062,18 +2149,14 @@ class _InsightToggleChip extends StatelessWidget {
             children: [
               ThreeDIconBadge(
                 icon: icon,
-                accent: active
-                    ? const Color(0xFF0F766E)
-                    : const Color(0xFF64748B),
+                accent: active ? _adminAccent : const Color(0xFF94A3B8),
               ),
               const SizedBox(width: 8),
               Text(
                 label,
                 style: Theme.of(context).textTheme.labelLarge?.copyWith(
                   fontWeight: FontWeight.w700,
-                  color: active
-                      ? const Color(0xFF0F766E)
-                      : const Color(0xFF334155),
+                  color: active ? _adminTextPrimary : _adminTextSecondary,
                 ),
               ),
             ],
@@ -2127,7 +2210,7 @@ class _ActivityTimelineCard extends StatelessWidget {
           'Son 7 gunde toplam ${buckets.fold<int>(0, (a, b) => a + b)} hareket izlendi.',
           style: Theme.of(
             context,
-          ).textTheme.bodySmall?.copyWith(color: const Color(0xFF475569)),
+          ).textTheme.bodySmall?.copyWith(color: _adminTextSecondary),
         ),
       ],
     );
