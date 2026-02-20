@@ -17,6 +17,8 @@ import '../features/luggage/luggage_list_page.dart';
 import '../features/luggage/luggage_detail_page.dart';
 import '../features/luggage/qr_preview_page.dart';
 import '../features/luggage/qr_scan_page.dart';
+import '../features/admin/admin_login_page.dart';
+import '../features/admin/admin_panel_page.dart';
 import '../models/luggage.dart';
 import '../ui/add_bag_flow/stepper_shell.dart';
 
@@ -42,43 +44,28 @@ GoRouter buildAppRouter() {
       return null;
     },
     routes: [
-      GoRoute(
-        path: '/',
-        redirect: (_, __) => '/home',
-      ),
-      GoRoute(
-        path: '/app',
-        redirect: (_, __) => '/home',
-      ),
-      GoRoute(
-        path: '/intro',
-        builder: (_, __) => const IntroSplashPage(),
-      ),
-      GoRoute(
-        path: '/login',
-        builder: (_, __) => const LoginPage(),
-      ),
-      GoRoute(
-        path: '/register',
-        builder: (_, __) => const RegisterPage(),
-      ),
+      GoRoute(path: '/', redirect: (_, __) => '/home'),
+      GoRoute(path: '/app', redirect: (_, __) => '/home'),
+      GoRoute(path: '/intro', builder: (_, __) => const IntroSplashPage()),
+      GoRoute(path: '/login', builder: (_, __) => const LoginPage()),
+      GoRoute(path: '/admin/login', builder: (_, __) => const AdminLoginPage()),
+      GoRoute(path: '/admin/panel', builder: (_, __) => const AdminPanelPage()),
+      GoRoute(path: '/register', builder: (_, __) => const RegisterPage()),
       GoRoute(
         path: '/verify',
         builder: (context, state) =>
             VerifyCodePage(email: state.extra as String? ?? ''),
       ),
-      GoRoute(
-        path: '/forgot',
-        builder: (_, __) => const ForgotPasswordPage(),
-      ),
+      GoRoute(path: '/forgot', builder: (_, __) => const ForgotPasswordPage()),
       GoRoute(
         path: '/notifications',
         builder: (_, __) => const NotificationsPage(),
       ),
       GoRoute(
         path: '/location/:id',
-        builder: (context, state) =>
-            LocationReservationPage(locationId: state.pathParameters['id'] ?? ''),
+        builder: (context, state) => LocationReservationPage(
+          locationId: state.pathParameters['id'] ?? '',
+        ),
       ),
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) =>
@@ -86,10 +73,7 @@ GoRouter buildAppRouter() {
         branches: [
           StatefulShellBranch(
             routes: [
-              GoRoute(
-                path: '/home',
-                builder: (_, __) => const DashboardPage(),
-              ),
+              GoRoute(path: '/home', builder: (_, __) => const DashboardPage()),
               GoRoute(
                 path: '/home/location/:id',
                 builder: (context, state) => LocationReservationPage(
@@ -135,18 +119,14 @@ GoRouter buildAppRouter() {
               ),
               GoRoute(
                 path: '/luggage/:id/qr',
-                builder: (context, state) => QrPreviewPage(
-                  luggage: state.extra as LuggageModel,
-                ),
+                builder: (context, state) =>
+                    QrPreviewPage(luggage: state.extra as LuggageModel),
               ),
             ],
           ),
           StatefulShellBranch(
             routes: [
-              GoRoute(
-                path: '/wallet',
-                builder: (_, __) => const WalletPage(),
-              ),
+              GoRoute(path: '/wallet', builder: (_, __) => const WalletPage()),
             ],
           ),
           StatefulShellBranch(

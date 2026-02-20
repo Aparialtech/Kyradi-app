@@ -17,7 +17,6 @@ import '../core/ios/ios_config_service.dart';
 import '../core/firebase/firebase_bootstrap.dart';
 import '../core/auth/google_oauth_config.dart';
 import '../ui/components/app_back_app_bar.dart';
-import '../widgets/app_logo_overlay.dart';
 import '../ui/components/rainbow_bar.dart';
 import '../widgets/auth_mesh_background.dart';
 
@@ -278,6 +277,7 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   Future<AuthResult> _signInWithGoogle() async {
+    final l10n = AppLocalizations.of(context)!;
     appLog('auth', 'AUTH_GOOGLE_TAP', level: AppLogLevel.info);
     if (_googleBusy) {
       return AuthResult(ok: false, error: 'BUSY', statusCode: 429);
@@ -295,7 +295,7 @@ class _LoginPageState extends State<LoginPage> {
         );
         return AuthResult(
           ok: false,
-          error: AppLocalizations.of(context)!.googleConfigMissing,
+          error: l10n.googleConfigMissing,
           statusCode: 500,
         );
       }
@@ -322,12 +322,13 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   Future<AuthResult> _signInWithApple() async {
+    final l10n = AppLocalizations.of(context)!;
     appLog('auth', 'AUTH_APPLE_TAP', level: AppLogLevel.info);
     if (!await AuthService.isAppleAvailable()) {
       appLog('auth', 'AUTH_APPLE_ERROR not_available', level: AppLogLevel.warn);
       return AuthResult(
         ok: false,
-        error: AppLocalizations.of(context)!.appleSignInUnavailable,
+        error: l10n.appleSignInUnavailable,
         statusCode: 400,
       );
     }
@@ -509,8 +510,7 @@ class _LoginPageState extends State<LoginPage> {
                               const SizedBox(height: 18),
                               Text(
                                 l10n.appTitle,
-                                style:
-                                    theme.textTheme.headlineMedium?.copyWith(
+                                style: theme.textTheme.headlineMedium?.copyWith(
                                   fontWeight: FontWeight.w800,
                                   letterSpacing: 1.1,
                                 ),
@@ -530,8 +530,9 @@ class _LoginPageState extends State<LoginPage> {
                         ),
                         const SizedBox(height: 22),
                         SectionCard(
-                          backgroundColor:
-                              theme.colorScheme.surface.withValues(alpha: 0.95),
+                          backgroundColor: theme.colorScheme.surface.withValues(
+                            alpha: 0.95,
+                          ),
                           child: Form(
                             key: _formKey,
                             child: Column(
@@ -660,8 +661,7 @@ class _LoginPageState extends State<LoginPage> {
                                         l10n.loginSocialDivider,
                                         style: theme.textTheme.bodySmall
                                             ?.copyWith(
-                                              color: theme
-                                                  .colorScheme.onSurface
+                                              color: theme.colorScheme.onSurface
                                                   .withValues(alpha: 0.6),
                                             ),
                                       ),
@@ -682,13 +682,13 @@ class _LoginPageState extends State<LoginPage> {
                                           child: OutlinedButton.icon(
                                             onPressed:
                                                 _loading ||
-                                                        !_googleConfigOk ||
-                                                        !_firebaseReady
-                                                    ? null
-                                                    : () => _handleSocialAuth(
-                                                          _signInWithGoogle,
-                                                          provider: 'google',
-                                                        ),
+                                                    !_googleConfigOk ||
+                                                    !_firebaseReady
+                                                ? null
+                                                : () => _handleSocialAuth(
+                                                    _signInWithGoogle,
+                                                    provider: 'google',
+                                                  ),
                                             icon: const CircleAvatar(
                                               radius: 10,
                                               backgroundColor: Color(
@@ -709,9 +709,9 @@ class _LoginPageState extends State<LoginPage> {
                                             style: OutlinedButton.styleFrom(
                                               padding:
                                                   const EdgeInsets.symmetric(
-                                                vertical: 12,
-                                                horizontal: 10,
-                                              ),
+                                                    vertical: 12,
+                                                    horizontal: 10,
+                                                  ),
                                             ),
                                           ),
                                         ),
@@ -720,13 +720,13 @@ class _LoginPageState extends State<LoginPage> {
                                           child: OutlinedButton.icon(
                                             onPressed:
                                                 _loading ||
-                                                        !_appleConfigOk ||
-                                                        !_firebaseReady
-                                                    ? null
-                                                    : () => _handleSocialAuth(
-                                                          _signInWithApple,
-                                                          provider: 'apple',
-                                                        ),
+                                                    !_appleConfigOk ||
+                                                    !_firebaseReady
+                                                ? null
+                                                : () => _handleSocialAuth(
+                                                    _signInWithApple,
+                                                    provider: 'apple',
+                                                  ),
                                             icon: const Icon(Icons.apple),
                                             label: Text(
                                               l10n.loginContinueWithApple,
@@ -734,9 +734,9 @@ class _LoginPageState extends State<LoginPage> {
                                             style: OutlinedButton.styleFrom(
                                               padding:
                                                   const EdgeInsets.symmetric(
-                                                vertical: 12,
-                                                horizontal: 10,
-                                              ),
+                                                    vertical: 12,
+                                                    horizontal: 10,
+                                                  ),
                                             ),
                                           ),
                                         ),
@@ -752,9 +752,8 @@ class _LoginPageState extends State<LoginPage> {
                                     !_firebaseReady
                                         ? l10n.firebaseConfigMissing
                                         : (!_googleConfigOk
-                                            ? l10n
-                                                .googleConfigMissingIosScheme
-                                            : l10n.appleConfigMissing),
+                                              ? l10n.googleConfigMissingIosScheme
+                                              : l10n.appleConfigMissing),
                                     style: theme.textTheme.bodySmall?.copyWith(
                                       color: theme.colorScheme.error,
                                     ),
@@ -771,8 +770,9 @@ class _LoginPageState extends State<LoginPage> {
                             horizontal: 18,
                             vertical: 14,
                           ),
-                          backgroundColor:
-                              theme.colorScheme.surface.withValues(alpha: 0.9),
+                          backgroundColor: theme.colorScheme.surface.withValues(
+                            alpha: 0.9,
+                          ),
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
@@ -790,14 +790,45 @@ class _LoginPageState extends State<LoginPage> {
                             ],
                           ),
                         ),
+                        const SizedBox(height: 12),
+                        SectionCard(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 18,
+                            vertical: 12,
+                          ),
+                          backgroundColor: theme.colorScheme.surface.withValues(
+                            alpha: 0.9,
+                          ),
+                          child: Row(
+                            children: [
+                              Icon(
+                                Icons.admin_panel_settings_outlined,
+                                size: 18,
+                                color: theme.colorScheme.primary,
+                              ),
+                              const SizedBox(width: 10),
+                              Expanded(
+                                child: Text(
+                                  'Yonetici misin? Ayrı giris ekranini kullan.',
+                                  style: theme.textTheme.bodyMedium,
+                                ),
+                              ),
+                              TextButton(
+                                onPressed: () => context.push('/admin/login'),
+                                child: const Text('Yonetici Girisi'),
+                              ),
+                            ],
+                          ),
+                        ),
                         const SizedBox(height: 20),
                         SectionCard(
                           padding: const EdgeInsets.symmetric(
                             horizontal: 18,
                             vertical: 12,
                           ),
-                          backgroundColor:
-                              theme.colorScheme.surface.withValues(alpha: 0.86),
+                          backgroundColor: theme.colorScheme.surface.withValues(
+                            alpha: 0.86,
+                          ),
                           child: Text(
                             l10n.copyrightNotice,
                             style: theme.textTheme.bodySmall?.copyWith(
@@ -820,7 +851,6 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 }
-
 
 class _FieldIcon extends StatelessWidget {
   const _FieldIcon({required this.icon});

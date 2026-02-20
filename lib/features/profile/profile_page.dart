@@ -27,7 +27,6 @@ import 'pages/verification_form_page.dart';
 import 'pages/profile_edit_page.dart';
 import 'pages/profile_settings_page.dart';
 import 'pages/identity_verification_page.dart';
-import '../admin/admin_panel_page.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -393,13 +392,7 @@ class _ProfilePageState extends State<ProfilePage> {
                             style: Theme.of(context).textTheme.bodySmall,
                           ),
                           trailing: const Icon(Icons.chevron_right),
-                          onTap: () {
-                            Navigator.of(context).push(
-                              MaterialPageRoute(
-                                builder: (_) => const AdminPanelPage(),
-                              ),
-                            );
-                          },
+                          onTap: () => context.push('/admin/panel'),
                         ),
                       ),
                     if (_canOpenAdminPanel) const SizedBox(height: 16),
