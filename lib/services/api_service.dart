@@ -788,6 +788,89 @@ class ApiService {
     return result;
   }
 
+  static Future<Map<String, dynamic>> getAdminReservations({
+    String? q,
+    String? status,
+    int? days,
+    int? limit,
+  }) async {
+    if (_usingMockBackend) {
+      return {'ok': true, 'reservations': const <dynamic>[]};
+    }
+    final query = <String, String>{};
+    if ((q ?? '').trim().isNotEmpty) query['q'] = q!.trim();
+    if ((status ?? '').trim().isNotEmpty) query['status'] = status!.trim();
+    if (days != null && days > 0) query['days'] = '$days';
+    if (limit != null && limit > 0) query['limit'] = '$limit';
+    final qp = query.entries
+        .map(
+          (e) =>
+              '${Uri.encodeQueryComponent(e.key)}=${Uri.encodeQueryComponent(e.value)}',
+        )
+        .join('&');
+    final path = qp.isEmpty ? '/admin/reservations' : '/admin/reservations?$qp';
+    final result = await _get(path);
+    result['statusCode'] ??= result['_httpStatus'];
+    if (result['reservations'] == null && result['data'] is List) {
+      result['reservations'] = result['data'];
+    }
+    return result;
+  }
+
+  static Future<Map<String, dynamic>> updateAdminReservationStatus({
+    required String reservationId,
+    required String status,
+    String? storageUnit,
+  }) async {
+    if (_usingMockBackend) {
+      return {
+        'ok': true,
+        'reservation': {
+          'id': reservationId,
+          'status': status,
+          if ((storageUnit ?? '').trim().isNotEmpty)
+            'storageUnit': storageUnit!.trim(),
+        },
+      };
+    }
+    final payload = <String, dynamic>{
+      'status': status,
+      if ((storageUnit ?? '').trim().isNotEmpty)
+        'storageUnit': storageUnit!.trim(),
+    };
+    final result = await _put(
+      '/admin/reservations/$reservationId/status',
+      payload,
+    );
+    result['statusCode'] ??= result['_httpStatus'];
+    return result;
+  }
+
+  static Future<Map<String, dynamic>> getAdminAuditLog({
+    int? days,
+    int? limit,
+  }) async {
+    if (_usingMockBackend) {
+      return {'ok': true, 'entries': const <dynamic>[]};
+    }
+    final query = <String, String>{};
+    if (days != null && days > 0) query['days'] = '$days';
+    if (limit != null && limit > 0) query['limit'] = '$limit';
+    final qp = query.entries
+        .map(
+          (e) =>
+              '${Uri.encodeQueryComponent(e.key)}=${Uri.encodeQueryComponent(e.value)}',
+        )
+        .join('&');
+    final path = qp.isEmpty ? '/admin/audit' : '/admin/audit?$qp';
+    final result = await _get(path);
+    result['statusCode'] ??= result['_httpStatus'];
+    if (result['entries'] == null && result['data'] is List) {
+      result['entries'] = result['data'];
+    }
+    return result;
+  }
+
   static Future<PricingEstimateResponse> estimatePricing(
     PricingEstimateRequest req,
   ) async {

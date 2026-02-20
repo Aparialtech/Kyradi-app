@@ -6,11 +6,14 @@ import {
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { User } from '../users/schemas/user.schema';
-import { Luggage } from '../luggages/schemas/luggage.schema';
+import { Luggage, LuggageStatus, PaymentStatus } from '../luggages/schemas/luggage.schema';
 import { Location } from '../locations/schemas/location.schema';
 import { Campaign } from '../campaigns/schemas/campaign.schema';
 import { UpsertLocationDto } from './dto/upsert-location.dto';
 import { UpsertCampaignDto } from './dto/upsert-campaign.dto';
+import {
+  AdminUpdateReservationStatusDto,
+} from './dto/admin-update-reservation-status.dto';
 
 @Injectable()
 export class AdminService {
@@ -395,12 +398,261 @@ export class AdminService {
     };
   }
 
+  async listReservations(params: {
+    q?: string;
+    status?: string;
+    days?: string;
+    limit?: string;
+  }) {
+    const q = (params.q ?? '').trim().toLowerCase();
+    const status = (params.status ?? '').trim().toLowerCase();
+    const days = this.parsePositiveInt(params.days, 0);
+    const limit = this.parsePositiveInt(params.limit, 80);
+    const safeLimit = Math.min(Math.max(limit, 1), 250);
+    const validStatuses = new Set(Object.values(LuggageStatus));
+
+    const query: Record<string, any> = {};
+    if (status && status !== 'all') {
+      if (!validStatuses.has(status as LuggageStatus)) {
+        throw new BadRequestException('INVALID_STATUS_FILTER');
+      }
+      query.status = status;
+    }
+    if (days > 0) {
+      query.updatedAt = {
+        $gte: new Date(Date.now() - days * 24 * 60 * 60 * 1000),
+      };
+    }
+
+    const rows = await this.luggageModel
+      .find(query)
+      .sort({ updatedAt: -1 })
+      .limit(safeLimit)
+      .select(
+        'userId status paymentStatus totalPrice dropLocationName storageUnit createdAt updatedAt',
+      )
+      .lean()
+      .exec();
+
+    const userIds = Array.from(
+      new Set(rows.map((item: any) => item.userId?.toString()).filter(Boolean)),
+    );
+    const users = userIds.length
+      ? await this.userModel
+          .find({ _id: { $in: userIds } })
+          .select('name surname email')
+          .lean()
+          .exec()
+      : [];
+    const userMap = new Map(
+      users.map((item: any) => [
+        item._id?.toString(),
+        {
+          name: `${item.name ?? ''} ${item.surname ?? ''}`.trim() || 'Kullanici',
+          email: item.email ?? '',
+        },
+      ]),
+    );
+
+    const mapped = rows
+      .map((item: any) => {
+        const user = userMap.get(item.userId?.toString() ?? '') ?? {
+          name: 'Kullanici',
+          email: '',
+        };
+        return {
+          id: item._id?.toString(),
+          userId: item.userId?.toString() ?? '',
+          userName: user.name,
+          userEmail: user.email,
+          status: item.status ?? LuggageStatus.AWAITING,
+          paymentStatus: item.paymentStatus ?? PaymentStatus.UNPAID,
+          totalPrice: item.totalPrice ?? 0,
+          dropLocationName: item.dropLocationName ?? '-',
+          storageUnit: item.storageUnit ?? '',
+          createdAt: item.createdAt ?? null,
+          updatedAt: item.updatedAt ?? null,
+        };
+      })
+      .filter((item) => {
+        if (q.length < 2) return true;
+        const haystack = [
+          item.id,
+          item.userName,
+          item.userEmail,
+          item.dropLocationName,
+          item.status,
+          item.paymentStatus,
+        ]
+          .join(' ')
+          .toLowerCase();
+        return haystack.includes(q);
+      });
+
+    return {
+      reservations: mapped,
+      total: mapped.length,
+    };
+  }
+
+  async updateReservationStatus(
+    reservationId: string,
+    dto: AdminUpdateReservationStatusDto,
+    actorId: string,
+  ) {
+    const luggage = await this.luggageModel.findById(reservationId).exec();
+    if (!luggage) {
+      throw new NotFoundException('RESERVATION_NOT_FOUND');
+    }
+
+    const nextStatus = dto.status;
+    if (nextStatus === LuggageStatus.DROPPED) {
+      const paid =
+        luggage.paymentStatus === PaymentStatus.PAID ||
+        !!luggage.paidAt ||
+        (!!luggage.transactionId && luggage.transactionId.trim().length > 0);
+      if (!paid) {
+        throw new BadRequestException({
+          message: 'PAYMENT_REQUIRED_BEFORE_DROP',
+          code: 'PAYMENT_REQUIRED_BEFORE_DROP',
+          action: 'OPEN_PAYMENT',
+          reservationId: luggage._id?.toString() ?? reservationId,
+          paymentStatus: luggage.paymentStatus ?? PaymentStatus.UNPAID,
+          amountDue: luggage.totalPrice ?? 0,
+        });
+      }
+    }
+
+    const now = new Date();
+    luggage.status = nextStatus;
+    const storageUnit = (dto.storageUnit ?? '').trim();
+    if (storageUnit) {
+      luggage.storageUnit = storageUnit;
+    }
+    if (nextStatus === LuggageStatus.DROPPED && !luggage.dropConfirmedAt) {
+      luggage.dropConfirmedAt = now;
+    } else if (nextStatus === LuggageStatus.PICKED && !luggage.pickupConfirmedAt) {
+      luggage.pickupConfirmedAt = now;
+    }
+    luggage.integration = {
+      ...(luggage.integration ?? {}),
+      adminLastActionBy: actorId,
+      adminLastActionAt: now,
+    } as any;
+
+    const saved = await luggage.save();
+    await this.refreshLocationOccupancy(saved.dropLocationId?.toString());
+
+    return {
+      ok: true,
+      reservation: {
+        id: saved._id?.toString(),
+        status: saved.status,
+        paymentStatus: saved.paymentStatus,
+        storageUnit: saved.storageUnit ?? '',
+        updatedAt: (saved as any).updatedAt ?? now,
+      },
+    };
+  }
+
+  async getAuditLog(params: { days?: string; limit?: string }) {
+    const days = this.parsePositiveInt(params.days, 30);
+    const limit = this.parsePositiveInt(params.limit, 80);
+    const safeLimit = Math.min(Math.max(limit, 1), 250);
+    const threshold = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
+
+    const [recentLuggages, recentCampaigns, recentLocations] = await Promise.all([
+      this.luggageModel
+        .find({ updatedAt: { $gte: threshold } })
+        .sort({ updatedAt: -1 })
+        .limit(safeLimit)
+        .select('status paymentStatus dropLocationName userId totalPrice updatedAt createdAt')
+        .lean()
+        .exec(),
+      this.campaignModel
+        .find({ updatedAt: { $gte: threshold } })
+        .sort({ updatedAt: -1 })
+        .limit(safeLimit)
+        .select('title subtitle isActive updatedBy updatedAt createdAt')
+        .lean()
+        .exec(),
+      this.locationModel
+        .find({ updatedAt: { $gte: threshold } })
+        .sort({ updatedAt: -1 })
+        .limit(safeLimit)
+        .select('name address isActive availableSlots totalSlots updatedAt createdAt')
+        .lean()
+        .exec(),
+    ]);
+
+    const userIds = Array.from(
+      new Set(
+        recentLuggages.map((item: any) => item.userId?.toString()).filter(Boolean),
+      ),
+    );
+    const users = userIds.length
+      ? await this.userModel
+          .find({ _id: { $in: userIds } })
+          .select('name surname email')
+          .lean()
+          .exec()
+      : [];
+    const userMap = new Map(
+      users.map((item: any) => [
+        item._id?.toString(),
+        `${item.name ?? ''} ${item.surname ?? ''}`.trim() || item.email || 'Kullanici',
+      ]),
+    );
+
+    const entries = [
+      ...recentLuggages.map((item: any) => ({
+        id: `res-${item._id?.toString() ?? ''}`,
+        type: 'reservation',
+        title: 'Rezervasyon guncellendi',
+        subtitle: `${userMap.get(item.userId?.toString()) ?? 'Kullanici'} • ${item.status ?? '-'} • ${item.dropLocationName ?? '-'}`,
+        createdAt: item.updatedAt ?? item.createdAt ?? null,
+      })),
+      ...recentCampaigns.map((item: any) => ({
+        id: `cmp-${item._id?.toString() ?? ''}`,
+        type: 'campaign',
+        title: 'Kampanya guncellendi',
+        subtitle: `${item.title ?? 'Kampanya'} • ${item.isActive === false ? 'pasif' : 'aktif'}`,
+        createdAt: item.updatedAt ?? item.createdAt ?? null,
+      })),
+      ...recentLocations.map((item: any) => ({
+        id: `loc-${item._id?.toString() ?? ''}`,
+        type: 'location',
+        title: 'Lokasyon guncellendi',
+        subtitle: `${item.name ?? '-'} • ${item.availableSlots ?? 0}/${item.totalSlots ?? 0} slot`,
+        createdAt: item.updatedAt ?? item.createdAt ?? null,
+      })),
+    ]
+      .sort((a, b) => {
+        const aDate = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+        const bDate = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+        return bDate - aDate;
+      })
+      .slice(0, safeLimit);
+
+    return {
+      entries,
+      total: entries.length,
+    };
+  }
+
   private normalizeRole(role: unknown): 'admin' | 'editor' | 'user' {
     const value = (role ?? 'user').toString().trim().toLowerCase();
     if (value === 'admin' || value === 'editor') {
       return value;
     }
     return 'user';
+  }
+
+  private parsePositiveInt(value: unknown, fallback: number) {
+    const parsed = Number(value);
+    if (!Number.isFinite(parsed)) return fallback;
+    if (parsed < 0) return fallback;
+    return Math.floor(parsed);
   }
 
   private normalizeNumber(value: unknown, fallback: number): number {
@@ -431,5 +683,39 @@ export class AdminService {
       .replace(/[^a-z0-9-_]+/g, '-')
       .replace(/-+/g, '-')
       .replace(/^-|-$/g, '');
+  }
+
+  private async refreshLocationOccupancy(locationId?: string | null) {
+    if (!locationId) return;
+    const normalized = locationId.toString();
+    const location = await this.locationModel.findById(normalized).lean().exec();
+    if (!location) return;
+    const usedSlots = await this.getLocationOccupancy(normalized);
+    const capacity =
+      typeof (location as any).maxCapacity === 'number'
+        ? ((location as any).maxCapacity as number)
+        : ((location as any).totalSlots ?? 0);
+    const availableSlots = Math.max(capacity - usedSlots, 0);
+    await this.locationModel
+      .updateOne(
+        { _id: normalized },
+        {
+          $set: {
+            usedSlots,
+            availableSlots,
+            updatedAt: new Date(),
+          },
+        },
+      )
+      .exec();
+  }
+
+  private async getLocationOccupancy(locationId: string) {
+    return this.luggageModel
+      .countDocuments({
+        dropLocationId: locationId,
+        status: { $in: [LuggageStatus.AWAITING, LuggageStatus.DROPPED] },
+      })
+      .exec();
   }
 }

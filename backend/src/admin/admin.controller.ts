@@ -15,6 +15,7 @@ import { Roles } from '../common/decorators/roles.decorator';
 import { UpsertLocationDto } from './dto/upsert-location.dto';
 import { UpsertCampaignDto } from './dto/upsert-campaign.dto';
 import { AdminPanelApiKeyGuard } from '../common/guards/admin-panel-api-key.guard';
+import { AdminUpdateReservationStatusDto } from './dto/admin-update-reservation-status.dto';
 
 @Controller('admin')
 export class AdminController {
@@ -94,5 +95,44 @@ export class AdminController {
   @Get('users/:id/activities')
   userActivities(@Param('id') id: string) {
     return this.adminService.getUserActivities(id);
+  }
+
+  @UseGuards(AdminRoleGuard)
+  @Roles('admin', 'editor')
+  @Get('reservations')
+  reservations(
+    @Query('q') q?: string,
+    @Query('status') status?: string,
+    @Query('days') days?: string,
+    @Query('limit') limit?: string,
+  ) {
+    return this.adminService.listReservations({
+      q,
+      status,
+      days,
+      limit,
+    });
+  }
+
+  @UseGuards(AdminRoleGuard)
+  @Roles('admin', 'editor')
+  @Put('reservations/:id/status')
+  updateReservationStatus(
+    @Param('id') id: string,
+    @Body() dto: AdminUpdateReservationStatusDto,
+    @Req() req: any,
+  ) {
+    const actor = req?.adminUser?.id?.toString() ?? req?.user?.id?.toString() ?? 'system';
+    return this.adminService.updateReservationStatus(id, dto, actor);
+  }
+
+  @UseGuards(AdminRoleGuard)
+  @Roles('admin', 'editor')
+  @Get('audit')
+  audit(
+    @Query('days') days?: string,
+    @Query('limit') limit?: string,
+  ) {
+    return this.adminService.getAuditLog({ days, limit });
   }
 }

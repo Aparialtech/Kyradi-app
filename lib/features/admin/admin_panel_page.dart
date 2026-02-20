@@ -31,6 +31,8 @@ class _AdminPanelPageState extends State<AdminPanelPage> {
   List<Map<String, dynamic>> _locations = const [];
   List<Map<String, dynamic>> _campaigns = const [];
   List<Map<String, dynamic>> _users = const [];
+  List<Map<String, dynamic>> _reservations = const [];
+  List<Map<String, dynamic>> _auditEntries = const [];
 
   final TextEditingController _userSearchController = TextEditingController();
   final TextEditingController _reservationSearchController =
@@ -101,6 +103,7 @@ class _AdminPanelPageState extends State<AdminPanelPage> {
         _campaigns = _asMapList(campaigns['campaigns'] ?? campaigns['data']);
         _users = _asMapList(users['users'] ?? users['data']);
       });
+      await _loadAdminFeeds();
     } catch (e) {
       if (!mounted) return;
       setState(() => _error = e.toString());
@@ -117,6 +120,38 @@ class _AdminPanelPageState extends State<AdminPanelPage> {
         .whereType<Map>()
         .map((item) => Map<String, dynamic>.from(item))
         .toList();
+  }
+
+  Future<void> _loadAdminFeeds() async {
+    final reservationsResponse = await ApiService.getAdminReservations(
+      status: _reservationStatusFilter == 'all'
+          ? null
+          : _reservationStatusFilter,
+      days: _dashboardWindowDays,
+      limit: 120,
+    );
+    final auditResponse = await ApiService.getAdminAuditLog(
+      days: _dashboardWindowDays,
+      limit: 120,
+    );
+
+    if (!mounted) return;
+    setState(() {
+      if (reservationsResponse['ok'] == true) {
+        _reservations = _asMapList(
+          reservationsResponse['reservations'] ?? reservationsResponse['data'],
+        );
+      } else {
+        _reservations = const [];
+      }
+      if (auditResponse['ok'] == true) {
+        _auditEntries = _asMapList(
+          auditResponse['entries'] ?? auditResponse['data'],
+        );
+      } else {
+        _auditEntries = const [];
+      }
+    });
   }
 
   Future<void> _openLocationEditor({Map<String, dynamic>? item}) async {
@@ -721,8 +756,13 @@ class _AdminPanelPageState extends State<AdminPanelPage> {
       luggage['paymentCounts'] as Map? ?? const {},
     );
     final filteredRecent = _filterRecentByWindow(recent);
-    final filteredReservations = _filterReservations(filteredRecent);
-    final auditItems = _buildAuditItems(filteredRecent);
+    final reservationSource = _reservations.isNotEmpty
+        ? _reservations
+        : filteredRecent;
+    final filteredReservations = _filterReservations(reservationSource);
+    final auditItems = _auditEntries.isNotEmpty
+        ? _auditEntries
+        : _buildAuditItems(filteredRecent);
     final periodRevenue = filteredRecent
         .where((item) => (item['paymentStatus'] ?? '') == 'paid')
         .fold<int>(0, (sum, item) => sum + _asInt(item['totalPrice']));
@@ -812,8 +852,10 @@ class _AdminPanelPageState extends State<AdminPanelPage> {
                     (days) => ChoiceChip(
                       label: Text('Son $days gun'),
                       selected: _dashboardWindowDays == days,
-                      onSelected: (_) =>
-                          setState(() => _dashboardWindowDays = days),
+                      onSelected: (_) async {
+                        setState(() => _dashboardWindowDays = days);
+                        await _loadAdminFeeds();
+                      },
                     ),
                   )
                   .toList(),
@@ -1137,64 +1179,151 @@ class _AdminPanelPageState extends State<AdminPanelPage> {
   Future<void> _showReservationDetailsSheet(Map<String, dynamic> item) async {
     if (!mounted) return;
     final date = _parseDate(item['updatedAt'] ?? item['createdAt']);
-    await showModalBottomSheet<void>(
+    final storageController = TextEditingController(
+      text: (item['storageUnit'] ?? '').toString(),
+    );
+    String selectedStatus = (item['status'] ?? 'awaiting_drop')
+        .toString()
+        .trim()
+        .toLowerCase();
+    const allowedStatuses = <String>[
+      'awaiting_drop',
+      'dropped',
+      'picked_up',
+      'cancelled',
+    ];
+    if (!allowedStatuses.contains(selectedStatus)) {
+      selectedStatus = 'awaiting_drop';
+    }
+
+    final updated = await showModalBottomSheet<bool>(
       context: context,
       showDragHandle: true,
       useSafeArea: true,
       builder: (context) {
-        return Padding(
-          padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Rezervasyon Detayi',
-                style: Theme.of(
-                  context,
-                ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
-              ),
-              const SizedBox(height: 12),
-              _ReservationDetailRow(
-                label: 'ID',
-                value: (item['id'] ?? '-').toString(),
-              ),
-              _ReservationDetailRow(
-                label: 'Kullanici',
-                value: (item['userName'] ?? 'Kullanici').toString(),
-              ),
-              _ReservationDetailRow(
-                label: 'Durum',
-                value: (item['status'] ?? '-').toString(),
-              ),
-              _ReservationDetailRow(
-                label: 'Odeme',
-                value: (item['paymentStatus'] ?? '-').toString(),
-              ),
-              _ReservationDetailRow(
-                label: 'Lokasyon',
-                value: (item['dropLocationName'] ?? '-').toString(),
-              ),
-              _ReservationDetailRow(
-                label: 'Tutar',
-                value: '₺${item['totalPrice'] ?? 0}',
-              ),
-              _ReservationDetailRow(
-                label: 'Guncelleme',
-                value: _relativeTime(date),
-              ),
-              const SizedBox(height: 14),
-              Text(
-                'Durum degistirme islemleri yakinda bu panelden yonetilecek.',
-                style: Theme.of(
-                  context,
-                ).textTheme.bodySmall?.copyWith(color: _adminTextSecondary),
-              ),
-            ],
+        var saving = false;
+        return StatefulBuilder(
+          builder: (context, setSheetState) => Padding(
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Rezervasyon Detayi',
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
+                ),
+                const SizedBox(height: 12),
+                _ReservationDetailRow(
+                  label: 'ID',
+                  value: (item['id'] ?? '-').toString(),
+                ),
+                _ReservationDetailRow(
+                  label: 'Kullanici',
+                  value: (item['userName'] ?? 'Kullanici').toString(),
+                ),
+                _ReservationDetailRow(
+                  label: 'Odeme',
+                  value: (item['paymentStatus'] ?? '-').toString(),
+                ),
+                _ReservationDetailRow(
+                  label: 'Lokasyon',
+                  value: (item['dropLocationName'] ?? '-').toString(),
+                ),
+                _ReservationDetailRow(
+                  label: 'Tutar',
+                  value: '₺${item['totalPrice'] ?? 0}',
+                ),
+                _ReservationDetailRow(
+                  label: 'Guncelleme',
+                  value: _relativeTime(date),
+                ),
+                const SizedBox(height: 10),
+                DropdownButtonFormField<String>(
+                  initialValue: selectedStatus,
+                  items: allowedStatuses
+                      .map(
+                        (status) => DropdownMenuItem<String>(
+                          value: status,
+                          child: Text(status),
+                        ),
+                      )
+                      .toList(),
+                  onChanged: saving
+                      ? null
+                      : (value) {
+                          if (value == null) return;
+                          setSheetState(() => selectedStatus = value);
+                        },
+                  decoration: InputDecoration(
+                    labelText: 'Durum',
+                    isDense: true,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 10),
+                TextField(
+                  controller: storageController,
+                  enabled: !saving,
+                  decoration: InputDecoration(
+                    labelText: 'Storage Unit (opsiyonel)',
+                    isDense: true,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                SizedBox(
+                  width: double.infinity,
+                  child: FilledButton(
+                    onPressed: saving
+                        ? null
+                        : () async {
+                            final reservationId = (item['id'] ?? '')
+                                .toString()
+                                .trim();
+                            if (reservationId.isEmpty) return;
+                            setSheetState(() => saving = true);
+                            final response =
+                                await ApiService.updateAdminReservationStatus(
+                                  reservationId: reservationId,
+                                  status: selectedStatus,
+                                  storageUnit: storageController.text.trim(),
+                                );
+                            if (!mounted) return;
+                            if (response['ok'] == true) {
+                              Navigator.of(this.context).pop(true);
+                              await _loadAll();
+                              return;
+                            }
+                            setSheetState(() => saving = false);
+                            _showError(
+                              (response['error'] ??
+                                      response['message'] ??
+                                      'Durum guncellenemedi')
+                                  .toString(),
+                            );
+                          },
+                    child: Text(saving ? 'Kaydediliyor...' : 'Durumu Kaydet'),
+                  ),
+                ),
+              ],
+            ),
           ),
         );
       },
     );
+    storageController.dispose();
+    if (updated == true && mounted) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Rezervasyon guncellendi')));
+    }
   }
 
   Color _statusColor(String status) {
@@ -1254,9 +1383,10 @@ class _AdminPanelPageState extends State<AdminPanelPage> {
                           ),
                         )
                         .toList(),
-                    onChanged: (value) => setState(
-                      () => _reservationStatusFilter = value ?? 'all',
-                    ),
+                    onChanged: (value) async {
+                      setState(() => _reservationStatusFilter = value ?? 'all');
+                      await _loadAdminFeeds();
+                    },
                     decoration: InputDecoration(
                       isDense: true,
                       border: OutlineInputBorder(
@@ -1296,9 +1426,10 @@ class _AdminPanelPageState extends State<AdminPanelPage> {
                           ),
                         )
                         .toList(),
-                    onChanged: (value) => setState(
-                      () => _reservationStatusFilter = value ?? 'all',
-                    ),
+                    onChanged: (value) async {
+                      setState(() => _reservationStatusFilter = value ?? 'all');
+                      await _loadAdminFeeds();
+                    },
                     decoration: InputDecoration(
                       isDense: true,
                       border: OutlineInputBorder(
@@ -1426,7 +1557,9 @@ class _AdminPanelPageState extends State<AdminPanelPage> {
 
     return Column(
       children: entries.map((entry) {
-        final date = entry['time'] as DateTime?;
+        final date = (entry['time'] is DateTime)
+            ? entry['time'] as DateTime?
+            : _parseDate(entry['createdAt'] ?? entry['time']);
         final type = (entry['type'] ?? 'reservation').toString();
         final icon = resolveIcon(type);
         return Padding(
