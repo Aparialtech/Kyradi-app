@@ -1552,40 +1552,63 @@ class _PaymentDistributionCard extends StatelessWidget {
     final total = entries.fold<int>(0, (sum, e) => sum + e.value);
     return entries.isEmpty
         ? const Text('Veri bulunamadi')
-        : Column(
-            children: [
-              Row(
+        : LayoutBuilder(
+            builder: (context, constraints) {
+              final isCompact = constraints.maxWidth < 560;
+              final legends = entries
+                  .asMap()
+                  .entries
+                  .map(
+                    (entry) => Padding(
+                      padding: const EdgeInsets.only(bottom: 8),
+                      child: _LegendRow(
+                        color: _palette[entry.key % _palette.length],
+                        label: _paymentLabel(entry.value.key),
+                        value:
+                            '${entry.value.value} (${((entry.value.value / total) * 100).toStringAsFixed(0)}%)',
+                      ),
+                    ),
+                  )
+                  .toList();
+
+              if (isCompact) {
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    SizedBox(
+                      height: 170,
+                      child: Center(
+                        child: _AnimatedDonutChart(entries: entries),
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    ...legends,
+                  ],
+                );
+              }
+
+              return Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Expanded(
                     child: SizedBox(
-                      height: 124,
+                      height: 152,
                       child: _AnimatedDonutChart(entries: entries),
                     ),
                   ),
-                  const SizedBox(width: 12),
+                  const SizedBox(width: 16),
                   Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: entries
-                          .asMap()
-                          .entries
-                          .map(
-                            (entry) => Padding(
-                              padding: const EdgeInsets.only(bottom: 8),
-                              child: _LegendRow(
-                                color: _palette[entry.key % _palette.length],
-                                label: _paymentLabel(entry.value.key),
-                                value:
-                                    '${entry.value.value} (${((entry.value.value / total) * 100).toStringAsFixed(0)}%)',
-                              ),
-                            ),
-                          )
-                          .toList(),
+                    child: Padding(
+                      padding: const EdgeInsets.only(top: 6),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: legends,
+                      ),
                     ),
                   ),
                 ],
-              ),
-            ],
+              );
+            },
           );
   }
 
@@ -1658,56 +1681,75 @@ class _SampleDatasetPanel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final total = _data.fold<int>(0, (sum, item) => sum + item.value);
-    return Row(
-      children: [
-        Expanded(
-          child: SizedBox(
-            height: 148,
-            child: TweenAnimationBuilder<double>(
-              tween: Tween(begin: 0, end: 1),
-              duration: const Duration(milliseconds: 900),
-              curve: Curves.easeOutCubic,
-              builder: (context, progress, _) {
-                return CustomPaint(
-                  painter: _OffsetPiePainter(
-                    data: _data,
-                    progress: progress,
-                    offset: 4,
-                  ),
-                  child: Center(
-                    child: Text(
-                      '$total',
-                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.w800,
-                        color: _adminTextPrimary,
-                      ),
-                    ),
-                  ),
-                );
-              },
+    final legendWidgets = _data
+        .map(
+          (item) => Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: _LegendRow(
+              color: item.color,
+              label: item.label,
+              value:
+                  '${item.value} (${((item.value / total) * 100).toStringAsFixed(0)}%)',
             ),
           ),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: _data
-                .map(
-                  (item) => Padding(
-                    padding: const EdgeInsets.only(bottom: 8),
-                    child: _LegendRow(
-                      color: item.color,
-                      label: item.label,
-                      value:
-                          '${item.value} (${((item.value / total) * 100).toStringAsFixed(0)}%)',
+        )
+        .toList();
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isCompact = constraints.maxWidth < 560;
+
+        final chart = SizedBox(
+          height: isCompact ? 190 : 162,
+          child: TweenAnimationBuilder<double>(
+            tween: Tween(begin: 0, end: 1),
+            duration: const Duration(milliseconds: 900),
+            curve: Curves.easeOutCubic,
+            builder: (context, progress, _) {
+              return CustomPaint(
+                painter: _OffsetPiePainter(
+                  data: _data,
+                  progress: progress,
+                  offset: 4,
+                ),
+                child: Center(
+                  child: Text(
+                    '$total',
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.w800,
+                      color: _adminTextPrimary,
                     ),
                   ),
-                )
-                .toList(),
+                ),
+              );
+            },
           ),
-        ),
-      ],
+        );
+
+        if (isCompact) {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [chart, const SizedBox(height: 10), ...legendWidgets],
+          );
+        }
+
+        return Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(child: chart),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.only(top: 8),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: legendWidgets,
+                ),
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 }
@@ -1740,11 +1782,11 @@ class _OffsetPiePainter extends CustomPainter {
     final total = data.fold<int>(0, (sum, item) => sum + item.value);
     if (total <= 0) return;
     final stroke = math.max(13.0, size.shortestSide * 0.14);
-    final baseRect = Rect.fromLTWH(
-      0,
-      0,
-      size.width,
-      size.height,
+    final side = math.min(size.width, size.height);
+    final baseRect = Rect.fromCenter(
+      center: size.center(Offset.zero),
+      width: side,
+      height: side,
     ).deflate(stroke / 2 + offset);
     final paint = Paint()
       ..style = PaintingStyle.stroke
@@ -1811,11 +1853,11 @@ class _DonutPainter extends CustomPainter {
     final total = entries.fold<int>(0, (sum, e) => sum + e.value);
     if (total <= 0) return;
     final stroke = math.max(12.0, size.shortestSide * 0.13);
-    final rect = Rect.fromLTWH(
-      0,
-      0,
-      size.width,
-      size.height,
+    final side = math.min(size.width, size.height);
+    final rect = Rect.fromCenter(
+      center: size.center(Offset.zero),
+      width: side,
+      height: side,
     ).deflate(stroke / 2);
     final paint = Paint()
       ..style = PaintingStyle.stroke
