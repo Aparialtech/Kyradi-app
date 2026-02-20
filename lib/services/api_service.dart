@@ -846,6 +846,38 @@ class ApiService {
     return result;
   }
 
+  static Future<Map<String, dynamic>> bulkUpdateAdminReservationStatus({
+    required List<String> reservationIds,
+    required String status,
+    String? storageUnit,
+  }) async {
+    if (_usingMockBackend) {
+      return {
+        'ok': true,
+        'successCount': reservationIds.length,
+        'failedCount': 0,
+        'success': reservationIds
+            .map((id) => {'id': id, 'status': status})
+            .toList(),
+        'failed': const <dynamic>[],
+      };
+    }
+    final ids = reservationIds
+        .map((e) => e.trim())
+        .where((e) => e.isNotEmpty)
+        .toSet()
+        .toList();
+    final payload = <String, dynamic>{
+      'reservationIds': ids,
+      'status': status,
+      if ((storageUnit ?? '').trim().isNotEmpty)
+        'storageUnit': storageUnit!.trim(),
+    };
+    final result = await _post('/admin/reservations/bulk-status', payload);
+    result['statusCode'] ??= result['_httpStatus'];
+    return result;
+  }
+
   static Future<Map<String, dynamic>> getAdminAuditLog({
     int? days,
     int? limit,

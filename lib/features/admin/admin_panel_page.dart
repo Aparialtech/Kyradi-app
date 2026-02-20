@@ -45,6 +45,9 @@ class _AdminPanelPageState extends State<AdminPanelPage> {
   bool _showAuditLog = true;
   int _dashboardWindowDays = 7;
   String _reservationStatusFilter = 'all';
+  String _bulkReservationStatus = 'awaiting_drop';
+  bool _bulkReservationUpdating = false;
+  final Set<String> _selectedReservationIds = <String>{};
 
   @override
   void initState() {
@@ -141,8 +144,14 @@ class _AdminPanelPageState extends State<AdminPanelPage> {
         _reservations = _asMapList(
           reservationsResponse['reservations'] ?? reservationsResponse['data'],
         );
+        final ids = _reservations
+            .map((item) => (item['id'] ?? '').toString())
+            .where((id) => id.isNotEmpty)
+            .toSet();
+        _selectedReservationIds.removeWhere((id) => !ids.contains(id));
       } else {
         _reservations = const [];
+        _selectedReservationIds.clear();
       }
       if (auditResponse['ok'] == true) {
         _auditEntries = _asMapList(
@@ -1187,6 +1196,7 @@ class _AdminPanelPageState extends State<AdminPanelPage> {
         .trim()
         .toLowerCase();
     const allowedStatuses = <String>[
+      'assigned',
       'awaiting_drop',
       'dropped',
       'picked_up',
@@ -1326,6 +1336,59 @@ class _AdminPanelPageState extends State<AdminPanelPage> {
     }
   }
 
+  Future<void> _runBulkReservationUpdate() async {
+    if (_bulkReservationUpdating || _selectedReservationIds.isEmpty) return;
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Toplu durum guncelle'),
+        content: Text(
+          '${_selectedReservationIds.length} rezervasyon "$_bulkReservationStatus" durumuna guncellensin mi?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Vazgec'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('Uygula'),
+          ),
+        ],
+      ),
+    );
+    if (confirm != true || !mounted) return;
+
+    setState(() => _bulkReservationUpdating = true);
+    final response = await ApiService.bulkUpdateAdminReservationStatus(
+      reservationIds: _selectedReservationIds.toList(),
+      status: _bulkReservationStatus,
+    );
+    if (!mounted) return;
+    setState(() => _bulkReservationUpdating = false);
+
+    if (response['ok'] == true || (response['successCount'] ?? 0) > 0) {
+      final success = (response['successCount'] ?? 0).toString();
+      final failed = (response['failedCount'] ?? 0).toString();
+      _selectedReservationIds.clear();
+      await _loadAll();
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Toplu guncelleme tamamlandi: $success basarili, $failed hatali',
+          ),
+        ),
+      );
+      return;
+    }
+
+    _showError(
+      (response['error'] ?? response['message'] ?? 'Toplu guncelleme basarisiz')
+          .toString(),
+    );
+  }
+
   Color _statusColor(String status) {
     switch (status) {
       case 'assigned':
@@ -1351,6 +1414,10 @@ class _AdminPanelPageState extends State<AdminPanelPage> {
       MapEntry('picked_up', 'Picked Up'),
       MapEntry('cancelled', 'Cancelled'),
     ];
+    final statusLabels = Map<String, String>.fromEntries(statusOptions);
+    final bulkStatusOptions = statusOptions
+        .where((entry) => entry.key != 'all')
+        .toList();
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -1443,15 +1510,112 @@ class _AdminPanelPageState extends State<AdminPanelPage> {
           },
         ),
         const SizedBox(height: 10),
+        if (items.isNotEmpty)
+          Container(
+            margin: const EdgeInsets.only(bottom: 10),
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.05),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.14)),
+            ),
+            child: Column(
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        '${_selectedReservationIds.length} secili',
+                        style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                          color: _adminTextPrimary,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                    TextButton(
+                      onPressed: () {
+                        setState(() {
+                          if (_selectedReservationIds.length == items.length) {
+                            _selectedReservationIds.clear();
+                          } else {
+                            _selectedReservationIds
+                              ..clear()
+                              ..addAll(
+                                items
+                                    .map(
+                                      (item) => (item['id'] ?? '').toString(),
+                                    )
+                                    .where((id) => id.isNotEmpty),
+                              );
+                          }
+                        });
+                      },
+                      child: Text(
+                        _selectedReservationIds.length == items.length
+                            ? 'Secimi temizle'
+                            : 'Tumunu sec',
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    Expanded(
+                      child: DropdownButtonFormField<String>(
+                        initialValue: _bulkReservationStatus,
+                        items: bulkStatusOptions
+                            .map(
+                              (entry) => DropdownMenuItem<String>(
+                                value: entry.key,
+                                child: Text(entry.value),
+                              ),
+                            )
+                            .toList(),
+                        onChanged: _bulkReservationUpdating
+                            ? null
+                            : (value) {
+                                if (value == null) return;
+                                setState(() => _bulkReservationStatus = value);
+                              },
+                        decoration: InputDecoration(
+                          isDense: true,
+                          labelText: 'Toplu durum',
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    FilledButton(
+                      onPressed:
+                          _selectedReservationIds.isEmpty ||
+                              _bulkReservationUpdating
+                          ? null
+                          : _runBulkReservationUpdate,
+                      child: Text(
+                        _bulkReservationUpdating
+                            ? 'Calisiyor...'
+                            : 'Toplu uygula',
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
         if (items.isEmpty)
           const Padding(
             padding: EdgeInsets.symmetric(vertical: 8),
             child: Text('Bu filtrede rezervasyon bulunamadi.'),
           )
         else
-          ...items.take(8).map((item) {
+          ...items.take(16).map((item) {
             final status = (item['status'] ?? 'awaiting_drop').toString();
             final payment = (item['paymentStatus'] ?? 'unpaid').toString();
+            final id = (item['id'] ?? '').toString();
+            final selected = _selectedReservationIds.contains(id);
             final date = _parseDate(item['updatedAt'] ?? item['createdAt']);
             return Padding(
               padding: const EdgeInsets.only(bottom: 8),
@@ -1472,6 +1636,20 @@ class _AdminPanelPageState extends State<AdminPanelPage> {
                   ),
                   child: Row(
                     children: [
+                      Checkbox.adaptive(
+                        value: selected,
+                        onChanged: id.isEmpty
+                            ? null
+                            : (checked) {
+                                setState(() {
+                                  if (checked == true) {
+                                    _selectedReservationIds.add(id);
+                                  } else {
+                                    _selectedReservationIds.remove(id);
+                                  }
+                                });
+                              },
+                      ),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -1514,7 +1692,7 @@ class _AdminPanelPageState extends State<AdminPanelPage> {
                               ),
                             ),
                             child: Text(
-                              status,
+                              statusLabels[status] ?? status,
                               style: Theme.of(context).textTheme.labelSmall
                                   ?.copyWith(
                                     color: _adminTextPrimary,

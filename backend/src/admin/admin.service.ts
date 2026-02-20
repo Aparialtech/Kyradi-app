@@ -14,6 +14,8 @@ import { UpsertCampaignDto } from './dto/upsert-campaign.dto';
 import {
   AdminUpdateReservationStatusDto,
 } from './dto/admin-update-reservation-status.dto';
+import { AdminBulkUpdateReservationStatusDto } from './dto/admin-bulk-update-reservation-status.dto';
+import { AdminAuditEvent } from './schemas/admin-audit-event.schema';
 
 @Injectable()
 export class AdminService {
@@ -22,6 +24,8 @@ export class AdminService {
     @InjectModel(Luggage.name) private readonly luggageModel: Model<Luggage>,
     @InjectModel(Location.name) private readonly locationModel: Model<Location>,
     @InjectModel(Campaign.name) private readonly campaignModel: Model<Campaign>,
+    @InjectModel(AdminAuditEvent.name)
+    private readonly auditModel: Model<AdminAuditEvent>,
   ) {}
 
   async getOverview() {
@@ -203,6 +207,16 @@ export class AdminService {
       isActive: dto.isActive ?? true,
       timezone: (dto.timezone ?? 'Europe/Istanbul').trim(),
     });
+    await this.appendAuditEvent({
+      type: 'location',
+      action: 'create',
+      entityId: doc._id?.toString() ?? id,
+      actorId: 'system',
+      summary: `${name} lokasyonu eklendi`,
+      meta: {
+        isActive: dto.isActive ?? true,
+      },
+    });
     return doc.toObject();
   }
 
@@ -243,6 +257,17 @@ export class AdminService {
     if (!updated) {
       throw new NotFoundException('LOCATION_NOT_FOUND');
     }
+    await this.appendAuditEvent({
+      type: 'location',
+      action: 'update',
+      entityId: id,
+      actorId: 'system',
+      summary: `${updated.name ?? id} lokasyonu guncellendi`,
+      meta: {
+        isActive: updated.isActive ?? true,
+        availableSlots: (updated as any).availableSlots ?? 0,
+      },
+    });
     return updated;
   }
 
@@ -275,6 +300,16 @@ export class AdminService {
       createdBy: actorId,
       updatedBy: actorId,
     });
+    await this.appendAuditEvent({
+      type: 'campaign',
+      action: 'create',
+      entityId: created._id?.toString() ?? '',
+      actorId,
+      summary: `${title} kampanyasi eklendi`,
+      meta: {
+        isActive: dto.isActive ?? true,
+      },
+    });
     return created.toObject();
   }
 
@@ -301,6 +336,16 @@ export class AdminService {
     if (!updated) {
       throw new NotFoundException('CAMPAIGN_NOT_FOUND');
     }
+    await this.appendAuditEvent({
+      type: 'campaign',
+      action: 'update',
+      entityId: id,
+      actorId,
+      summary: `${(updated as any).title ?? id} kampanyasi guncellendi`,
+      meta: {
+        isActive: (updated as any).isActive ?? true,
+      },
+    });
     return updated;
   }
 
@@ -413,10 +458,11 @@ export class AdminService {
 
     const query: Record<string, any> = {};
     if (status && status !== 'all') {
-      if (!validStatuses.has(status as LuggageStatus)) {
+      const normalizedStatus = this.normalizeAdminStatus(status);
+      if (!validStatuses.has(normalizedStatus)) {
         throw new BadRequestException('INVALID_STATUS_FILTER');
       }
-      query.status = status;
+      query.status = normalizedStatus;
     }
     if (days > 0) {
       query.updatedAt = {
@@ -505,7 +551,7 @@ export class AdminService {
       throw new NotFoundException('RESERVATION_NOT_FOUND');
     }
 
-    const nextStatus = dto.status;
+    const nextStatus = this.normalizeAdminStatus(dto.status);
     if (nextStatus === LuggageStatus.DROPPED) {
       const paid =
         luggage.paymentStatus === PaymentStatus.PAID ||
@@ -542,6 +588,17 @@ export class AdminService {
 
     const saved = await luggage.save();
     await this.refreshLocationOccupancy(saved.dropLocationId?.toString());
+    await this.appendAuditEvent({
+      type: 'reservation',
+      action: 'status_update',
+      entityId: saved._id?.toString() ?? reservationId,
+      actorId,
+      summary: `Rezervasyon durumu ${nextStatus} yapildi`,
+      meta: {
+        paymentStatus: saved.paymentStatus ?? PaymentStatus.UNPAID,
+        storageUnit: saved.storageUnit ?? '',
+      },
+    });
 
     return {
       ok: true,
@@ -555,11 +612,95 @@ export class AdminService {
     };
   }
 
+  async bulkUpdateReservationStatus(
+    dto: AdminBulkUpdateReservationStatusDto,
+    actorId: string,
+  ) {
+    const ids = Array.from(
+      new Set((dto.reservationIds ?? []).map((item) => (item ?? '').toString().trim())),
+    ).filter(Boolean);
+    if (ids.length === 0) {
+      throw new BadRequestException('RESERVATION_IDS_REQUIRED');
+    }
+    if (ids.length > 120) {
+      throw new BadRequestException('TOO_MANY_RESERVATIONS');
+    }
+
+    const success: Array<{ id: string; status: string }> = [];
+    const failed: Array<{ id: string; error: string }> = [];
+    for (const id of ids) {
+      try {
+        const result = await this.updateReservationStatus(
+          id,
+          {
+            status: dto.status,
+            storageUnit: dto.storageUnit,
+          },
+          actorId,
+        );
+        success.push({
+          id,
+          status: result.reservation?.status?.toString() ?? dto.status.toString(),
+        });
+      } catch (error) {
+        const message =
+          (error as any)?.response?.message ??
+          (error as any)?.message ??
+          'UPDATE_FAILED';
+        failed.push({ id, error: message.toString() });
+      }
+    }
+
+    await this.appendAuditEvent({
+      type: 'reservation',
+      action: 'bulk_status_update',
+      entityId: `${success.length}/${ids.length}`,
+      actorId,
+      summary: `${success.length} rezervasyon toplu guncellendi`,
+      meta: {
+        requested: ids.length,
+        success: success.length,
+        failed: failed.length,
+        status: dto.status,
+      },
+    });
+
+    return {
+      ok: failed.length === 0,
+      successCount: success.length,
+      failedCount: failed.length,
+      success,
+      failed,
+    };
+  }
+
   async getAuditLog(params: { days?: string; limit?: string }) {
     const days = this.parsePositiveInt(params.days, 30);
     const limit = this.parsePositiveInt(params.limit, 80);
     const safeLimit = Math.min(Math.max(limit, 1), 250);
     const threshold = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
+
+    const storedEntries = await this.auditModel
+      .find({ createdAt: { $gte: threshold } })
+      .sort({ createdAt: -1 })
+      .limit(safeLimit)
+      .lean()
+      .exec();
+    if (storedEntries.length > 0) {
+      return {
+        entries: storedEntries.map((item: any) => ({
+          id: item._id?.toString(),
+          type: item.type ?? 'unknown',
+          action: item.action ?? 'update',
+          title: this.auditTitle(item.type, item.action),
+          subtitle: item.summary ?? '-',
+          createdAt: item.createdAt ?? null,
+          actorId: item.actorId ?? '',
+          meta: item.meta ?? {},
+        })),
+        total: storedEntries.length,
+      };
+    }
 
     const [recentLuggages, recentCampaigns, recentLocations] = await Promise.all([
       this.luggageModel
@@ -683,6 +824,56 @@ export class AdminService {
       .replace(/[^a-z0-9-_]+/g, '-')
       .replace(/-+/g, '-')
       .replace(/^-|-$/g, '');
+  }
+
+  private normalizeAdminStatus(
+    status: LuggageStatus | 'assigned' | string,
+  ): LuggageStatus {
+    if (status === 'assigned') {
+      return LuggageStatus.AWAITING;
+    }
+    return status as LuggageStatus;
+  }
+
+  private auditTitle(type?: string, action?: string) {
+    if (type === 'reservation') {
+      return action === 'bulk_status_update'
+        ? 'Toplu rezervasyon islemi'
+        : 'Rezervasyon guncellendi';
+    }
+    if (type === 'campaign') {
+      return action === 'create'
+        ? 'Kampanya eklendi'
+        : 'Kampanya guncellendi';
+    }
+    if (type === 'location') {
+      return action === 'create'
+        ? 'Lokasyon eklendi'
+        : 'Lokasyon guncellendi';
+    }
+    return 'Yonetim islemi';
+  }
+
+  private async appendAuditEvent(event: {
+    type: string;
+    action: string;
+    entityId: string;
+    actorId?: string;
+    summary?: string;
+    meta?: Record<string, unknown>;
+  }) {
+    try {
+      await this.auditModel.create({
+        type: event.type,
+        action: event.action,
+        entityId: event.entityId,
+        actorId: event.actorId ?? 'system',
+        summary: event.summary ?? '',
+        meta: event.meta ?? {},
+      });
+    } catch {
+      // Best-effort audit; never block admin operations.
+    }
   }
 
   private async refreshLocationOccupancy(locationId?: string | null) {

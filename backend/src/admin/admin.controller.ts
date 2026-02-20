@@ -16,6 +16,7 @@ import { UpsertLocationDto } from './dto/upsert-location.dto';
 import { UpsertCampaignDto } from './dto/upsert-campaign.dto';
 import { AdminPanelApiKeyGuard } from '../common/guards/admin-panel-api-key.guard';
 import { AdminUpdateReservationStatusDto } from './dto/admin-update-reservation-status.dto';
+import { AdminBulkUpdateReservationStatusDto } from './dto/admin-bulk-update-reservation-status.dto';
 
 @Controller('admin')
 export class AdminController {
@@ -124,6 +125,17 @@ export class AdminController {
   ) {
     const actor = req?.adminUser?.id?.toString() ?? req?.user?.id?.toString() ?? 'system';
     return this.adminService.updateReservationStatus(id, dto, actor);
+  }
+
+  @UseGuards(AdminRoleGuard)
+  @Roles('admin', 'editor')
+  @Post('reservations/bulk-status')
+  bulkUpdateReservationStatus(
+    @Body() dto: AdminBulkUpdateReservationStatusDto,
+    @Req() req: any,
+  ) {
+    const actor = req?.adminUser?.id?.toString() ?? req?.user?.id?.toString() ?? 'system';
+    return this.adminService.bulkUpdateReservationStatus(dto, actor);
   }
 
   @UseGuards(AdminRoleGuard)
