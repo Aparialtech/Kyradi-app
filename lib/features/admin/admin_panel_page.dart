@@ -33,10 +33,16 @@ class _AdminPanelPageState extends State<AdminPanelPage> {
   List<Map<String, dynamic>> _users = const [];
 
   final TextEditingController _userSearchController = TextEditingController();
+  final TextEditingController _reservationSearchController =
+      TextEditingController();
   bool _showReservationInsights = true;
   bool _showPaymentInsights = true;
   bool _showLocationInsights = true;
   bool _showActivityInsights = false;
+  bool _showReservationManager = true;
+  bool _showAuditLog = true;
+  int _dashboardWindowDays = 7;
+  String _reservationStatusFilter = 'all';
 
   @override
   void initState() {
@@ -47,6 +53,7 @@ class _AdminPanelPageState extends State<AdminPanelPage> {
   @override
   void dispose() {
     _userSearchController.dispose();
+    _reservationSearchController.dispose();
     super.dispose();
   }
 
@@ -713,6 +720,29 @@ class _AdminPanelPageState extends State<AdminPanelPage> {
     final paymentCounts = Map<String, dynamic>.from(
       luggage['paymentCounts'] as Map? ?? const {},
     );
+    final filteredRecent = _filterRecentByWindow(recent);
+    final filteredReservations = _filterReservations(filteredRecent);
+    final auditItems = _buildAuditItems(filteredRecent);
+    final periodRevenue = filteredRecent
+        .where((item) => (item['paymentStatus'] ?? '') == 'paid')
+        .fold<int>(0, (sum, item) => sum + _asInt(item['totalPrice']));
+    final periodPending = filteredRecent
+        .where(
+          (item) =>
+              (item['paymentStatus'] ?? '') == 'pending' ||
+              (item['paymentStatus'] ?? '') == 'failed',
+        )
+        .length;
+    final periodActive = filteredRecent
+        .where(
+          (item) => {
+            'awaiting_drop',
+            'assigned',
+            'dropped',
+          }.contains((item['status'] ?? '').toString()),
+        )
+        .length;
+
     final metricCards = [
       _KpiCardData(
         id: 'users_total',
@@ -768,6 +798,57 @@ class _AdminPanelPageState extends State<AdminPanelPage> {
     return [
       _HeaderAction(title: 'Canli Dashboard'),
       const SizedBox(height: 10),
+      _PanelCard(
+        title: 'Donem Filtresi',
+        icon: Icons.date_range_rounded,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [7, 30, 90]
+                  .map(
+                    (days) => ChoiceChip(
+                      label: Text('Son $days gun'),
+                      selected: _dashboardWindowDays == days,
+                      onSelected: (_) =>
+                          setState(() => _dashboardWindowDays = days),
+                    ),
+                  )
+                  .toList(),
+            ),
+            const SizedBox(height: 10),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                _PeriodStatPill(
+                  label: 'Rezervasyon',
+                  value: '${filteredRecent.length}',
+                  icon: Icons.luggage_rounded,
+                ),
+                _PeriodStatPill(
+                  label: 'Aktif Akis',
+                  value: '$periodActive',
+                  icon: Icons.timeline_rounded,
+                ),
+                _PeriodStatPill(
+                  label: 'Odeme Bekleyen',
+                  value: '$periodPending',
+                  icon: Icons.warning_amber_rounded,
+                ),
+                _PeriodStatPill(
+                  label: 'Gelir',
+                  value: '₺$periodRevenue',
+                  icon: Icons.payments_rounded,
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+      const SizedBox(height: 12),
       _KpiGrid(
         cards: metricCards,
         onTap: (card) => _showDashboardMetricSheet(
@@ -819,6 +900,20 @@ class _AdminPanelPageState extends State<AdminPanelPage> {
                 () => _showActivityInsights = !_showActivityInsights,
               ),
             ),
+            _InsightToggleChip(
+              label: 'Yonetim',
+              icon: Icons.manage_search_rounded,
+              active: _showReservationManager,
+              onTap: () => setState(
+                () => _showReservationManager = !_showReservationManager,
+              ),
+            ),
+            _InsightToggleChip(
+              label: 'Audit',
+              icon: Icons.fact_check_outlined,
+              active: _showAuditLog,
+              onTap: () => setState(() => _showAuditLog = !_showAuditLog),
+            ),
           ],
         ),
       ),
@@ -863,7 +958,24 @@ class _AdminPanelPageState extends State<AdminPanelPage> {
         expanded: _showActivityInsights,
         onToggle: () =>
             setState(() => _showActivityInsights = !_showActivityInsights),
-        child: _ActivityTimelineCard(recent: recent),
+        child: _ActivityTimelineCard(recent: filteredRecent),
+      ),
+      const SizedBox(height: 14),
+      _ExpandableInsightPanel(
+        title: 'Rezervasyon Yonetimi',
+        icon: Icons.manage_search_rounded,
+        expanded: _showReservationManager,
+        onToggle: () =>
+            setState(() => _showReservationManager = !_showReservationManager),
+        child: _buildReservationManagerPanel(filteredReservations),
+      ),
+      const SizedBox(height: 14),
+      _ExpandableInsightPanel(
+        title: 'Audit Log',
+        icon: Icons.fact_check_outlined,
+        expanded: _showAuditLog,
+        onToggle: () => setState(() => _showAuditLog = !_showAuditLog),
+        child: _buildAuditLogPanel(auditItems),
       ),
       const SizedBox(height: 14),
       _HeaderAction(
@@ -872,12 +984,12 @@ class _AdminPanelPageState extends State<AdminPanelPage> {
         onAction: _loadAll,
       ),
       const SizedBox(height: 8),
-      if (recent.isEmpty)
+      if (filteredRecent.isEmpty)
         const _GlassTile(
           title: 'Hareket yok',
           subtitle: 'Heniz islem kaydi bulunmuyor.',
         ),
-      ...recent.map(
+      ...filteredRecent.map(
         (item) => _GlassTile(
           title: item['userName']?.toString() ?? '-',
           subtitle:
@@ -928,6 +1040,444 @@ class _AdminPanelPageState extends State<AdminPanelPage> {
   int _asInt(dynamic value) {
     if (value is num) return value.toInt();
     return int.tryParse((value ?? '0').toString()) ?? 0;
+  }
+
+  DateTime? _parseDate(dynamic raw) {
+    if (raw == null) return null;
+    final text = raw.toString().trim();
+    if (text.isEmpty) return null;
+    return DateTime.tryParse(text)?.toLocal();
+  }
+
+  List<Map<String, dynamic>> _filterRecentByWindow(
+    List<Map<String, dynamic>> recent,
+  ) {
+    final threshold = DateTime.now().subtract(
+      Duration(days: _dashboardWindowDays),
+    );
+    return recent.where((item) {
+      final date = _parseDate(item['updatedAt'] ?? item['createdAt']);
+      return date != null && !date.isBefore(threshold);
+    }).toList();
+  }
+
+  List<Map<String, dynamic>> _filterReservations(
+    List<Map<String, dynamic>> recent,
+  ) {
+    final statusFilter = _reservationStatusFilter;
+    final query = _reservationSearchController.text.trim().toLowerCase();
+    return recent.where((item) {
+      final status = (item['status'] ?? '').toString().trim().toLowerCase();
+      if (statusFilter != 'all' && status != statusFilter) return false;
+      if (query.isEmpty) return true;
+      final haystack = [
+        item['id'],
+        item['userName'],
+        item['dropLocationName'],
+        item['status'],
+        item['paymentStatus'],
+      ].map((e) => (e ?? '').toString().toLowerCase()).join(' ');
+      return haystack.contains(query);
+    }).toList();
+  }
+
+  String _relativeTime(DateTime? date) {
+    if (date == null) return '-';
+    final now = DateTime.now();
+    final diff = now.difference(date);
+    if (diff.inMinutes < 1) return 'simdi';
+    if (diff.inMinutes < 60) return '${diff.inMinutes} dk once';
+    if (diff.inHours < 24) return '${diff.inHours} sa once';
+    if (diff.inDays < 30) return '${diff.inDays} gun once';
+    final months = (diff.inDays / 30).floor();
+    return '$months ay once';
+  }
+
+  List<Map<String, dynamic>> _buildAuditItems(
+    List<Map<String, dynamic>> filteredRecent,
+  ) {
+    final entries = <Map<String, dynamic>>[];
+    for (final item in filteredRecent.take(40)) {
+      entries.add({
+        'type': 'reservation',
+        'title': 'Rezervasyon guncellemesi',
+        'subtitle':
+            '${item['userName'] ?? 'Kullanici'} • ${item['status'] ?? '-'} • ${item['dropLocationName'] ?? '-'}',
+        'time': _parseDate(item['updatedAt'] ?? item['createdAt']),
+      });
+    }
+    for (final item in _campaigns) {
+      entries.add({
+        'type': 'campaign',
+        'title': 'Kampanya guncellendi',
+        'subtitle':
+            '${item['title'] ?? 'Kampanya'} • ${item['subtitle'] ?? ''}',
+        'time': _parseDate(item['updatedAt'] ?? item['createdAt']),
+      });
+    }
+    for (final item in _locations) {
+      entries.add({
+        'type': 'location',
+        'title': 'Lokasyon kaydi',
+        'subtitle': '${item['name'] ?? '-'} • ${item['address'] ?? '-'}',
+        'time': _parseDate(item['updatedAt'] ?? item['createdAt']),
+      });
+    }
+    entries.sort((a, b) {
+      final aDate = a['time'] as DateTime?;
+      final bDate = b['time'] as DateTime?;
+      if (aDate == null && bDate == null) return 0;
+      if (aDate == null) return 1;
+      if (bDate == null) return -1;
+      return bDate.compareTo(aDate);
+    });
+    return entries.take(18).toList();
+  }
+
+  Future<void> _showReservationDetailsSheet(Map<String, dynamic> item) async {
+    if (!mounted) return;
+    final date = _parseDate(item['updatedAt'] ?? item['createdAt']);
+    await showModalBottomSheet<void>(
+      context: context,
+      showDragHandle: true,
+      useSafeArea: true,
+      builder: (context) {
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Rezervasyon Detayi',
+                style: Theme.of(
+                  context,
+                ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
+              ),
+              const SizedBox(height: 12),
+              _ReservationDetailRow(
+                label: 'ID',
+                value: (item['id'] ?? '-').toString(),
+              ),
+              _ReservationDetailRow(
+                label: 'Kullanici',
+                value: (item['userName'] ?? 'Kullanici').toString(),
+              ),
+              _ReservationDetailRow(
+                label: 'Durum',
+                value: (item['status'] ?? '-').toString(),
+              ),
+              _ReservationDetailRow(
+                label: 'Odeme',
+                value: (item['paymentStatus'] ?? '-').toString(),
+              ),
+              _ReservationDetailRow(
+                label: 'Lokasyon',
+                value: (item['dropLocationName'] ?? '-').toString(),
+              ),
+              _ReservationDetailRow(
+                label: 'Tutar',
+                value: '₺${item['totalPrice'] ?? 0}',
+              ),
+              _ReservationDetailRow(
+                label: 'Guncelleme',
+                value: _relativeTime(date),
+              ),
+              const SizedBox(height: 14),
+              Text(
+                'Durum degistirme islemleri yakinda bu panelden yonetilecek.',
+                style: Theme.of(
+                  context,
+                ).textTheme.bodySmall?.copyWith(color: _adminTextSecondary),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Color _statusColor(String status) {
+    switch (status) {
+      case 'assigned':
+        return const Color(0xFF60A5FA);
+      case 'dropped':
+        return const Color(0xFF14B8A6);
+      case 'picked_up':
+        return const Color(0xFF34D399);
+      case 'cancelled':
+      case 'rejected':
+        return const Color(0xFFF87171);
+      default:
+        return const Color(0xFFFBBF24);
+    }
+  }
+
+  Widget _buildReservationManagerPanel(List<Map<String, dynamic>> items) {
+    final statusOptions = const <MapEntry<String, String>>[
+      MapEntry('all', 'Tum Durumlar'),
+      MapEntry('awaiting_drop', 'Awaiting Drop'),
+      MapEntry('assigned', 'Assigned'),
+      MapEntry('dropped', 'Dropped'),
+      MapEntry('picked_up', 'Picked Up'),
+      MapEntry('cancelled', 'Cancelled'),
+    ];
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        LayoutBuilder(
+          builder: (context, constraints) {
+            final compact = constraints.maxWidth < 560;
+            if (compact) {
+              return Column(
+                children: [
+                  TextField(
+                    controller: _reservationSearchController,
+                    onChanged: (_) => setState(() {}),
+                    decoration: InputDecoration(
+                      hintText: 'Rezervasyon ara',
+                      prefixIcon: const Icon(Icons.search_rounded),
+                      isDense: true,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  DropdownButtonFormField<String>(
+                    initialValue: _reservationStatusFilter,
+                    items: statusOptions
+                        .map(
+                          (entry) => DropdownMenuItem<String>(
+                            value: entry.key,
+                            child: Text(entry.value),
+                          ),
+                        )
+                        .toList(),
+                    onChanged: (value) => setState(
+                      () => _reservationStatusFilter = value ?? 'all',
+                    ),
+                    decoration: InputDecoration(
+                      isDense: true,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                  ),
+                ],
+              );
+            }
+            return Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: _reservationSearchController,
+                    onChanged: (_) => setState(() {}),
+                    decoration: InputDecoration(
+                      hintText: 'Rezervasyon ara',
+                      prefixIcon: const Icon(Icons.search_rounded),
+                      isDense: true,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                SizedBox(
+                  width: 200,
+                  child: DropdownButtonFormField<String>(
+                    initialValue: _reservationStatusFilter,
+                    items: statusOptions
+                        .map(
+                          (entry) => DropdownMenuItem<String>(
+                            value: entry.key,
+                            child: Text(entry.value),
+                          ),
+                        )
+                        .toList(),
+                    onChanged: (value) => setState(
+                      () => _reservationStatusFilter = value ?? 'all',
+                    ),
+                    decoration: InputDecoration(
+                      isDense: true,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            );
+          },
+        ),
+        const SizedBox(height: 10),
+        if (items.isEmpty)
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: 8),
+            child: Text('Bu filtrede rezervasyon bulunamadi.'),
+          )
+        else
+          ...items.take(8).map((item) {
+            final status = (item['status'] ?? 'awaiting_drop').toString();
+            final payment = (item['paymentStatus'] ?? 'unpaid').toString();
+            final date = _parseDate(item['updatedAt'] ?? item['createdAt']);
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: InkWell(
+                borderRadius: BorderRadius.circular(12),
+                onTap: () => _showReservationDetailsSheet(item),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 10,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.06),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: Colors.white.withValues(alpha: 0.14),
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              (item['userName'] ?? 'Kullanici').toString(),
+                              style: Theme.of(context).textTheme.labelLarge
+                                  ?.copyWith(
+                                    color: _adminTextPrimary,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              '${item['dropLocationName'] ?? '-'} • ${_relativeTime(date)}',
+                              style: Theme.of(context).textTheme.bodySmall
+                                  ?.copyWith(color: _adminTextSecondary),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 4,
+                            ),
+                            decoration: BoxDecoration(
+                              color: _statusColor(
+                                status,
+                              ).withValues(alpha: 0.2),
+                              borderRadius: BorderRadius.circular(999),
+                              border: Border.all(
+                                color: _statusColor(
+                                  status,
+                                ).withValues(alpha: 0.4),
+                              ),
+                            ),
+                            child: Text(
+                              status,
+                              style: Theme.of(context).textTheme.labelSmall
+                                  ?.copyWith(
+                                    color: _adminTextPrimary,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            '$payment • ₺${item['totalPrice'] ?? 0}',
+                            style: Theme.of(context).textTheme.labelSmall
+                                ?.copyWith(color: _adminTextSecondary),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          }),
+      ],
+    );
+  }
+
+  Widget _buildAuditLogPanel(List<Map<String, dynamic>> entries) {
+    if (entries.isEmpty) {
+      return const Text('Audit kaydi bulunamadi.');
+    }
+    IconData resolveIcon(String type) {
+      switch (type) {
+        case 'campaign':
+          return Icons.campaign_outlined;
+        case 'location':
+          return Icons.location_city_outlined;
+        default:
+          return Icons.inventory_2_outlined;
+      }
+    }
+
+    return Column(
+      children: entries.map((entry) {
+        final date = entry['time'] as DateTime?;
+        final type = (entry['type'] ?? 'reservation').toString();
+        final icon = resolveIcon(type);
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 8),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.06),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.14)),
+            ),
+            child: Row(
+              children: [
+                ThreeDIconBadge(icon: icon, accent: _adminAccent),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        (entry['title'] ?? '-').toString(),
+                        style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                          color: _adminTextPrimary,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        (entry['subtitle'] ?? '-').toString(),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: _adminTextSecondary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  _relativeTime(date),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.labelSmall?.copyWith(color: _adminTextSecondary),
+                ),
+              ],
+            ),
+          ),
+        );
+      }).toList(),
+    );
   }
 
   Future<void> _showDashboardMetricSheet({
@@ -1169,6 +1719,81 @@ class _StatChip extends StatelessWidget {
             style: Theme.of(context).textTheme.labelLarge?.copyWith(
               fontWeight: FontWeight.w800,
               color: _adminTextPrimary,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _PeriodStatPill extends StatelessWidget {
+  const _PeriodStatPill({
+    required this.label,
+    required this.value,
+    required this.icon,
+  });
+
+  final String label;
+  final String value;
+  final IconData icon;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.14)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 16, color: _adminTextSecondary),
+          const SizedBox(width: 6),
+          Text(
+            '$label: $value',
+            style: Theme.of(context).textTheme.labelMedium?.copyWith(
+              color: _adminTextPrimary,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ReservationDetailRow extends StatelessWidget {
+  const _ReservationDetailRow({required this.label, required this.value});
+
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 95,
+            child: Text(
+              label,
+              style: Theme.of(
+                context,
+              ).textTheme.bodySmall?.copyWith(color: _adminTextSecondary),
+            ),
+          ),
+          Expanded(
+            child: Text(
+              value,
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: _adminTextPrimary,
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ),
         ],
