@@ -4,15 +4,15 @@ import 'dart:ui';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 import '../../services/api_service.dart';
-import '../../widgets/app_mesh_background.dart';
 import '../../widgets/section_card.dart';
 
-const _adminTextPrimary = Color(0xFFF3F7FF);
-const _adminTextSecondary = Color(0xFFA9B7D3);
-const _adminCardBase = Color(0xFF112540);
-const _adminCardBaseSoft = Color(0xFF0D1C35);
+const _adminTextPrimary = Color(0xFF0F172A);
+const _adminTextSecondary = Color(0xFF64748B);
+const _adminCardBase = Color(0xFFFFFFFF);
+const _adminCardBaseSoft = Color(0xFFF8FAFC);
 const _adminAccent = Color(0xFF14B8A6);
 
 class AdminPanelPage extends StatefulWidget {
@@ -125,6 +125,112 @@ class _AdminPanelPageState extends State<AdminPanelPage> {
         .toList();
   }
 
+  ThemeData _adminTheme(BuildContext context) {
+    final base = ThemeData(
+      useMaterial3: true,
+      brightness: Brightness.light,
+      colorScheme: ColorScheme.fromSeed(
+        seedColor: const Color(0xFF0F766E),
+        brightness: Brightness.light,
+      ),
+    );
+    return base.copyWith(
+      scaffoldBackgroundColor: const Color(0xFFF8FAFC),
+      appBarTheme: base.appBarTheme.copyWith(
+        backgroundColor: Colors.transparent,
+        surfaceTintColor: Colors.transparent,
+        foregroundColor: _adminTextPrimary,
+        elevation: 0,
+        scrolledUnderElevation: 0,
+      ),
+      snackBarTheme: const SnackBarThemeData(
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
+  }
+
+  String _locationIdFromLatLng(double lat, double lng) {
+    final latPart = lat.abs().toStringAsFixed(4).replaceAll('.', '');
+    final lngPart = lng.abs().toStringAsFixed(4).replaceAll('.', '');
+    return 'loc-${lat >= 0 ? 'n' : 's'}$latPart-${lng >= 0 ? 'e' : 'w'}$lngPart';
+  }
+
+  Future<LatLng?> _pickLocationFromMap({
+    required double initialLat,
+    required double initialLng,
+  }) async {
+    final normalizedLat = initialLat == 0 ? 41.0082 : initialLat;
+    final normalizedLng = initialLng == 0 ? 28.9784 : initialLng;
+    final start = LatLng(normalizedLat, normalizedLng);
+    return showModalBottomSheet<LatLng>(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      builder: (context) {
+        LatLng selected = start;
+        return StatefulBuilder(
+          builder: (context, setStateModal) => SizedBox(
+            height: MediaQuery.of(context).size.height * 0.82,
+            child: Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
+                  child: Row(
+                    children: [
+                      IconButton(
+                        icon: const Icon(Icons.close_rounded),
+                        onPressed: () => Navigator.of(context).pop(),
+                      ),
+                      const Expanded(
+                        child: Text(
+                          'Haritadan lokasyon sec',
+                          style: TextStyle(fontWeight: FontWeight.w700),
+                        ),
+                      ),
+                      FilledButton(
+                        onPressed: () => Navigator.of(context).pop(selected),
+                        child: const Text('Sec'),
+                      ),
+                    ],
+                  ),
+                ),
+                Expanded(
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(16),
+                    child: GoogleMap(
+                      initialCameraPosition: CameraPosition(
+                        target: start,
+                        zoom: 13.5,
+                      ),
+                      myLocationButtonEnabled: false,
+                      zoomControlsEnabled: false,
+                      onTap: (latLng) => setStateModal(() => selected = latLng),
+                      markers: {
+                        Marker(
+                          markerId: const MarkerId('selected'),
+                          position: selected,
+                        ),
+                      },
+                    ),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(14, 10, 14, 12),
+                  child: Text(
+                    'Secilen: ${selected.latitude.toStringAsFixed(6)}, ${selected.longitude.toStringAsFixed(6)}',
+                    style: Theme.of(
+                      context,
+                    ).textTheme.bodySmall?.copyWith(color: _adminTextSecondary),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   Future<void> _loadAdminFeeds() async {
     final reservationsResponse = await ApiService.getAdminReservations(
       status: _reservationStatusFilter == 'all'
@@ -174,10 +280,16 @@ class _AdminPanelPageState extends State<AdminPanelPage> {
       text: item?['_id']?.toString() ?? item?['id']?.toString() ?? '',
     );
     final totalSlotsController = TextEditingController(
-      text: (item?['totalSlots'] ?? 0).toString(),
+      text: (item?['totalSlots'] ?? 50).toString(),
     );
     final availableSlotsController = TextEditingController(
-      text: (item?['availableSlots'] ?? 0).toString(),
+      text: (item?['availableSlots'] ?? 50).toString(),
+    );
+    final maxCapacityController = TextEditingController(
+      text: (item?['maxCapacity'] ?? item?['totalSlots'] ?? 50).toString(),
+    );
+    final timezoneController = TextEditingController(
+      text: item?['timezone']?.toString() ?? 'Europe/Istanbul',
     );
     final latController = TextEditingController(
       text: (item?['latitude'] ?? 0).toString(),
@@ -214,6 +326,64 @@ class _AdminPanelPageState extends State<AdminPanelPage> {
                     ),
                     const SizedBox(height: 12),
                     _Field(label: 'ID', controller: idController),
+                    const SizedBox(height: 6),
+                    OutlinedButton.icon(
+                      onPressed: () async {
+                        final selected = await _pickLocationFromMap(
+                          initialLat:
+                              double.tryParse(latController.text.trim()) ?? 0,
+                          initialLng:
+                              double.tryParse(lngController.text.trim()) ?? 0,
+                        );
+                        if (selected == null) return;
+                        setSheetState(() {
+                          latController.text = selected.latitude
+                              .toStringAsFixed(6);
+                          lngController.text = selected.longitude
+                              .toStringAsFixed(6);
+                          if (idController.text.trim().isEmpty) {
+                            idController.text = _locationIdFromLatLng(
+                              selected.latitude,
+                              selected.longitude,
+                            );
+                          }
+                          if (nameController.text.trim().isEmpty) {
+                            nameController.text =
+                                'Lokasyon ${selected.latitude.toStringAsFixed(3)}, ${selected.longitude.toStringAsFixed(3)}';
+                          }
+                          if (addressController.text.trim().isEmpty) {
+                            addressController.text = 'Haritadan secilen konum';
+                          }
+                          final total =
+                              int.tryParse(totalSlotsController.text.trim()) ??
+                              0;
+                          if (total <= 0) {
+                            totalSlotsController.text = '50';
+                          }
+                          final available =
+                              int.tryParse(
+                                availableSlotsController.text.trim(),
+                              ) ??
+                              0;
+                          if (available <= 0) {
+                            availableSlotsController.text =
+                                totalSlotsController.text;
+                          }
+                          final maxCap =
+                              int.tryParse(maxCapacityController.text.trim()) ??
+                              0;
+                          if (maxCap <= 0) {
+                            maxCapacityController.text =
+                                totalSlotsController.text;
+                          }
+                          if (timezoneController.text.trim().isEmpty) {
+                            timezoneController.text = 'Europe/Istanbul';
+                          }
+                        });
+                      },
+                      icon: const Icon(Icons.map_outlined),
+                      label: const Text('Haritadan sec ve otomatik doldur'),
+                    ),
                     _Field(label: 'Lokasyon adi', controller: nameController),
                     _Field(label: 'Adres', controller: addressController),
                     Row(
@@ -258,6 +428,24 @@ class _AdminPanelPageState extends State<AdminPanelPage> {
                         ),
                       ],
                     ),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _Field(
+                            label: 'Max Kapasite',
+                            controller: maxCapacityController,
+                            keyboardType: TextInputType.number,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: _Field(
+                            label: 'Timezone',
+                            controller: timezoneController,
+                          ),
+                        ),
+                      ],
+                    ),
                     SwitchListTile.adaptive(
                       contentPadding: EdgeInsets.zero,
                       value: isActive,
@@ -289,8 +477,12 @@ class _AdminPanelPageState extends State<AdminPanelPage> {
       'address': addressController.text.trim(),
       'totalSlots': int.tryParse(totalSlotsController.text.trim()) ?? 0,
       'availableSlots': int.tryParse(availableSlotsController.text.trim()) ?? 0,
+      'maxCapacity': int.tryParse(maxCapacityController.text.trim()) ?? 0,
       'latitude': double.tryParse(latController.text.trim()) ?? 0,
       'longitude': double.tryParse(lngController.text.trim()) ?? 0,
+      'timezone': timezoneController.text.trim().isEmpty
+          ? 'Europe/Istanbul'
+          : timezoneController.text.trim(),
       'isActive': isActive,
     };
     Map<String, dynamic> response;
@@ -539,134 +731,143 @@ class _AdminPanelPageState extends State<AdminPanelPage> {
   @override
   Widget build(BuildContext context) {
     final recent = _asMapList(_overview['recentActivity']);
-    return Scaffold(
-      backgroundColor: Colors.transparent,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        surfaceTintColor: Colors.transparent,
-        elevation: 0,
-        scrolledUnderElevation: 0,
-        foregroundColor: _adminTextPrimary,
-        title: const Text(
-          'Yonetim Paneli',
-          style: TextStyle(fontWeight: FontWeight.w800, letterSpacing: 0.2),
+    return Theme(
+      data: _adminTheme(context),
+      child: Scaffold(
+        backgroundColor: const Color(0xFFF8FAFC),
+        appBar: AppBar(
+          foregroundColor: _adminTextPrimary,
+          title: const Text(
+            'Yonetim Paneli',
+            style: TextStyle(fontWeight: FontWeight.w800, letterSpacing: 0.2),
+          ),
+          actions: [
+            IconButton(
+              onPressed: _loadAll,
+              icon: const Icon(Icons.refresh_rounded, color: _adminTextPrimary),
+            ),
+            IconButton(
+              onPressed: _confirmLogout,
+              icon: const Icon(Icons.logout_rounded, color: _adminTextPrimary),
+              tooltip: 'Cikis yap',
+            ),
+          ],
         ),
-        actions: [
-          IconButton(
-            onPressed: _loadAll,
-            icon: const Icon(Icons.refresh_rounded, color: _adminTextPrimary),
-          ),
-          IconButton(
-            onPressed: _confirmLogout,
-            icon: const Icon(Icons.logout_rounded, color: _adminTextPrimary),
-            tooltip: 'Cikis yap',
-          ),
-        ],
-      ),
-      body: Stack(
-        children: [
-          const AppMeshBackground(),
-          if (_loading)
-            const Center(child: CircularProgressIndicator())
-          else if (_error != null)
-            Center(
-              child: Padding(
-                padding: const EdgeInsets.all(24),
-                child: Text(_error!, textAlign: TextAlign.center),
-              ),
-            )
-          else
-            RefreshIndicator(
-              onRefresh: _loadAll,
-              child: CustomScrollView(
-                physics: const AlwaysScrollableScrollPhysics(),
-                slivers: [
-                  SliverToBoxAdapter(
-                    child: Padding(
-                      padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
-                      child: _GlassHero(overview: _overview),
-                    ),
-                  ),
-                  SliverToBoxAdapter(
-                    child: Padding(
-                      padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
-                      child: CupertinoSlidingSegmentedControl<int>(
-                        backgroundColor: Colors.white.withValues(alpha: 0.11),
-                        thumbColor: Colors.white.withValues(alpha: 0.22),
-                        groupValue: _tab,
-                        children: const {
-                          0: Padding(
-                            padding: EdgeInsets.symmetric(
-                              vertical: 8,
-                              horizontal: 12,
-                            ),
-                            child: Text(
-                              'Dashboard',
-                              style: TextStyle(
-                                color: _adminTextPrimary,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ),
-                          1: Padding(
-                            padding: EdgeInsets.symmetric(
-                              vertical: 8,
-                              horizontal: 12,
-                            ),
-                            child: Text(
-                              'Lokasyon',
-                              style: TextStyle(
-                                color: _adminTextPrimary,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ),
-                          2: Padding(
-                            padding: EdgeInsets.symmetric(
-                              vertical: 8,
-                              horizontal: 12,
-                            ),
-                            child: Text(
-                              'Kampanya',
-                              style: TextStyle(
-                                color: _adminTextPrimary,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ),
-                          3: Padding(
-                            padding: EdgeInsets.symmetric(
-                              vertical: 8,
-                              horizontal: 12,
-                            ),
-                            child: Text(
-                              'Kullanicilar',
-                              style: TextStyle(
-                                color: _adminTextPrimary,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ),
-                        },
-                        onValueChanged: (value) {
-                          if (value == null) return;
-                          setState(() => _tab = value);
-                        },
-                      ),
-                    ),
-                  ),
-                  SliverPadding(
-                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
-                    sliver: SliverList(
-                      delegate: SliverChildListDelegate(
-                        _buildTabContent(context, recent),
-                      ),
-                    ),
-                  ),
-                ],
+        body: Stack(
+          children: [
+            Container(
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [Color(0xFFF8FBFF), Color(0xFFF1F5F9)],
+                ),
               ),
             ),
-        ],
+            if (_loading)
+              const Center(child: CircularProgressIndicator())
+            else if (_error != null)
+              Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(24),
+                  child: Text(_error!, textAlign: TextAlign.center),
+                ),
+              )
+            else
+              RefreshIndicator(
+                onRefresh: _loadAll,
+                child: CustomScrollView(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  slivers: [
+                    SliverToBoxAdapter(
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+                        child: _GlassHero(overview: _overview),
+                      ),
+                    ),
+                    SliverToBoxAdapter(
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+                        child: CupertinoSlidingSegmentedControl<int>(
+                          backgroundColor: const Color(
+                            0xFFE2E8F0,
+                          ).withValues(alpha: 0.75),
+                          thumbColor: Colors.white,
+                          groupValue: _tab,
+                          children: const {
+                            0: Padding(
+                              padding: EdgeInsets.symmetric(
+                                vertical: 8,
+                                horizontal: 12,
+                              ),
+                              child: Text(
+                                'Dashboard',
+                                style: TextStyle(
+                                  color: _adminTextPrimary,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                            1: Padding(
+                              padding: EdgeInsets.symmetric(
+                                vertical: 8,
+                                horizontal: 12,
+                              ),
+                              child: Text(
+                                'Lokasyon',
+                                style: TextStyle(
+                                  color: _adminTextPrimary,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                            2: Padding(
+                              padding: EdgeInsets.symmetric(
+                                vertical: 8,
+                                horizontal: 12,
+                              ),
+                              child: Text(
+                                'Kampanya',
+                                style: TextStyle(
+                                  color: _adminTextPrimary,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                            3: Padding(
+                              padding: EdgeInsets.symmetric(
+                                vertical: 8,
+                                horizontal: 12,
+                              ),
+                              child: Text(
+                                'Kullanicilar',
+                                style: TextStyle(
+                                  color: _adminTextPrimary,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                          },
+                          onValueChanged: (value) {
+                            if (value == null) return;
+                            setState(() => _tab = value);
+                          },
+                        ),
+                      ),
+                    ),
+                    SliverPadding(
+                      padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+                      sliver: SliverList(
+                        delegate: SliverChildListDelegate(
+                          _buildTabContent(context, recent),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+          ],
+        ),
       ),
     );
   }
@@ -1559,36 +1760,34 @@ class _AdminPanelPageState extends State<AdminPanelPage> {
                   ],
                 ),
                 const SizedBox(height: 8),
-                Row(
-                  children: [
-                    Expanded(
-                      child: DropdownButtonFormField<String>(
-                        initialValue: _bulkReservationStatus,
-                        items: bulkStatusOptions
-                            .map(
-                              (entry) => DropdownMenuItem<String>(
-                                value: entry.key,
-                                child: Text(entry.value),
-                              ),
-                            )
-                            .toList(),
-                        onChanged: _bulkReservationUpdating
-                            ? null
-                            : (value) {
-                                if (value == null) return;
-                                setState(() => _bulkReservationStatus = value);
-                              },
-                        decoration: InputDecoration(
-                          isDense: true,
-                          labelText: 'Toplu durum',
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
+                LayoutBuilder(
+                  builder: (context, constraints) {
+                    final compact = constraints.maxWidth < 520;
+                    final statusField = DropdownButtonFormField<String>(
+                      initialValue: _bulkReservationStatus,
+                      items: bulkStatusOptions
+                          .map(
+                            (entry) => DropdownMenuItem<String>(
+                              value: entry.key,
+                              child: Text(entry.value),
+                            ),
+                          )
+                          .toList(),
+                      onChanged: _bulkReservationUpdating
+                          ? null
+                          : (value) {
+                              if (value == null) return;
+                              setState(() => _bulkReservationStatus = value);
+                            },
+                      decoration: InputDecoration(
+                        isDense: true,
+                        labelText: 'Toplu durum',
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
                         ),
                       ),
-                    ),
-                    const SizedBox(width: 8),
-                    FilledButton(
+                    );
+                    final actionButton = FilledButton(
                       onPressed:
                           _selectedReservationIds.isEmpty ||
                               _bulkReservationUpdating
@@ -1599,8 +1798,24 @@ class _AdminPanelPageState extends State<AdminPanelPage> {
                             ? 'Calisiyor...'
                             : 'Toplu uygula',
                       ),
-                    ),
-                  ],
+                    );
+                    if (compact) {
+                      return Column(
+                        children: [
+                          statusField,
+                          const SizedBox(height: 8),
+                          SizedBox(width: double.infinity, child: actionButton),
+                        ],
+                      );
+                    }
+                    return Row(
+                      children: [
+                        Expanded(child: statusField),
+                        const SizedBox(width: 8),
+                        actionButton,
+                      ],
+                    );
+                  },
                 ),
               ],
             ),
@@ -1942,17 +2157,17 @@ class _GlassHero extends StatelessWidget {
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
               colors: [
-                _adminCardBase.withValues(alpha: 0.9),
-                _adminCardBaseSoft.withValues(alpha: 0.84),
-                const Color(0xFF143456).withValues(alpha: 0.82),
+                _adminCardBase.withValues(alpha: 0.96),
+                _adminCardBaseSoft.withValues(alpha: 0.94),
+                const Color(0xFFEFF6FF).withValues(alpha: 0.9),
               ],
             ),
-            border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
+            border: Border.all(color: const Color(0xFFCBD5E1)),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha: 0.22),
-                blurRadius: 22,
-                offset: const Offset(0, 12),
+                color: Colors.black.withValues(alpha: 0.05),
+                blurRadius: 18,
+                offset: const Offset(0, 8),
               ),
             ],
           ),
