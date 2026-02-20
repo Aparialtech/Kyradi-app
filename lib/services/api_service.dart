@@ -16,12 +16,18 @@ const String kApiBaseUrl = 'https://kyradi-app-production.up.railway.app';
 class ApiService {
   ApiService._();
 
-  static const String _envBase =
-      String.fromEnvironment('API_BASE_URL', defaultValue: '');
-  static const String _envPort =
-      String.fromEnvironment('API_PORT', defaultValue: '8080');
-  static const bool _assumeIosSimulator =
-      bool.fromEnvironment('IOS_SIMULATOR', defaultValue: false);
+  static const String _envBase = String.fromEnvironment(
+    'API_BASE_URL',
+    defaultValue: '',
+  );
+  static const String _envPort = String.fromEnvironment(
+    'API_PORT',
+    defaultValue: '8080',
+  );
+  static const bool _assumeIosSimulator = bool.fromEnvironment(
+    'IOS_SIMULATOR',
+    defaultValue: false,
+  );
   static const String _defaultBaseUrl =
       'https://kyradi-app-production.up.railway.app';
 
@@ -29,8 +35,9 @@ class ApiService {
   static bool _initialized = false;
   static String? _customBaseUrl;
   static String? _authToken;
-  static const FlutterSecureStorage _secureStorage =
-      FlutterSecureStorage(aOptions: AndroidOptions(encryptedSharedPreferences: true));
+  static const FlutterSecureStorage _secureStorage = FlutterSecureStorage(
+    aOptions: AndroidOptions(encryptedSharedPreferences: true),
+  );
 
   static Future<void> ensureInitialized() async {
     if (_initialized) return;
@@ -150,18 +157,26 @@ class ApiService {
     if (uri == null) {
       return _missingBaseUrlError();
     }
-    appLog('http', 'POST $uri  body=${jsonEncode(body)}',
-        level: AppLogLevel.debug);
+    appLog(
+      'http',
+      'POST $uri  body=${jsonEncode(body)}',
+      level: AppLogLevel.debug,
+    );
     try {
       final res = await http
           .post(uri, headers: _jsonHeaders(), body: jsonEncode(body))
           .timeout(timeout);
       return _handleResponse(res, uri);
     } on TimeoutException {
-      return {'ok': false, 'error': 'İstek zaman aşımına uğradı', 'statusCode': 408};
+      return {
+        'ok': false,
+        'error': 'İstek zaman aşımına uğradı',
+        'statusCode': 408,
+      };
     } catch (e) {
       final message = e.toString();
-      final hint = message.contains('Failed host lookup') ||
+      final hint =
+          message.contains('Failed host lookup') ||
               message.contains('Connection refused') ||
               message.contains('Failed to fetch')
           ? 'Sunucuya bağlanılamadı. Lütfen internetinizi ve API ayarlarını kontrol edin.'
@@ -185,18 +200,26 @@ class ApiService {
     if (uri == null) {
       return _missingBaseUrlError();
     }
-    appLog('http', 'PUT $uri  body=${jsonEncode(body)}',
-        level: AppLogLevel.debug);
+    appLog(
+      'http',
+      'PUT $uri  body=${jsonEncode(body)}',
+      level: AppLogLevel.debug,
+    );
     try {
       final res = await http
           .put(uri, headers: _jsonHeaders(), body: jsonEncode(body))
           .timeout(timeout);
       return _handleResponse(res, uri);
     } on TimeoutException {
-      return {'ok': false, 'error': 'İstek zaman aşımına uğradı', 'statusCode': 408};
+      return {
+        'ok': false,
+        'error': 'İstek zaman aşımına uğradı',
+        'statusCode': 408,
+      };
     } catch (e) {
       final message = e.toString();
-      final hint = message.contains('Failed host lookup') ||
+      final hint =
+          message.contains('Failed host lookup') ||
               message.contains('Connection refused') ||
               message.contains('Failed to fetch')
           ? 'Sunucuya bağlanılamadı. Lütfen internetinizi ve API ayarlarını kontrol edin.'
@@ -231,10 +254,15 @@ class ApiService {
       final res = await http.get(uri, headers: _jsonHeaders()).timeout(timeout);
       return _handleResponse(res, uri);
     } on TimeoutException {
-      return {'ok': false, 'error': 'İstek zaman aşımına uğradı', 'statusCode': 408};
+      return {
+        'ok': false,
+        'error': 'İstek zaman aşımına uğradı',
+        'statusCode': 408,
+      };
     } catch (e) {
       final message = e.toString();
-      final hint = message.contains('Failed host lookup') ||
+      final hint =
+          message.contains('Failed host lookup') ||
               message.contains('Connection refused') ||
               message.contains('Failed to fetch')
           ? 'Sunucuya bağlanılamadı. Lütfen internetinizi ve API ayarlarını kontrol edin.'
@@ -260,7 +288,9 @@ class ApiService {
     if (res.body.isNotEmpty) {
       try {
         decoded = jsonDecode(res.body);
-      } catch (_) {/* yoksay */}
+      } catch (_) {
+        /* yoksay */
+      }
     }
 
     Map<String, dynamic> map;
@@ -283,7 +313,8 @@ class ApiService {
 
     // hata durumları
     map['ok'] = false;
-    if (decoded is Map && (decoded.containsKey('error') || decoded.containsKey('message'))) {
+    if (decoded is Map &&
+        (decoded.containsKey('error') || decoded.containsKey('message'))) {
       if (map['error'] == null && map['message'] != null) {
         map['error'] = map['message'];
       }
@@ -309,7 +340,10 @@ class ApiService {
     return result;
   }
 
-  static Future<Map<String, dynamic>> login(String email, String password) async {
+  static Future<Map<String, dynamic>> login(
+    String email,
+    String password,
+  ) async {
     if (_usingMockBackend) {
       return MockServer.login(email, password);
     }
@@ -329,7 +363,9 @@ class ApiService {
     });
     result['statusCode'] ??= result['_httpStatus'];
     if (result['ok'] == true) {
-      await _storeAuthToken((result['accessToken'] ?? result['token'])?.toString());
+      await _storeAuthToken(
+        (result['accessToken'] ?? result['token'])?.toString(),
+      );
       if (result['user'] is Map<String, dynamic>) {
         result['profile'] = _normalizeProfile(
           Map<String, dynamic>.from(result['user'] as Map),
@@ -354,7 +390,8 @@ class ApiService {
     final result = await _post('/auth/social', {
       'provider': provider,
       if (idToken != null && idToken.isNotEmpty) 'idToken': idToken,
-      if (accessToken != null && accessToken.isNotEmpty) 'accessToken': accessToken,
+      if (accessToken != null && accessToken.isNotEmpty)
+        'accessToken': accessToken,
       if (authorizationCode != null) 'authorizationCode': authorizationCode,
       if (platform != null) 'platform': platform,
       if (deviceId != null) 'deviceId': deviceId,
@@ -362,7 +399,9 @@ class ApiService {
     });
     result['statusCode'] ??= result['_httpStatus'];
     if (result['ok'] == true) {
-      await _storeAuthToken((result['accessToken'] ?? result['token'])?.toString());
+      await _storeAuthToken(
+        (result['accessToken'] ?? result['token'])?.toString(),
+      );
       if (result['user'] is Map<String, dynamic>) {
         result['profile'] = _normalizeProfile(
           Map<String, dynamic>.from(result['user'] as Map),
@@ -387,7 +426,9 @@ class ApiService {
     return _post('/auth/register', payload).then((result) async {
       result['statusCode'] ??= result['_httpStatus'];
       if (result['ok'] == true) {
-        await _storeAuthToken((result['accessToken'] ?? result['token'])?.toString());
+        await _storeAuthToken(
+          (result['accessToken'] ?? result['token'])?.toString(),
+        );
         if (result['user'] is Map<String, dynamic>) {
           result['profile'] = _normalizeProfile(
             Map<String, dynamic>.from(result['user'] as Map),
@@ -400,10 +441,7 @@ class ApiService {
 
   static Future<Map<String, dynamic>> verifyCode(String email, String code) {
     if (_usingMockBackend) return MockServer.verifyCode(email, code);
-    return _post('/auth/verify', {
-      'email': email,
-      'code': code,
-    }).then((result) {
+    return _post('/auth/verify', {'email': email, 'code': code}).then((result) {
       result['statusCode'] ??= result['_httpStatus'];
       return result;
     });
@@ -411,9 +449,7 @@ class ApiService {
 
   static Future<Map<String, dynamic>> resendVerify(String email) {
     if (_usingMockBackend) return MockServer.resendCode(email);
-    return _post('/auth/resend-verify', {
-      'email': email,
-    }).then((result) {
+    return _post('/auth/resend-verify', {'email': email}).then((result) {
       result['statusCode'] ??= result['_httpStatus'];
       return result;
     });
@@ -466,12 +502,10 @@ class ApiService {
     final response = await _get('/users/$userId');
     response['statusCode'] ??= response['_httpStatus'];
     if (response['ok'] == true) {
-      final raw = response['profile'] ??
-          response['data'] ??
-          _stripMeta(response);
+      final raw =
+          response['profile'] ?? response['data'] ?? _stripMeta(response);
       if (raw is Map<String, dynamic>) {
-        response['profile'] =
-            _normalizeProfile(Map<String, dynamic>.from(raw));
+        response['profile'] = _normalizeProfile(Map<String, dynamic>.from(raw));
       }
     }
     return response;
@@ -482,10 +516,10 @@ class ApiService {
     final response = await _get('/me');
     response['statusCode'] ??= response['_httpStatus'];
     if (response['ok'] == true) {
-      final raw = response['profile'] ?? response['data'] ?? _stripMeta(response);
+      final raw =
+          response['profile'] ?? response['data'] ?? _stripMeta(response);
       if (raw is Map<String, dynamic>) {
-        response['profile'] =
-            _normalizeProfile(Map<String, dynamic>.from(raw));
+        response['profile'] = _normalizeProfile(Map<String, dynamic>.from(raw));
       }
     }
     return response;
@@ -498,10 +532,10 @@ class ApiService {
     final response = await _put('/me/profile', body);
     response['statusCode'] ??= response['_httpStatus'];
     if (response['ok'] == true) {
-      final raw = response['profile'] ?? response['data'] ?? _stripMeta(response);
+      final raw =
+          response['profile'] ?? response['data'] ?? _stripMeta(response);
       if (raw is Map<String, dynamic>) {
-        response['profile'] =
-            _normalizeProfile(Map<String, dynamic>.from(raw));
+        response['profile'] = _normalizeProfile(Map<String, dynamic>.from(raw));
       }
     }
     return response;
@@ -607,7 +641,12 @@ class ApiService {
 
   static Future<Map<String, dynamic>> kycResendOtp() async {
     if (_usingMockBackend) {
-      return {'ok': true, 'status': 'pending_otp', 'delivered': true, 'otpTtlMin': 10};
+      return {
+        'ok': true,
+        'status': 'pending_otp',
+        'delivered': true,
+        'otpTtlMin': 10,
+      };
     }
     final response = await _post('/me/verification/identity/resend-otp', {});
     response['statusCode'] ??= response['_httpStatus'];
@@ -621,6 +660,131 @@ class ApiService {
     if (result['locations'] == null && result['data'] is List) {
       result['locations'] = result['data'];
     }
+    return result;
+  }
+
+  static Future<Map<String, dynamic>> getCampaignsPublic() async {
+    if (_usingMockBackend) {
+      return {'ok': true, 'campaigns': const <dynamic>[]};
+    }
+    final result = await _get('/campaigns');
+    result['statusCode'] ??= result['_httpStatus'];
+    if (result['campaigns'] == null && result['data'] is List) {
+      result['campaigns'] = result['data'];
+    }
+    return result;
+  }
+
+  static Future<Map<String, dynamic>> getAdminOverview() async {
+    if (_usingMockBackend) {
+      return {
+        'ok': true,
+        'users': {'total': 0, 'last7d': 0},
+        'locations': {'total': 0, 'active': 0},
+        'campaigns': {'total': 0, 'active': 0},
+        'luggage': {'total': 0, 'paymentPending': 0, 'statusCounts': {}},
+        'recentActivity': const <dynamic>[],
+      };
+    }
+    final result = await _get('/admin/overview');
+    result['statusCode'] ??= result['_httpStatus'];
+    return result;
+  }
+
+  static Future<Map<String, dynamic>> getAdminLocations() async {
+    if (_usingMockBackend) {
+      return {'ok': true, 'locations': const <dynamic>[]};
+    }
+    final result = await _get('/admin/locations');
+    result['statusCode'] ??= result['_httpStatus'];
+    if (result['locations'] == null && result['data'] is List) {
+      result['locations'] = result['data'];
+    }
+    return result;
+  }
+
+  static Future<Map<String, dynamic>> createAdminLocation(
+    Map<String, dynamic> payload,
+  ) async {
+    if (_usingMockBackend) {
+      return {'ok': true, ...payload};
+    }
+    final result = await _post('/admin/locations', payload);
+    result['statusCode'] ??= result['_httpStatus'];
+    return result;
+  }
+
+  static Future<Map<String, dynamic>> updateAdminLocation(
+    String id,
+    Map<String, dynamic> payload,
+  ) async {
+    if (_usingMockBackend) {
+      return {'ok': true, 'id': id, ...payload};
+    }
+    final result = await _put('/admin/locations/$id', payload);
+    result['statusCode'] ??= result['_httpStatus'];
+    return result;
+  }
+
+  static Future<Map<String, dynamic>> getAdminCampaigns() async {
+    if (_usingMockBackend) {
+      return {'ok': true, 'campaigns': const <dynamic>[]};
+    }
+    final result = await _get('/admin/campaigns');
+    result['statusCode'] ??= result['_httpStatus'];
+    if (result['campaigns'] == null && result['data'] is List) {
+      result['campaigns'] = result['data'];
+    }
+    return result;
+  }
+
+  static Future<Map<String, dynamic>> createAdminCampaign(
+    Map<String, dynamic> payload,
+  ) async {
+    if (_usingMockBackend) {
+      return {'ok': true, ...payload};
+    }
+    final result = await _post('/admin/campaigns', payload);
+    result['statusCode'] ??= result['_httpStatus'];
+    return result;
+  }
+
+  static Future<Map<String, dynamic>> updateAdminCampaign(
+    String id,
+    Map<String, dynamic> payload,
+  ) async {
+    if (_usingMockBackend) {
+      return {'ok': true, 'id': id, ...payload};
+    }
+    final result = await _put('/admin/campaigns/$id', payload);
+    result['statusCode'] ??= result['_httpStatus'];
+    return result;
+  }
+
+  static Future<Map<String, dynamic>> getAdminUsers({String? q}) async {
+    if (_usingMockBackend) {
+      return {'ok': true, 'users': const <dynamic>[]};
+    }
+    final query = (q ?? '').trim();
+    final path = query.isEmpty
+        ? '/admin/users'
+        : '/admin/users?q=${Uri.encodeQueryComponent(query)}';
+    final result = await _get(path);
+    result['statusCode'] ??= result['_httpStatus'];
+    if (result['users'] == null && result['data'] is List) {
+      result['users'] = result['data'];
+    }
+    return result;
+  }
+
+  static Future<Map<String, dynamic>> getAdminUserActivities(
+    String userId,
+  ) async {
+    if (_usingMockBackend) {
+      return {'ok': true, 'user': null, 'activities': const <dynamic>[]};
+    }
+    final result = await _get('/admin/users/$userId/activities');
+    result['statusCode'] ??= result['_httpStatus'];
     return result;
   }
 
@@ -665,12 +829,14 @@ class ApiService {
     if (base == null) {
       throw Exception('API base URL missing');
     }
-    final uri = base.replace(queryParameters: {
-      'sizeClass': sizeClass,
-      'startAt': startAt.toUtc().toIso8601String(),
-      'endAt': endAt.toUtc().toIso8601String(),
-      if (protectionLevel != null) 'protectionLevel': protectionLevel,
-    });
+    final uri = base.replace(
+      queryParameters: {
+        'sizeClass': sizeClass,
+        'startAt': startAt.toUtc().toIso8601String(),
+        'endAt': endAt.toUtc().toIso8601String(),
+        if (protectionLevel != null) 'protectionLevel': protectionLevel,
+      },
+    );
     final res = await http
         .get(uri, headers: _jsonHeaders())
         .timeout(const Duration(seconds: 10));
@@ -701,8 +867,11 @@ class ApiService {
     if (_usingMockBackend) return MockServer.updateProfile(userId, body);
     final payload = Map<String, dynamic>.from(body)
       ..removeWhere((key, value) => value == null);
-    appLog('http', 'PUT /users/$userId body=${jsonEncode(payload)}',
-        level: AppLogLevel.debug);
+    appLog(
+      'http',
+      'PUT /users/$userId body=${jsonEncode(payload)}',
+      level: AppLogLevel.debug,
+    );
     final result = await _put('/users/$userId', payload);
     result['statusCode'] ??= result['_httpStatus'];
     return result;
@@ -733,22 +902,18 @@ class ApiService {
     final body = Map<String, dynamic>.from(payload)
       ..removeWhere((key, _) => !allowedKeys.contains(key));
     if (body['scheduledDropTime'] is DateTime) {
-      body['scheduledDropTime'] =
-          (body['scheduledDropTime'] as DateTime).toIso8601String();
+      body['scheduledDropTime'] = (body['scheduledDropTime'] as DateTime)
+          .toIso8601String();
     }
     if (body['scheduledPickupTime'] is DateTime) {
-      body['scheduledPickupTime'] =
-          (body['scheduledPickupTime'] as DateTime).toIso8601String();
+      body['scheduledPickupTime'] = (body['scheduledPickupTime'] as DateTime)
+          .toIso8601String();
     }
     final path = '/users/$userId/luggages';
     final uri = _buildUri(path);
     appLog(
       'pin_flow',
-      'sending request: ${{
-        'method': 'POST',
-        'url': uri?.toString(),
-        'body': body,
-      }}',
+      'sending request: ${{'method': 'POST', 'url': uri?.toString(), 'body': body}}',
       level: AppLogLevel.debug,
     );
     Map<String, dynamic> result;
@@ -756,10 +921,7 @@ class ApiService {
       result = await _post(path, body);
       appLog(
         'pin_flow',
-        'response: ${{
-          'status': result['statusCode'],
-          'body': result,
-        }}',
+        'response: ${{'status': result['statusCode'], 'body': result}}',
         level: AppLogLevel.debug,
       );
     } catch (e) {
@@ -829,10 +991,7 @@ class ApiService {
         bookingId: bookingId,
       );
     }
-    final body = <String, dynamic>{
-      'amount': amount,
-      'currency': currency,
-    };
+    final body = <String, dynamic>{'amount': amount, 'currency': currency};
     if (protectionLevel != null) {
       body['protectionLevel'] = protectionLevel;
     }
@@ -844,7 +1003,9 @@ class ApiService {
     return result;
   }
 
-  static Future<Map<String, dynamic>> getPaymentStatus(String reservationId) async {
+  static Future<Map<String, dynamic>> getPaymentStatus(
+    String reservationId,
+  ) async {
     if (_usingMockBackend) {
       return MockServer.getPaymentStatus(reservationId);
     }
@@ -881,15 +1042,20 @@ class ApiService {
     final result = await _post('/pricing/estimate', body);
     result['statusCode'] ??= result['_httpStatus'];
     if (result['ok'] == true && result['total'] is num) {
-      final durationMinutes = endAt.difference(startAt).inMinutes.clamp(60, 60 * 24 * 30);
+      final durationMinutes = endAt
+          .difference(startAt)
+          .inMinutes
+          .clamp(60, 60 * 24 * 30);
       final durationHours = (durationMinutes / 60).ceil();
       final durationDays = (durationMinutes / (60 * 24)).ceil();
       final breakdown = (result['breakdown'] is Map)
           ? Map<String, dynamic>.from(result['breakdown'] as Map)
           : const <String, dynamic>{};
       final basePrice = (breakdown['basePrice'] as num?)?.toInt() ?? 0;
-      final premiumProtectionFee = (breakdown['premiumProtectionFee'] as num?)?.toInt() ?? 0;
-      final hotelCommissionFee = (breakdown['hotelCommissionFee'] as num?)?.toInt() ?? 0;
+      final premiumProtectionFee =
+          (breakdown['premiumProtectionFee'] as num?)?.toInt() ?? 0;
+      final hotelCommissionFee =
+          (breakdown['hotelCommissionFee'] as num?)?.toInt() ?? 0;
       result['pricing'] = {
         'durationMinutes': durationMinutes,
         'durationHours': durationHours,
@@ -1041,17 +1207,14 @@ class ApiService {
     final payload = Map<String, dynamic>.from(data)
       ..removeWhere((key, value) => value == null);
     if (payload['scheduledDropTime'] is DateTime) {
-      payload['scheduledDropTime'] =
-          (payload['scheduledDropTime'] as DateTime).toIso8601String();
+      payload['scheduledDropTime'] = (payload['scheduledDropTime'] as DateTime)
+          .toIso8601String();
     }
     if (payload['scheduledPickupTime'] is DateTime) {
       payload['scheduledPickupTime'] =
           (payload['scheduledPickupTime'] as DateTime).toIso8601String();
     }
-    final result = await _put(
-      '/users/$userId/luggages/$luggageId',
-      payload,
-    );
+    final result = await _put('/users/$userId/luggages/$luggageId', payload);
     result['statusCode'] ??= result['_httpStatus'];
     if (result['ok'] == true && result['luggage'] is! Map) {
       final doc = _stripMeta(result);
@@ -1075,7 +1238,11 @@ class ApiService {
     if (sessionId != null && sessionId.isNotEmpty) {
       payload['sessionId'] = sessionId;
     }
-    return _post('/support/chat', payload, timeout: const Duration(seconds: 18));
+    return _post(
+      '/support/chat',
+      payload,
+      timeout: const Duration(seconds: 18),
+    );
   }
 
   static Future<Map<String, dynamic>> supportChatHealth() async {
@@ -1108,10 +1275,9 @@ class ApiService {
       return _missingBaseUrlError();
     }
     if (type != null && type.trim().isNotEmpty) {
-      uri = uri.replace(queryParameters: {
-        ...uri.queryParameters,
-        'type': type.trim(),
-      });
+      uri = uri.replace(
+        queryParameters: {...uri.queryParameters, 'type': type.trim()},
+      );
     }
     final contentType = _guessImageMediaType(filename);
     final request = http.MultipartRequest('POST', uri)
@@ -1125,7 +1291,9 @@ class ApiService {
         ),
       );
     try {
-      final response = await request.send().timeout(const Duration(seconds: 20));
+      final response = await request.send().timeout(
+        const Duration(seconds: 20),
+      );
       final responseBody = await response.stream.bytesToString();
       final map = responseBody.isNotEmpty
           ? jsonDecode(responseBody) as Map<String, dynamic>
@@ -1134,11 +1302,7 @@ class ApiService {
       map['ok'] = response.statusCode >= 200 && response.statusCode < 300;
       return map;
     } catch (e) {
-      return {
-        'ok': false,
-        'error': 'Yükleme başarısız: $e',
-        'statusCode': 500,
-      };
+      return {'ok': false, 'error': 'Yükleme başarısız: $e', 'statusCode': 500};
     }
   }
 
@@ -1167,9 +1331,12 @@ class ApiService {
     if (uri == null || uri.host.isEmpty) return null;
     final scheme = uri.scheme.toLowerCase();
     if (scheme != 'http' && scheme != 'https') return null;
-    final cleanedPath =
-        uri.path.isEmpty || uri.path == '/' ? '' : uri.path.replaceFirst(RegExp(r'/+$'), '');
-    return uri.replace(path: cleanedPath, query: null, fragment: null).toString();
+    final cleanedPath = uri.path.isEmpty || uri.path == '/'
+        ? ''
+        : uri.path.replaceFirst(RegExp(r'/+$'), '');
+    return uri
+        .replace(path: cleanedPath, query: null, fragment: null)
+        .toString();
   }
 
   static String? normalizeBaseUrl(String value) => _normalizeBaseUrl(value);
@@ -1203,7 +1370,8 @@ class ApiService {
   static Map<String, dynamic> _missingBaseUrlError() {
     return {
       'ok': false,
-      'error': 'API base URL ayarlı değil. Lütfen API ayarlarından bir adres girin.',
+      'error':
+          'API base URL ayarlı değil. Lütfen API ayarlarından bir adres girin.',
       'statusCode': 400,
       '_configurationError': true,
     };
@@ -1264,6 +1432,8 @@ Map<String, dynamic> _normalizeProfile(Map<String, dynamic> profile) {
   if (!normalized.containsKey('id') && rawId != null) {
     normalized['id'] = rawId.toString();
   }
+  final role = (normalized['role'] ?? 'user').toString().trim().toLowerCase();
+  normalized['role'] = (role == 'admin' || role == 'editor') ? role : 'user';
   return normalized;
 }
 
@@ -1272,9 +1442,9 @@ Map<String, dynamic> _stripMeta(Map<String, dynamic> response) {
   copy.removeWhere(
     (key, value) =>
         ((key.startsWith('_') && key != '_id') ||
-            key == 'ok' ||
-            key == 'statusCode' ||
-            key == 'profile'),
+        key == 'ok' ||
+        key == 'statusCode' ||
+        key == 'profile'),
   );
   return copy;
 }

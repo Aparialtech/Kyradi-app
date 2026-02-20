@@ -19,8 +19,10 @@ class EmergencyContactModel {
       final familyName = (json['surname'] ?? '').toString();
       var resolvedFullName = (json['fullName'] ?? '').toString();
       if (resolvedFullName.trim().isEmpty) {
-        resolvedFullName =
-            [givenName, familyName].where((e) => e.trim().isNotEmpty).join(' ').trim();
+        resolvedFullName = [
+          givenName,
+          familyName,
+        ].where((e) => e.trim().isNotEmpty).join(' ').trim();
       }
       return EmergencyContactModel(
         fullName: resolvedFullName,
@@ -62,6 +64,7 @@ class UserModel {
   final String verificationStatus;
   final String? verifiedAt;
   final bool identityVerified;
+  final String role;
   final String? identityDocumentUrl;
   final String? avatarUrl;
   final bool pushReminderEnabled;
@@ -81,6 +84,7 @@ class UserModel {
     this.verificationStatus = 'unverified',
     this.verifiedAt,
     this.identityVerified = false,
+    this.role = 'user',
     this.identityDocumentUrl,
     this.avatarUrl,
     this.pushReminderEnabled = true,
@@ -105,9 +109,16 @@ class UserModel {
       })(),
       birthDate: json['birthDate']?.toString(),
       nationalId: (json['nationalId'] ?? '').toString(),
-      verificationStatus: (json['verificationStatus'] ?? 'unverified').toString(),
+      verificationStatus: (json['verificationStatus'] ?? 'unverified')
+          .toString(),
       verifiedAt: json['verifiedAt']?.toString(),
-      identityVerified: (json['identityVerified'] ?? json['verified'] ?? false) == true,
+      identityVerified:
+          (json['identityVerified'] ?? json['verified'] ?? false) == true,
+      role: (() {
+        final role = (json['role'] ?? 'user').toString().trim().toLowerCase();
+        if (role == 'admin' || role == 'editor') return role;
+        return 'user';
+      })(),
       identityDocumentUrl: identityRaw.isEmpty ? null : identityRaw,
       avatarUrl: (json['avatarUrl'] ?? '').toString().trim().isEmpty
           ? null
@@ -117,28 +128,29 @@ class UserModel {
       emergencyContact: json['emergencyContact'] != null
           ? EmergencyContactModel.fromJson(json['emergencyContact'])
           : json['emergency'] != null
-              ? EmergencyContactModel.fromJson(json['emergency'])
-              : null,
+          ? EmergencyContactModel.fromJson(json['emergency'])
+          : null,
     );
   }
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'name': name,
-        'surname': surname,
-        'email': email,
-        'phone': phone,
-        'address': address,
-        'gender': gender,
-        'birthDate': birthDate,
-        'nationalId': nationalId,
-        'verificationStatus': verificationStatus,
-        'verifiedAt': verifiedAt,
-        'identityVerified': identityVerified,
-        'identityDocumentUrl': identityDocumentUrl,
-        'avatarUrl': avatarUrl,
-        'pushReminderEnabled': pushReminderEnabled,
-        'emailReminderEnabled': emailReminderEnabled,
-        'emergencyContact': emergencyContact?.toJson(),
-      };
+    'id': id,
+    'name': name,
+    'surname': surname,
+    'email': email,
+    'phone': phone,
+    'address': address,
+    'gender': gender,
+    'birthDate': birthDate,
+    'nationalId': nationalId,
+    'verificationStatus': verificationStatus,
+    'verifiedAt': verifiedAt,
+    'identityVerified': identityVerified,
+    'role': role,
+    'identityDocumentUrl': identityDocumentUrl,
+    'avatarUrl': avatarUrl,
+    'pushReminderEnabled': pushReminderEnabled,
+    'emailReminderEnabled': emailReminderEnabled,
+    'emergencyContact': emergencyContact?.toJson(),
+  };
 }

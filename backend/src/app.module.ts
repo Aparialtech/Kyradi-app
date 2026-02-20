@@ -18,6 +18,8 @@ import { ChatModule } from './chat/chat.module';
 import { ReservationsModule } from './reservations/reservations.module';
 import { WalletModule } from './wallet/wallet.module';
 import { SaasModule } from './integrations/saas/saas.module';
+import { CampaignsModule } from './campaigns/campaigns.module';
+import { AdminModule } from './admin/admin.module';
 
 @Module({
   imports: [
@@ -52,6 +54,8 @@ import { SaasModule } from './integrations/saas/saas.module';
     ReservationsModule,
     WalletModule,
     SaasModule,
+    CampaignsModule,
+    AdminModule,
   ],
   controllers: [AppController],
   providers: [

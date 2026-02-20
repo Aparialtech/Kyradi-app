@@ -49,6 +49,7 @@ async function bootstrap() {
     'KYC_OTP_TTL_MIN',
     'KYC_OTP_RATE_LIMIT',
     'ADMIN_API_KEY',
+    'ADMIN_PANEL_ENABLED',
     'BUILT_AT',
     'GIT_SHA',
     'RAILWAY_GIT_COMMIT_SHA',

@@ -37,6 +37,9 @@ export const OAuthAccountSchema = SchemaFactory.createForClass(OAuthAccount);
 
 @Schema({ collection: 'users', timestamps: true })
 export class User extends Document {
+  @Prop({ enum: ['user', 'editor', 'admin'], default: 'user', index: true })
+  role: 'user' | 'editor' | 'admin';
+
   @Prop({ required: true })
   name: string;
 

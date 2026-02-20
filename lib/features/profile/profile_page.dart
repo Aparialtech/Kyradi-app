@@ -27,6 +27,7 @@ import 'pages/verification_form_page.dart';
 import 'pages/profile_edit_page.dart';
 import 'pages/profile_settings_page.dart';
 import 'pages/identity_verification_page.dart';
+import '../admin/admin_panel_page.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -46,6 +47,11 @@ class _ProfilePageState extends State<ProfilePage> {
   String _languageCode = 'tr';
   ThemeMode _themeMode = AppThemeMode.notifier.value;
   String? _avatarPath;
+
+  bool get _canOpenAdminPanel {
+    final role = (_user?.role ?? 'user').toLowerCase();
+    return role == 'admin' || role == 'editor';
+  }
 
   @override
   void initState() {
@@ -119,8 +125,8 @@ class _ProfilePageState extends State<ProfilePage> {
           }
         }
       } else {
-        errorMessage =
-            (result['message'] ?? result['error'] ?? 'Load failed').toString();
+        errorMessage = (result['message'] ?? result['error'] ?? 'Load failed')
+            .toString();
       }
     } catch (e) {
       errorMessage = e.toString();
@@ -170,10 +176,7 @@ class _ProfilePageState extends State<ProfilePage> {
     if (_user == null) return;
     final updated = await Navigator.of(context).push<bool>(
       MaterialPageRoute(
-        builder: (_) => ProfileEditPage(
-          user: _user!,
-          avatarPath: _avatarPath,
-        ),
+        builder: (_) => ProfileEditPage(user: _user!, avatarPath: _avatarPath),
       ),
     );
     if (!mounted) return;
@@ -184,10 +187,7 @@ class _ProfilePageState extends State<ProfilePage> {
     }
   }
 
-  Future<void> _updateNotificationSettings({
-    bool? inApp,
-    bool? email,
-  }) async {
+  Future<void> _updateNotificationSettings({bool? inApp, bool? email}) async {
     if (_userId == null) return;
     setState(() {
       if (inApp != null) _inAppNotifications = inApp;
@@ -220,7 +220,6 @@ class _ProfilePageState extends State<ProfilePage> {
     setState(() => _criticalOnly = value);
     await NotificationPrefs.setCriticalOnly(value);
   }
-
 
   Future<void> _openVerification() async {
     if (_user == null) return;
@@ -258,15 +257,11 @@ class _ProfilePageState extends State<ProfilePage> {
     if (!mounted || choice == null) return;
     if (choice == 'email') {
       await Navigator.of(context).push(
-        MaterialPageRoute(
-          builder: (_) => VerificationFormPage(user: _user!),
-        ),
+        MaterialPageRoute(builder: (_) => VerificationFormPage(user: _user!)),
       );
     } else {
       await Navigator.of(context).push(
-        MaterialPageRoute(
-          builder: (_) => const IdentityVerificationPage(),
-        ),
+        MaterialPageRoute(builder: (_) => const IdentityVerificationPage()),
       );
     }
     if (!mounted) return;
@@ -335,76 +330,104 @@ class _ProfilePageState extends State<ProfilePage> {
                   ],
                 )
               : _error != null
-                  ? AppErrorState(
-                      message: _error == 'USER_ID_MISSING'
-                          ? loc.userIdMissing
-                          : _error!,
-                      onRetry: _restoreUser,
-                    )
-                  : ListView(
-                      padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
-                      children: [
-                        if (_user != null)
-                          ProfileHeaderCard(
-                            user: _user!,
-                            onEdit: _openEditProfile,
-                            avatarPath: _avatarPath,
-                          ),
-                        if (_user != null) ...[
-                          const SizedBox(height: 16),
-                          _ProfileDetailsCard(user: _user!),
-                        ],
-                        const SizedBox(height: 16),
-                        VerificationSection(
-                          status: _user?.verificationStatus ?? 'unverified',
-                          identityVerified: _user?.identityVerified ?? false,
-                          onManage: _openVerification,
+              ? AppErrorState(
+                  message: _error == 'USER_ID_MISSING'
+                      ? loc.userIdMissing
+                      : _error!,
+                  onRetry: _restoreUser,
+                )
+              : ListView(
+                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
+                  children: [
+                    if (_user != null)
+                      ProfileHeaderCard(
+                        user: _user!,
+                        onEdit: _openEditProfile,
+                        avatarPath: _avatarPath,
+                      ),
+                    if (_user != null) ...[
+                      const SizedBox(height: 16),
+                      _ProfileDetailsCard(user: _user!),
+                    ],
+                    const SizedBox(height: 16),
+                    VerificationSection(
+                      status: _user?.verificationStatus ?? 'unverified',
+                      identityVerified: _user?.identityVerified ?? false,
+                      onManage: _openVerification,
+                    ),
+                    const SizedBox(height: 16),
+                    SectionCard(
+                      backgroundColor: Theme.of(
+                        context,
+                      ).colorScheme.surface.withValues(alpha: 0.92),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
+                      child: ListTile(
+                        leading: const ThreeDIconBadge(
+                          icon: Icons.settings_outlined,
                         ),
-                        const SizedBox(height: 16),
-                        SectionCard(
-                          backgroundColor: Theme.of(context)
-                              .colorScheme
-                              .surface
-                              .withValues(alpha: 0.92),
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 4,
-                          ),
-                          child: ListTile(
-                            leading: const ThreeDIconBadge(
-                              icon: Icons.settings_outlined,
-                            ),
-                            title: Text(loc.settingsTitle),
-                            trailing: const Icon(Icons.chevron_right),
-                            onTap: _openSettings,
-                          ),
+                        title: Text(loc.settingsTitle),
+                        trailing: const Icon(Icons.chevron_right),
+                        onTap: _openSettings,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    if (_canOpenAdminPanel)
+                      SectionCard(
+                        backgroundColor: Theme.of(
+                          context,
+                        ).colorScheme.surface.withValues(alpha: 0.92),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
                         ),
-                        const SizedBox(height: 16),
-                        SecuritySection(
-                          onChangePassword: () {
+                        child: ListTile(
+                          leading: const ThreeDIconBadge(
+                            icon: Icons.admin_panel_settings_outlined,
+                          ),
+                          title: const Text('Yonetim Paneli'),
+                          subtitle: Text(
+                            'Lokasyon, kampanya ve kullanici yonetimi',
+                            style: Theme.of(context).textTheme.bodySmall,
+                          ),
+                          trailing: const Icon(Icons.chevron_right),
+                          onTap: () {
                             Navigator.of(context).push(
                               MaterialPageRoute(
-                                builder: (_) => const ChangePasswordPage(),
+                                builder: (_) => const AdminPanelPage(),
                               ),
                             );
                           },
-                          onLogout: _confirmLogout,
                         ),
-                        const SizedBox(height: 16),
-                        SupportSection(
-                          onFaq: () {
-                            Navigator.of(context).push(
-                              MaterialPageRoute(builder: (_) => const FaqPage()),
-                            );
-                          },
-                          onAbout: () {
-                            Navigator.of(context).push(
-                              MaterialPageRoute(builder: (_) => const AboutPage()),
-                            );
-                          },
-                        ),
-                      ],
+                      ),
+                    if (_canOpenAdminPanel) const SizedBox(height: 16),
+                    SecuritySection(
+                      onChangePassword: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (_) => const ChangePasswordPage(),
+                          ),
+                        );
+                      },
+                      onLogout: _confirmLogout,
                     ),
+                    const SizedBox(height: 16),
+                    SupportSection(
+                      onFaq: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(builder: (_) => const FaqPage()),
+                        );
+                      },
+                      onAbout: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(builder: (_) => const AboutPage()),
+                        );
+                      },
+                    ),
+                  ],
+                ),
         ],
       ),
     );
@@ -412,9 +435,7 @@ class _ProfilePageState extends State<ProfilePage> {
 }
 
 class _ProfileDetailsCard extends StatelessWidget {
-  const _ProfileDetailsCard({
-    required this.user,
-  });
+  const _ProfileDetailsCard({required this.user});
 
   final UserModel user;
 

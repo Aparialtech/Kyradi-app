@@ -137,6 +137,9 @@ export class UsersService {
     const obj =
       typeof user.toObject === 'function' ? (user.toObject() as Record<string, any>) : (user as any);
     delete obj.passwordHash;
+    if (!obj.role) {
+      obj.role = 'user';
+    }
     return obj;
   }
 }
