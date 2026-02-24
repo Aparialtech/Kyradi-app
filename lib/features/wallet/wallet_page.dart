@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../l10n/app_localizations.dart';
@@ -34,13 +35,17 @@ class WalletPage extends StatefulWidget {
 
 enum _WalletPanel { none, coupon, topup, transfer }
 
+enum _WalletTxFilter { all, incoming, outgoing }
+
 class _WalletPageState extends State<WalletPage>
     with SingleTickerProviderStateMixin {
   bool _loading = true;
   double _balance = 0;
   double _monthlyEarned = 0;
+  bool _obscureBalance = false;
   List<WalletTransaction> _transactions = [];
   List<RewardMission> _missions = [];
+  _WalletTxFilter _txFilter = _WalletTxFilter.all;
   bool _didSeed = false;
   _WalletPanel _openPanel = _WalletPanel.none;
 
@@ -159,27 +164,27 @@ class _WalletPageState extends State<WalletPage>
   }
 
   void _openRules() {
-    Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => const CashbackRulesPage()),
-    );
+    Navigator.of(
+      context,
+    ).push(MaterialPageRoute(builder: (_) => const CashbackRulesPage()));
   }
 
   void _openCoupons() {
-    Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => const CouponsPage()),
-    );
+    Navigator.of(
+      context,
+    ).push(MaterialPageRoute(builder: (_) => const CouponsPage()));
   }
 
   void _openInvite() {
-    Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => const InviteFriendsPage()),
-    );
+    Navigator.of(
+      context,
+    ).push(MaterialPageRoute(builder: (_) => const InviteFriendsPage()));
   }
 
   void _openCampaigns() {
-    Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => const CampaignsPage()),
-    );
+    Navigator.of(
+      context,
+    ).push(MaterialPageRoute(builder: (_) => const CampaignsPage()));
   }
 
   void _openTransactions() {
@@ -199,9 +204,9 @@ class _WalletPageState extends State<WalletPage>
   }
 
   void _openCards() {
-    Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => const WalletCardsPage()),
-    );
+    Navigator.of(
+      context,
+    ).push(MaterialPageRoute(builder: (_) => const WalletCardsPage()));
   }
 
   void _togglePanel(_WalletPanel panel) {
@@ -237,7 +242,11 @@ class _WalletPageState extends State<WalletPage>
           message: loc.couponInvalidMessage,
           type: AppNotificationType.warning,
         );
-        appLog('wallet', 'COUPON_APPLY_ERR code=$code', level: AppLogLevel.warn);
+        appLog(
+          'wallet',
+          'COUPON_APPLY_ERR code=$code',
+          level: AppLogLevel.warn,
+        );
       }
     } catch (e) {
       if (!mounted) return;
@@ -247,7 +256,11 @@ class _WalletPageState extends State<WalletPage>
         message: loc.couponFailedMessage,
         type: AppNotificationType.error,
       );
-      appLog('wallet', 'COUPON_APPLY_ERR code=$code err=$e', level: AppLogLevel.error);
+      appLog(
+        'wallet',
+        'COUPON_APPLY_ERR code=$code err=$e',
+        level: AppLogLevel.error,
+      );
     } finally {
       if (mounted) setState(() => _couponLoading = false);
     }
@@ -297,18 +310,14 @@ class _WalletPageState extends State<WalletPage>
 
   Future<void> _openTopUpSaved() async {
     final result = await Navigator.of(context).push<Map<String, dynamic>>(
-      MaterialPageRoute(
-        builder: (_) => const WalletTopUpSavedCardPage(),
-      ),
+      MaterialPageRoute(builder: (_) => const WalletTopUpSavedCardPage()),
     );
     await _handleTopUpResult(result);
   }
 
   Future<void> _openTopUpNew() async {
     final result = await Navigator.of(context).push<Map<String, dynamic>>(
-      MaterialPageRoute(
-        builder: (_) => const WalletTopUpNewCardPage(),
-      ),
+      MaterialPageRoute(builder: (_) => const WalletTopUpNewCardPage()),
     );
     await _handleTopUpResult(result);
   }
@@ -318,10 +327,7 @@ class _WalletPageState extends State<WalletPage>
     final rawAmount = result['amount'];
     final label = result['label']?.toString() ?? '';
     if (rawAmount is num) {
-      await _applyTopUpResult(
-        amount: rawAmount.toDouble(),
-        label: label,
-      );
+      await _applyTopUpResult(amount: rawAmount.toDouble(), label: label);
     }
   }
 
@@ -329,7 +335,8 @@ class _WalletPageState extends State<WalletPage>
     final loc = AppLocalizations.of(context)!;
     if (_transferLoading) return;
     final target = _transferTargetCtrl.text.trim();
-    final amount = double.tryParse(_transferAmountCtrl.text.replaceAll(',', '.')) ?? 0;
+    final amount =
+        double.tryParse(_transferAmountCtrl.text.replaceAll(',', '.')) ?? 0;
     if (target.isEmpty || amount <= 0) {
       AppNotification.show(
         context,
@@ -350,7 +357,9 @@ class _WalletPageState extends State<WalletPage>
       context: context,
       builder: (dialogContext) => AlertDialog(
         title: Text(loc.transferConfirmTitle),
-        content: Text(loc.transferConfirmMessage(target, amount.toStringAsFixed(2))),
+        content: Text(
+          loc.transferConfirmMessage(target, amount.toStringAsFixed(2)),
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(dialogContext).pop(false),
@@ -365,7 +374,11 @@ class _WalletPageState extends State<WalletPage>
     );
     if (confirm != true) return;
     setState(() => _transferLoading = true);
-    appLog('wallet', 'TRANSFER_START target=$target amount=$amount', level: AppLogLevel.info);
+    appLog(
+      'wallet',
+      'TRANSFER_START target=$target amount=$amount',
+      level: AppLogLevel.info,
+    );
     try {
       await Future<void>.delayed(const Duration(milliseconds: 900));
       if (!mounted) return;
@@ -389,7 +402,11 @@ class _WalletPageState extends State<WalletPage>
         message: loc.transferSuccessMessage,
         type: AppNotificationType.success,
       );
-      appLog('wallet', 'TRANSFER_OK target=$target amount=$amount', level: AppLogLevel.info);
+      appLog(
+        'wallet',
+        'TRANSFER_OK target=$target amount=$amount',
+        level: AppLogLevel.info,
+      );
     } catch (e) {
       if (!mounted) return;
       AppNotification.show(
@@ -403,11 +420,128 @@ class _WalletPageState extends State<WalletPage>
     }
   }
 
+  Future<void> _openQuickTopUpSheet() async {
+    final loc = AppLocalizations.of(context)!;
+    const presets = <double>[100, 250, 500, 1000];
+    final amount = await showModalBottomSheet<double>(
+      context: context,
+      showDragHandle: true,
+      builder: (sheetContext) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  loc.topUpSectionTitle,
+                  style: Theme.of(sheetContext).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  'Tek dokunusla bakiye ekleyin',
+                  style: Theme.of(sheetContext).textTheme.bodySmall,
+                ),
+                const SizedBox(height: 14),
+                Wrap(
+                  spacing: 10,
+                  runSpacing: 10,
+                  children: presets
+                      .map(
+                        (value) => FilledButton.tonal(
+                          onPressed: () =>
+                              Navigator.of(sheetContext).pop(value),
+                          child: Text('${value.toStringAsFixed(0)} ₺'),
+                        ),
+                      )
+                      .toList(),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+    if (!mounted || amount == null) return;
+    await _applyTopUpResult(amount: amount, label: 'Hizli Yukleme');
+  }
+
+  double get _earnedTotal => _transactions
+      .where((t) => t.type == WalletTransactionType.earn)
+      .fold<double>(0, (sum, t) => sum + t.amount);
+
+  double get _spentTotal => _transactions
+      .where((t) => t.type == WalletTransactionType.spend)
+      .fold<double>(0, (sum, t) => sum + t.amount);
+
+  List<WalletTransaction> get _visibleTransactions {
+    switch (_txFilter) {
+      case _WalletTxFilter.incoming:
+        return _transactions
+            .where((t) => t.type == WalletTransactionType.earn)
+            .toList();
+      case _WalletTxFilter.outgoing:
+        return _transactions
+            .where((t) => t.type == WalletTransactionType.spend)
+            .toList();
+      case _WalletTxFilter.all:
+        return _transactions;
+    }
+  }
+
+  List<_DailyFlow> get _weeklyFlows {
+    final now = DateTime.now();
+    final start = DateTime(
+      now.year,
+      now.month,
+      now.day,
+    ).subtract(const Duration(days: 6));
+    final labels = ['Pzt', 'Sal', 'Car', 'Per', 'Cum', 'Cmt', 'Paz'];
+    final buckets = List<_DailyFlow>.generate(7, (index) {
+      final date = start.add(Duration(days: index));
+      final dayLabel = labels[(date.weekday - 1) % 7];
+      return _DailyFlow(label: dayLabel, incoming: 0, outgoing: 0);
+    });
+    for (final tx in _transactions) {
+      final normalized = DateTime(tx.date.year, tx.date.month, tx.date.day);
+      final diff = normalized.difference(start).inDays;
+      if (diff < 0 || diff > 6) continue;
+      final current = buckets[diff];
+      if (tx.type == WalletTransactionType.earn) {
+        buckets[diff] = current.copyWith(
+          incoming: current.incoming + tx.amount,
+        );
+      } else if (tx.type == WalletTransactionType.spend) {
+        buckets[diff] = current.copyWith(
+          outgoing: current.outgoing + tx.amount,
+        );
+      }
+    }
+    return buckets;
+  }
+
   @override
   Widget build(BuildContext context) {
     final loc = AppLocalizations.of(context)!;
     return Scaffold(
-      appBar: AppBar(title: Text(loc.walletTitle)),
+      appBar: AppBar(
+        title: Text(loc.walletTitle),
+        actions: [
+          IconButton(
+            tooltip: loc.walletTransactionsTitle,
+            onPressed: _openTransactions,
+            icon: const Icon(Icons.receipt_long_outlined),
+          ),
+          IconButton(
+            tooltip: loc.walletCardsTitle,
+            onPressed: _openCards,
+            icon: const Icon(Icons.credit_card_outlined),
+          ),
+        ],
+      ),
       body: Stack(
         children: [
           const AppMeshBackground(),
@@ -425,275 +559,670 @@ class _WalletPageState extends State<WalletPage>
                   ],
                 )
               : RefreshIndicator(
-                  onRefresh: () =>
-                      _loadMockData(AppLocalizations.of(context)!),
+                  onRefresh: () => _loadMockData(AppLocalizations.of(context)!),
                   child: ListView(
                     padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
                     children: [
-                  WalletHeader(
-                    title: loc.walletHeaderTitle,
-                    subtitle: loc.walletHeaderSubtitle,
-                    onRulesTap: _openRules,
-                  ),
-                  const SizedBox(height: 16),
-                  BalanceCard(
-                    balance: _balance,
-                    monthlyEarned: _monthlyEarned,
-                  ),
-                  const SizedBox(height: 16),
-                  SectionCard(
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          loc.walletActionsTitle,
-                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                fontWeight: FontWeight.w700,
-                              ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          loc.walletActionsSubtitle,
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                color: Theme.of(context)
-                                    .colorScheme
-                                    .onSurfaceVariant,
-                              ),
-                        ),
-                        const SizedBox(height: 12),
-                        WalletQuickActions(
-                          onTopUp: () => _togglePanel(_WalletPanel.topup),
-                          onTransactions: _openTransactions,
-                          onCashback: _openCashback,
-                          onCoupons: _openCoupons,
-                          onCards: _openCards,
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  SectionCard(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        SectionHeader(
-                          title: loc.walletActionsTitle,
-                          subtitle: loc.walletActionsSubtitle,
-                          icon: Icons.bolt_outlined,
-                        ),
-                        const SizedBox(height: 12),
-                        LayoutBuilder(
-                          builder: (context, constraints) {
-                            final tileWidth = (constraints.maxWidth - 24) / 3;
-                            return Wrap(
-                              spacing: 12,
-                              runSpacing: 12,
-                              children: [
-                                SizedBox(
-                                  width: tileWidth,
-                                  child: _PanelTile(
-                                    label: loc.couponSectionTitle,
-                                    icon: Icons.discount_outlined,
-                                    accent: Theme.of(context).colorScheme.primary,
-                                    active: _openPanel == _WalletPanel.coupon,
-                                    onTap: () => _togglePanel(_WalletPanel.coupon),
+                      WalletHeader(
+                        title: loc.walletHeaderTitle,
+                        subtitle: loc.walletHeaderSubtitle,
+                        onRulesTap: _openRules,
+                      ),
+                      const SizedBox(height: 16),
+                      BalanceCard(
+                        balance: _balance,
+                        monthlyEarned: _monthlyEarned,
+                        obscureBalance: _obscureBalance,
+                        onToggleVisibility: () {
+                          setState(() => _obscureBalance = !_obscureBalance);
+                        },
+                        onQuickTopUp: _openQuickTopUpSheet,
+                      ),
+                      const SizedBox(height: 16),
+                      _WalletMetricStrip(
+                        earnedAmount: _earnedTotal,
+                        spentAmount: _spentTotal,
+                        txCount: _transactions.length,
+                      ),
+                      const SizedBox(height: 16),
+                      SectionCard(
+                        padding: const EdgeInsets.all(16),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              loc.walletActionsTitle,
+                              style: Theme.of(context).textTheme.titleMedium
+                                  ?.copyWith(fontWeight: FontWeight.w700),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              loc.walletActionsSubtitle,
+                              style: Theme.of(context).textTheme.bodySmall
+                                  ?.copyWith(
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.onSurfaceVariant,
                                   ),
-                                ),
-                                SizedBox(
-                                  width: tileWidth,
-                                  child: _PanelTile(
-                                    label: loc.topUpSectionTitle,
-                                    icon: Icons.account_balance_wallet_outlined,
-                                    accent: const Color(0xFFE53935),
-                                    active: _openPanel == _WalletPanel.topup,
-                                    onTap: () => _togglePanel(_WalletPanel.topup),
-                                  ),
-                                ),
-                                SizedBox(
-                                  width: tileWidth,
-                                  child: _PanelTile(
-                                    label: loc.transferSectionTitle,
-                                    icon: Icons.compare_arrows_outlined,
-                                    accent: const Color(0xFF2E7D32),
-                                    active: _openPanel == _WalletPanel.transfer,
-                                    onTap: () => _togglePanel(_WalletPanel.transfer),
-                                  ),
-                                ),
-                              ],
-                            );
-                          },
+                            ),
+                            const SizedBox(height: 12),
+                            WalletQuickActions(
+                              onTopUp: () => _togglePanel(_WalletPanel.topup),
+                              onTransactions: _openTransactions,
+                              onCashback: _openCashback,
+                              onCoupons: _openCoupons,
+                              onCards: _openCards,
+                            ),
+                          ],
                         ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  AnimatedSize(
-                    duration: const Duration(milliseconds: 220),
-                    curve: Curves.easeOut,
-                    child: _openPanel == _WalletPanel.coupon
-                        ? SectionCard(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                SectionHeader(
-                                  title: loc.couponSectionTitle,
-                                  subtitle: loc.couponSectionSubtitle,
-                                  icon: Icons.discount_outlined,
-                                ),
-                                const SizedBox(height: 12),
-                                TextFormField(
-                                  controller: _couponCtrl,
-                                  textCapitalization: TextCapitalization.characters,
-                                  decoration: InputDecoration(
-                                    labelText: loc.couponInputLabel,
-                                    prefixIcon:
-                                        const Icon(Icons.confirmation_number_outlined),
-                                  ),
-                                ),
-                                const SizedBox(height: 10),
-                                Row(
+                      ),
+                      const SizedBox(height: 16),
+                      SectionCard(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            SectionHeader(
+                              title: loc.walletActionsTitle,
+                              subtitle: loc.walletActionsSubtitle,
+                              icon: Icons.bolt_outlined,
+                            ),
+                            const SizedBox(height: 12),
+                            LayoutBuilder(
+                              builder: (context, constraints) {
+                                final tileWidth =
+                                    (constraints.maxWidth - 24) / 3;
+                                return Wrap(
+                                  spacing: 12,
+                                  runSpacing: 12,
                                   children: [
-                                    Expanded(
-                                      child: FilledButton(
-                                        onPressed:
-                                            _couponLoading ? null : _applyCoupon,
-                                        child: _couponLoading
-                                            ? const SizedBox(
-                                                height: 18,
-                                                width: 18,
-                                                child: CircularProgressIndicator(
-                                                    strokeWidth: 2),
-                                              )
-                                            : Text(loc.couponApplyAction),
+                                    SizedBox(
+                                      width: tileWidth,
+                                      child: _PanelTile(
+                                        label: loc.couponSectionTitle,
+                                        icon: Icons.discount_outlined,
+                                        accent: Theme.of(
+                                          context,
+                                        ).colorScheme.primary,
+                                        active:
+                                            _openPanel == _WalletPanel.coupon,
+                                        onTap: () =>
+                                            _togglePanel(_WalletPanel.coupon),
+                                      ),
+                                    ),
+                                    SizedBox(
+                                      width: tileWidth,
+                                      child: _PanelTile(
+                                        label: loc.topUpSectionTitle,
+                                        icon: Icons
+                                            .account_balance_wallet_outlined,
+                                        accent: const Color(0xFFE53935),
+                                        active:
+                                            _openPanel == _WalletPanel.topup,
+                                        onTap: () =>
+                                            _togglePanel(_WalletPanel.topup),
+                                      ),
+                                    ),
+                                    SizedBox(
+                                      width: tileWidth,
+                                      child: _PanelTile(
+                                        label: loc.transferSectionTitle,
+                                        icon: Icons.compare_arrows_outlined,
+                                        accent: const Color(0xFF2E7D32),
+                                        active:
+                                            _openPanel == _WalletPanel.transfer,
+                                        onTap: () =>
+                                            _togglePanel(_WalletPanel.transfer),
                                       ),
                                     ),
                                   ],
-                                ),
-                                if (_couponStatus != null) ...[
-                                  const SizedBox(height: 8),
-                                  Text(
-                                    _couponStatus!,
-                                    style: Theme.of(context).textTheme.bodySmall,
-                                  ),
-                                ],
-                              ],
+                                );
+                              },
                             ),
-                          )
-                        : const SizedBox.shrink(),
-                  ),
-                  const SizedBox(height: 16),
-                  AnimatedSize(
-                    duration: const Duration(milliseconds: 220),
-                    curve: Curves.easeOut,
-                    child: _openPanel == _WalletPanel.topup
-                        ? SectionCard(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                SectionHeader(
-                                  title: loc.topUpSectionTitle,
-                                  subtitle: loc.topUpSectionSubtitle,
-                                  icon: Icons.account_balance_wallet_outlined,
-                                ),
-                                const SizedBox(height: 12),
-                                _TopUpMethodTile(
-                                  title: loc.topUpUseSavedCardTitle,
-                                  subtitle: loc.topUpUseSavedCardSubtitle,
-                                  icon: Icons.credit_card_rounded,
-                                  accent: const Color(0xFF2563EB),
-                                  onTap: _topUpLoading ? null : _openTopUpSaved,
-                                ),
-                                const SizedBox(height: 12),
-                                _TopUpMethodTile(
-                                  title: loc.topUpUseNewCardTitle,
-                                  subtitle: loc.topUpUseNewCardSubtitle,
-                                  icon: Icons.add_card_rounded,
-                                  accent: const Color(0xFF10B981),
-                                  onTap: _topUpLoading ? null : _openTopUpNew,
-                                ),
-                              ],
-                            ),
-                          )
-                        : const SizedBox.shrink(),
-                  ),
-                  const SizedBox(height: 16),
-                  AnimatedSize(
-                    duration: const Duration(milliseconds: 220),
-                    curve: Curves.easeOut,
-                    child: _openPanel == _WalletPanel.transfer
-                        ? SectionCard(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                SectionHeader(
-                                  title: loc.transferSectionTitle,
-                                  subtitle: loc.transferSectionSubtitle,
-                                  icon: Icons.compare_arrows_outlined,
-                                ),
-                                const SizedBox(height: 12),
-                                TextFormField(
-                                  controller: _transferTargetCtrl,
-                                  decoration:
-                                      InputDecoration(labelText: loc.transferTargetLabel),
-                                ),
-                                const SizedBox(height: 12),
-                                TextFormField(
-                                  controller: _transferAmountCtrl,
-                                  keyboardType: TextInputType.number,
-                                  decoration:
-                                      InputDecoration(labelText: loc.transferAmountLabel),
-                                ),
-                                const SizedBox(height: 12),
-                                TextFormField(
-                                  controller: _transferNoteCtrl,
-                                  decoration:
-                                      InputDecoration(labelText: loc.transferNoteLabel),
-                                ),
-                                const SizedBox(height: 16),
-                                FilledButton(
-                                  onPressed: _transferLoading ? null : _submitTransfer,
-                                  child: _transferLoading
-                                      ? const SizedBox(
-                                          height: 18,
-                                          width: 18,
-                                          child: CircularProgressIndicator(
-                                              strokeWidth: 2),
-                                        )
-                                      : Text(loc.transferAction),
-                                ),
-                              ],
-                            ),
-                          )
-                        : const SizedBox.shrink(),
-                  ),
-                  const SizedBox(height: 20),
-                  Text(
-                    loc.walletMissionsTitle,
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.w700,
+                          ],
                         ),
-                  ),
-                  const SizedBox(height: 12),
-                  MissionCarousel(items: _missions),
-                  const SizedBox(height: 20),
-                  Text(
-                    loc.walletTransactionsTitle,
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.w700,
-                        ),
-                  ),
-                  const SizedBox(height: 12),
-                  _transactions.isEmpty
-                      ? AppEmptyState(
-                          title: loc.walletEmptyTransactionsTitle,
-                          subtitle: loc.walletEmptyTransactionsSubtitle,
-                        )
-                      : TransactionsList(items: _transactions),
+                      ),
+                      const SizedBox(height: 16),
+                      AnimatedSize(
+                        duration: const Duration(milliseconds: 220),
+                        curve: Curves.easeOut,
+                        child: _openPanel == _WalletPanel.coupon
+                            ? SectionCard(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    SectionHeader(
+                                      title: loc.couponSectionTitle,
+                                      subtitle: loc.couponSectionSubtitle,
+                                      icon: Icons.discount_outlined,
+                                    ),
+                                    const SizedBox(height: 12),
+                                    TextFormField(
+                                      controller: _couponCtrl,
+                                      textCapitalization:
+                                          TextCapitalization.characters,
+                                      decoration: InputDecoration(
+                                        labelText: loc.couponInputLabel,
+                                        prefixIcon: const Icon(
+                                          Icons.confirmation_number_outlined,
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(height: 10),
+                                    Row(
+                                      children: [
+                                        Expanded(
+                                          child: FilledButton(
+                                            onPressed: _couponLoading
+                                                ? null
+                                                : _applyCoupon,
+                                            child: _couponLoading
+                                                ? const SizedBox(
+                                                    height: 18,
+                                                    width: 18,
+                                                    child:
+                                                        CircularProgressIndicator(
+                                                          strokeWidth: 2,
+                                                        ),
+                                                  )
+                                                : Text(loc.couponApplyAction),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    if (_couponStatus != null) ...[
+                                      const SizedBox(height: 8),
+                                      Text(
+                                        _couponStatus!,
+                                        style: Theme.of(
+                                          context,
+                                        ).textTheme.bodySmall,
+                                      ),
+                                    ],
+                                  ],
+                                ),
+                              )
+                            : const SizedBox.shrink(),
+                      ),
+                      const SizedBox(height: 16),
+                      AnimatedSize(
+                        duration: const Duration(milliseconds: 220),
+                        curve: Curves.easeOut,
+                        child: _openPanel == _WalletPanel.topup
+                            ? SectionCard(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    SectionHeader(
+                                      title: loc.topUpSectionTitle,
+                                      subtitle: loc.topUpSectionSubtitle,
+                                      icon:
+                                          Icons.account_balance_wallet_outlined,
+                                    ),
+                                    const SizedBox(height: 12),
+                                    _TopUpMethodTile(
+                                      title: loc.topUpUseSavedCardTitle,
+                                      subtitle: loc.topUpUseSavedCardSubtitle,
+                                      icon: Icons.credit_card_rounded,
+                                      accent: const Color(0xFF2563EB),
+                                      onTap: _topUpLoading
+                                          ? null
+                                          : _openTopUpSaved,
+                                    ),
+                                    const SizedBox(height: 12),
+                                    _TopUpMethodTile(
+                                      title: loc.topUpUseNewCardTitle,
+                                      subtitle: loc.topUpUseNewCardSubtitle,
+                                      icon: Icons.add_card_rounded,
+                                      accent: const Color(0xFF10B981),
+                                      onTap: _topUpLoading
+                                          ? null
+                                          : _openTopUpNew,
+                                    ),
+                                  ],
+                                ),
+                              )
+                            : const SizedBox.shrink(),
+                      ),
+                      const SizedBox(height: 16),
+                      AnimatedSize(
+                        duration: const Duration(milliseconds: 220),
+                        curve: Curves.easeOut,
+                        child: _openPanel == _WalletPanel.transfer
+                            ? SectionCard(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    SectionHeader(
+                                      title: loc.transferSectionTitle,
+                                      subtitle: loc.transferSectionSubtitle,
+                                      icon: Icons.compare_arrows_outlined,
+                                    ),
+                                    const SizedBox(height: 12),
+                                    TextFormField(
+                                      controller: _transferTargetCtrl,
+                                      decoration: InputDecoration(
+                                        labelText: loc.transferTargetLabel,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 12),
+                                    TextFormField(
+                                      controller: _transferAmountCtrl,
+                                      keyboardType: TextInputType.number,
+                                      decoration: InputDecoration(
+                                        labelText: loc.transferAmountLabel,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 12),
+                                    TextFormField(
+                                      controller: _transferNoteCtrl,
+                                      decoration: InputDecoration(
+                                        labelText: loc.transferNoteLabel,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 16),
+                                    FilledButton(
+                                      onPressed: _transferLoading
+                                          ? null
+                                          : _submitTransfer,
+                                      child: _transferLoading
+                                          ? const SizedBox(
+                                              height: 18,
+                                              width: 18,
+                                              child: CircularProgressIndicator(
+                                                strokeWidth: 2,
+                                              ),
+                                            )
+                                          : Text(loc.transferAction),
+                                    ),
+                                  ],
+                                ),
+                              )
+                            : const SizedBox.shrink(),
+                      ),
+                      const SizedBox(height: 20),
+                      Text(
+                        loc.walletMissionsTitle,
+                        style: Theme.of(context).textTheme.titleMedium
+                            ?.copyWith(fontWeight: FontWeight.w700),
+                      ),
+                      const SizedBox(height: 12),
+                      MissionCarousel(items: _missions),
+                      const SizedBox(height: 20),
+                      _WeeklyFlowCard(items: _weeklyFlows),
+                      const SizedBox(height: 20),
+                      Text(
+                        loc.walletTransactionsTitle,
+                        style: Theme.of(context).textTheme.titleMedium
+                            ?.copyWith(fontWeight: FontWeight.w700),
+                      ),
+                      const SizedBox(height: 10),
+                      _TransactionFilterChips(
+                        value: _txFilter,
+                        onChanged: (next) => setState(() => _txFilter = next),
+                      ),
+                      const SizedBox(height: 12),
+                      _visibleTransactions.isEmpty
+                          ? AppEmptyState(
+                              title: loc.walletEmptyTransactionsTitle,
+                              subtitle: loc.walletEmptyTransactionsSubtitle,
+                            )
+                          : TransactionsList(items: _visibleTransactions),
                     ],
                   ),
                 ),
         ],
+      ),
+    );
+  }
+}
+
+class _DailyFlow {
+  const _DailyFlow({
+    required this.label,
+    required this.incoming,
+    required this.outgoing,
+  });
+
+  final String label;
+  final double incoming;
+  final double outgoing;
+
+  _DailyFlow copyWith({String? label, double? incoming, double? outgoing}) {
+    return _DailyFlow(
+      label: label ?? this.label,
+      incoming: incoming ?? this.incoming,
+      outgoing: outgoing ?? this.outgoing,
+    );
+  }
+}
+
+class _WeeklyFlowCard extends StatelessWidget {
+  const _WeeklyFlowCard({required this.items});
+
+  final List<_DailyFlow> items;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final peak = items.fold<double>(
+      1,
+      (maxVal, item) =>
+          math.max(maxVal, math.max(item.incoming, item.outgoing)),
+    );
+    return SectionCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Haftalik Akis',
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'Son 7 gun gelir ve gider dagilimi',
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
+          const SizedBox(height: 14),
+          SizedBox(
+            height: 132,
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: items
+                  .map(
+                    (item) => Expanded(
+                      child: _DayFlowBar(item: item, maxValue: peak),
+                    ),
+                  )
+                  .toList(),
+            ),
+          ),
+          const SizedBox(height: 10),
+          Wrap(
+            spacing: 10,
+            runSpacing: 10,
+            children: const [
+              _FlowLegendDot(color: Color(0xFF0EA5E9), label: 'Gelen'),
+              _FlowLegendDot(color: Color(0xFFF97316), label: 'Giden'),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _DayFlowBar extends StatelessWidget {
+  const _DayFlowBar({required this.item, required this.maxValue});
+
+  final _DailyFlow item;
+  final double maxValue;
+
+  @override
+  Widget build(BuildContext context) {
+    final inHeight = item.incoming <= 0
+        ? 3.0
+        : (item.incoming / maxValue * 70).clamp(3.0, 70.0);
+    final outHeight = item.outgoing <= 0
+        ? 3.0
+        : (item.outgoing / maxValue * 70).clamp(3.0, 70.0);
+    final textTheme = Theme.of(context).textTheme;
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 2),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: [
+          Expanded(
+            child: Align(
+              alignment: Alignment.bottomCenter,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  AnimatedContainer(
+                    duration: const Duration(milliseconds: 260),
+                    curve: Curves.easeOutCubic,
+                    width: 7,
+                    height: inHeight,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF0EA5E9),
+                      borderRadius: BorderRadius.circular(999),
+                    ),
+                  ),
+                  const SizedBox(width: 4),
+                  AnimatedContainer(
+                    duration: const Duration(milliseconds: 260),
+                    curve: Curves.easeOutCubic,
+                    width: 7,
+                    height: outHeight,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF97316),
+                      borderRadius: BorderRadius.circular(999),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            item.label,
+            style: textTheme.labelSmall?.copyWith(
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _FlowLegendDot extends StatelessWidget {
+  const _FlowLegendDot({required this.color, required this.label});
+
+  final Color color;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: 9,
+          height: 9,
+          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+        ),
+        const SizedBox(width: 6),
+        Text(
+          label,
+          style: Theme.of(
+            context,
+          ).textTheme.labelSmall?.copyWith(fontWeight: FontWeight.w600),
+        ),
+      ],
+    );
+  }
+}
+
+class _WalletMetricStrip extends StatelessWidget {
+  const _WalletMetricStrip({
+    required this.earnedAmount,
+    required this.spentAmount,
+    required this.txCount,
+  });
+
+  final double earnedAmount;
+  final double spentAmount;
+  final int txCount;
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return Row(
+      children: [
+        Expanded(
+          child: _MetricItem(
+            icon: Icons.arrow_downward_rounded,
+            label: 'Gelen',
+            value: '${earnedAmount.toStringAsFixed(0)} ₺',
+            accent: const Color(0xFF0EA5E9),
+            tint: colorScheme.primary.withValues(alpha: 0.08),
+          ),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: _MetricItem(
+            icon: Icons.arrow_upward_rounded,
+            label: 'Giden',
+            value: '${spentAmount.toStringAsFixed(0)} ₺',
+            accent: const Color(0xFFF97316),
+            tint: const Color(0xFFF97316).withValues(alpha: 0.08),
+          ),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: _MetricItem(
+            icon: Icons.receipt_long_outlined,
+            label: 'Islem',
+            value: '$txCount adet',
+            accent: const Color(0xFF8B5CF6),
+            tint: const Color(0xFF8B5CF6).withValues(alpha: 0.08),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _MetricItem extends StatelessWidget {
+  const _MetricItem({
+    required this.icon,
+    required this.label,
+    required this.value,
+    required this.accent,
+    required this.tint,
+  });
+
+  final IconData icon;
+  final String label;
+  final String value;
+  final Color accent;
+  final Color tint;
+
+  @override
+  Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(16),
+        color: tint,
+        border: Border.all(color: accent.withValues(alpha: 0.24)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, size: 16, color: accent),
+          const SizedBox(height: 6),
+          Text(
+            label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: textTheme.labelSmall?.copyWith(
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            value,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: textTheme.labelMedium?.copyWith(fontWeight: FontWeight.w700),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _TransactionFilterChips extends StatelessWidget {
+  const _TransactionFilterChips({required this.value, required this.onChanged});
+
+  final _WalletTxFilter value;
+  final ValueChanged<_WalletTxFilter> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      children: [
+        _TxChip(
+          label: 'Tum Islem',
+          selected: value == _WalletTxFilter.all,
+          onTap: () => onChanged(_WalletTxFilter.all),
+        ),
+        _TxChip(
+          label: 'Gelen',
+          selected: value == _WalletTxFilter.incoming,
+          onTap: () => onChanged(_WalletTxFilter.incoming),
+        ),
+        _TxChip(
+          label: 'Giden',
+          selected: value == _WalletTxFilter.outgoing,
+          onTap: () => onChanged(_WalletTxFilter.outgoing),
+        ),
+      ],
+    );
+  }
+}
+
+class _TxChip extends StatelessWidget {
+  const _TxChip({
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        curve: Curves.easeOut,
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(999),
+          color: selected
+              ? colorScheme.primary.withValues(alpha: 0.16)
+              : colorScheme.surface.withValues(alpha: 0.92),
+          border: Border.all(
+            color: selected
+                ? colorScheme.primary.withValues(alpha: 0.42)
+                : colorScheme.outlineVariant.withValues(alpha: 0.55),
+          ),
+        ),
+        child: Text(
+          label,
+          style: Theme.of(context).textTheme.labelSmall?.copyWith(
+            fontWeight: FontWeight.w700,
+            color: selected
+                ? colorScheme.primary
+                : colorScheme.onSurfaceVariant,
+          ),
+        ),
       ),
     );
   }
@@ -782,10 +1311,7 @@ class _PanelTileState extends State<_PanelTile> {
 }
 
 class _PanelIcon extends StatelessWidget {
-  const _PanelIcon({
-    required this.accent,
-    required this.icon,
-  });
+  const _PanelIcon({required this.accent, required this.icon});
 
   final Color accent;
   final IconData icon;

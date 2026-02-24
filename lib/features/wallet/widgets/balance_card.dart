@@ -7,10 +7,16 @@ class BalanceCard extends StatelessWidget {
     super.key,
     required this.balance,
     required this.monthlyEarned,
+    required this.obscureBalance,
+    required this.onToggleVisibility,
+    required this.onQuickTopUp,
   });
 
   final double balance;
   final double monthlyEarned;
+  final bool obscureBalance;
+  final VoidCallback onToggleVisibility;
+  final VoidCallback onQuickTopUp;
 
   @override
   Widget build(BuildContext context) {
@@ -62,9 +68,17 @@ class BalanceCard extends StatelessWidget {
                     ),
                   ),
                   const Spacer(),
-                  Icon(
-                    Icons.account_balance_wallet_outlined,
+                  IconButton(
+                    onPressed: onToggleVisibility,
+                    icon: Icon(
+                      obscureBalance
+                          ? Icons.visibility_off_outlined
+                          : Icons.visibility_outlined,
+                    ),
                     color: theme.colorScheme.primary,
+                    tooltip: obscureBalance
+                        ? 'Bakiyeyi goster'
+                        : 'Bakiyeyi gizle',
                   ),
                 ],
               ),
@@ -77,24 +91,40 @@ class BalanceCard extends StatelessWidget {
               ),
               const SizedBox(height: 6),
               Text(
-                '${balance.toStringAsFixed(2)} ₺',
+                obscureBalance ? '••••• ₺' : '${balance.toStringAsFixed(2)} ₺',
                 style: theme.textTheme.headlineSmall?.copyWith(
                   fontWeight: FontWeight.w800,
                 ),
               ),
               const SizedBox(height: 12),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 4,
+                ),
                 decoration: BoxDecoration(
                   color: theme.colorScheme.secondary.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(999),
                 ),
                 child: Text(
-                  loc.walletMonthlyEarnedLabel(monthlyEarned.toStringAsFixed(2)),
+                  obscureBalance
+                      ? loc.walletMonthlyEarnedLabel('•••')
+                      : loc.walletMonthlyEarnedLabel(
+                          monthlyEarned.toStringAsFixed(2),
+                        ),
                   style: theme.textTheme.labelSmall?.copyWith(
                     color: theme.colorScheme.secondary,
                     fontWeight: FontWeight.w700,
                   ),
+                ),
+              ),
+              const SizedBox(height: 14),
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton.icon(
+                  onPressed: onQuickTopUp,
+                  icon: const Icon(Icons.add_circle_outline_rounded, size: 18),
+                  label: const Text('Hizli Yukle'),
                 ),
               ),
             ],
