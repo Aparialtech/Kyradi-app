@@ -28,7 +28,7 @@ class LoginPage extends StatefulWidget {
 
 class _LoginPageState extends State<LoginPage> {
   static const LinearGradient _warmGradient = LinearGradient(
-    colors: [Color(0xFFFF8C42), Color(0xFFFF5F6D)],
+    colors: [Color(0xFF0F766E), Color(0xFF0EA5E9)],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
@@ -647,7 +647,12 @@ class _LoginPageState extends State<LoginPage> {
                                   onPressed: _loading ? null : _submit,
                                   loading: _loading,
                                   gradient: _warmGradient,
-                                  glass: true,
+                                  leading: const Icon(Icons.login_rounded),
+                                  radius: 16,
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 15,
+                                  ),
+                                  glass: false,
                                 ),
                                 const SizedBox(height: 18),
                                 Row(

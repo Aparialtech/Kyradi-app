@@ -55,7 +55,10 @@ class _ExplorePageState extends State<ExplorePage> {
   void initState() {
     super.initState();
     _fetchLocations();
-    _loadPosition();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      _loadPosition();
+    });
   }
 
   @override
@@ -75,8 +78,9 @@ class _ExplorePageState extends State<ExplorePage> {
       final remote = await LocationsService.fetchLocations();
       if (!mounted) return;
       setState(() {
-        _locations =
-            remote.isNotEmpty ? remote : DropLocationsRepository.locations;
+        _locations = remote.isNotEmpty
+            ? remote
+            : DropLocationsRepository.locations;
       });
     } catch (e) {
       errorMessage = e.toString();
@@ -93,7 +97,6 @@ class _ExplorePageState extends State<ExplorePage> {
   }
 
   Future<bool> _ensureCurrentPosition({required bool showError}) async {
-    final loc = AppLocalizations.of(context)!;
     try {
       final permission = await Geolocator.checkPermission();
       LocationPermission resolved = permission;
@@ -103,9 +106,12 @@ class _ExplorePageState extends State<ExplorePage> {
       if (resolved == LocationPermission.denied ||
           resolved == LocationPermission.deniedForever) {
         if (showError && mounted) {
+          final loc = AppLocalizations.of(context);
           final message = resolved == LocationPermission.deniedForever
-              ? loc.permissionDeniedForever(loc.permissionNameLocation)
-              : loc.permissionDenied(loc.permissionNameLocation);
+              ? (loc?.permissionDeniedForever(loc.permissionNameLocation) ??
+                    'Konum izni kalici olarak kapatildi.')
+              : (loc?.permissionDenied(loc.permissionNameLocation) ??
+                    'Konum izni gerekli.');
           AppNotification.show(
             context,
             message: message,
@@ -122,9 +128,10 @@ class _ExplorePageState extends State<ExplorePage> {
       return true;
     } catch (_) {
       if (showError && mounted) {
+        final loc = AppLocalizations.of(context);
         AppNotification.show(
           context,
-          message: loc.exploreEmptyTitle,
+          message: loc?.exploreEmptyTitle ?? 'Konum bilgisi alinamadi.',
           type: AppNotificationType.warning,
         );
       }
@@ -202,7 +209,9 @@ class _ExplorePageState extends State<ExplorePage> {
     for (final key in dayKeys) {
       final ranges = location.openingHours[key];
       if (ranges == null || ranges.isEmpty) return false;
-      final hasFullDay = ranges.any((range) => range.start == '00:00' && range.end == '23:59');
+      final hasFullDay = ranges.any(
+        (range) => range.start == '00:00' && range.end == '23:59',
+      );
       if (!hasFullDay) return false;
     }
     return true;
@@ -236,15 +245,20 @@ class _ExplorePageState extends State<ExplorePage> {
           openNow: _openNow,
           availableOnly: _availableOnly,
           activeOnly: _activeOnly,
-          onApply: ({required openNow, required availableOnly, required activeOnly}) {
-            Navigator.pop(context);
-            setState(() {
-              _openNow = openNow;
-              _availableOnly = availableOnly;
-              _activeOnly = activeOnly;
-              _page = 1;
-            });
-          },
+          onApply:
+              ({
+                required openNow,
+                required availableOnly,
+                required activeOnly,
+              }) {
+                Navigator.pop(context);
+                setState(() {
+                  _openNow = openNow;
+                  _availableOnly = availableOnly;
+                  _activeOnly = activeOnly;
+                  _page = 1;
+                });
+              },
           onClear: () {
             Navigator.pop(context);
             setState(() {
@@ -269,8 +283,11 @@ class _ExplorePageState extends State<ExplorePage> {
       final hasKey = await IosConfigService.hasGmsApiKey();
       if (!mounted) return;
       if (!hasKey) {
-        appLog('map', 'MAP_PREFLIGHT_FAIL missing_api_key',
-            level: AppLogLevel.warn);
+        appLog(
+          'map',
+          'MAP_PREFLIGHT_FAIL missing_api_key',
+          level: AppLogLevel.warn,
+        );
         AppNotification.show(
           context,
           message: AppLocalizations.of(context)!.mapsMissingApiKey,
@@ -360,9 +377,7 @@ class _ExplorePageState extends State<ExplorePage> {
     final googleUri = Uri.parse(
       'https://www.google.com/maps/dir/?api=1&destination=$lat,$lng',
     );
-    final appleUri = Uri.parse(
-      'http://maps.apple.com/?daddr=$lat,$lng',
-    );
+    final appleUri = Uri.parse('http://maps.apple.com/?daddr=$lat,$lng');
     final isIos = Theme.of(context).platform == TargetPlatform.iOS;
 
     if (isIos) {
@@ -378,8 +393,9 @@ class _ExplorePageState extends State<ExplorePage> {
       }
     }
     if (!mounted) return;
-    ScaffoldMessenger.of(context)
-        .showSnackBar(SnackBar(content: Text(loc.mapsOpenFailed)));
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(loc.mapsOpenFailed)));
   }
 
   Future<void> _centerOnMyLocation() async {
@@ -426,8 +442,8 @@ class _ExplorePageState extends State<ExplorePage> {
             selectedId == location.id
                 ? BitmapDescriptor.hueAzure
                 : location.availableSlots > 0
-                    ? BitmapDescriptor.hueCyan
-                    : BitmapDescriptor.hueViolet,
+                ? BitmapDescriptor.hueCyan
+                : BitmapDescriptor.hueViolet,
           ),
           infoWindow: InfoWindow(
             title: location.name,
@@ -688,9 +704,7 @@ class _ExplorePageState extends State<ExplorePage> {
                           ),
                         ),
                         const Divider(height: 1),
-                        Expanded(
-                          child: _buildListView(paged, filtered.length),
-                        ),
+                        Expanded(child: _buildListView(paged, filtered.length)),
                       ],
                     ),
             ),

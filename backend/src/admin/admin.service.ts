@@ -402,7 +402,9 @@ export class AdminService {
   async getUserActivities(userId: string) {
     const user = await this.userModel
       .findById(userId)
-      .select('name surname email role verified identityVerified verificationStatus createdAt')
+      .select(
+        'name surname email phone address gender birthDate nationalId emergencyContact role verified identityVerified verificationStatus createdAt',
+      )
       .lean()
       .exec();
     if (!user) {
@@ -418,18 +420,49 @@ export class AdminService {
       .lean()
       .exec();
 
+    const summary = activities.reduce(
+      (acc, item: any) => {
+        acc.total += 1;
+        acc.totalRevenue += Number(item.totalPrice ?? 0);
+        const payment = (item.paymentStatus ?? 'unpaid').toString();
+        const status = (item.status ?? 'awaiting_drop').toString();
+        acc.byPayment[payment] = (acc.byPayment[payment] ?? 0) + 1;
+        acc.byStatus[status] = (acc.byStatus[status] ?? 0) + 1;
+        return acc;
+      },
+      {
+        total: 0,
+        totalRevenue: 0,
+        byPayment: {} as Record<string, number>,
+        byStatus: {} as Record<string, number>,
+      },
+    );
+
     return {
       user: {
         id: (user as any)._id?.toString(),
         name: (user as any).name ?? '',
         surname: (user as any).surname ?? '',
         email: (user as any).email ?? '',
+        phone: (user as any).phone ?? '',
+        address: (user as any).address ?? '',
+        gender: (user as any).gender ?? '',
+        birthDate: (user as any).birthDate ?? null,
+        nationalIdMasked: this.maskNationalId((user as any).nationalId),
+        emergencyContact: {
+          fullName: (user as any).emergencyContact?.fullName ?? '',
+          phone: (user as any).emergencyContact?.phone ?? '',
+          email: (user as any).emergencyContact?.email ?? '',
+          relation: (user as any).emergencyContact?.relation ?? '',
+          address: (user as any).emergencyContact?.address ?? '',
+        },
         role: this.normalizeRole((user as any).role),
         verified: (user as any).verified === true,
         identityVerified: (user as any).identityVerified === true,
         verificationStatus: (user as any).verificationStatus ?? 'unverified',
         createdAt: (user as any).createdAt ?? null,
       },
+      summary,
       activities: activities.map((item: any) => ({
         id: item._id?.toString(),
         status: item.status ?? 'awaiting_drop',
@@ -787,6 +820,13 @@ export class AdminService {
       return value;
     }
     return 'user';
+  }
+
+  private maskNationalId(value: unknown) {
+    const raw = (value ?? '').toString().trim();
+    if (!raw) return '';
+    if (raw.length <= 2) return '*'.repeat(raw.length);
+    return `${'*'.repeat(raw.length - 2)}${raw.substring(raw.length - 2)}`;
   }
 
   private parsePositiveInt(value: unknown, fallback: number) {

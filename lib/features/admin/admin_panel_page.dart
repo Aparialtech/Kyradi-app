@@ -636,6 +636,12 @@ class _AdminPanelPageState extends State<AdminPanelPage> {
       );
       return;
     }
+    final detailUser = Map<String, dynamic>.from(
+      response['user'] is Map ? response['user'] as Map : user,
+    );
+    final summary = Map<String, dynamic>.from(
+      response['summary'] is Map ? response['summary'] as Map : const {},
+    );
     final activities = _asMapList(response['activities']);
     await showModalBottomSheet<void>(
       context: context,
@@ -649,32 +655,146 @@ class _AdminPanelPageState extends State<AdminPanelPage> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                '${user['name'] ?? ''} ${user['surname'] ?? ''}'.trim(),
+                '${detailUser['name'] ?? ''} ${detailUser['surname'] ?? ''}'
+                    .trim(),
                 style: Theme.of(
                   context,
                 ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
               ),
               const SizedBox(height: 4),
               Text(
-                user['email']?.toString() ?? '',
+                detailUser['email']?.toString() ?? '',
                 style: Theme.of(
                   context,
-                ).textTheme.bodySmall?.copyWith(color: Colors.black54),
+                ).textTheme.bodySmall?.copyWith(color: _adminTextSecondary),
               ),
               const SizedBox(height: 12),
+              _PanelCard(
+                title: 'Iletisim Bilgileri',
+                icon: Icons.contact_phone_outlined,
+                child: Column(
+                  children: [
+                    _ReservationDetailRow(
+                      label: 'Telefon',
+                      value: (detailUser['phone'] ?? '-').toString().isEmpty
+                          ? '-'
+                          : (detailUser['phone'] ?? '-').toString(),
+                    ),
+                    _ReservationDetailRow(
+                      label: 'E-posta',
+                      value: (detailUser['email'] ?? '-').toString(),
+                    ),
+                    _ReservationDetailRow(
+                      label: 'Adres',
+                      value: (detailUser['address'] ?? '-').toString().isEmpty
+                          ? '-'
+                          : (detailUser['address'] ?? '-').toString(),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 10),
+              _PanelCard(
+                title: 'Kisisel Bilgiler',
+                icon: Icons.badge_outlined,
+                child: Column(
+                  children: [
+                    _ReservationDetailRow(
+                      label: 'Rol',
+                      value: (detailUser['role'] ?? 'user').toString(),
+                    ),
+                    _ReservationDetailRow(
+                      label: 'Cinsiyet',
+                      value: (detailUser['gender'] ?? '-').toString().isEmpty
+                          ? '-'
+                          : (detailUser['gender'] ?? '-').toString(),
+                    ),
+                    _ReservationDetailRow(
+                      label: 'Dogum Tarihi',
+                      value: _parseDate(detailUser['birthDate']) == null
+                          ? '-'
+                          : _parseDate(detailUser['birthDate'])!
+                              .toIso8601String()
+                              .split('T')
+                              .first,
+                    ),
+                    _ReservationDetailRow(
+                      label: 'Kimlik',
+                      value: (detailUser['nationalIdMasked'] ?? '-')
+                          .toString()
+                          .isEmpty
+                          ? '-'
+                          : (detailUser['nationalIdMasked'] ?? '-').toString(),
+                    ),
+                    _ReservationDetailRow(
+                      label: 'Kimlik Onayi',
+                      value: detailUser['identityVerified'] == true
+                          ? 'Verified'
+                          : 'Unverified',
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 10),
+              _PanelCard(
+                title: 'Rezervasyon Ozeti',
+                icon: Icons.analytics_outlined,
+                child: Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    _PeriodStatPill(
+                      label: 'Toplam',
+                      value: '${summary['total'] ?? activities.length}',
+                      icon: Icons.inventory_2_outlined,
+                    ),
+                    _PeriodStatPill(
+                      label: 'Gelir',
+                      value: '₺${summary['totalRevenue'] ?? 0}',
+                      icon: Icons.payments_outlined,
+                    ),
+                    _PeriodStatPill(
+                      label: 'Aktif',
+                      value: '${(summary['byStatus'] is Map ? (summary['byStatus']['awaiting_drop'] ?? 0) : 0)}',
+                      icon: Icons.timeline_rounded,
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 10),
+              Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  'Yapilan Rezervasyonlar',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        color: _adminTextPrimary,
+                        fontWeight: FontWeight.w700,
+                      ),
+                ),
+              ),
+              const SizedBox(height: 6),
               Expanded(
                 child: activities.isEmpty
                     ? const Center(child: Text('Hareket bulunamadi'))
                     : ListView.separated(
                         itemBuilder: (context, index) {
                           final item = activities[index];
+                          final status = (item['status'] ?? '').toString();
                           return ListTile(
                             contentPadding: EdgeInsets.zero,
                             title: Text(
                               item['dropLocationName']?.toString() ?? '-',
                             ),
                             subtitle: Text(
-                              '${item['status'] ?? '-'} • ${item['paymentStatus'] ?? '-'}',
+                              '${item['status'] ?? '-'} • ${item['paymentStatus'] ?? '-'} • ${_relativeTime(_parseDate(item['updatedAt'] ?? item['createdAt']))}',
+                            ),
+                            leading: Container(
+                              width: 10,
+                              height: 10,
+                              decoration: BoxDecoration(
+                                color: _statusColor(status),
+                                shape: BoxShape.circle,
+                              ),
                             ),
                             trailing: Text(
                               '₺${item['totalPrice'] ?? 0}',
