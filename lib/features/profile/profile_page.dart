@@ -300,6 +300,11 @@ class _ProfilePageState extends State<ProfilePage> {
     final loc = AppLocalizations.of(context)!;
     return Scaffold(
       appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        surfaceTintColor: Colors.transparent,
+        elevation: 0,
+        scrolledUnderElevation: 0,
+        centerTitle: false,
         title: GestureDetector(
           onLongPress: kDebugMode
               ? () {
@@ -311,21 +316,49 @@ class _ProfilePageState extends State<ProfilePage> {
               : null,
           child: Text(loc.profile),
         ),
+        actions: [
+          IconButton(
+            tooltip: 'Yenile',
+            onPressed: _loadProfile,
+            icon: const Icon(Icons.refresh_rounded),
+          ),
+        ],
       ),
       body: Stack(
         children: [
           const AppMeshBackground(),
+          Positioned(
+            top: -80,
+            right: -40,
+            child: IgnorePointer(
+              child: Container(
+                height: 200,
+                width: 200,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: RadialGradient(
+                    colors: [
+                      Theme.of(
+                        context,
+                      ).colorScheme.primary.withValues(alpha: 0.24),
+                      Colors.transparent,
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
           _loading
               ? ListView(
-                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
+                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 40),
                   children: const [
-                    AppSkeleton(height: 120, radius: 20),
-                    SizedBox(height: 16),
-                    AppSkeleton(height: 90, radius: 20),
-                    SizedBox(height: 16),
-                    AppSkeleton(height: 140, radius: 20),
-                    SizedBox(height: 16),
-                    AppSkeleton(height: 160, radius: 20),
+                    AppSkeleton(height: 180, radius: 28),
+                    SizedBox(height: 12),
+                    AppSkeleton(height: 112, radius: 24),
+                    SizedBox(height: 12),
+                    AppSkeleton(height: 160, radius: 24),
+                    SizedBox(height: 12),
+                    AppSkeleton(height: 180, radius: 24),
                   ],
                 )
               : _error != null
@@ -336,7 +369,7 @@ class _ProfilePageState extends State<ProfilePage> {
                   onRetry: _restoreUser,
                 )
               : ListView(
-                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
+                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 40),
                   children: [
                     if (_user != null)
                       ProfileHeaderCard(
@@ -344,17 +377,26 @@ class _ProfilePageState extends State<ProfilePage> {
                         onEdit: _openEditProfile,
                         avatarPath: _avatarPath,
                       ),
+                    const SizedBox(height: 12),
+                    _ProfileQuickActionsCard(
+                      onEdit: _openEditProfile,
+                      onVerification: _openVerification,
+                      onSettings: _openSettings,
+                      onAdmin: _canOpenAdminPanel
+                          ? () => context.push('/admin/panel')
+                          : null,
+                    ),
                     if (_user != null) ...[
-                      const SizedBox(height: 16),
+                      const SizedBox(height: 12),
                       _ProfileDetailsCard(user: _user!),
                     ],
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 12),
                     VerificationSection(
                       status: _user?.verificationStatus ?? 'unverified',
                       identityVerified: _user?.identityVerified ?? false,
                       onManage: _openVerification,
                     ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 12),
                     SectionCard(
                       backgroundColor: Theme.of(
                         context,
@@ -372,7 +414,7 @@ class _ProfilePageState extends State<ProfilePage> {
                         onTap: _openSettings,
                       ),
                     ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 12),
                     if (_canOpenAdminPanel)
                       SectionCard(
                         backgroundColor: Theme.of(
@@ -395,7 +437,7 @@ class _ProfilePageState extends State<ProfilePage> {
                           onTap: () => context.push('/admin/panel'),
                         ),
                       ),
-                    if (_canOpenAdminPanel) const SizedBox(height: 16),
+                    if (_canOpenAdminPanel) const SizedBox(height: 12),
                     SecuritySection(
                       onChangePassword: () {
                         Navigator.of(context).push(
@@ -406,7 +448,7 @@ class _ProfilePageState extends State<ProfilePage> {
                       },
                       onLogout: _confirmLogout,
                     ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 12),
                     SupportSection(
                       onFaq: () {
                         Navigator.of(context).push(
@@ -422,6 +464,130 @@ class _ProfilePageState extends State<ProfilePage> {
                   ],
                 ),
         ],
+      ),
+    );
+  }
+}
+
+class _ProfileQuickActionsCard extends StatelessWidget {
+  const _ProfileQuickActionsCard({
+    required this.onEdit,
+    required this.onVerification,
+    required this.onSettings,
+    this.onAdmin,
+  });
+
+  final VoidCallback onEdit;
+  final VoidCallback onVerification;
+  final VoidCallback onSettings;
+  final VoidCallback? onAdmin;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final chips = <_QuickActionChipData>[
+      _QuickActionChipData(
+        icon: Icons.edit_outlined,
+        label: 'Profili Duzenle',
+        onTap: onEdit,
+      ),
+      _QuickActionChipData(
+        icon: Icons.verified_user_outlined,
+        label: 'Dogrulama',
+        onTap: onVerification,
+      ),
+      _QuickActionChipData(
+        icon: Icons.tune_rounded,
+        label: 'Ayarlar',
+        onTap: onSettings,
+      ),
+      if (onAdmin != null)
+        _QuickActionChipData(
+          icon: Icons.admin_panel_settings_outlined,
+          label: 'Yonetim',
+          onTap: onAdmin!,
+        ),
+    ];
+    return SectionCard(
+      padding: const EdgeInsets.all(14),
+      radius: 24,
+      backgroundColor: theme.colorScheme.surface.withValues(alpha: 0.94),
+      child: Wrap(
+        spacing: 8,
+        runSpacing: 8,
+        children: chips
+            .map(
+              (item) => _QuickActionPill(
+                icon: item.icon,
+                label: item.label,
+                onTap: item.onTap,
+              ),
+            )
+            .toList(),
+      ),
+    );
+  }
+}
+
+class _QuickActionChipData {
+  const _QuickActionChipData({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+}
+
+class _QuickActionPill extends StatelessWidget {
+  const _QuickActionPill({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(999),
+        onTap: onTap,
+        child: Ink(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(999),
+            gradient: LinearGradient(
+              colors: [
+                theme.colorScheme.primary.withValues(alpha: 0.14),
+                theme.colorScheme.primary.withValues(alpha: 0.05),
+              ],
+            ),
+            border: Border.all(
+              color: theme.colorScheme.primary.withValues(alpha: 0.18),
+            ),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ThreeDIconBadge(icon: icon, accent: theme.colorScheme.primary),
+              const SizedBox(width: 8),
+              Text(
+                label,
+                style: theme.textTheme.labelLarge?.copyWith(
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

@@ -45,43 +45,78 @@ class NearbyLocationsCarousel extends StatelessWidget {
           return InkWell(
             onTap: () => onLocationTap(location),
             borderRadius: BorderRadius.circular(18),
-            splashColor: Theme.of(context)
-                .colorScheme
-                .primary
-                .withValues(alpha: 0.08),
-            highlightColor: Theme.of(context)
-                .colorScheme
-                .primary
-                .withValues(alpha: 0.04),
+            splashColor: Theme.of(
+              context,
+            ).colorScheme.primary.withValues(alpha: 0.08),
+            highlightColor: Theme.of(
+              context,
+            ).colorScheme.primary.withValues(alpha: 0.04),
             child: Ink(
               width: 220,
               padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.surface,
+                gradient: LinearGradient(
+                  colors: [
+                    Theme.of(
+                      context,
+                    ).colorScheme.surface.withValues(alpha: 0.95),
+                    Theme.of(
+                      context,
+                    ).colorScheme.surface.withValues(alpha: 0.85),
+                  ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
                 borderRadius: BorderRadius.circular(18),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.08),
-                    blurRadius: 14,
-                    offset: const Offset(0, 8),
+                    color: Colors.black.withValues(alpha: 0.1),
+                    blurRadius: 18,
+                    offset: const Offset(0, 10),
                   ),
                 ],
-                border: Border.all(
-                  color: Theme.of(context)
-                      .colorScheme
-                      .outlineVariant
-                      .withValues(alpha: 0.6),
-                ),
+                border: Border.all(color: Colors.white.withValues(alpha: 0.75)),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  Row(
+                    children: [
+                      Container(
+                        width: 34,
+                        height: 34,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          gradient: LinearGradient(
+                            colors: [
+                              Theme.of(
+                                context,
+                              ).colorScheme.primary.withValues(alpha: 0.22),
+                              Theme.of(
+                                context,
+                              ).colorScheme.primary.withValues(alpha: 0.06),
+                            ],
+                          ),
+                        ),
+                        child: Icon(
+                          Icons.location_on_outlined,
+                          size: 18,
+                          color: Theme.of(context).colorScheme.primary,
+                        ),
+                      ),
+                      const Spacer(),
+                      Icon(
+                        Icons.chevron_right_rounded,
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
                   Text(
                     location.name,
-                    style: Theme.of(context)
-                        .textTheme
-                        .titleSmall
-                        ?.copyWith(fontWeight: FontWeight.w600),
+                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                   const SizedBox(height: 6),
                   Text(
@@ -89,16 +124,19 @@ class NearbyLocationsCarousel extends StatelessWidget {
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
-                        ),
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
                   ),
                   const Spacer(),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 6,
+                    ),
                     decoration: BoxDecoration(
-                      color: Theme.of(context)
-                          .colorScheme
-                          .surfaceContainerHighest,
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.primary.withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(999),
                     ),
                     child: Text(
@@ -107,8 +145,8 @@ class NearbyLocationsCarousel extends StatelessWidget {
                         location.totalSlots,
                       ),
                       style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                            fontWeight: FontWeight.w600,
-                          ),
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ),
                 ],
@@ -130,11 +168,8 @@ class _SkeletonRow extends StatelessWidget {
         scrollDirection: Axis.horizontal,
         itemCount: 3,
         separatorBuilder: (_, __) => const SizedBox(width: 12),
-        itemBuilder: (context, index) => const AppSkeleton(
-          height: 150,
-          width: 220,
-          radius: 18,
-        ),
+        itemBuilder: (context, index) =>
+            const AppSkeleton(height: 150, width: 220, radius: 18),
       ),
     );
   }

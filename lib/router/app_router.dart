@@ -9,6 +9,7 @@ import '../screens/notifications_page.dart';
 import '../screens/location_reservation_page.dart';
 import '../screens/superapp_shell.dart';
 import '../features/dashboard/dashboard_page.dart';
+import '../features/dashboard/pages/how_it_works_page.dart';
 import '../features/explore/explore_page.dart';
 import '../features/bookings/bookings_page.dart';
 import '../features/wallet/wallet_page.dart';
@@ -74,6 +75,10 @@ GoRouter buildAppRouter() {
           StatefulShellBranch(
             routes: [
               GoRoute(path: '/home', builder: (_, __) => const DashboardPage()),
+              GoRoute(
+                path: '/home/how-it-works',
+                builder: (_, __) => const HowItWorksPage(),
+              ),
               GoRoute(
                 path: '/home/location/:id',
                 builder: (context, state) => LocationReservationPage(

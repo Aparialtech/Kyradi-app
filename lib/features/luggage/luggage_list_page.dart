@@ -141,15 +141,16 @@ class _LuggageListPageState extends State<LuggageListPage> {
         filtered.sort((a, b) => a.status.index.compareTo(b.status.index));
         break;
       case LuggageSort.location:
-        filtered.sort((a, b) =>
-            a.dropLocationName.compareTo(b.dropLocationName));
+        filtered.sort(
+          (a, b) => a.dropLocationName.compareTo(b.dropLocationName),
+        );
         break;
       case LuggageSort.payment:
-        filtered.sort((a, b) =>
-            (a.paymentStatus ?? '').compareTo(b.paymentStatus ?? ''));
+        filtered.sort(
+          (a, b) => (a.paymentStatus ?? '').compareTo(b.paymentStatus ?? ''),
+        );
         break;
       case LuggageSort.date:
-      default:
         filtered.sort((a, b) => b.createdAt.compareTo(a.createdAt));
         break;
     }
@@ -164,16 +165,41 @@ class _LuggageListPageState extends State<LuggageListPage> {
   }
 
   LuggageModel? get _activeLuggage {
-    final active = _items
-        .where(
-          (item) =>
-              item.status == LuggageStatus.awaitingDrop ||
-              item.status == LuggageStatus.dropped,
-        )
-        .toList()
-      ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+    final active =
+        _items
+            .where(
+              (item) =>
+                  item.status == LuggageStatus.awaitingDrop ||
+                  item.status == LuggageStatus.dropped,
+            )
+            .toList()
+          ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
     if (active.isEmpty) return null;
     return active.first;
+  }
+
+  int get _activeCount => _items
+      .where(
+        (item) =>
+            item.status == LuggageStatus.awaitingDrop ||
+            item.status == LuggageStatus.dropped,
+      )
+      .length;
+
+  Future<void> _openAddLuggageFlow() async {
+    final loc = AppLocalizations.of(context)!;
+    final result = await context.push('/luggage/add');
+    if (!context.mounted) return;
+    if (result is LuggageModel) {
+      setState(() {
+        _items = [result, ..._items];
+      });
+      AppNotification.show(
+        context,
+        message: loc.luggageCreated,
+        type: AppNotificationType.success,
+      );
+    }
   }
 
   void _openFilters() {
@@ -187,17 +213,16 @@ class _LuggageListPageState extends State<LuggageListPage> {
         var payment = _paymentFilter;
         var location = _locationFilter;
         var size = _sizeFilter;
-        final locations = _items
-            .map((e) => e.dropLocationName.toLowerCase())
-            .toSet()
-            .toList()
-          ..sort();
-        final sizes = _items
-            .map((e) => (e.size ?? '').toLowerCase())
-            .where((e) => e.isNotEmpty)
-            .toSet()
-            .toList()
-          ..sort();
+        final locations =
+            _items.map((e) => e.dropLocationName.toLowerCase()).toSet().toList()
+              ..sort();
+        final sizes =
+            _items
+                .map((e) => (e.size ?? '').toLowerCase())
+                .where((e) => e.isNotEmpty)
+                .toSet()
+                .toList()
+              ..sort();
         return Padding(
           padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
           child: Column(
@@ -206,22 +231,16 @@ class _LuggageListPageState extends State<LuggageListPage> {
             children: [
               Text(
                 loc.luggageFilterTitle,
-                style: Theme.of(context)
-                    .textTheme
-                    .titleMedium
-                    ?.copyWith(fontWeight: FontWeight.w700),
+                style: Theme.of(
+                  context,
+                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
               ),
               const SizedBox(height: 12),
               DropdownButtonFormField<LuggageStatus>(
                 value: status,
-                decoration: InputDecoration(
-                  labelText: loc.luggageFilterStatus,
-                ),
+                decoration: InputDecoration(labelText: loc.luggageFilterStatus),
                 items: [
-                  DropdownMenuItem(
-                    value: null,
-                    child: Text(loc.allLabel),
-                  ),
+                  DropdownMenuItem(value: null, child: Text(loc.allLabel)),
                   DropdownMenuItem(
                     value: LuggageStatus.awaitingDrop,
                     child: Text(loc.luggageStatusAwaitingDrop),
@@ -244,7 +263,9 @@ class _LuggageListPageState extends State<LuggageListPage> {
               const SizedBox(height: 12),
               DropdownButtonFormField<String>(
                 value: payment,
-                decoration: InputDecoration(labelText: loc.luggageFilterPayment),
+                decoration: InputDecoration(
+                  labelText: loc.luggageFilterPayment,
+                ),
                 items: [
                   DropdownMenuItem(value: null, child: Text(loc.allLabel)),
                   DropdownMenuItem(
@@ -269,14 +290,13 @@ class _LuggageListPageState extends State<LuggageListPage> {
               const SizedBox(height: 12),
               DropdownButtonFormField<String>(
                 value: location,
-                decoration: InputDecoration(labelText: loc.luggageFilterLocation),
+                decoration: InputDecoration(
+                  labelText: loc.luggageFilterLocation,
+                ),
                 items: [
                   DropdownMenuItem(value: null, child: Text(loc.allLabel)),
                   for (final locName in locations)
-                    DropdownMenuItem(
-                      value: locName,
-                      child: Text(locName),
-                    ),
+                    DropdownMenuItem(value: locName, child: Text(locName)),
                 ],
                 onChanged: (value) => location = value,
               ),
@@ -287,10 +307,7 @@ class _LuggageListPageState extends State<LuggageListPage> {
                 items: [
                   DropdownMenuItem(value: null, child: Text(loc.allLabel)),
                   for (final sizeValue in sizes)
-                    DropdownMenuItem(
-                      value: sizeValue,
-                      child: Text(sizeValue),
-                    ),
+                    DropdownMenuItem(value: sizeValue, child: Text(sizeValue)),
                 ],
                 onChanged: (value) => size = value,
               ),
@@ -335,7 +352,11 @@ class _LuggageListPageState extends State<LuggageListPage> {
 
   Future<void> _cancelLuggage(LuggageModel luggage) async {
     final loc = AppLocalizations.of(context)!;
-    appLog('luggage', 'LUGGAGE_CANCEL_TAP id=${luggage.id}', level: AppLogLevel.info);
+    appLog(
+      'luggage',
+      'LUGGAGE_CANCEL_TAP id=${luggage.id}',
+      level: AppLogLevel.info,
+    );
     final confirm = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
@@ -358,15 +379,20 @@ class _LuggageListPageState extends State<LuggageListPage> {
     setState(() {
       _canceling = true;
     });
-    appLog('luggage', 'LUGGAGE_CANCEL_START id=${luggage.id}', level: AppLogLevel.info);
+    appLog(
+      'luggage',
+      'LUGGAGE_CANCEL_START id=${luggage.id}',
+      level: AppLogLevel.info,
+    );
     try {
       final res = await _repo
           .cancel(_userId!, luggage.id)
           .timeout(const Duration(seconds: 20));
       if (!mounted) return;
       if (res['ok'] == true && res['luggage'] is Map) {
-        final updated =
-            LuggageModel.fromJson(Map<String, dynamic>.from(res['luggage'] as Map));
+        final updated = LuggageModel.fromJson(
+          Map<String, dynamic>.from(res['luggage'] as Map),
+        );
         setState(() {
           _items = _items.map((e) => e.id == updated.id ? updated : e).toList();
         });
@@ -375,9 +401,14 @@ class _LuggageListPageState extends State<LuggageListPage> {
           message: loc.reservationCancelledMessage,
           type: AppNotificationType.success,
         );
-        appLog('luggage', 'LUGGAGE_CANCEL_OK id=${luggage.id}', level: AppLogLevel.info);
+        appLog(
+          'luggage',
+          'LUGGAGE_CANCEL_OK id=${luggage.id}',
+          level: AppLogLevel.info,
+        );
       } else {
-        final msg = (res['error'] ?? res['message'] ?? 'CANCEL_FAILED').toString();
+        final msg = (res['error'] ?? res['message'] ?? 'CANCEL_FAILED')
+            .toString();
         AppNotification.show(
           context,
           message: msg.isNotEmpty ? msg : loc.cancelFailed,
@@ -418,7 +449,10 @@ class _LuggageListPageState extends State<LuggageListPage> {
     final hasMore = paged.length < filtered.length;
     final activeLuggage = _activeLuggage;
     final showActiveSheet =
-        !_loading && _error == null && activeLuggage != null && _items.isNotEmpty;
+        !_loading &&
+        _error == null &&
+        activeLuggage != null &&
+        _items.isNotEmpty;
     final activeSheetBottom = MediaQuery.viewPaddingOf(context).bottom + 84;
     return Scaffold(
       backgroundColor: Colors.transparent,
@@ -523,7 +557,9 @@ class _LuggageListPageState extends State<LuggageListPage> {
                                 ButtonSegment(
                                   value: LuggageView.calendar,
                                   label: Text(loc.luggageViewCalendar),
-                                  icon: const Icon(Icons.calendar_month_outlined),
+                                  icon: const Icon(
+                                    Icons.calendar_month_outlined,
+                                  ),
                                 ),
                               ],
                               selected: {_view},
@@ -537,6 +573,14 @@ class _LuggageListPageState extends State<LuggageListPage> {
                       ),
                     ],
                   ),
+                ),
+                const SizedBox(height: 12),
+                _LuggageQuickBar(
+                  totalCount: _items.length,
+                  activeCount: _activeCount,
+                  onAdd: _openAddLuggageFlow,
+                  onFilter: _items.isEmpty ? null : _openFilters,
+                  onRefresh: _load,
                 ),
                 const SizedBox(height: 16),
                 if (_loading) ...[
@@ -562,7 +606,7 @@ class _LuggageListPageState extends State<LuggageListPage> {
                     title: loc.myLuggages,
                     subtitle: loc.luggageEmptyStateNoItems,
                     actionLabel: loc.quickAddLuggage,
-                    onAction: () => context.push('/luggage/add'),
+                    onAction: _openAddLuggageFlow,
                   ),
                 ] else if (filtered.isEmpty) ...[
                   AppEmptyState(
@@ -625,9 +669,7 @@ class _LuggageListPageState extends State<LuggageListPage> {
             Positioned.fill(
               child: Container(
                 color: Colors.black.withValues(alpha: 0.15),
-                child: const Center(
-                  child: CircularProgressIndicator(),
-                ),
+                child: const Center(child: CircularProgressIndicator()),
               ),
             ),
           if (showActiveSheet)
@@ -646,20 +688,7 @@ class _LuggageListPageState extends State<LuggageListPage> {
         ],
       ),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: () async {
-          final result = await context.push('/luggage/add');
-          if (!context.mounted) return;
-          if (result is LuggageModel) {
-            setState(() {
-              _items = [result, ..._items];
-            });
-            AppNotification.show(
-              context,
-              message: loc.luggageCreated,
-              type: AppNotificationType.success,
-            );
-          }
-        },
+        onPressed: _openAddLuggageFlow,
         icon: const Icon(Icons.add),
         label: Text(loc.quickAddLuggage),
       ),
@@ -869,10 +898,11 @@ class _LuggageListPageState extends State<LuggageListPage> {
                             vertical: 6,
                           ),
                           decoration: BoxDecoration(
-                            color: (location.availableSlots > 0
-                                    ? theme.colorScheme.tertiary
-                                    : theme.colorScheme.error)
-                                .withValues(alpha: 0.12),
+                            color:
+                                (location.availableSlots > 0
+                                        ? theme.colorScheme.tertiary
+                                        : theme.colorScheme.error)
+                                    .withValues(alpha: 0.12),
                             borderRadius: BorderRadius.circular(999),
                           ),
                           child: Text(
@@ -923,8 +953,7 @@ class _LuggageListPageState extends State<LuggageListPage> {
                                   Text(
                                     dateLabel.format(day),
                                     style: theme.textTheme.bodySmall?.copyWith(
-                                      color:
-                                          theme.colorScheme.onSurfaceVariant,
+                                      color: theme.colorScheme.onSurfaceVariant,
                                     ),
                                   ),
                                 ],
@@ -979,15 +1008,132 @@ class _LuggageListPageState extends State<LuggageListPage> {
   }
 }
 
+class _LuggageQuickBar extends StatelessWidget {
+  const _LuggageQuickBar({
+    required this.totalCount,
+    required this.activeCount,
+    required this.onAdd,
+    required this.onFilter,
+    required this.onRefresh,
+  });
+
+  final int totalCount;
+  final int activeCount;
+  final VoidCallback onAdd;
+  final VoidCallback? onFilter;
+  final Future<void> Function() onRefresh;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return SectionCard(
+      padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Text(
+                'Hizli Islemler',
+                style: theme.textTheme.titleSmall?.copyWith(
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+              const Spacer(),
+              _CountPill(
+                label: 'Toplam',
+                value: '$totalCount',
+                accent: const Color(0xFF334155),
+              ),
+              const SizedBox(width: 6),
+              _CountPill(
+                label: 'Aktif',
+                value: '$activeCount',
+                accent: const Color(0xFF0F766E),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              Expanded(
+                child: FilledButton.icon(
+                  onPressed: onAdd,
+                  icon: const Icon(Icons.add_box_rounded, size: 18),
+                  label: const Text('Yeni Bavul'),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: onFilter,
+                  icon: const Icon(Icons.tune_rounded, size: 18),
+                  label: const Text('Filtre'),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: () => onRefresh(),
+                  icon: const Icon(Icons.refresh_rounded, size: 18),
+                  label: const Text('Yenile'),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _CountPill extends StatelessWidget {
+  const _CountPill({
+    required this.label,
+    required this.value,
+    required this.accent,
+  });
+
+  final String label;
+  final String value;
+  final Color accent;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(999),
+        color: accent.withValues(alpha: 0.08),
+        border: Border.all(color: accent.withValues(alpha: 0.24)),
+      ),
+      child: Row(
+        children: [
+          Text(
+            '$label ',
+            style: Theme.of(context).textTheme.labelSmall?.copyWith(
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
+          ),
+          Text(
+            value,
+            style: Theme.of(context).textTheme.labelSmall?.copyWith(
+              fontWeight: FontWeight.w800,
+              color: accent,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 enum LuggageSort { date, status, location, payment }
 
 enum LuggageView { list, cards, calendar }
 
 class _InfoChip extends StatelessWidget {
-  const _InfoChip({
-    required this.icon,
-    required this.label,
-  });
+  const _InfoChip({required this.icon, required this.label});
 
   final IconData icon;
   final String label;

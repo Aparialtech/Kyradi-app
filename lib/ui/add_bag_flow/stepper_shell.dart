@@ -38,6 +38,29 @@ class _ReservationStepperShellState extends State<ReservationStepperShell> {
   String? _userId;
   LuggageModel? _created;
 
+  static const List<_StepMeta> _stepMeta = [
+    _StepMeta(
+      icon: Icons.inventory_2_outlined,
+      subtitle: 'Bavulun temel bilgilerini girin.',
+    ),
+    _StepMeta(
+      icon: Icons.location_on_outlined,
+      subtitle: 'Lokasyon ve birakma/teslim saatini secin.',
+    ),
+    _StepMeta(
+      icon: Icons.auto_graph_rounded,
+      subtitle: 'Ucret ve opsiyonlari kontrol edin.',
+    ),
+    _StepMeta(
+      icon: Icons.payments_outlined,
+      subtitle: 'Odeme yontemini secip islemi tamamlayin.',
+    ),
+    _StepMeta(
+      icon: Icons.verified_rounded,
+      subtitle: 'Rezervasyon olusturuldu.',
+    ),
+  ];
+
   @override
   void initState() {
     super.initState();
@@ -71,7 +94,11 @@ class _ReservationStepperShellState extends State<ReservationStepperShell> {
         }
       }
     } catch (e) {
-      appLog('reservation', 'locations load failed $e', level: AppLogLevel.warn);
+      appLog(
+        'reservation',
+        'locations load failed $e',
+        level: AppLogLevel.warn,
+      );
     }
   }
 
@@ -135,7 +162,8 @@ class _ReservationStepperShellState extends State<ReservationStepperShell> {
           return;
         }
       }
-      final pricing = draft.pricing ??
+      final pricing =
+          draft.pricing ??
           PricingService.calculate(
             start: draft.dropAt ?? DateTime.now(),
             end: draft.pickupAt ?? DateTime.now().add(const Duration(hours: 1)),
@@ -160,7 +188,8 @@ class _ReservationStepperShellState extends State<ReservationStepperShell> {
             amount: pricing.total,
             paymentMethod: draft.paymentMethod,
           );
-          ok = checkout['ok'] == true ||
+          ok =
+              checkout['ok'] == true ||
               checkout['status'] == 'success' ||
               checkout['paymentStatus'] == 'success';
         } catch (_) {
@@ -268,8 +297,7 @@ class _ReservationStepperShellState extends State<ReservationStepperShell> {
     return true;
   }
 
-  String _digitsOnly(String input) =>
-      input.replaceAll(RegExp(r'[^0-9]'), '');
+  String _digitsOnly(String input) => input.replaceAll(RegExp(r'[^0-9]'), '');
 
   bool _isValidExpiry(String value) {
     final trimmed = value.trim();
@@ -284,13 +312,12 @@ class _ReservationStepperShellState extends State<ReservationStepperShell> {
     return expiry.isAfter(now);
   }
 
-  Map<String, dynamic> _buildPayload(
-    ReservationDraft draft,
-    dynamic pricing,
-  ) {
-    final paid = draft.paymentMethod == 'wallet' || draft.paymentMethod == 'card';
-    final backendMethod =
-        draft.paymentMethod == 'wallet' ? 'card' : draft.paymentMethod;
+  Map<String, dynamic> _buildPayload(ReservationDraft draft, dynamic pricing) {
+    final paid =
+        draft.paymentMethod == 'wallet' || draft.paymentMethod == 'card';
+    final backendMethod = draft.paymentMethod == 'wallet'
+        ? 'card'
+        : draft.paymentMethod;
     return {
       'qrCode': _generateQrCode(),
       'label': draft.label.trim().isEmpty ? 'Bavul' : draft.label.trim(),
@@ -311,8 +338,7 @@ class _ReservationStepperShellState extends State<ReservationStepperShell> {
   }
 
   String _generateQrCode() {
-    final stamp = DateTime.now()
-        .millisecondsSinceEpoch
+    final stamp = DateTime.now().millisecondsSinceEpoch
         .toRadixString(36)
         .toUpperCase();
     return 'BGO-$stamp-${stamp.substring(0, 4)}';
@@ -337,10 +363,9 @@ class _ReservationStepperShellState extends State<ReservationStepperShell> {
             children: [
               Text(
                 loc.paymentWalletInsufficientTitle,
-                style: Theme.of(context)
-                    .textTheme
-                    .titleMedium
-                    ?.copyWith(fontWeight: FontWeight.w700),
+                style: Theme.of(
+                  context,
+                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
               ),
               const SizedBox(height: 8),
               Text(
@@ -430,6 +455,9 @@ class _ReservationStepperShellState extends State<ReservationStepperShell> {
           loc.stepPaymentTitle,
           loc.stepSuccessTitle,
         ];
+        final currentStep = _controller.step;
+        final progress = ((currentStep + 1) / steps.length).clamp(0.0, 1.0);
+        final currentMeta = _stepMeta[currentStep];
         return Scaffold(
           appBar: AppBar(
             title: Text(loc.addLuggageTitle),
@@ -443,23 +471,94 @@ class _ReservationStepperShellState extends State<ReservationStepperShell> {
               Padding(
                 padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
                 child: SectionCard(
-                  padding: const EdgeInsets.all(12),
-                  child: Row(
+                  padding: const EdgeInsets.fromLTRB(12, 12, 12, 10),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      for (var i = 0; i < steps.length; i++) ...[
-                        _StepDot(
-                          active: _controller.step == i,
-                          label: '${i + 1}',
-                        ),
-                        if (i != steps.length - 1)
-                          Expanded(
-                            child: Divider(
-                              color: Theme.of(context)
-                                  .colorScheme
-                                  .outlineVariant,
+                      Row(
+                        children: [
+                          Container(
+                            height: 34,
+                            width: 34,
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(10),
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.primary.withValues(alpha: 0.12),
+                            ),
+                            child: Icon(
+                              currentMeta.icon,
+                              size: 18,
+                              color: Theme.of(context).colorScheme.primary,
                             ),
                           ),
-                      ],
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  steps[currentStep],
+                                  style: Theme.of(context).textTheme.titleSmall
+                                      ?.copyWith(fontWeight: FontWeight.w700),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  currentMeta.subtitle,
+                                  style: Theme.of(context).textTheme.bodySmall
+                                      ?.copyWith(
+                                        color: Theme.of(
+                                          context,
+                                        ).colorScheme.onSurfaceVariant,
+                                      ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            '${currentStep + 1}/${steps.length}',
+                            style: Theme.of(context).textTheme.labelMedium
+                                ?.copyWith(
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.onSurfaceVariant,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 10),
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(999),
+                        child: LinearProgressIndicator(
+                          value: progress,
+                          minHeight: 4,
+                          backgroundColor: Theme.of(
+                            context,
+                          ).colorScheme.surfaceContainerHighest,
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      Row(
+                        children: [
+                          for (var i = 0; i < steps.length; i++) ...[
+                            _StepDot(
+                              active: _controller.step == i,
+                              completed: _controller.step > i,
+                              label: '${i + 1}',
+                            ),
+                            if (i != steps.length - 1)
+                              Expanded(
+                                child: Divider(
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.outlineVariant,
+                                ),
+                              ),
+                          ],
+                        ],
+                      ),
                     ],
                   ),
                 ),
@@ -498,9 +597,7 @@ class _ReservationStepperShellState extends State<ReservationStepperShell> {
                       onPay: _submitPayment,
                       loading: _submitting,
                     ),
-                    StepSuccess(
-                      luggage: _created,
-                    ),
+                    StepSuccess(luggage: _created),
                   ],
                 ),
               ),
@@ -511,7 +608,9 @@ class _ReservationStepperShellState extends State<ReservationStepperShell> {
                   minimum: const EdgeInsets.fromLTRB(16, 0, 16, 16),
                   child: FilledButton(
                     onPressed: _canContinue(_controller.step) ? _next : null,
-                    child: Text(loc.continueAction),
+                    child: Text(
+                      '${loc.continueAction} • ${_controller.step + 1}/${steps.length}',
+                    ),
                   ),
                 )
               : null,
@@ -522,9 +621,14 @@ class _ReservationStepperShellState extends State<ReservationStepperShell> {
 }
 
 class _StepDot extends StatelessWidget {
-  const _StepDot({required this.active, required this.label});
+  const _StepDot({
+    required this.active,
+    required this.completed,
+    required this.label,
+  });
 
   final bool active;
+  final bool completed;
   final String label;
 
   @override
@@ -535,21 +639,30 @@ class _StepDot extends StatelessWidget {
       height: 28,
       width: 28,
       decoration: BoxDecoration(
-        color: active ? theme.colorScheme.primary : theme.colorScheme.surface,
+        color: active || completed
+            ? theme.colorScheme.primary
+            : theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(999),
-        border: Border.all(
-          color: theme.colorScheme.outlineVariant,
-        ),
+        border: Border.all(color: theme.colorScheme.outlineVariant),
       ),
       child: Center(
         child: Text(
-          label,
+          completed ? '✓' : label,
           style: theme.textTheme.labelSmall?.copyWith(
-            color: active ? theme.colorScheme.onPrimary : theme.colorScheme.onSurface,
+            color: active || completed
+                ? theme.colorScheme.onPrimary
+                : theme.colorScheme.onSurface,
             fontWeight: FontWeight.w700,
           ),
         ),
       ),
     );
   }
+}
+
+class _StepMeta {
+  const _StepMeta({required this.icon, required this.subtitle});
+
+  final IconData icon;
+  final String subtitle;
 }

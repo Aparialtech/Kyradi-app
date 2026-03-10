@@ -37,92 +37,143 @@ class ActiveTripCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final loc = AppLocalizations.of(context)!;
-    return Card(
-      margin: EdgeInsets.zero,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(24),
+        gradient: LinearGradient(
+          colors: [
+            theme.colorScheme.surface.withValues(alpha: 0.94),
+            theme.colorScheme.surface.withValues(alpha: 0.85),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.7)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.08),
+            blurRadius: 22,
+            offset: const Offset(0, 12),
+          ),
+        ],
+      ),
       child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
+        child: Stack(
           children: [
-            Container(
-              height: 4,
-              width: 26,
-              margin: const EdgeInsets.only(bottom: 10),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(999),
-                gradient: LinearGradient(
-                  colors: [
-                    theme.colorScheme.primary.withValues(alpha: 0.9),
-                    theme.colorScheme.secondary.withValues(alpha: 0.8),
-                  ],
+            Positioned(
+              right: -24,
+              top: -34,
+              child: Container(
+                width: 110,
+                height: 110,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: LinearGradient(
+                    colors: [
+                      theme.colorScheme.primary.withValues(alpha: 0.18),
+                      theme.colorScheme.secondary.withValues(alpha: 0.03),
+                    ],
+                  ),
                 ),
               ),
             ),
-            Text(
-              title,
-              style: theme.textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              subtitle,
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
-            ),
-            const SizedBox(height: 16),
-            if (loading)
-              const AppSkeleton(height: 80)
-            else if (errorMessage != null)
-              AppErrorState(
-                message: errorMessage!,
-                onRetry: onRetry,
-              )
-            else if (luggage == null)
-              AppEmptyState(
-                title: emptyLabel,
-                subtitle: '',
-                actionLabel: emptyActionLabel,
-                onAction: onEmptyAction,
-              )
-            else
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    luggage!.displayLabel,
-                    style: theme.textTheme.titleSmall?.copyWith(
-                      fontWeight: FontWeight.w600,
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  height: 4,
+                  width: 26,
+                  margin: const EdgeInsets.only(bottom: 10),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(999),
+                    gradient: LinearGradient(
+                      colors: [
+                        theme.colorScheme.primary.withValues(alpha: 0.9),
+                        theme.colorScheme.secondary.withValues(alpha: 0.8),
+                      ],
                     ),
                   ),
-                  const SizedBox(height: 6),
-                  Text(
-                    _statusLabel(loc, luggage!.status),
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.colorScheme.primary,
-                      fontWeight: FontWeight.w600,
-                    ),
+                ),
+                Text(
+                  title,
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w800,
                   ),
-                  const SizedBox(height: 12),
-                  Wrap(
-                    spacing: 8,
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  subtitle,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                if (loading)
+                  const AppSkeleton(height: 80)
+                else if (errorMessage != null)
+                  AppErrorState(message: errorMessage!, onRetry: onRetry)
+                else if (luggage == null)
+                  AppEmptyState(
+                    title: emptyLabel,
+                    subtitle: '',
+                    actionLabel: emptyActionLabel,
+                    onAction: onEmptyAction,
+                  )
+                else
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      FilledButton.icon(
-                        onPressed: onShowQr,
-                        icon: const Icon(Icons.qr_code_2),
-                        label: Text(loc.qrShowAction),
+                      Text(
+                        luggage!.displayLabel,
+                        style: theme.textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.w700,
+                        ),
                       ),
-                      OutlinedButton.icon(
-                        onPressed: onDetails,
-                        icon: const Icon(Icons.open_in_new),
-                        label: Text(loc.detailsAction),
+                      const SizedBox(height: 6),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 5,
+                        ),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(999),
+                          color: theme.colorScheme.primary.withValues(
+                            alpha: 0.12,
+                          ),
+                        ),
+                        child: Text(
+                          _statusLabel(loc, luggage!.status),
+                          style: theme.textTheme.labelSmall?.copyWith(
+                            color: theme.colorScheme.primary,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: FilledButton.icon(
+                              onPressed: onShowQr,
+                              icon: const Icon(Icons.qr_code_2),
+                              label: Text(loc.qrShowAction),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: OutlinedButton.icon(
+                              onPressed: onDetails,
+                              icon: const Icon(Icons.open_in_new),
+                              label: Text(loc.detailsAction),
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),
-                ],
-              ),
+              ],
+            ),
           ],
         ),
       ),

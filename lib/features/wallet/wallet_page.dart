@@ -579,6 +579,12 @@ class _WalletPageState extends State<WalletPage>
                         onQuickTopUp: _openQuickTopUpSheet,
                       ),
                       const SizedBox(height: 16),
+                      _WalletStartCard(
+                        onTopUp: () => _togglePanel(_WalletPanel.topup),
+                        onTransactions: _openTransactions,
+                        onCards: _openCards,
+                      ),
+                      const SizedBox(height: 16),
                       _WalletMetricStrip(
                         earnedAmount: _earnedTotal,
                         spentAmount: _spentTotal,
@@ -892,6 +898,72 @@ class _DailyFlow {
       label: label ?? this.label,
       incoming: incoming ?? this.incoming,
       outgoing: outgoing ?? this.outgoing,
+    );
+  }
+}
+
+class _WalletStartCard extends StatelessWidget {
+  const _WalletStartCard({
+    required this.onTopUp,
+    required this.onTransactions,
+    required this.onCards,
+  });
+
+  final VoidCallback onTopUp;
+  final VoidCallback onTransactions;
+  final VoidCallback onCards;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return SectionCard(
+      padding: const EdgeInsets.all(14),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Hizli Baslangic',
+            style: theme.textTheme.titleSmall?.copyWith(
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'En sik kullanilan islemler tek dokunusla.',
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: FilledButton.icon(
+                  onPressed: onTopUp,
+                  icon: const Icon(Icons.add_circle_outline_rounded, size: 18),
+                  label: const Text('Para Yukle'),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: onTransactions,
+                  icon: const Icon(Icons.receipt_long_outlined, size: 18),
+                  label: const Text('Islemler'),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: onCards,
+                  icon: const Icon(Icons.credit_card_outlined, size: 18),
+                  label: const Text('Kartlar'),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 }

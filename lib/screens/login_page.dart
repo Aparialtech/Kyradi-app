@@ -8,7 +8,6 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:go_router/go_router.dart';
 import '../services/auth_service.dart';
 import '../widgets/gradient_button.dart';
-import '../widgets/section_card.dart';
 import '../services/api_service.dart';
 import '../widgets/app_notification.dart';
 import '../l10n/app_localizations.dart';
@@ -17,7 +16,6 @@ import '../core/ios/ios_config_service.dart';
 import '../core/firebase/firebase_bootstrap.dart';
 import '../core/auth/google_oauth_config.dart';
 import '../ui/components/app_back_app_bar.dart';
-import '../ui/components/rainbow_bar.dart';
 import '../widgets/auth_mesh_background.dart';
 
 class LoginPage extends StatefulWidget {
@@ -27,11 +25,6 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
-  static const LinearGradient _warmGradient = LinearGradient(
-    colors: [Color(0xFF0F766E), Color(0xFF0EA5E9)],
-    begin: Alignment.topLeft,
-    end: Alignment.bottomRight,
-  );
   static const String _rememberEmailKey = 'remember_email';
   static const FlutterSecureStorage _secureStorage = FlutterSecureStorage();
 
@@ -455,393 +448,311 @@ class _LoginPageState extends State<LoginPage> {
             child: LayoutBuilder(
               builder: (context, constraints) {
                 return SingleChildScrollView(
-                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
+                  padding: const EdgeInsets.fromLTRB(20, 10, 20, 24),
                   child: ConstrainedBox(
                     constraints: BoxConstraints(
-                      minHeight: constraints.maxHeight - 48,
+                      minHeight: constraints.maxHeight - 20,
                     ),
                     child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        const SizedBox(height: 16),
-                        const RainbowBar(height: 4),
-                        const SizedBox(height: 12),
-                        SectionCard(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 26,
-                            vertical: 24,
-                          ),
-                          backgroundColor: theme.colorScheme.surface.withValues(
-                            alpha: 0.92,
-                          ),
-                          child: Column(
-                            children: [
-                              Container(
-                                height: 72,
-                                width: 72,
-                                decoration: BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  gradient: const LinearGradient(
-                                    colors: [
-                                      Color(0xFF2C2966),
-                                      Color(0xFF005C99),
-                                    ],
-                                    begin: Alignment.topLeft,
-                                    end: Alignment.bottomRight,
-                                  ),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: const Color(
-                                        0xFF2C3E50,
-                                      ).withValues(alpha: 0.18),
-                                      blurRadius: 24,
-                                      offset: const Offset(0, 12),
-                                    ),
-                                  ],
-                                ),
-                                child: Padding(
-                                  padding: const EdgeInsets.all(12),
-                                  child: Image.asset(
-                                    'assets/images/kyradi_logo.png',
-                                    fit: BoxFit.contain,
-                                  ),
-                                ),
+                        ConstrainedBox(
+                          constraints: const BoxConstraints(maxWidth: 430),
+                          child: Container(
+                            padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(34),
+                              color: Colors.white.withValues(alpha: 0.92),
+                              border: Border.all(
+                                color: Colors.white.withValues(alpha: 0.95),
                               ),
-                              const SizedBox(height: 18),
-                              Text(
-                                l10n.appTitle,
-                                style: theme.textTheme.headlineMedium?.copyWith(
-                                  fontWeight: FontWeight.w800,
-                                  letterSpacing: 1.1,
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withValues(alpha: 0.16),
+                                  blurRadius: 30,
+                                  offset: const Offset(0, 16),
                                 ),
+                              ],
+                            ),
+                            child: Container(
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(28),
+                                color: const Color(0xFFF0F2F9),
                               ),
-                              const SizedBox(height: 6),
-                              Text(
-                                l10n.loginHeroSubtitle,
-                                style: theme.textTheme.bodyMedium?.copyWith(
-                                  color: theme.colorScheme.onSurface.withValues(
-                                    alpha: 0.7,
-                                  ),
-                                ),
-                                textAlign: TextAlign.center,
+                              padding: const EdgeInsets.fromLTRB(
+                                18,
+                                20,
+                                18,
+                                18,
                               ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(height: 22),
-                        SectionCard(
-                          backgroundColor: theme.colorScheme.surface.withValues(
-                            alpha: 0.95,
-                          ),
-                          child: Form(
-                            key: _formKey,
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                SectionHeader(
-                                  title: l10n.loginFormTitle,
-                                  subtitle: l10n.loginFormSubtitle,
-                                  icon: Icons.key_rounded,
-                                ),
-                                const SizedBox(height: 18),
-                                TextFormField(
-                                  controller: _emailCtrl,
-                                  keyboardType: TextInputType.emailAddress,
-                                  decoration: InputDecoration(
-                                    labelText: l10n.email,
-                                    hintText: l10n.emailHint,
-                                    prefixIcon: _FieldIcon(
-                                      icon: Icons.alternate_email,
+                              child: Form(
+                                key: _formKey,
+                                child: Column(
+                                  crossAxisAlignment:
+                                      CrossAxisAlignment.stretch,
+                                  children: [
+                                    Text(
+                                      l10n.loginFormTitle,
+                                      textAlign: TextAlign.center,
+                                      style: theme.textTheme.headlineMedium
+                                          ?.copyWith(
+                                            fontWeight: FontWeight.w800,
+                                          ),
                                     ),
-                                  ),
-                                  validator: (v) {
-                                    if (v == null || v.trim().isEmpty) {
-                                      return l10n.validationEmailRequired;
-                                    }
-                                    final ok = RegExp(
-                                      r'^\S+@\S+\.\S+$',
-                                    ).hasMatch(v.trim());
-                                    if (!ok) {
-                                      return l10n.validationEmailInvalid;
-                                    }
-                                    return null;
-                                  },
-                                ),
-                                const SizedBox(height: 16),
-                                TextFormField(
-                                  controller: _passCtrl,
-                                  obscureText: _obscure,
-                                  enableSuggestions: false,
-                                  autocorrect: false,
-                                  inputFormatters: [
-                                    FilteringTextInputFormatter.deny(
-                                      RegExp(r'\s'),
+                                    const SizedBox(height: 10),
+                                    Text(
+                                      l10n.loginFormSubtitle,
+                                      textAlign: TextAlign.center,
+                                      style: theme.textTheme.bodyMedium
+                                          ?.copyWith(
+                                            color: const Color(0xFF4D5361),
+                                            height: 1.4,
+                                          ),
                                     ),
-                                  ],
-                                  decoration: InputDecoration(
-                                    labelText: l10n.passwordLabel,
-                                    hintText: l10n.passwordHint,
-                                    prefixIcon: _FieldIcon(
-                                      icon: Icons.lock_outline,
+                                    const SizedBox(height: 16),
+                                    Text(
+                                      l10n.email,
+                                      style: theme.textTheme.labelLarge
+                                          ?.copyWith(
+                                            color: const Color(0xFF626878),
+                                          ),
                                     ),
-                                    suffixIcon: IconButton(
-                                      onPressed: () =>
-                                          setState(() => _obscure = !_obscure),
-                                      icon: Icon(
-                                        _obscure
-                                            ? Icons.visibility
-                                            : Icons.visibility_off,
+                                    const SizedBox(height: 6),
+                                    _SoftTextField(
+                                      child: TextFormField(
+                                        controller: _emailCtrl,
+                                        keyboardType:
+                                            TextInputType.emailAddress,
+                                        decoration: InputDecoration(
+                                          hintText: l10n.emailHint,
+                                          prefixIcon: const _FieldIcon(
+                                            icon: Icons.alternate_email,
+                                          ),
+                                        ),
+                                        validator: (v) {
+                                          if (v == null || v.trim().isEmpty) {
+                                            return l10n.validationEmailRequired;
+                                          }
+                                          final ok = RegExp(
+                                            r'^\S+@\S+\.\S+$',
+                                          ).hasMatch(v.trim());
+                                          if (!ok) {
+                                            return l10n.validationEmailInvalid;
+                                          }
+                                          return null;
+                                        },
                                       ),
                                     ),
-                                  ),
-                                  validator: (v) {
-                                    if (v == null || v.isEmpty) {
-                                      return l10n.validationPasswordRequired;
-                                    }
-                                    if (v.length < 6) {
-                                      return l10n.validationMinChars('6');
-                                    }
-                                    return null;
-                                  },
-                                ),
-                                const SizedBox(height: 12),
-                                Row(
-                                  children: [
-                                    Checkbox(
-                                      value: _rememberMe,
-                                      onChanged: (value) {
-                                        setState(
-                                          () => _rememberMe = value ?? false,
-                                        );
-                                        if (!(value ?? false)) {
-                                          _secureStorage.delete(
-                                            key: _rememberEmailKey,
-                                          );
-                                        }
-                                      },
+                                    const SizedBox(height: 12),
+                                    Text(
+                                      l10n.passwordLabel,
+                                      style: theme.textTheme.labelLarge
+                                          ?.copyWith(
+                                            color: const Color(0xFF626878),
+                                          ),
                                     ),
-                                    Text(rememberLabel),
-                                  ],
-                                ),
-                                Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    TextButton(
-                                      onPressed: () {
-                                        context.push('/forgot');
-                                      },
-                                      child: Text(l10n.loginForgotPassword),
-                                    ),
-                                    TextButton.icon(
-                                      onPressed: () =>
-                                          setState(() => _passCtrl.clear()),
-                                      icon: const Icon(Icons.clear),
-                                      label: Text(l10n.clearButton),
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(height: 4),
-                                GradientButton(
-                                  text: l10n.loginButtonLabel,
-                                  onPressed: _loading ? null : _submit,
-                                  loading: _loading,
-                                  gradient: _warmGradient,
-                                  leading: const Icon(Icons.login_rounded),
-                                  radius: 16,
-                                  padding: const EdgeInsets.symmetric(
-                                    vertical: 15,
-                                  ),
-                                  glass: false,
-                                ),
-                                const SizedBox(height: 18),
-                                Row(
-                                  children: [
-                                    const Expanded(child: Divider()),
-                                    Padding(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 12,
-                                      ),
-                                      child: Text(
-                                        l10n.loginSocialDivider,
-                                        style: theme.textTheme.bodySmall
-                                            ?.copyWith(
-                                              color: theme.colorScheme.onSurface
-                                                  .withValues(alpha: 0.6),
+                                    const SizedBox(height: 6),
+                                    _SoftTextField(
+                                      child: TextFormField(
+                                        controller: _passCtrl,
+                                        obscureText: _obscure,
+                                        enableSuggestions: false,
+                                        autocorrect: false,
+                                        inputFormatters: [
+                                          FilteringTextInputFormatter.deny(
+                                            RegExp(r'\s'),
+                                          ),
+                                        ],
+                                        decoration: InputDecoration(
+                                          hintText: l10n.passwordHint,
+                                          prefixIcon: const _FieldIcon(
+                                            icon: Icons.lock_outline,
+                                          ),
+                                          suffixIcon: IconButton(
+                                            onPressed: () => setState(
+                                              () => _obscure = !_obscure,
                                             ),
-                                      ),
-                                    ),
-                                    const Expanded(child: Divider()),
-                                  ],
-                                ),
-                                const SizedBox(height: 14),
-                                Align(
-                                  alignment: Alignment.center,
-                                  child: ConstrainedBox(
-                                    constraints: const BoxConstraints(
-                                      maxWidth: 360,
-                                    ),
-                                    child: Row(
-                                      children: [
-                                        Expanded(
-                                          child: OutlinedButton.icon(
-                                            onPressed:
-                                                _loading ||
-                                                    !_googleConfigOk ||
-                                                    !_firebaseReady
-                                                ? null
-                                                : () => _handleSocialAuth(
-                                                    _signInWithGoogle,
-                                                    provider: 'google',
-                                                  ),
-                                            icon: const CircleAvatar(
-                                              radius: 10,
-                                              backgroundColor: Color(
-                                                0xFFEA4335,
-                                              ),
-                                              child: Text(
-                                                'G',
-                                                style: TextStyle(
-                                                  color: Colors.white,
-                                                  fontSize: 12,
-                                                  fontWeight: FontWeight.w700,
-                                                ),
-                                              ),
-                                            ),
-                                            label: Text(
-                                              l10n.loginContinueWithGoogle,
-                                            ),
-                                            style: OutlinedButton.styleFrom(
-                                              padding:
-                                                  const EdgeInsets.symmetric(
-                                                    vertical: 12,
-                                                    horizontal: 10,
-                                                  ),
+                                            icon: Icon(
+                                              _obscure
+                                                  ? Icons.visibility
+                                                  : Icons.visibility_off,
                                             ),
                                           ),
                                         ),
-                                        const SizedBox(width: 12),
-                                        Expanded(
-                                          child: OutlinedButton.icon(
-                                            onPressed:
-                                                _loading ||
-                                                    !_appleConfigOk ||
-                                                    !_firebaseReady
-                                                ? null
-                                                : () => _handleSocialAuth(
-                                                    _signInWithApple,
-                                                    provider: 'apple',
-                                                  ),
-                                            icon: const Icon(Icons.apple),
-                                            label: Text(
-                                              l10n.loginContinueWithApple,
-                                            ),
-                                            style: OutlinedButton.styleFrom(
-                                              padding:
-                                                  const EdgeInsets.symmetric(
-                                                    vertical: 12,
-                                                    horizontal: 10,
-                                                  ),
-                                            ),
-                                          ),
+                                        validator: (v) {
+                                          if (v == null || v.isEmpty) {
+                                            return l10n
+                                                .validationPasswordRequired;
+                                          }
+                                          if (v.length < 6) {
+                                            return l10n.validationMinChars('6');
+                                          }
+                                          return null;
+                                        },
+                                      ),
+                                    ),
+                                    const SizedBox(height: 10),
+                                    Row(
+                                      children: [
+                                        Checkbox(
+                                          value: _rememberMe,
+                                          onChanged: (value) {
+                                            setState(
+                                              () =>
+                                                  _rememberMe = value ?? false,
+                                            );
+                                            if (!(value ?? false)) {
+                                              _secureStorage.delete(
+                                                key: _rememberEmailKey,
+                                              );
+                                            }
+                                          },
+                                        ),
+                                        Text(rememberLabel),
+                                        const Spacer(),
+                                        TextButton(
+                                          onPressed: () =>
+                                              context.push('/forgot'),
+                                          child: Text(l10n.loginForgotPassword),
                                         ),
                                       ],
                                     ),
-                                  ),
-                                ),
-                                if (!_firebaseReady ||
-                                    !_googleConfigOk ||
-                                    !_appleConfigOk) ...[
-                                  const SizedBox(height: 10),
-                                  Text(
-                                    !_firebaseReady
-                                        ? l10n.firebaseConfigMissing
-                                        : (!_googleConfigOk
-                                              ? l10n.googleConfigMissingIosScheme
-                                              : l10n.appleConfigMissing),
-                                    style: theme.textTheme.bodySmall?.copyWith(
-                                      color: theme.colorScheme.error,
+                                    const SizedBox(height: 4),
+                                    GradientButton(
+                                      text: l10n.loginButtonLabel,
+                                      onPressed: _loading ? null : _submit,
+                                      loading: _loading,
+                                      gradient: const LinearGradient(
+                                        colors: [
+                                          Color(0xFFF48FA9),
+                                          Color(0xFFE66783),
+                                        ],
+                                        begin: Alignment.topLeft,
+                                        end: Alignment.bottomRight,
+                                      ),
+                                      leading: const Icon(Icons.arrow_forward),
+                                      radius: 18,
+                                      padding: const EdgeInsets.symmetric(
+                                        vertical: 15,
+                                      ),
+                                      glass: false,
                                     ),
-                                    textAlign: TextAlign.center,
-                                  ),
-                                ],
-                              ],
+                                    const SizedBox(height: 14),
+                                    Row(
+                                      children: [
+                                        const Expanded(child: Divider()),
+                                        Padding(
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 12,
+                                          ),
+                                          child: Text(
+                                            l10n.loginSocialDivider,
+                                            style: theme.textTheme.bodySmall
+                                                ?.copyWith(
+                                                  color: theme
+                                                      .colorScheme
+                                                      .onSurface
+                                                      .withValues(alpha: 0.6),
+                                                ),
+                                          ),
+                                        ),
+                                        const Expanded(child: Divider()),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 12),
+                                    Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      children: [
+                                        _SocialCircleButton(
+                                          icon: Icons.mail_outline_rounded,
+                                          borderColor: const Color(0xFF22242E),
+                                          onTap: () =>
+                                              context.push('/register'),
+                                        ),
+                                        const SizedBox(width: 14),
+                                        _SocialCircleButton(
+                                          icon: Icons.apple_rounded,
+                                          filled: true,
+                                          onTap:
+                                              _loading ||
+                                                  !_appleConfigOk ||
+                                                  !_firebaseReady
+                                              ? null
+                                              : () => _handleSocialAuth(
+                                                  _signInWithApple,
+                                                  provider: 'apple',
+                                                ),
+                                        ),
+                                        const SizedBox(width: 14),
+                                        _SocialCircleButton(
+                                          icon: Icons.g_mobiledata_rounded,
+                                          borderColor: const Color(0xFFE96A84),
+                                          foregroundColor: const Color(
+                                            0xFFE84A68,
+                                          ),
+                                          onTap:
+                                              _loading ||
+                                                  !_googleConfigOk ||
+                                                  !_firebaseReady
+                                              ? null
+                                              : () => _handleSocialAuth(
+                                                  _signInWithGoogle,
+                                                  provider: 'google',
+                                                ),
+                                        ),
+                                      ],
+                                    ),
+                                    if (!_firebaseReady ||
+                                        !_googleConfigOk ||
+                                        !_appleConfigOk) ...[
+                                      const SizedBox(height: 10),
+                                      Text(
+                                        !_firebaseReady
+                                            ? l10n.firebaseConfigMissing
+                                            : (!_googleConfigOk
+                                                  ? l10n.googleConfigMissingIosScheme
+                                                  : l10n.appleConfigMissing),
+                                        style: theme.textTheme.bodySmall
+                                            ?.copyWith(
+                                              color: theme.colorScheme.error,
+                                            ),
+                                        textAlign: TextAlign.center,
+                                      ),
+                                    ],
+                                  ],
+                                ),
+                              ),
                             ),
-                          ),
-                        ),
-                        const SizedBox(height: 18),
-                        SectionCard(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 18,
-                            vertical: 14,
-                          ),
-                          backgroundColor: theme.colorScheme.surface.withValues(
-                            alpha: 0.9,
-                          ),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Text(
-                                l10n.loginNoAccount,
-                                style: theme.textTheme.bodyMedium,
-                              ),
-                              const SizedBox(width: 8),
-                              TextButton(
-                                onPressed: () {
-                                  context.push('/register');
-                                },
-                                child: Text(l10n.registerButtonLabel),
-                              ),
-                            ],
                           ),
                         ),
                         const SizedBox(height: 12),
-                        SectionCard(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 18,
-                            vertical: 12,
-                          ),
-                          backgroundColor: theme.colorScheme.surface.withValues(
-                            alpha: 0.9,
-                          ),
-                          child: Row(
-                            children: [
-                              Icon(
-                                Icons.admin_panel_settings_outlined,
-                                size: 18,
-                                color: theme.colorScheme.primary,
-                              ),
-                              const SizedBox(width: 10),
-                              Expanded(
-                                child: Text(
-                                  'Yonetici misin? Ayrı giris ekranini kullan.',
-                                  style: theme.textTheme.bodyMedium,
-                                ),
-                              ),
-                              TextButton(
-                                onPressed: () => context.push('/admin/login'),
-                                child: const Text('Yonetici Girisi'),
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(height: 20),
-                        SectionCard(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 18,
-                            vertical: 12,
-                          ),
-                          backgroundColor: theme.colorScheme.surface.withValues(
-                            alpha: 0.86,
-                          ),
-                          child: Text(
-                            l10n.copyrightNotice,
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              color: theme.colorScheme.onSurface.withValues(
-                                alpha: 0.6,
-                              ),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              l10n.loginNoAccount,
+                              style: theme.textTheme.bodyMedium,
                             ),
-                            textAlign: TextAlign.center,
+                            const SizedBox(width: 8),
+                            TextButton(
+                              onPressed: () => context.push('/register'),
+                              child: Text(l10n.registerButtonLabel),
+                            ),
+                          ],
+                        ),
+                        TextButton(
+                          onPressed: () => context.push('/admin/login'),
+                          child: const Text('Yonetici Girisi'),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          l10n.copyrightNotice,
+                          textAlign: TextAlign.center,
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.colorScheme.onSurface.withValues(
+                              alpha: 0.55,
+                            ),
                           ),
                         ),
                       ],
@@ -852,6 +763,98 @@ class _LoginPageState extends State<LoginPage> {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _SoftTextField extends StatelessWidget {
+  const _SoftTextField({required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return Theme(
+      data: Theme.of(context).copyWith(
+        inputDecorationTheme: InputDecorationTheme(
+          filled: true,
+          fillColor: Colors.white.withValues(alpha: 0.95),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 12,
+            vertical: 14,
+          ),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(16),
+            borderSide: BorderSide(color: Colors.black.withValues(alpha: 0.08)),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(16),
+            borderSide: BorderSide(color: Colors.black.withValues(alpha: 0.08)),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(16),
+            borderSide: const BorderSide(color: Color(0xFFE96A84), width: 1.3),
+          ),
+          errorBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(16),
+            borderSide: const BorderSide(color: Color(0xFFB3261E), width: 1.1),
+          ),
+          focusedErrorBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(16),
+            borderSide: const BorderSide(color: Color(0xFFB3261E), width: 1.3),
+          ),
+        ),
+      ),
+      child: child,
+    );
+  }
+}
+
+class _SocialCircleButton extends StatelessWidget {
+  const _SocialCircleButton({
+    required this.icon,
+    required this.onTap,
+    this.filled = false,
+    this.borderColor,
+    this.foregroundColor,
+  });
+
+  final IconData icon;
+  final VoidCallback? onTap;
+  final bool filled;
+  final Color? borderColor;
+  final Color? foregroundColor;
+
+  @override
+  Widget build(BuildContext context) {
+    final fg = foregroundColor ?? (filled ? Colors.white : Colors.black87);
+    final bg = filled ? Colors.black : Colors.white;
+    return InkResponse(
+      onTap: onTap,
+      radius: 30,
+      child: Container(
+        height: 44,
+        width: 44,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: onTap == null ? bg.withValues(alpha: 0.45) : bg,
+          border: Border.all(
+            color: (borderColor ?? Colors.black).withValues(alpha: 0.45),
+            width: 1.2,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.1),
+              blurRadius: 10,
+              offset: const Offset(0, 5),
+            ),
+          ],
+        ),
+        child: Icon(
+          icon,
+          color: fg.withValues(alpha: onTap == null ? 0.45 : 1),
+        ),
       ),
     );
   }

@@ -637,6 +637,21 @@ class _ExplorePageState extends State<ExplorePage> {
               onCall: _callSupport,
               onDetails: () => _openLocationDetail(selected),
             ),
+          )
+        else
+          Positioned(
+            left: 16,
+            right: 16,
+            bottom: 20,
+            child: SafeArea(
+              top: false,
+              child: _MapGuideCard(
+                onPickNearest: locations.isEmpty
+                    ? null
+                    : () => setState(() => _selectedLocation = locations.first),
+                onBackToList: () => setState(() => _showMap = false),
+              ),
+            ),
           ),
       ],
     );
@@ -739,6 +754,68 @@ class _MapBackButton extends StatelessWidget {
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _MapGuideCard extends StatelessWidget {
+  const _MapGuideCard({
+    required this.onPickNearest,
+    required this.onBackToList,
+  });
+
+  final VoidCallback? onPickNearest;
+  final VoidCallback onBackToList;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Container(
+      padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(20),
+        color: Colors.white.withValues(alpha: 0.86),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.95)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.08),
+            blurRadius: 22,
+            offset: const Offset(0, 12),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Haritada bir nokta sec',
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w700,
+                    color: const Color(0xFF0F172A),
+                  ),
+                ),
+                const SizedBox(height: 3),
+                Text(
+                  'Detaylari acip direkt rezervasyon baslatabilirsin.',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: const Color(0xFF475569),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 10),
+          FilledButton.tonal(
+            onPressed: onBackToList,
+            child: const Text('Liste'),
+          ),
+          const SizedBox(width: 8),
+          FilledButton(onPressed: onPickNearest, child: const Text('En yakin')),
+        ],
       ),
     );
   }

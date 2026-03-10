@@ -19,88 +19,139 @@ class DashboardTopBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
     return ClipRRect(
-      borderRadius: BorderRadius.circular(22),
+      borderRadius: BorderRadius.circular(24),
       child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+        filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
         child: Container(
-          padding: const EdgeInsets.symmetric(
-            horizontal: 16,
-            vertical: 12,
-          ),
+          padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
           decoration: BoxDecoration(
-            color: theme.colorScheme.surface.withValues(
-              alpha: isDark ? 0.22 : 0.8,
+            gradient: LinearGradient(
+              colors: [
+                theme.colorScheme.surface.withValues(alpha: 0.9),
+                theme.colorScheme.surface.withValues(alpha: 0.76),
+              ],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
             ),
-            border: Border.all(
-              color: theme.colorScheme.outlineVariant.withValues(
-                alpha: 0.5,
+            border: Border.all(color: Colors.white.withValues(alpha: 0.75)),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.08),
+                blurRadius: 22,
+                offset: const Offset(0, 14),
               ),
-            ),
+            ],
           ),
-          child: Row(
+          child: Stack(
             children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: theme.textTheme.headlineSmall?.copyWith(
-                        fontWeight: FontWeight.w800,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      subtitle,
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 12),
-              InkWell(
-                onTap: onAvatarTap,
-                borderRadius: BorderRadius.circular(24),
-                splashColor: theme.colorScheme.primary.withValues(alpha: 0.08),
-                highlightColor: theme.colorScheme.primary.withValues(alpha: 0.04),
+              Positioned(
+                right: -30,
+                top: -34,
                 child: Container(
-                  padding: const EdgeInsets.all(2),
+                  width: 120,
+                  height: 120,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     gradient: LinearGradient(
                       colors: [
-                        theme.colorScheme.primary.withValues(alpha: 0.9),
-                        theme.colorScheme.secondary.withValues(alpha: 0.8),
+                        theme.colorScheme.primary.withValues(alpha: 0.2),
+                        theme.colorScheme.secondary.withValues(alpha: 0.05),
                       ],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: theme.colorScheme.primary.withValues(alpha: 0.25),
-                        blurRadius: 16,
-                        offset: const Offset(0, 8),
-                      ),
-                    ],
-                  ),
-                  child: CircleAvatar(
-                    radius: 20,
-                    backgroundColor:
-                        theme.colorScheme.primary.withValues(alpha: 0.12),
-                    child: AvatarImage(
-                      path: avatarPath,
-                      size: 40,
-                      icon: Icons.person,
-                      iconColor: theme.colorScheme.primary,
-                      backgroundColor:
-                          theme.colorScheme.primary.withValues(alpha: 0.12),
                     ),
                   ),
                 ),
+              ),
+              Positioned(
+                top: 0,
+                right: 24,
+                child: Container(
+                  width: 78,
+                  height: 20,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(999),
+                    gradient: LinearGradient(
+                      colors: [
+                        Colors.white.withValues(alpha: 0.5),
+                        Colors.white.withValues(alpha: 0.02),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          title,
+                          style: theme.textTheme.headlineSmall?.copyWith(
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: -0.2,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          subtitle,
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            color: theme.colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  InkWell(
+                    onTap: onAvatarTap,
+                    borderRadius: BorderRadius.circular(24),
+                    splashColor: theme.colorScheme.primary.withValues(
+                      alpha: 0.08,
+                    ),
+                    highlightColor: theme.colorScheme.primary.withValues(
+                      alpha: 0.04,
+                    ),
+                    child: Container(
+                      padding: const EdgeInsets.all(2),
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        gradient: LinearGradient(
+                          colors: [
+                            theme.colorScheme.primary.withValues(alpha: 0.9),
+                            theme.colorScheme.secondary.withValues(alpha: 0.8),
+                          ],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: theme.colorScheme.primary.withValues(
+                              alpha: 0.24,
+                            ),
+                            blurRadius: 18,
+                            offset: const Offset(0, 8),
+                          ),
+                        ],
+                      ),
+                      child: CircleAvatar(
+                        radius: 20,
+                        backgroundColor: theme.colorScheme.primary.withValues(
+                          alpha: 0.12,
+                        ),
+                        child: AvatarImage(
+                          path: avatarPath,
+                          size: 40,
+                          icon: Icons.person,
+                          iconColor: theme.colorScheme.primary,
+                          backgroundColor: theme.colorScheme.primary.withValues(
+                            alpha: 0.12,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ],
           ),

@@ -7,7 +7,6 @@ import '../../services/reminder_service.dart';
 import '../../widgets/app_notification.dart';
 import '../../widgets/section_card.dart';
 import '../../widgets/app_mesh_background.dart';
-import '../../ui/components/app_section_header.dart';
 import '../../ui/components/app_error_state.dart';
 import '../../core/profile_avatar_cache.dart';
 import '../../core/ios/ios_config_service.dart';
@@ -41,6 +40,10 @@ class _DashboardPageState extends State<DashboardPage> {
   bool _profileLoading = false;
   bool _homeMapReady = false;
   DropLocation? _homeMapSelected;
+  bool _expandMap = false;
+  bool _expandLuggage = false;
+  bool _expandNearby = false;
+  bool _expandCampaigns = false;
 
   @override
   void initState() {
@@ -140,7 +143,10 @@ class _DashboardPageState extends State<DashboardPage> {
     await controller.animateCamera(CameraUpdate.zoomOut());
   }
 
-  void _snack(String message, {AppNotificationType type = AppNotificationType.info}) {
+  void _snack(
+    String message, {
+    AppNotificationType type = AppNotificationType.info,
+  }) {
     AppNotification.show(context, message: message, type: type);
   }
 
@@ -211,9 +217,9 @@ class _DashboardPageState extends State<DashboardPage> {
       QuickActionItem(
         label: loc.quickActionCashback,
         icon: Icons.credit_card_rounded,
-        onTap: () => Navigator.of(context).push(
-          MaterialPageRoute(builder: (_) => const WalletPage()),
-        ),
+        onTap: () => Navigator.of(
+          context,
+        ).push(MaterialPageRoute(builder: (_) => const WalletPage())),
       ),
       QuickActionItem(
         label: loc.quickActionReservation,
@@ -226,18 +232,18 @@ class _DashboardPageState extends State<DashboardPage> {
         label: loc.quickActionSupport,
         icon: Icons.support_agent_rounded,
         onTap: () {
-          Navigator.of(context).push(
-            MaterialPageRoute(builder: (_) => const SupportChatPage()),
-          );
+          Navigator.of(
+            context,
+          ).push(MaterialPageRoute(builder: (_) => const SupportChatPage()));
         },
       ),
       QuickActionItem(
         label: loc.quickActionCampaigns,
         icon: Icons.local_activity_rounded,
         onTap: () {
-          Navigator.of(context).push(
-            MaterialPageRoute(builder: (_) => const CampaignsPage()),
-          );
+          Navigator.of(
+            context,
+          ).push(MaterialPageRoute(builder: (_) => const CampaignsPage()));
         },
       ),
     ];
@@ -249,10 +255,18 @@ class _DashboardPageState extends State<DashboardPage> {
     final displayName = _controller.currentUser == null
         ? loc.travelerPlaceholder
         : '${_controller.currentUser!.name} ${_controller.currentUser!.surname}'
-            .trim();
-    final latestLuggage =
-        _controller.luggages.isNotEmpty ? _controller.luggages.first : null;
+              .trim();
+    final latestLuggage = _controller.luggages.isNotEmpty
+        ? _controller.luggages.first
+        : null;
     final nearbyLocations = _controller.locations.take(6).toList();
+    final activeCount = _controller.luggages
+        .where(
+          (item) =>
+              item.status == LuggageStatus.awaitingDrop ||
+              item.status == LuggageStatus.dropped,
+        )
+        .length;
 
     final campaigns = [
       CampaignItem(
@@ -260,50 +274,35 @@ class _DashboardPageState extends State<DashboardPage> {
         subtitle: 'İlk rezervasyonuna özel 1 kahve ücretsiz.',
         tag: loc.campaignNewTag,
         icon: Icons.local_cafe_outlined,
-        gradient: [
-          const Color(0xFF8B5E34),
-          const Color(0xFFD9A15A),
-        ],
+        gradient: [const Color(0xFF8B5E34), const Color(0xFFD9A15A)],
       ),
       CampaignItem(
         title: '3+ Gün %50 İndirim',
         subtitle: '3 gün ve üzeri rezervasyonlarda yarı fiyat.',
         tag: loc.campaignHotTag,
         icon: Icons.local_offer_outlined,
-        gradient: [
-          const Color(0xFF1E3A8A),
-          const Color(0xFF3B82F6),
-        ],
+        gradient: [const Color(0xFF1E3A8A), const Color(0xFF3B82F6)],
       ),
       CampaignItem(
         title: 'Boyner %10 İndirim',
         subtitle: 'Boyner mağazalarında ekstra avantaj.',
         tag: loc.campaignBonusTag,
         icon: Icons.shopping_bag_outlined,
-        gradient: [
-          const Color(0xFF7C3AED),
-          const Color(0xFFA78BFA),
-        ],
+        gradient: [const Color(0xFF7C3AED), const Color(0xFFA78BFA)],
       ),
       CampaignItem(
         title: 'Kyradi Vadi & Axis',
         subtitle: 'Vadi İstanbul ve Axis AVM’de hizmetinizde.',
         tag: 'YENİ NOKTA',
         icon: Icons.location_on_outlined,
-        gradient: [
-          const Color(0xFF0F766E),
-          const Color(0xFF5EEAD4),
-        ],
+        gradient: [const Color(0xFF0F766E), const Color(0xFF5EEAD4)],
       ),
       CampaignItem(
         title: 'Öğrenci %30 İndirim',
         subtitle: 'Edu mail ile kayıt ol, %30 indirim kazan.',
         tag: 'GENÇ',
         icon: Icons.school_outlined,
-        gradient: [
-          const Color(0xFFB45309),
-          const Color(0xFFF59E0B),
-        ],
+        gradient: [const Color(0xFFB45309), const Color(0xFFF59E0B)],
       ),
     ];
 
@@ -336,104 +335,144 @@ class _DashboardPageState extends State<DashboardPage> {
                     },
                   ),
                   const SizedBox(height: 16),
+                  _PremiumHeroPanel(
+                    totalCount: _controller.luggages.length,
+                    activeCount: activeCount,
+                    locationCount: _controller.locations.length,
+                    onPrimaryTap: _openAddLuggage,
+                    onSecondaryTap: () => context.go('/explore'),
+                  ),
+                  const SizedBox(height: 14),
                   DashboardSearchBar(
                     hintText: loc.findLocation,
                     onTap: () => context.go('/explore'),
                   ),
-                  const SizedBox(height: 18),
+                  const SizedBox(height: 14),
                   QuickActionsGrid(actions: _buildQuickActions(loc)),
-                  const SizedBox(height: 18),
-                  if (_homeMapReady)
-                    _HomeMapCard(
-                      title: loc.map,
-                      subtitle: loc.mapIntro,
-                      locations: _controller.locations,
-                      selected: _homeMapSelected,
-                      onSelect: (location) =>
-                          setState(() => _homeMapSelected = location),
-                      onOpenDetails: _openLocationDetails,
-                      onOpenExplore: () => context.go('/explore'),
-                      onMapCreated: (controller) =>
-                          _homeMapController = controller,
-                      onZoomIn: _zoomInHomeMap,
-                      onZoomOut: _zoomOutHomeMap,
-                    )
-                  else
-                    SectionCard(
-                      child: ListTile(
-                        leading: const Icon(Icons.map_outlined),
-                        title: Text(loc.map),
-                        subtitle: Text(loc.mapsMissingApiKey),
-                        trailing: const Icon(Icons.chevron_right),
-                        onTap: () => context.go('/explore'),
-                      ),
-                    ),
-                  const SizedBox(height: 20),
-                  AppSectionHeader(
-                    title: loc.activeTripTitle,
-                    actionLabel: loc.seeAllAction,
-                    onAction: () => context.push('/luggage'),
-                  ),
                   const SizedBox(height: 12),
-                  ActiveTripCard(
-                    title: loc.myLuggages,
-                    subtitle: loc.luggagesSectionSubtitle,
-                    loading: _controller.luggageLoading,
-                    errorMessage: _luggageError,
-                    onRetry: () {
-                      final userId = _controller.userId;
-                      if (userId != null) _loadLuggages(userId);
-                    },
-                    luggage: latestLuggage,
-                    onShowQr: () {
-                      if (latestLuggage != null) _openQrPreview(latestLuggage);
-                    },
-                    onDetails: _openLuggageCenter,
-                    emptyLabel: loc.luggageEmptyStateNoItems,
-                    emptyActionLabel: loc.quickAddLuggage,
-                    onEmptyAction: _openAddLuggage,
-                  ),
-                  const SizedBox(height: 20),
-                  AppSectionHeader(
-                    title: loc.nearbyLocationsTitle,
+                  _DashboardFoldSection(
+                    title: loc.map,
+                    subtitle: 'Harita ve rota paneli',
+                    icon: Icons.map_outlined,
+                    expanded: _expandMap,
+                    onToggle: () => setState(() => _expandMap = !_expandMap),
                     actionLabel: loc.seeAllAction,
                     onAction: () => context.go('/explore'),
+                    child: _homeMapReady
+                        ? _HomeMapCard(
+                            title: loc.map,
+                            subtitle: loc.mapIntro,
+                            locations: _controller.locations,
+                            selected: _homeMapSelected,
+                            onSelect: (location) =>
+                                setState(() => _homeMapSelected = location),
+                            onOpenDetails: _openLocationDetails,
+                            onOpenExplore: () => context.go('/explore'),
+                            onMapCreated: (controller) =>
+                                _homeMapController = controller,
+                            onZoomIn: _zoomInHomeMap,
+                            onZoomOut: _zoomOutHomeMap,
+                            showHeader: false,
+                          )
+                        : SectionCard(
+                            child: ListTile(
+                              leading: const Icon(Icons.map_outlined),
+                              title: Text(loc.map),
+                              subtitle: Text(loc.mapsMissingApiKey),
+                              trailing: const Icon(Icons.chevron_right),
+                              onTap: () => context.go('/explore'),
+                            ),
+                          ),
                   ),
                   const SizedBox(height: 12),
-                  NearbyLocationsCarousel(
-                    loading: _controller.locationsLoading,
-                    errorMessage: _locationError,
-                    locations: nearbyLocations,
-                    onRetry: _loadLocations,
-                    onLocationTap: _openLocationDetails,
-                    emptyLabel: loc.mapNoLocations,
+                  _DashboardFoldSection(
+                    title: loc.activeTripTitle,
+                    subtitle: 'Aktif bavul ve QR islemleri',
+                    icon: Icons.luggage_outlined,
+                    expanded: _expandLuggage,
+                    onToggle: () =>
+                        setState(() => _expandLuggage = !_expandLuggage),
+                    actionLabel: loc.seeAllAction,
+                    onAction: () => context.push('/luggage'),
+                    child: ActiveTripCard(
+                      title: loc.myLuggages,
+                      subtitle: loc.luggagesSectionSubtitle,
+                      loading: _controller.luggageLoading,
+                      errorMessage: _luggageError,
+                      onRetry: () {
+                        final userId = _controller.userId;
+                        if (userId != null) _loadLuggages(userId);
+                      },
+                      luggage: latestLuggage,
+                      onShowQr: () {
+                        if (latestLuggage != null) {
+                          _openQrPreview(latestLuggage);
+                        }
+                      },
+                      onDetails: _openLuggageCenter,
+                      emptyLabel: loc.luggageEmptyStateNoItems,
+                      emptyActionLabel: loc.quickAddLuggage,
+                      onEmptyAction: _openAddLuggage,
+                    ),
                   ),
-                  const SizedBox(height: 20),
-                  AppSectionHeader(
+                  const SizedBox(height: 12),
+                  _DashboardFoldSection(
+                    title: loc.nearbyLocationsTitle,
+                    subtitle: 'Yakindaki noktalar ve uygunluk',
+                    icon: Icons.place_outlined,
+                    expanded: _expandNearby,
+                    onToggle: () =>
+                        setState(() => _expandNearby = !_expandNearby),
+                    actionLabel: loc.seeAllAction,
+                    onAction: () => context.go('/explore'),
+                    child: NearbyLocationsCarousel(
+                      loading: _controller.locationsLoading,
+                      errorMessage: _locationError,
+                      locations: nearbyLocations,
+                      onRetry: _loadLocations,
+                      onLocationTap: _openLocationDetails,
+                      emptyLabel: loc.mapNoLocations,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  _DashboardFoldSection(
                     title: loc.campaignsTitle,
+                    subtitle: 'Avantajlar ve kampanyalar',
+                    icon: Icons.local_activity_outlined,
+                    expanded: _expandCampaigns,
+                    onToggle: () =>
+                        setState(() => _expandCampaigns = !_expandCampaigns),
                     actionLabel: loc.seeAllAction,
                     onAction: () {
                       Navigator.of(context).push(
-                        MaterialPageRoute(builder: (_) => const CampaignsPage()),
+                        MaterialPageRoute(
+                          builder: (_) => const CampaignsPage(),
+                        ),
                       );
                     },
+                    child: CampaignCarousel(
+                      loading: false,
+                      errorMessage: null,
+                      items: campaigns,
+                      onRetry: () {},
+                      emptyLabel: loc.campaignsEmptyState,
+                    ),
                   ),
                   const SizedBox(height: 12),
-                  CampaignCarousel(
-                    loading: false,
-                    errorMessage: null,
-                    items: campaigns,
-                    onRetry: () {},
-                    emptyLabel: loc.campaignsEmptyState,
-                  ),
-                  const SizedBox(height: 20),
                   SectionCard(
-                    child: _IconActionCard(
-                      title: loc.myLuggages,
-                      subtitle: loc.luggagesSectionSubtitle,
-                      icon: Icons.luggage_outlined,
-                      accent: const Color(0xFF5B7CFA),
-                      onTap: _openLuggageCenter,
+                    child: ListTile(
+                      contentPadding: EdgeInsets.zero,
+                      leading: const ThreeDIconBadge(
+                        icon: Icons.auto_awesome_outlined,
+                      ),
+                      title: Text(
+                        loc.howItWorksTitle,
+                        style: Theme.of(context).textTheme.titleMedium
+                            ?.copyWith(fontWeight: FontWeight.w800),
+                      ),
+                      subtitle: Text(loc.howItWorksIntro, maxLines: 2),
+                      trailing: const Icon(Icons.chevron_right),
+                      onTap: () => context.push('/home/how-it-works'),
                     ),
                   ),
                   if (_profileLoading)
@@ -459,6 +498,305 @@ class _DashboardPageState extends State<DashboardPage> {
   }
 }
 
+class _PremiumHeroPanel extends StatelessWidget {
+  const _PremiumHeroPanel({
+    required this.totalCount,
+    required this.activeCount,
+    required this.locationCount,
+    required this.onPrimaryTap,
+    required this.onSecondaryTap,
+  });
+
+  final int totalCount;
+  final int activeCount;
+  final int locationCount;
+  final VoidCallback onPrimaryTap;
+  final VoidCallback onSecondaryTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return TweenAnimationBuilder<double>(
+      tween: Tween<double>(begin: 0.96, end: 1),
+      duration: const Duration(milliseconds: 420),
+      curve: Curves.easeOutCubic,
+      builder: (context, value, child) {
+        return Transform.scale(scale: value, child: child);
+      },
+      child: Container(
+        padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(24),
+          gradient: const LinearGradient(
+            colors: [Color(0xFF0F766E), Color(0xFF0EA5E9)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFF0EA5E9).withValues(alpha: 0.24),
+              blurRadius: 24,
+              offset: const Offset(0, 14),
+            ),
+          ],
+          border: Border.all(color: Colors.white.withValues(alpha: 0.4)),
+        ),
+        child: Stack(
+          children: [
+            Positioned(
+              top: 0,
+              right: 30,
+              child: Container(
+                width: 90,
+                height: 20,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(999),
+                  gradient: LinearGradient(
+                    colors: [
+                      Colors.white.withValues(alpha: 0.32),
+                      Colors.white.withValues(alpha: 0.02),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Kyradi ile 3 adimda tamamla',
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  'Lokasyon sec, bavulunu birak, QR ile takip et.',
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: Colors.white.withValues(alpha: 0.88),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Expanded(
+                      child: _HeroStat(label: 'Toplam', value: '$totalCount'),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: _HeroStat(label: 'Aktif', value: '$activeCount'),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: _HeroStat(
+                        label: 'Lokasyon',
+                        value: '$locationCount',
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Expanded(
+                      child: FilledButton.icon(
+                        style: FilledButton.styleFrom(
+                          backgroundColor: Colors.white,
+                          foregroundColor: const Color(0xFF0F766E),
+                        ),
+                        onPressed: onPrimaryTap,
+                        icon: const Icon(Icons.add_box_rounded),
+                        label: const Text('Bavul Ekle'),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: Colors.white,
+                          side: BorderSide(
+                            color: Colors.white.withValues(alpha: 0.72),
+                          ),
+                        ),
+                        onPressed: onSecondaryTap,
+                        icon: const Icon(Icons.map_outlined),
+                        label: const Text('Haritaya Git'),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _HeroStat extends StatelessWidget {
+  const _HeroStat({required this.label, required this.value});
+
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(12),
+        color: Colors.white.withValues(alpha: 0.16),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: Theme.of(context).textTheme.labelSmall?.copyWith(
+              color: Colors.white.withValues(alpha: 0.9),
+            ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            value,
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+              color: Colors.white,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _DashboardFoldSection extends StatelessWidget {
+  const _DashboardFoldSection({
+    required this.title,
+    required this.subtitle,
+    required this.icon,
+    required this.expanded,
+    required this.onToggle,
+    required this.child,
+    this.actionLabel,
+    this.onAction,
+  });
+
+  final String title;
+  final String subtitle;
+  final IconData icon;
+  final bool expanded;
+  final VoidCallback onToggle;
+  final Widget child;
+  final String? actionLabel;
+  final VoidCallback? onAction;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 220),
+      curve: Curves.easeOutCubic,
+      padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(20),
+        gradient: LinearGradient(
+          colors: [
+            theme.colorScheme.surface.withValues(alpha: 0.94),
+            theme.colorScheme.surface.withValues(alpha: 0.86),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.72)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.06),
+            blurRadius: 18,
+            offset: const Offset(0, 10),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          InkWell(
+            borderRadius: BorderRadius.circular(14),
+            onTap: onToggle,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
+              child: Row(
+                children: [
+                  Container(
+                    width: 34,
+                    height: 34,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(10),
+                      gradient: LinearGradient(
+                        colors: [
+                          theme.colorScheme.primary.withValues(alpha: 0.2),
+                          theme.colorScheme.primary.withValues(alpha: 0.06),
+                        ],
+                      ),
+                    ),
+                    child: Icon(
+                      icon,
+                      size: 18,
+                      color: theme.colorScheme.primary,
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          title,
+                          style: theme.textTheme.titleSmall?.copyWith(
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          subtitle,
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  if (actionLabel != null && onAction != null)
+                    TextButton(onPressed: onAction, child: Text(actionLabel!)),
+                  Icon(
+                    expanded
+                        ? Icons.keyboard_arrow_up_rounded
+                        : Icons.keyboard_arrow_down_rounded,
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ],
+              ),
+            ),
+          ),
+          AnimatedCrossFade(
+            firstChild: const SizedBox.shrink(),
+            secondChild: Padding(
+              padding: const EdgeInsets.only(top: 10),
+              child: child,
+            ),
+            crossFadeState: expanded
+                ? CrossFadeState.showSecond
+                : CrossFadeState.showFirst,
+            duration: const Duration(milliseconds: 220),
+            sizeCurve: Curves.easeOutCubic,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class _HomeMapCard extends StatelessWidget {
   const _HomeMapCard({
     required this.title,
@@ -471,6 +809,7 @@ class _HomeMapCard extends StatelessWidget {
     required this.onMapCreated,
     required this.onZoomIn,
     required this.onZoomOut,
+    this.showHeader = true,
   });
 
   final String title;
@@ -483,6 +822,7 @@ class _HomeMapCard extends StatelessWidget {
   final ValueChanged<GoogleMapController> onMapCreated;
   final VoidCallback onZoomIn;
   final VoidCallback onZoomOut;
+  final bool showHeader;
 
   @override
   Widget build(BuildContext context) {
@@ -516,16 +856,18 @@ class _HomeMapCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          SectionHeader(
-            title: title,
-            subtitle: subtitle,
-            icon: Icons.map_outlined,
-            action: TextButton(
-              onPressed: onOpenExplore,
-              child: Text(AppLocalizations.of(context)!.seeAllAction),
+          if (showHeader) ...[
+            SectionHeader(
+              title: title,
+              subtitle: subtitle,
+              icon: Icons.map_outlined,
+              action: TextButton(
+                onPressed: onOpenExplore,
+                child: Text(AppLocalizations.of(context)!.seeAllAction),
+              ),
             ),
-          ),
-          const SizedBox(height: 12),
+            const SizedBox(height: 12),
+          ],
           SizedBox(
             height: 220,
             child: ClipRRect(
@@ -570,7 +912,9 @@ class _HomeMapCard extends StatelessWidget {
                 color: theme.colorScheme.surfaceContainerHighest,
                 borderRadius: BorderRadius.circular(16),
                 border: Border.all(
-                  color: theme.colorScheme.outlineVariant.withValues(alpha: 0.6),
+                  color: theme.colorScheme.outlineVariant.withValues(
+                    alpha: 0.6,
+                  ),
                 ),
               ),
               child: Row(
@@ -610,80 +954,8 @@ class _HomeMapCard extends StatelessWidget {
   }
 }
 
-class _IconActionCard extends StatelessWidget {
-  const _IconActionCard({
-    required this.title,
-    required this.subtitle,
-    required this.icon,
-    required this.accent,
-    required this.onTap,
-  });
-
-  final String title;
-  final String subtitle;
-  final IconData icon;
-  final Color accent;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(20),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-        child: Row(
-          children: [
-            Container(
-              height: 52,
-              width: 52,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: LinearGradient(
-                  colors: [
-                    accent.withValues(alpha: 0.2),
-                    accent.withValues(alpha: 0.05),
-                  ],
-                ),
-              ),
-              child: Icon(icon, color: accent, size: 26),
-            ),
-            const SizedBox(width: 14),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: theme.textTheme.titleSmall?.copyWith(
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    subtitle,
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(width: 8),
-            const Icon(Icons.chevron_right),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
 class _ZoomButton extends StatelessWidget {
-  const _ZoomButton({
-    required this.icon,
-    required this.onTap,
-  });
+  const _ZoomButton({required this.icon, required this.onTap});
 
   final IconData icon;
   final VoidCallback onTap;

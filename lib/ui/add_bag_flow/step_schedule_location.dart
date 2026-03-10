@@ -110,11 +110,44 @@ class _StepScheduleLocationState extends State<StepScheduleLocation> {
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
       children: [
+        Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(14),
+            color: Theme.of(
+              context,
+            ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.45),
+            border: Border.all(
+              color: Theme.of(
+                context,
+              ).colorScheme.outlineVariant.withValues(alpha: 0.6),
+            ),
+          ),
+          child: Row(
+            children: [
+              Icon(
+                Icons.route_outlined,
+                size: 18,
+                color: Theme.of(context).colorScheme.primary,
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  'Lokasyon secin, sonra birakma ve teslim saatini belirleyin.',
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 12),
         Text(
           loc.stepScheduleTitle,
-          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w700,
-              ),
+          style: Theme.of(
+            context,
+          ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
         ),
         const SizedBox(height: 12),
         TextField(
@@ -172,10 +205,7 @@ class _StepScheduleLocationState extends State<StepScheduleLocation> {
           ),
           items: [
             for (final location in filtered)
-              DropdownMenuItem(
-                value: location,
-                child: Text(location.name),
-              ),
+              DropdownMenuItem(value: location, child: Text(location.name)),
           ],
           onChanged: (value) => _updateDraft((draft) => draft.location = value),
         ),

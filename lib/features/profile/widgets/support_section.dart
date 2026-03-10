@@ -4,11 +4,7 @@ import '../../../l10n/app_localizations.dart';
 import '../../../widgets/section_card.dart';
 
 class SupportSection extends StatelessWidget {
-  const SupportSection({
-    super.key,
-    required this.onFaq,
-    required this.onAbout,
-  });
+  const SupportSection({super.key, required this.onFaq, required this.onAbout});
 
   final VoidCallback onFaq;
   final VoidCallback onAbout;
@@ -20,15 +16,26 @@ class SupportSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final loc = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
     return SectionCard(
+      radius: 24,
+      backgroundColor: theme.colorScheme.surface.withValues(alpha: 0.94),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            loc.supportSectionTitle,
-            style: const TextStyle(fontWeight: FontWeight.w700),
+          Row(
+            children: [
+              const ThreeDIconBadge(icon: Icons.support_agent_outlined),
+              const SizedBox(width: 10),
+              Text(
+                loc.supportSectionTitle,
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ],
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 10),
           ListTile(
             contentPadding: EdgeInsets.zero,
             leading: const ThreeDIconBadge(icon: Icons.help_outline),
@@ -43,7 +50,9 @@ class SupportSection extends StatelessWidget {
             trailing: const Icon(Icons.chevron_right),
             onTap: onAbout,
           ),
-          const Divider(),
+          Divider(
+            color: theme.colorScheme.outlineVariant.withValues(alpha: 0.4),
+          ),
           ListTile(
             contentPadding: EdgeInsets.zero,
             leading: const ThreeDIconBadge(icon: Icons.chat_bubble_outline),

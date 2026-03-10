@@ -15,15 +15,26 @@ class SecuritySection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final loc = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
     return SectionCard(
+      radius: 24,
+      backgroundColor: theme.colorScheme.surface.withValues(alpha: 0.94),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            loc.securitySectionTitle,
-            style: const TextStyle(fontWeight: FontWeight.w700),
+          Row(
+            children: [
+              const ThreeDIconBadge(icon: Icons.shield_outlined),
+              const SizedBox(width: 10),
+              Text(
+                loc.securitySectionTitle,
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ],
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 10),
           ListTile(
             contentPadding: EdgeInsets.zero,
             leading: const ThreeDIconBadge(icon: Icons.lock_reset_outlined),
@@ -31,9 +42,15 @@ class SecuritySection extends StatelessWidget {
             trailing: const Icon(Icons.chevron_right),
             onTap: onChangePassword,
           ),
+          Divider(
+            color: theme.colorScheme.outlineVariant.withValues(alpha: 0.4),
+          ),
           ListTile(
             contentPadding: EdgeInsets.zero,
-            leading: const ThreeDIconBadge(icon: Icons.logout),
+            leading: ThreeDIconBadge(
+              icon: Icons.logout,
+              accent: theme.colorScheme.error,
+            ),
             title: Text(loc.logout),
             trailing: const Icon(Icons.chevron_right),
             onTap: onLogout,

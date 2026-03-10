@@ -3,11 +3,7 @@ import '../../l10n/app_localizations.dart';
 import '../../models/reservation_draft.dart';
 
 class StepBagInfo extends StatefulWidget {
-  const StepBagInfo({
-    super.key,
-    required this.draft,
-    required this.onChanged,
-  });
+  const StepBagInfo({super.key, required this.draft, required this.onChanged});
 
   final ReservationDraft draft;
   final ValueChanged<ReservationDraft> onChanged;
@@ -49,11 +45,44 @@ class _StepBagInfoState extends State<StepBagInfo> {
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
       children: [
+        Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(14),
+            color: Theme.of(
+              context,
+            ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.45),
+            border: Border.all(
+              color: Theme.of(
+                context,
+              ).colorScheme.outlineVariant.withValues(alpha: 0.6),
+            ),
+          ),
+          child: Row(
+            children: [
+              Icon(
+                Icons.tips_and_updates_outlined,
+                size: 18,
+                color: Theme.of(context).colorScheme.primary,
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  'Bu adim 30-40 saniye surer. Kisa ve net bilgi girmeniz yeterli.',
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 12),
         Text(
           loc.stepBagInfoTitle,
-          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w700,
-              ),
+          style: Theme.of(
+            context,
+          ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
         ),
         const SizedBox(height: 12),
         TextField(
