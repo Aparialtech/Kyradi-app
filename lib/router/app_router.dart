@@ -104,12 +104,12 @@ GoRouter buildAppRouter() {
           StatefulShellBranch(
             routes: [
               GoRoute(
-                path: '/bookings',
-                builder: (_, __) => const BookingsPage(),
-              ),
-              GoRoute(
                 path: '/luggage',
                 builder: (_, __) => const LuggageListPage(),
+              ),
+              GoRoute(
+                path: '/bookings',
+                builder: (_, __) => const BookingsPage(),
               ),
               GoRoute(
                 path: '/luggage/add',

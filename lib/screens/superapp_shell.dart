@@ -5,10 +5,7 @@ import '../l10n/app_localizations.dart';
 import '../ui/shell/root_shell.dart';
 
 class SuperAppShell extends StatefulWidget {
-  const SuperAppShell({
-    super.key,
-    required this.navigationShell,
-  });
+  const SuperAppShell({super.key, required this.navigationShell});
 
   final StatefulNavigationShell navigationShell;
 
@@ -80,7 +77,8 @@ class _SuperAppShellState extends State<SuperAppShell> {
           currentIndex: currentIndex,
           onSelect: (value) => widget.navigationShell.goBranch(
             value,
-            initialLocation: value == currentIndex,
+            // "Bavullarim" sekmesine her giriste dogrudan klasik tum listeyi ac.
+            initialLocation: value == 2 ? true : value == currentIndex,
           ),
         ),
       ),
@@ -137,9 +135,12 @@ class _GlassBottomBar extends StatelessWidget {
             child: LayoutBuilder(
               builder: (context, constraints) {
                 final itemWidth =
-                    (constraints.maxWidth - contentPadding.horizontal) / items.length;
-                final pillHeight = constraints.maxHeight - contentPadding.vertical - 2;
-                final pillLeft = contentPadding.left + (itemWidth * currentIndex);
+                    (constraints.maxWidth - contentPadding.horizontal) /
+                    items.length;
+                final pillHeight =
+                    constraints.maxHeight - contentPadding.vertical - 2;
+                final pillLeft =
+                    contentPadding.left + (itemWidth * currentIndex);
                 return Stack(
                   children: [
                     Positioned.fill(
@@ -217,7 +218,9 @@ class _LiquidActivePill extends StatelessWidget {
                   decoration: BoxDecoration(
                     color: Colors.white.withValues(alpha: isDark ? 0.12 : 0.10),
                     border: Border.all(
-                      color: Colors.white.withValues(alpha: isDark ? 0.24 : 0.20),
+                      color: Colors.white.withValues(
+                        alpha: isDark ? 0.24 : 0.20,
+                      ),
                       width: 1,
                     ),
                     borderRadius: BorderRadius.circular(999),
@@ -263,10 +266,12 @@ class _GlassBottomBarBackground extends StatelessWidget {
     final glassFill = isDark
         ? Colors.white.withValues(alpha: 0.10)
         : Colors.white.withValues(alpha: 0.18);
-    final borderColor =
-        isDark ? Colors.white.withValues(alpha: 0.22) : Colors.white.withValues(alpha: 0.56);
-    final dropShadow =
-        isDark ? Colors.black.withValues(alpha: 0.26) : Colors.black.withValues(alpha: 0.15);
+    final borderColor = isDark
+        ? Colors.white.withValues(alpha: 0.22)
+        : Colors.white.withValues(alpha: 0.56);
+    final dropShadow = isDark
+        ? Colors.black.withValues(alpha: 0.26)
+        : Colors.black.withValues(alpha: 0.15);
     return DecoratedBox(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(30),
@@ -306,10 +311,7 @@ class _GlassBottomBarBackground extends StatelessWidget {
                     end: Alignment.bottomRight,
                   ),
                   borderRadius: BorderRadius.circular(30),
-                  border: Border.all(
-                    color: borderColor,
-                    width: 1.1,
-                  ),
+                  border: Border.all(color: borderColor, width: 1.1),
                 ),
               ),
             ),
@@ -319,7 +321,9 @@ class _GlassBottomBarBackground extends StatelessWidget {
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(30),
                     border: Border.all(
-                      color: Colors.white.withValues(alpha: isDark ? 0.14 : 0.24),
+                      color: Colors.white.withValues(
+                        alpha: isDark ? 0.14 : 0.24,
+                      ),
                       width: 0.8,
                     ),
                   ),

@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../l10n/app_localizations.dart';
 import '../../features/wallet/models/reward_mission.dart';
@@ -526,6 +527,7 @@ class _WalletPageState extends State<WalletPage>
   @override
   Widget build(BuildContext context) {
     final loc = AppLocalizations.of(context)!;
+    final txPreview = _visibleTransactions.take(5).toList();
     return Scaffold(
       appBar: AppBar(
         title: Text(loc.walletTitle),
@@ -553,9 +555,9 @@ class _WalletPageState extends State<WalletPage>
                     SizedBox(height: 16),
                     AppSkeleton(height: 90, radius: 20),
                     SizedBox(height: 16),
-                    AppSkeleton(height: 160, radius: 20),
+                    AppSkeleton(height: 120, radius: 20),
                     SizedBox(height: 16),
-                    AppSkeleton(height: 220, radius: 20),
+                    AppSkeleton(height: 260, radius: 20),
                   ],
                 )
               : RefreshIndicator(
@@ -563,145 +565,31 @@ class _WalletPageState extends State<WalletPage>
                   child: ListView(
                     padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
                     children: [
-                      WalletHeader(
-                        title: loc.walletHeaderTitle,
-                        subtitle: loc.walletHeaderSubtitle,
-                        onRulesTap: _openRules,
-                      ),
-                      const SizedBox(height: 16),
-                      BalanceCard(
+                      _WalletHeroBalance(
                         balance: _balance,
-                        monthlyEarned: _monthlyEarned,
                         obscureBalance: _obscureBalance,
-                        onToggleVisibility: () {
-                          setState(() => _obscureBalance = !_obscureBalance);
-                        },
-                        onQuickTopUp: _openQuickTopUpSheet,
+                        onToggleVisibility: () =>
+                            setState(() => _obscureBalance = !_obscureBalance),
+                        onCardsTap: _openCards,
                       ),
-                      const SizedBox(height: 16),
-                      _WalletStartCard(
-                        onTopUp: () => _togglePanel(_WalletPanel.topup),
-                        onTransactions: _openTransactions,
-                        onCards: _openCards,
+                      const SizedBox(height: 14),
+                      _WalletActionDock(
+                        onPay: _openTransactions,
+                        onTopUp: _openQuickTopUpSheet,
+                        onTransfer: () => _togglePanel(_WalletPanel.transfer),
+                        onRequest: () => _togglePanel(_WalletPanel.coupon),
                       ),
-                      const SizedBox(height: 16),
-                      _WalletMetricStrip(
-                        earnedAmount: _earnedTotal,
-                        spentAmount: _spentTotal,
-                        txCount: _transactions.length,
-                      ),
-                      const SizedBox(height: 16),
-                      SectionCard(
-                        padding: const EdgeInsets.all(16),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              loc.walletActionsTitle,
-                              style: Theme.of(context).textTheme.titleMedium
-                                  ?.copyWith(fontWeight: FontWeight.w700),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              loc.walletActionsSubtitle,
-                              style: Theme.of(context).textTheme.bodySmall
-                                  ?.copyWith(
-                                    color: Theme.of(
-                                      context,
-                                    ).colorScheme.onSurfaceVariant,
-                                  ),
-                            ),
-                            const SizedBox(height: 12),
-                            WalletQuickActions(
-                              onTopUp: () => _togglePanel(_WalletPanel.topup),
-                              onTransactions: _openTransactions,
-                              onCashback: _openCashback,
-                              onCoupons: _openCoupons,
-                              onCards: _openCards,
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      SectionCard(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            SectionHeader(
-                              title: loc.walletActionsTitle,
-                              subtitle: loc.walletActionsSubtitle,
-                              icon: Icons.bolt_outlined,
-                            ),
-                            const SizedBox(height: 12),
-                            LayoutBuilder(
-                              builder: (context, constraints) {
-                                final tileWidth =
-                                    (constraints.maxWidth - 24) / 3;
-                                return Wrap(
-                                  spacing: 12,
-                                  runSpacing: 12,
-                                  children: [
-                                    SizedBox(
-                                      width: tileWidth,
-                                      child: _PanelTile(
-                                        label: loc.couponSectionTitle,
-                                        icon: Icons.discount_outlined,
-                                        accent: Theme.of(
-                                          context,
-                                        ).colorScheme.primary,
-                                        active:
-                                            _openPanel == _WalletPanel.coupon,
-                                        onTap: () =>
-                                            _togglePanel(_WalletPanel.coupon),
-                                      ),
-                                    ),
-                                    SizedBox(
-                                      width: tileWidth,
-                                      child: _PanelTile(
-                                        label: loc.topUpSectionTitle,
-                                        icon: Icons
-                                            .account_balance_wallet_outlined,
-                                        accent: const Color(0xFFE53935),
-                                        active:
-                                            _openPanel == _WalletPanel.topup,
-                                        onTap: () =>
-                                            _togglePanel(_WalletPanel.topup),
-                                      ),
-                                    ),
-                                    SizedBox(
-                                      width: tileWidth,
-                                      child: _PanelTile(
-                                        label: loc.transferSectionTitle,
-                                        icon: Icons.compare_arrows_outlined,
-                                        accent: const Color(0xFF2E7D32),
-                                        active:
-                                            _openPanel == _WalletPanel.transfer,
-                                        onTap: () =>
-                                            _togglePanel(_WalletPanel.transfer),
-                                      ),
-                                    ),
-                                  ],
-                                );
-                              },
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 16),
                       AnimatedSize(
-                        duration: const Duration(milliseconds: 220),
-                        curve: Curves.easeOut,
-                        child: _openPanel == _WalletPanel.coupon
-                            ? SectionCard(
+                        duration: const Duration(milliseconds: 260),
+                        curve: Curves.easeOutCubic,
+                        child: Column(
+                          children: [
+                            if (_openPanel == _WalletPanel.coupon)
+                              _CompactWalletPanel(
+                                title: loc.couponSectionTitle,
+                                subtitle: loc.couponSectionSubtitle,
                                 child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    SectionHeader(
-                                      title: loc.couponSectionTitle,
-                                      subtitle: loc.couponSectionSubtitle,
-                                      icon: Icons.discount_outlined,
-                                    ),
-                                    const SizedBox(height: 12),
                                     TextFormField(
                                       controller: _couponCtrl,
                                       textCapitalization:
@@ -714,103 +602,40 @@ class _WalletPageState extends State<WalletPage>
                                       ),
                                     ),
                                     const SizedBox(height: 10),
-                                    Row(
-                                      children: [
-                                        Expanded(
-                                          child: FilledButton(
-                                            onPressed: _couponLoading
-                                                ? null
-                                                : _applyCoupon,
-                                            child: _couponLoading
-                                                ? const SizedBox(
-                                                    height: 18,
-                                                    width: 18,
-                                                    child:
-                                                        CircularProgressIndicator(
-                                                          strokeWidth: 2,
-                                                        ),
-                                                  )
-                                                : Text(loc.couponApplyAction),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                    if (_couponStatus != null) ...[
-                                      const SizedBox(height: 8),
-                                      Text(
-                                        _couponStatus!,
-                                        style: Theme.of(
-                                          context,
-                                        ).textTheme.bodySmall,
+                                    SizedBox(
+                                      width: double.infinity,
+                                      child: FilledButton(
+                                        onPressed: _couponLoading
+                                            ? null
+                                            : _applyCoupon,
+                                        child: _couponLoading
+                                            ? const SizedBox(
+                                                height: 18,
+                                                width: 18,
+                                                child:
+                                                    CircularProgressIndicator(
+                                                      strokeWidth: 2,
+                                                    ),
+                                              )
+                                            : Text(loc.couponApplyAction),
                                       ),
-                                    ],
-                                  ],
-                                ),
-                              )
-                            : const SizedBox.shrink(),
-                      ),
-                      const SizedBox(height: 16),
-                      AnimatedSize(
-                        duration: const Duration(milliseconds: 220),
-                        curve: Curves.easeOut,
-                        child: _openPanel == _WalletPanel.topup
-                            ? SectionCard(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    SectionHeader(
-                                      title: loc.topUpSectionTitle,
-                                      subtitle: loc.topUpSectionSubtitle,
-                                      icon:
-                                          Icons.account_balance_wallet_outlined,
-                                    ),
-                                    const SizedBox(height: 12),
-                                    _TopUpMethodTile(
-                                      title: loc.topUpUseSavedCardTitle,
-                                      subtitle: loc.topUpUseSavedCardSubtitle,
-                                      icon: Icons.credit_card_rounded,
-                                      accent: const Color(0xFF2563EB),
-                                      onTap: _topUpLoading
-                                          ? null
-                                          : _openTopUpSaved,
-                                    ),
-                                    const SizedBox(height: 12),
-                                    _TopUpMethodTile(
-                                      title: loc.topUpUseNewCardTitle,
-                                      subtitle: loc.topUpUseNewCardSubtitle,
-                                      icon: Icons.add_card_rounded,
-                                      accent: const Color(0xFF10B981),
-                                      onTap: _topUpLoading
-                                          ? null
-                                          : _openTopUpNew,
                                     ),
                                   ],
                                 ),
-                              )
-                            : const SizedBox.shrink(),
-                      ),
-                      const SizedBox(height: 16),
-                      AnimatedSize(
-                        duration: const Duration(milliseconds: 220),
-                        curve: Curves.easeOut,
-                        child: _openPanel == _WalletPanel.transfer
-                            ? SectionCard(
+                              ),
+                            if (_openPanel == _WalletPanel.transfer)
+                              _CompactWalletPanel(
+                                title: loc.transferSectionTitle,
+                                subtitle: loc.transferSectionSubtitle,
                                 child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    SectionHeader(
-                                      title: loc.transferSectionTitle,
-                                      subtitle: loc.transferSectionSubtitle,
-                                      icon: Icons.compare_arrows_outlined,
-                                    ),
-                                    const SizedBox(height: 12),
                                     TextFormField(
                                       controller: _transferTargetCtrl,
                                       decoration: InputDecoration(
                                         labelText: loc.transferTargetLabel,
                                       ),
                                     ),
-                                    const SizedBox(height: 12),
+                                    const SizedBox(height: 10),
                                     TextFormField(
                                       controller: _transferAmountCtrl,
                                       keyboardType: TextInputType.number,
@@ -818,66 +643,517 @@ class _WalletPageState extends State<WalletPage>
                                         labelText: loc.transferAmountLabel,
                                       ),
                                     ),
-                                    const SizedBox(height: 12),
+                                    const SizedBox(height: 10),
                                     TextFormField(
                                       controller: _transferNoteCtrl,
                                       decoration: InputDecoration(
                                         labelText: loc.transferNoteLabel,
                                       ),
                                     ),
-                                    const SizedBox(height: 16),
-                                    FilledButton(
-                                      onPressed: _transferLoading
-                                          ? null
-                                          : _submitTransfer,
-                                      child: _transferLoading
-                                          ? const SizedBox(
-                                              height: 18,
-                                              width: 18,
-                                              child: CircularProgressIndicator(
-                                                strokeWidth: 2,
-                                              ),
-                                            )
-                                          : Text(loc.transferAction),
+                                    const SizedBox(height: 12),
+                                    SizedBox(
+                                      width: double.infinity,
+                                      child: FilledButton(
+                                        onPressed: _transferLoading
+                                            ? null
+                                            : _submitTransfer,
+                                        child: _transferLoading
+                                            ? const SizedBox(
+                                                height: 18,
+                                                width: 18,
+                                                child:
+                                                    CircularProgressIndicator(
+                                                      strokeWidth: 2,
+                                                    ),
+                                              )
+                                            : Text(loc.transferAction),
+                                      ),
                                     ),
                                   ],
                                 ),
-                              )
-                            : const SizedBox.shrink(),
+                              ),
+                          ],
+                        ),
                       ),
-                      const SizedBox(height: 20),
+                      const SizedBox(height: 18),
+                      _WalletPlanSection(
+                        onAddTap: _openCampaigns,
+                        plans: const [
+                          _PlanChipData(
+                            icon: Icons.home_outlined,
+                            label: 'House',
+                            color: Color(0xFFE2E8F0),
+                          ),
+                          _PlanChipData(
+                            icon: Icons.menu_book_outlined,
+                            label: 'Education',
+                            color: Color(0xFFFDE8D5),
+                          ),
+                          _PlanChipData(
+                            icon: Icons.public_outlined,
+                            label: 'Holiday',
+                            color: Color(0xFFE5E7EB),
+                          ),
+                          _PlanChipData(
+                            icon: Icons.apartment_outlined,
+                            label: 'Apartment',
+                            color: Color(0xFFDFF2FE),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 18),
+                      Row(
+                        children: [
+                          Text(
+                            loc.walletTransactionsTitle,
+                            style: Theme.of(context).textTheme.titleLarge
+                                ?.copyWith(fontWeight: FontWeight.w800),
+                          ),
+                          const Spacer(),
+                          TextButton(
+                            onPressed: _openTransactions,
+                            child: Text(loc.seeAllAction),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      _TransactionFilterChips(
+                        value: _txFilter,
+                        onChanged: (next) => setState(() => _txFilter = next),
+                      ),
+                      const SizedBox(height: 10),
+                      txPreview.isEmpty
+                          ? AppEmptyState(
+                              title: loc.walletEmptyTransactionsTitle,
+                              subtitle: loc.walletEmptyTransactionsSubtitle,
+                            )
+                          : _WalletTransactionPreviewList(items: txPreview),
+                      const SizedBox(height: 18),
+                      _WalletMetricStrip(
+                        earnedAmount: _earnedTotal,
+                        spentAmount: _spentTotal,
+                        txCount: _transactions.length,
+                      ),
+                      const SizedBox(height: 12),
                       Text(
                         loc.walletMissionsTitle,
                         style: Theme.of(context).textTheme.titleMedium
                             ?.copyWith(fontWeight: FontWeight.w700),
                       ),
-                      const SizedBox(height: 12),
-                      MissionCarousel(items: _missions),
-                      const SizedBox(height: 20),
-                      _WeeklyFlowCard(items: _weeklyFlows),
-                      const SizedBox(height: 20),
-                      Text(
-                        loc.walletTransactionsTitle,
-                        style: Theme.of(context).textTheme.titleMedium
-                            ?.copyWith(fontWeight: FontWeight.w700),
-                      ),
                       const SizedBox(height: 10),
-                      _TransactionFilterChips(
-                        value: _txFilter,
-                        onChanged: (next) => setState(() => _txFilter = next),
+                      MissionCarousel(items: _missions),
+                      const SizedBox(height: 16),
+                      TextButton.icon(
+                        onPressed: _openRules,
+                        icon: const Icon(Icons.info_outline_rounded),
+                        label: Text(loc.walletRulesAction),
                       ),
-                      const SizedBox(height: 12),
-                      _visibleTransactions.isEmpty
-                          ? AppEmptyState(
-                              title: loc.walletEmptyTransactionsTitle,
-                              subtitle: loc.walletEmptyTransactionsSubtitle,
-                            )
-                          : TransactionsList(items: _visibleTransactions),
                     ],
                   ),
                 ),
         ],
       ),
+    );
+  }
+}
+
+class _WalletHeroBalance extends StatelessWidget {
+  const _WalletHeroBalance({
+    required this.balance,
+    required this.obscureBalance,
+    required this.onToggleVisibility,
+    required this.onCardsTap,
+  });
+
+  final double balance;
+  final bool obscureBalance;
+  final VoidCallback onToggleVisibility;
+  final VoidCallback onCardsTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final amount = obscureBalance
+        ? '••••••'
+        : '\$${balance.toStringAsFixed(2)}';
+    return Container(
+      padding: const EdgeInsets.fromLTRB(18, 16, 18, 16),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(22),
+        gradient: const LinearGradient(
+          colors: [Color(0xFF0E5D58), Color(0xFF0F766E)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF0F766E).withValues(alpha: 0.28),
+            blurRadius: 22,
+            offset: const Offset(0, 12),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'My Available Balance',
+                  style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                    color: Colors.white.withValues(alpha: 0.88),
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  amount,
+                  style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: -0.6,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          IconButton(
+            onPressed: onToggleVisibility,
+            icon: Icon(
+              obscureBalance ? Icons.visibility_off : Icons.visibility,
+              color: Colors.white,
+            ),
+          ),
+          IconButton(
+            onPressed: onCardsTap,
+            icon: const Icon(Icons.account_balance_wallet_outlined),
+            color: Colors.white,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _WalletActionDock extends StatelessWidget {
+  const _WalletActionDock({
+    required this.onPay,
+    required this.onTopUp,
+    required this.onTransfer,
+    required this.onRequest,
+  });
+
+  final VoidCallback onPay;
+  final VoidCallback onTopUp;
+  final VoidCallback onTransfer;
+  final VoidCallback onRequest;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(12, 12, 12, 10),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(18),
+        color: const Color(0xFF121826),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        children: [
+          _WalletActionButton(
+            icon: Icons.payments_outlined,
+            label: 'Pay',
+            onTap: onPay,
+          ),
+          _WalletActionButton(
+            icon: Icons.add_circle_outline_rounded,
+            label: 'Top up',
+            onTap: onTopUp,
+          ),
+          _WalletActionButton(
+            icon: Icons.sync_alt_rounded,
+            label: 'Transfer',
+            onTap: onTransfer,
+          ),
+          _WalletActionButton(
+            icon: Icons.request_page_outlined,
+            label: 'Request',
+            onTap: onRequest,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _WalletActionButton extends StatelessWidget {
+  const _WalletActionButton({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      borderRadius: BorderRadius.circular(14),
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 4),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 42,
+              height: 42,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(color: Colors.white.withValues(alpha: 0.24)),
+                color: Colors.white.withValues(alpha: 0.06),
+              ),
+              child: Icon(icon, size: 20, color: Colors.white),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              label,
+              style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                color: Colors.white.withValues(alpha: 0.88),
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _CompactWalletPanel extends StatelessWidget {
+  const _CompactWalletPanel({
+    required this.title,
+    required this.subtitle,
+    required this.child,
+  });
+
+  final String title;
+  final String subtitle;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(top: 12),
+      child: SectionCard(
+        padding: const EdgeInsets.all(14),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              title,
+              style: Theme.of(
+                context,
+              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
+            ),
+            const SizedBox(height: 4),
+            Text(subtitle, style: Theme.of(context).textTheme.bodySmall),
+            const SizedBox(height: 10),
+            child,
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _WalletPlanSection extends StatelessWidget {
+  const _WalletPlanSection({required this.onAddTap, required this.plans});
+
+  final VoidCallback onAddTap;
+  final List<_PlanChipData> plans;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Financial Plan',
+          style: Theme.of(
+            context,
+          ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
+        ),
+        const SizedBox(height: 10),
+        SizedBox(
+          height: 78,
+          child: ListView(
+            scrollDirection: Axis.horizontal,
+            children: [
+              _PlanRoundChip.add(onTap: onAddTap),
+              const SizedBox(width: 10),
+              ...plans.map(
+                (plan) => Padding(
+                  padding: const EdgeInsets.only(right: 10),
+                  child: _PlanRoundChip(
+                    icon: plan.icon,
+                    label: plan.label,
+                    color: plan.color,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _PlanChipData {
+  const _PlanChipData({
+    required this.icon,
+    required this.label,
+    required this.color,
+  });
+
+  final IconData icon;
+  final String label;
+  final Color color;
+}
+
+class _PlanRoundChip extends StatelessWidget {
+  const _PlanRoundChip({
+    required this.icon,
+    required this.label,
+    required this.color,
+    this.onTap,
+  }) : isAdd = false;
+
+  const _PlanRoundChip.add({required this.onTap})
+    : icon = Icons.add_rounded,
+      label = 'Add',
+      color = const Color(0xFFF8FAFC),
+      isAdd = true;
+
+  final IconData icon;
+  final String label;
+  final Color color;
+  final VoidCallback? onTap;
+  final bool isAdd;
+
+  @override
+  Widget build(BuildContext context) {
+    final circle = Container(
+      width: 58,
+      height: 58,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: color,
+        border: Border.all(
+          color: isAdd ? const Color(0xFF94A3B8) : Colors.transparent,
+          style: isAdd ? BorderStyle.solid : BorderStyle.none,
+        ),
+      ),
+      child: Icon(
+        icon,
+        color: isAdd ? const Color(0xFF111827) : const Color(0xFF334155),
+      ),
+    );
+    return GestureDetector(
+      onTap: onTap,
+      child: Column(
+        children: [
+          circle,
+          const SizedBox(height: 4),
+          Text(
+            label,
+            style: Theme.of(
+              context,
+            ).textTheme.labelMedium?.copyWith(fontWeight: FontWeight.w600),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _WalletTransactionPreviewList extends StatelessWidget {
+  const _WalletTransactionPreviewList({required this.items});
+
+  final List<WalletTransaction> items;
+
+  @override
+  Widget build(BuildContext context) {
+    return SectionCard(
+      padding: const EdgeInsets.all(14),
+      child: Column(
+        children: [
+          for (var i = 0; i < items.length; i++) ...[
+            _WalletPreviewTile(item: items[i]),
+            if (i != items.length - 1) const Divider(height: 16),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _WalletPreviewTile extends StatelessWidget {
+  const _WalletPreviewTile({required this.item});
+
+  final WalletTransaction item;
+
+  @override
+  Widget build(BuildContext context) {
+    final isIncoming = item.type == WalletTransactionType.earn;
+    final icon = isIncoming
+        ? Icons.south_west_rounded
+        : Icons.north_east_rounded;
+    final amountPrefix = isIncoming ? '+' : '-';
+    return Row(
+      children: [
+        Container(
+          width: 40,
+          height: 40,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: const Color(0xFFF1F5F9),
+          ),
+          child: Icon(icon, size: 20, color: const Color(0xFF334155)),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                item.title,
+                style: Theme.of(
+                  context,
+                ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                DateFormat('dd MMM yyyy').format(item.date),
+                style: Theme.of(
+                  context,
+                ).textTheme.bodySmall?.copyWith(color: const Color(0xFF64748B)),
+              ),
+            ],
+          ),
+        ),
+        Text(
+          '$amountPrefix\$${item.amount.toStringAsFixed(2)}',
+          style: Theme.of(context).textTheme.titleSmall?.copyWith(
+            fontWeight: FontWeight.w800,
+            color: isIncoming
+                ? const Color(0xFF0F766E)
+                : const Color(0xFF111827),
+          ),
+        ),
+      ],
     );
   }
 }

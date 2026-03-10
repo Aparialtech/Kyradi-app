@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:intl/intl.dart';
+import 'package:qr_flutter/qr_flutter.dart';
 import '../../core/repositories/luggage_repository.dart';
 import '../../core/drop_locations.dart';
 import '../../models/luggage.dart';
@@ -15,6 +16,7 @@ import '../../ui/components/app_skeleton.dart';
 import '../../widgets/section_card.dart';
 import '../../widgets/app_mesh_background.dart';
 import 'widgets/active_luggage_bottom_sheet.dart';
+import 'widgets/luggage_color_icon.dart';
 
 class LuggageListPage extends StatefulWidget {
   const LuggageListPage({super.key});
@@ -37,7 +39,7 @@ class _LuggageListPageState extends State<LuggageListPage> {
   String? _locationFilter;
   String? _sizeFilter;
   LuggageSort _sort = LuggageSort.date;
-  LuggageView _view = LuggageView.list;
+  LuggageView _view = LuggageView.cards;
   int _page = 1;
   static const int _pageSize = 10;
 
@@ -700,146 +702,21 @@ class _LuggageListPageState extends State<LuggageListPage> {
     AppLocalizations loc,
     List<LuggageModel> items,
   ) {
-    final theme = Theme.of(context);
     final locale = Localizations.localeOf(context).toLanguageTag();
-    final dateFormat = DateFormat('dd MMM', locale);
-    final timeFormat = DateFormat('HH:mm', locale);
     return Column(
       children: items
           .map(
             (luggage) => Padding(
               padding: const EdgeInsets.only(bottom: 14),
-              child: SectionCard(
-                padding: const EdgeInsets.all(18),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                luggage.displayLabel,
-                                style: theme.textTheme.titleMedium?.copyWith(
-                                  fontWeight: FontWeight.w700,
-                                ),
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                luggage.dropLocationName,
-                                style: theme.textTheme.bodySmall?.copyWith(
-                                  color: theme.colorScheme.onSurfaceVariant,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 10,
-                            vertical: 6,
-                          ),
-                          decoration: BoxDecoration(
-                            color: luggage
-                                .statusColor(theme)
-                                .withValues(alpha: 0.12),
-                            borderRadius: BorderRadius.circular(999),
-                          ),
-                          child: Text(
-                            luggage.statusLabel,
-                            style: theme.textTheme.labelSmall?.copyWith(
-                              color: luggage.statusColor(theme),
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                    Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
-                      children: [
-                        _InfoChip(
-                          icon: Icons.straighten,
-                          label: luggage.size?.isNotEmpty == true
-                              ? luggage.size!
-                              : '-',
-                        ),
-                        _InfoChip(
-                          icon: Icons.scale_outlined,
-                          label: luggage.weight?.isNotEmpty == true
-                              ? luggage.weight!
-                              : '-',
-                        ),
-                        _InfoChip(
-                          icon: Icons.palette_outlined,
-                          label: luggage.color?.isNotEmpty == true
-                              ? luggage.color!
-                              : '-',
-                        ),
-                        _InfoChip(
-                          icon: Icons.payments_outlined,
-                          label: _paymentStatusLabel(loc, luggage),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: _InfoChip(
-                            icon: Icons.schedule,
-                            label: luggage.scheduledDropTime != null
-                                ? '${dateFormat.format(luggage.scheduledDropTime!.toLocal())} · ${timeFormat.format(luggage.scheduledDropTime!.toLocal())}'
-                                : loc.luggageTimelineTimeUnknown,
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: _InfoChip(
-                            icon: Icons.access_time,
-                            label: luggage.scheduledPickupTime != null
-                                ? '${dateFormat.format(luggage.scheduledPickupTime!.toLocal())} · ${timeFormat.format(luggage.scheduledPickupTime!.toLocal())}'
-                                : loc.luggageTimelineTimeUnknown,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: OutlinedButton.icon(
-                            onPressed: () => _openDetail(luggage),
-                            icon: const Icon(Icons.info_outline),
-                            label: Text(loc.detailsAction),
-                          ),
-                        ),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: FilledButton.icon(
-                            onPressed: () => _openQr(luggage),
-                            icon: const Icon(Icons.qr_code_2),
-                            label: Text(loc.luggageShowQr),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    Align(
-                      alignment: Alignment.centerRight,
-                      child: TextButton.icon(
-                        onPressed: () => _cancelLuggage(luggage),
-                        icon: const Icon(Icons.delete_outline),
-                        label: Text(loc.luggageCancelAction),
-                      ),
-                    ),
-                  ],
-                ),
+              child: _LuggageTicketCard(
+                luggage: luggage,
+                localeTag: locale,
+                paymentLabel: _paymentStatusLabel(loc, luggage),
+                onDetails: () => _openDetail(luggage),
+                onCancel: () => _cancelLuggage(luggage),
+                detailLabel: loc.detailsAction,
+                cancelLabel: loc.luggageCancelAction,
+                unknownTimeLabel: loc.luggageTimelineTimeUnknown,
               ),
             ),
           )
@@ -1054,35 +931,117 @@ class _LuggageQuickBar extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 10),
-          Row(
-            children: [
-              Expanded(
-                child: FilledButton.icon(
-                  onPressed: onAdd,
-                  icon: const Icon(Icons.add_box_rounded, size: 18),
-                  label: const Text('Yeni Bavul'),
-                ),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: OutlinedButton.icon(
-                  onPressed: onFilter,
-                  icon: const Icon(Icons.tune_rounded, size: 18),
-                  label: const Text('Filtre'),
-                ),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: OutlinedButton.icon(
-                  onPressed: () => onRefresh(),
-                  icon: const Icon(Icons.refresh_rounded, size: 18),
-                  label: const Text('Yenile'),
-                ),
-              ),
-            ],
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final compact = constraints.maxWidth < 360;
+              if (compact) {
+                return Column(
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _QuickBarButton.filled(
+                            onPressed: onAdd,
+                            icon: Icons.add_box_rounded,
+                            label: 'Yeni Bavul',
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: _QuickBarButton.outlined(
+                            onPressed: onFilter,
+                            icon: Icons.tune_rounded,
+                            label: 'Filtrele',
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    SizedBox(
+                      width: double.infinity,
+                      child: _QuickBarButton.outlined(
+                        onPressed: () => onRefresh(),
+                        icon: Icons.refresh_rounded,
+                        label: 'Yenile',
+                      ),
+                    ),
+                  ],
+                );
+              }
+              return Row(
+                children: [
+                  Expanded(
+                    child: _QuickBarButton.filled(
+                      onPressed: onAdd,
+                      icon: Icons.add_box_rounded,
+                      label: 'Yeni Bavul',
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: _QuickBarButton.outlined(
+                      onPressed: onFilter,
+                      icon: Icons.tune_rounded,
+                      label: 'Filtrele',
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: _QuickBarButton.outlined(
+                      onPressed: () => onRefresh(),
+                      icon: Icons.refresh_rounded,
+                      label: 'Yenile',
+                    ),
+                  ),
+                ],
+              );
+            },
           ),
         ],
       ),
+    );
+  }
+}
+
+class _QuickBarButton extends StatelessWidget {
+  const _QuickBarButton.filled({
+    required this.onPressed,
+    required this.icon,
+    required this.label,
+  }) : _filled = true;
+
+  const _QuickBarButton.outlined({
+    required this.onPressed,
+    required this.icon,
+    required this.label,
+  }) : _filled = false;
+
+  final VoidCallback? onPressed;
+  final IconData icon;
+  final String label;
+  final bool _filled;
+
+  @override
+  Widget build(BuildContext context) {
+    final text = Text(
+      label,
+      maxLines: 1,
+      overflow: TextOverflow.ellipsis,
+      style: const TextStyle(fontWeight: FontWeight.w700),
+    );
+    if (_filled) {
+      return FilledButton.icon(
+        onPressed: onPressed,
+        style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(46)),
+        icon: Icon(icon, size: 18),
+        label: text,
+      );
+    }
+    return OutlinedButton.icon(
+      onPressed: onPressed,
+      style: OutlinedButton.styleFrom(minimumSize: const Size.fromHeight(46)),
+      icon: Icon(icon, size: 18),
+      label: text,
     );
   }
 }
@@ -1132,40 +1091,446 @@ enum LuggageSort { date, status, location, payment }
 
 enum LuggageView { list, cards, calendar }
 
-class _InfoChip extends StatelessWidget {
-  const _InfoChip({required this.icon, required this.label});
+class _LuggageTicketCard extends StatelessWidget {
+  const _LuggageTicketCard({
+    required this.luggage,
+    required this.localeTag,
+    required this.paymentLabel,
+    required this.onDetails,
+    required this.onCancel,
+    required this.detailLabel,
+    required this.cancelLabel,
+    required this.unknownTimeLabel,
+  });
 
-  final IconData icon;
-  final String label;
+  final LuggageModel luggage;
+  final String localeTag;
+  final String paymentLabel;
+  final VoidCallback onDetails;
+  final VoidCallback onCancel;
+  final String detailLabel;
+  final String cancelLabel;
+  final String unknownTimeLabel;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final accent = getLuggageColor(luggage.color);
+    final softAccent = Color.lerp(accent, Colors.white, 0.2) ?? accent;
+    final darkStart = Color.lerp(accent, const Color(0xFF0B1327), 0.78)!;
+    final darkEnd = Color.lerp(accent, const Color(0xFF132B4A), 0.66)!;
+    final headlineColor = accent.computeLuminance() > 0.8
+        ? const Color(0xFF111827)
+        : Colors.white;
+    final dateLabel = DateFormat(
+      'EEE dd MMM',
+      localeTag,
+    ).format(luggage.createdAt.toLocal());
+    final dropTime = _formatTime(luggage.scheduledDropTime);
+    final pickupTime = _formatTime(luggage.scheduledPickupTime);
+
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
       decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceVariant.withValues(alpha: 0.6),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(
-          color: theme.colorScheme.outlineVariant.withValues(alpha: 0.3),
-        ),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 16, color: theme.colorScheme.primary),
-          const SizedBox(width: 6),
-          Flexible(
-            child: Text(
-              label,
-              overflow: TextOverflow.ellipsis,
-              style: theme.textTheme.labelMedium?.copyWith(
-                fontWeight: FontWeight.w600,
-              ),
-            ),
+        borderRadius: BorderRadius.circular(26),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.24)),
+        boxShadow: [
+          BoxShadow(
+            color: darkStart.withValues(alpha: 0.26),
+            blurRadius: 24,
+            offset: const Offset(0, 14),
           ),
         ],
       ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(26),
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [darkStart, darkEnd],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                padding: const EdgeInsets.fromLTRB(14, 12, 14, 10),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      softAccent.withValues(alpha: 0.35),
+                      softAccent.withValues(alpha: 0.06),
+                    ],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Text(
+                      dateLabel,
+                      style: theme.textTheme.labelMedium?.copyWith(
+                        color: headlineColor.withValues(alpha: 0.92),
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const Spacer(),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 9,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.black.withValues(alpha: 0.18),
+                        borderRadius: BorderRadius.circular(999),
+                      ),
+                      child: Text(
+                        luggage.statusLabel,
+                        style: theme.textTheme.labelSmall?.copyWith(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 10),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: _AirportCode(
+                        code: _codeFromLocation(luggage.dropLocationName),
+                        city: luggage.dropLocationName,
+                      ),
+                    ),
+                    Column(
+                      children: [
+                        Icon(
+                          Icons.local_shipping_outlined,
+                          color: Colors.white.withValues(alpha: 0.82),
+                          size: 20,
+                        ),
+                        const SizedBox(height: 3),
+                        Text(
+                          _durationText(luggage),
+                          style: theme.textTheme.labelSmall?.copyWith(
+                            color: Colors.white.withValues(alpha: 0.86),
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                    Expanded(
+                      child: _AirportCode(
+                        alignEnd: true,
+                        code: luggage.displayLabel.length >= 3
+                            ? luggage.displayLabel
+                                  .replaceAll(' ', '')
+                                  .toUpperCase()
+                                  .substring(0, 3)
+                            : 'BAG',
+                        city: luggage.displayLabel,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Center(
+                child: Container(
+                  width: 220,
+                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(999),
+                    gradient: LinearGradient(
+                      colors: [
+                        Colors.white.withValues(alpha: 0.04),
+                        Colors.white.withValues(alpha: 0.18),
+                        Colors.white.withValues(alpha: 0.04),
+                      ],
+                    ),
+                  ),
+                  child: Center(child: getLuggageIcon(luggage.color, size: 92)),
+                ),
+              ),
+              const SizedBox(height: 12),
+              Container(
+                margin: const EdgeInsets.symmetric(horizontal: 12),
+                padding: const EdgeInsets.fromLTRB(12, 10, 12, 12),
+                decoration: BoxDecoration(
+                  color: Colors.black.withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: Colors.white.withValues(alpha: 0.12),
+                  ),
+                ),
+                child: Column(
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _TicketInfoCell(
+                            label: 'Drop',
+                            value: dropTime,
+                            valueColor: Colors.white,
+                          ),
+                        ),
+                        Expanded(
+                          child: _TicketInfoCell(
+                            label: 'Pick-up',
+                            value: pickupTime,
+                            valueColor: Colors.white,
+                          ),
+                        ),
+                        Expanded(
+                          child: _TicketInfoCell(
+                            label: 'Odeme',
+                            value: paymentLabel,
+                            valueColor: luggage.isPaymentPaid
+                                ? const Color(0xFF34D399)
+                                : const Color(0xFFFBBF24),
+                            alignEnd: true,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 10),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: OutlinedButton.icon(
+                            onPressed: onDetails,
+                            style: OutlinedButton.styleFrom(
+                              foregroundColor: Colors.white,
+                              side: BorderSide(
+                                color: Colors.white.withValues(alpha: 0.38),
+                              ),
+                            ),
+                            icon: const Icon(Icons.info_outline, size: 18),
+                            label: Text(detailLabel),
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        IconButton(
+                          tooltip: cancelLabel,
+                          onPressed: onCancel,
+                          icon: const Icon(Icons.delete_outline_rounded),
+                          color: Colors.white70,
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 12),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
+                decoration: const BoxDecoration(
+                  color: Color(0xFFF8FAFC),
+                  borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(16),
+                    topRight: Radius.circular(16),
+                    bottomLeft: Radius.circular(26),
+                    bottomRight: Radius.circular(26),
+                  ),
+                ),
+                child: Column(
+                  children: [
+                    Row(
+                      children: [
+                        Container(
+                          width: 78,
+                          height: 78,
+                          padding: const EdgeInsets.all(7),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(14),
+                            border: Border.all(color: const Color(0xFFCBD5E1)),
+                          ),
+                          child: QrImageView(
+                            data: luggage.qrCode.isNotEmpty
+                                ? luggage.qrCode
+                                : luggage.id,
+                            version: QrVersions.auto,
+                            eyeStyle: const QrEyeStyle(
+                              eyeShape: QrEyeShape.square,
+                              color: Color(0xFF0F172A),
+                            ),
+                            dataModuleStyle: const QrDataModuleStyle(
+                              dataModuleShape: QrDataModuleShape.square,
+                              color: Color(0xFF0F172A),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'QR Numarasi',
+                                style: theme.textTheme.labelMedium?.copyWith(
+                                  color: const Color(0xFF64748B),
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                luggage.qrCode.isEmpty ? '--' : luggage.qrCode,
+                                style: theme.textTheme.titleSmall?.copyWith(
+                                  color: const Color(0xFF0F172A),
+                                  fontWeight: FontWeight.w800,
+                                  letterSpacing: 0.3,
+                                ),
+                              ),
+                              const SizedBox(height: 6),
+                              Text(
+                                luggage.displayLabel,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: theme.textTheme.labelMedium?.copyWith(
+                                  color: const Color(0xFF334155),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  String _formatTime(DateTime? value) {
+    if (value == null) return unknownTimeLabel;
+    return DateFormat('HH:mm', localeTag).format(value.toLocal());
+  }
+
+  String _durationText(LuggageModel item) {
+    final start = item.scheduledDropTime;
+    final end = item.scheduledPickupTime;
+    if (start == null || end == null) return '--';
+    final minutes = end.difference(start).inMinutes;
+    if (minutes <= 0) return '--';
+    final hours = minutes ~/ 60;
+    final rest = minutes % 60;
+    if (hours == 0) return '${rest}m';
+    if (rest == 0) return '${hours}h';
+    return '${hours}h ${rest}m';
+  }
+
+  String _codeFromLocation(String location) {
+    final clean = location.trim();
+    if (clean.isEmpty) return 'LOC';
+    final words = clean
+        .split(RegExp(r'\s+'))
+        .where((e) => e.isNotEmpty)
+        .toList();
+    if (words.length >= 2) {
+      final firstWord = words.first;
+      final lastWord = words.last;
+      final chars =
+          '${firstWord[0]}${lastWord[0]}${firstWord[firstWord.length - 1]}'
+              .toUpperCase();
+      return chars.length >= 3 ? chars.substring(0, 3) : chars.padRight(3, 'X');
+    }
+    final single = words.first.toUpperCase().replaceAll(
+      RegExp(r'[^A-Z0-9]'),
+      '',
+    );
+    if (single.length >= 3) return single.substring(0, 3);
+    return single.padRight(3, 'X');
+  }
+}
+
+class _AirportCode extends StatelessWidget {
+  const _AirportCode({
+    required this.code,
+    required this.city,
+    this.alignEnd = false,
+  });
+
+  final String code;
+  final String city;
+  final bool alignEnd;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: alignEnd
+          ? CrossAxisAlignment.end
+          : CrossAxisAlignment.start,
+      children: [
+        Text(
+          code,
+          style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+            color: Colors.white,
+            fontWeight: FontWeight.w900,
+            letterSpacing: -0.8,
+          ),
+        ),
+        const SizedBox(height: 1),
+        Text(
+          city,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          textAlign: alignEnd ? TextAlign.end : TextAlign.start,
+          style: Theme.of(context).textTheme.labelMedium?.copyWith(
+            color: Colors.white.withValues(alpha: 0.78),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _TicketInfoCell extends StatelessWidget {
+  const _TicketInfoCell({
+    required this.label,
+    required this.value,
+    required this.valueColor,
+    this.alignEnd = false,
+  });
+
+  final String label;
+  final String value;
+  final Color valueColor;
+  final bool alignEnd;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: alignEnd
+          ? CrossAxisAlignment.end
+          : CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: Theme.of(
+            context,
+          ).textTheme.labelSmall?.copyWith(color: Colors.white70),
+        ),
+        const SizedBox(height: 2),
+        Text(
+          value,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          textAlign: alignEnd ? TextAlign.end : TextAlign.start,
+          style: Theme.of(context).textTheme.titleSmall?.copyWith(
+            color: valueColor,
+            fontWeight: FontWeight.w800,
+          ),
+        ),
+      ],
     );
   }
 }

@@ -19,6 +19,8 @@ class _IntroSplashPageState extends State<IntroSplashPage>
   late final AnimationController _neonController;
   late final Animation<double> _logoScale;
   late final Animation<Alignment> _logoAlign;
+  late final Animation<double> _brandOpacity;
+  late final Animation<Offset> _brandSlide;
   late final Animation<double> _sloganOpacity;
   late final Animation<Offset> _sloganSlide;
   late final Animation<double> _buttonOpacity;
@@ -59,6 +61,17 @@ class _IntroSplashPageState extends State<IntroSplashPage>
       parent: _introController,
       curve: const Interval(0.56, 0.84, curve: Curves.easeOutCubic),
     );
+    _brandOpacity = CurvedAnimation(
+      parent: _introController,
+      curve: const Interval(0.5, 0.78, curve: Curves.easeOutCubic),
+    );
+    _brandSlide = Tween<Offset>(begin: const Offset(0, 0.1), end: Offset.zero)
+        .animate(
+          CurvedAnimation(
+            parent: _introController,
+            curve: const Interval(0.5, 0.78, curve: Curves.easeOutCubic),
+          ),
+        );
     _sloganSlide = Tween<Offset>(begin: const Offset(0, 0.14), end: Offset.zero)
         .animate(
           CurvedAnimation(
@@ -142,6 +155,16 @@ class _IntroSplashPageState extends State<IntroSplashPage>
                                 child: Transform.scale(
                                   scale: _logoScale.value,
                                   child: _IntroLogoOrb(scale: _logoScale.value),
+                                ),
+                              ),
+                              Align(
+                                alignment: const Alignment(0, -0.42),
+                                child: FadeTransition(
+                                  opacity: _brandOpacity,
+                                  child: SlideTransition(
+                                    position: _brandSlide,
+                                    child: const _NeonBrandWord(),
+                                  ),
                                 ),
                               ),
                               Center(
@@ -401,6 +424,35 @@ class _NeonTrackButton extends StatelessWidget {
           ],
         );
       },
+    );
+  }
+}
+
+class _NeonBrandWord extends StatelessWidget {
+  const _NeonBrandWord();
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      'KYRADI',
+      textAlign: TextAlign.center,
+      style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+        fontWeight: FontWeight.w900,
+        fontSize: 28,
+        letterSpacing: 4.2,
+        color: const Color(0xFFF4F8FF),
+        shadows: [
+          Shadow(
+            color: const Color(0xFF36CFFF).withValues(alpha: 0.82),
+            blurRadius: 18,
+          ),
+          Shadow(
+            color: const Color(0xFFE96A84).withValues(alpha: 0.58),
+            blurRadius: 24,
+          ),
+          Shadow(color: Colors.white.withValues(alpha: 0.72), blurRadius: 6),
+        ],
+      ),
     );
   }
 }

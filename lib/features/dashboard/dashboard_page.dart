@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../features/home/controllers/home_controller.dart';
 import '../../core/drop_locations.dart';
 import '../../l10n/app_localizations.dart';
@@ -44,6 +45,7 @@ class _DashboardPageState extends State<DashboardPage> {
   bool _expandLuggage = false;
   bool _expandNearby = false;
   bool _expandCampaigns = false;
+  double _walletBalance = 0;
 
   @override
   void initState() {
@@ -56,6 +58,7 @@ class _DashboardPageState extends State<DashboardPage> {
       _checkHomeMapKey();
     }
     _loadLocations();
+    _loadWalletBalance();
     _restoreUserIdThenLoad();
   }
 
@@ -129,6 +132,12 @@ class _DashboardPageState extends State<DashboardPage> {
       if (!mounted) return;
       setState(() => _luggageError = e.toString());
     }
+  }
+
+  Future<void> _loadWalletBalance() async {
+    final prefs = await SharedPreferences.getInstance();
+    if (!mounted) return;
+    setState(() => _walletBalance = prefs.getDouble('wallet_balance') ?? 0);
   }
 
   Future<void> _zoomInHomeMap() async {
@@ -259,6 +268,14 @@ class _DashboardPageState extends State<DashboardPage> {
     final latestLuggage = _controller.luggages.isNotEmpty
         ? _controller.luggages.first
         : null;
+    LuggageModel? activeLuggage;
+    for (final item in _controller.luggages) {
+      if (item.status == LuggageStatus.awaitingDrop ||
+          item.status == LuggageStatus.dropped) {
+        activeLuggage = item;
+        break;
+      }
+    }
     final nearbyLocations = _controller.locations.take(6).toList();
     final activeCount = _controller.luggages
         .where(
@@ -318,6 +335,7 @@ class _DashboardPageState extends State<DashboardPage> {
                   await _loadProfile(_controller.userId!);
                   await _loadLuggages(_controller.userId!);
                 }
+                await _loadWalletBalance();
                 await _loadLocations();
               },
               child: ListView(
@@ -336,9 +354,17 @@ class _DashboardPageState extends State<DashboardPage> {
                   ),
                   const SizedBox(height: 16),
                   _PremiumHeroPanel(
+                    walletBalance: _walletBalance,
                     totalCount: _controller.luggages.length,
                     activeCount: activeCount,
                     locationCount: _controller.locations.length,
+                    activeLuggage: activeLuggage,
+                    onTicketTap: _openLuggageCenter,
+                    onTicketQrTap: () {
+                      if (activeLuggage != null) {
+                        _openQrPreview(activeLuggage);
+                      }
+                    },
                     onPrimaryTap: _openAddLuggage,
                     onSecondaryTap: () => context.go('/explore'),
                   ),
@@ -500,16 +526,24 @@ class _DashboardPageState extends State<DashboardPage> {
 
 class _PremiumHeroPanel extends StatelessWidget {
   const _PremiumHeroPanel({
+    required this.walletBalance,
     required this.totalCount,
     required this.activeCount,
     required this.locationCount,
+    required this.activeLuggage,
+    required this.onTicketTap,
+    required this.onTicketQrTap,
     required this.onPrimaryTap,
     required this.onSecondaryTap,
   });
 
+  final double walletBalance;
   final int totalCount;
   final int activeCount;
   final int locationCount;
+  final LuggageModel? activeLuggage;
+  final VoidCallback onTicketTap;
+  final VoidCallback onTicketQrTap;
   final VoidCallback onPrimaryTap;
   final VoidCallback onSecondaryTap;
 
@@ -524,37 +558,37 @@ class _PremiumHeroPanel extends StatelessWidget {
         return Transform.scale(scale: value, child: child);
       },
       child: Container(
-        padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
+        padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(24),
           gradient: const LinearGradient(
-            colors: [Color(0xFF0F766E), Color(0xFF0EA5E9)],
+            colors: [Color(0xFF0B1C34), Color(0xFF103864), Color(0xFF0F766E)],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
           boxShadow: [
             BoxShadow(
-              color: const Color(0xFF0EA5E9).withValues(alpha: 0.24),
-              blurRadius: 24,
+              color: const Color(0xFF0C4D84).withValues(alpha: 0.3),
+              blurRadius: 26,
               offset: const Offset(0, 14),
             ),
           ],
-          border: Border.all(color: Colors.white.withValues(alpha: 0.4)),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
         ),
         child: Stack(
           children: [
             Positioned(
-              top: 0,
-              right: 30,
+              top: -8,
+              right: 16,
               child: Container(
-                width: 90,
-                height: 20,
+                width: 120,
+                height: 28,
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(999),
                   gradient: LinearGradient(
                     colors: [
-                      Colors.white.withValues(alpha: 0.32),
-                      Colors.white.withValues(alpha: 0.02),
+                      Colors.white.withValues(alpha: 0.18),
+                      Colors.white.withValues(alpha: 0),
                     ],
                   ),
                 ),
@@ -563,25 +597,70 @@ class _PremiumHeroPanel extends StatelessWidget {
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  'Kyradi ile 3 adimda tamamla',
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  'Lokasyon sec, bavulunu birak, QR ile takip et.',
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    color: Colors.white.withValues(alpha: 0.88),
-                  ),
+                Row(
+                  children: [
+                    Container(
+                      width: 42,
+                      height: 42,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: Colors.white.withValues(alpha: 0.14),
+                        border: Border.all(
+                          color: Colors.white.withValues(alpha: 0.3),
+                        ),
+                      ),
+                      child: const Icon(
+                        Icons.account_balance_wallet_rounded,
+                        color: Color(0xFF8FFBFF),
+                        size: 20,
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'SuperApp Cuzdan Bakiyesi',
+                            style: theme.textTheme.labelLarge?.copyWith(
+                              color: Colors.white.withValues(alpha: 0.84),
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            '${walletBalance.toStringAsFixed(2)} ₺',
+                            style: theme.textTheme.headlineSmall?.copyWith(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w900,
+                              letterSpacing: -0.3,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    OutlinedButton.icon(
+                      onPressed: onSecondaryTap,
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: Colors.white,
+                        side: BorderSide(
+                          color: Colors.white.withValues(alpha: 0.35),
+                        ),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 9,
+                        ),
+                      ),
+                      icon: const Icon(Icons.map_outlined, size: 18),
+                      label: const Text('Harita'),
+                    ),
+                  ],
                 ),
                 const SizedBox(height: 12),
                 Row(
                   children: [
                     Expanded(
-                      child: _HeroStat(label: 'Toplam', value: '$totalCount'),
+                      child: _HeroStat(label: 'Bavul', value: '$totalCount'),
                     ),
                     const SizedBox(width: 8),
                     Expanded(
@@ -597,34 +676,30 @@ class _PremiumHeroPanel extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: 12),
-                Row(
-                  children: [
-                    Expanded(
-                      child: FilledButton.icon(
-                        style: FilledButton.styleFrom(
-                          backgroundColor: Colors.white,
-                          foregroundColor: const Color(0xFF0F766E),
-                        ),
-                        onPressed: onPrimaryTap,
-                        icon: const Icon(Icons.add_box_rounded),
-                        label: const Text('Bavul Ekle'),
-                      ),
+                if (activeLuggage != null) ...[
+                  _ReservationTicketCard(
+                    luggage: activeLuggage!,
+                    onDetailsTap: onTicketTap,
+                    onQrTap: onTicketQrTap,
+                  ),
+                  const SizedBox(height: 12),
+                ],
+                SizedBox(
+                  width: double.infinity,
+                  child: FilledButton.icon(
+                    style: FilledButton.styleFrom(
+                      backgroundColor: Colors.white,
+                      foregroundColor: const Color(0xFF0E425E),
+                      minimumSize: const Size.fromHeight(48),
                     ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: OutlinedButton.icon(
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: Colors.white,
-                          side: BorderSide(
-                            color: Colors.white.withValues(alpha: 0.72),
-                          ),
-                        ),
-                        onPressed: onSecondaryTap,
-                        icon: const Icon(Icons.map_outlined),
-                        label: const Text('Haritaya Git'),
-                      ),
+                    onPressed: onPrimaryTap,
+                    icon: const Icon(Icons.add_box_rounded),
+                    label: Text(
+                      activeLuggage == null
+                          ? 'Ilk Bavulunu Olustur'
+                          : 'Yeni Bavul Ekle',
                     ),
-                  ],
+                  ),
                 ),
               ],
             ),
@@ -647,7 +722,8 @@ class _HeroStat extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(12),
-        color: Colors.white.withValues(alpha: 0.16),
+        color: Colors.white.withValues(alpha: 0.12),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.18)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -664,6 +740,267 @@ class _HeroStat extends StatelessWidget {
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
               color: Colors.white,
               fontWeight: FontWeight.w800,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ReservationTicketCard extends StatelessWidget {
+  const _ReservationTicketCard({
+    required this.luggage,
+    required this.onDetailsTap,
+    required this.onQrTap,
+  });
+
+  final LuggageModel luggage;
+  final VoidCallback onDetailsTap;
+  final VoidCallback onQrTap;
+
+  int get _stepIndex {
+    switch (luggage.status) {
+      case LuggageStatus.awaitingDrop:
+        return 1;
+      case LuggageStatus.dropped:
+        return 2;
+      case LuggageStatus.pickedUp:
+        return 3;
+      case LuggageStatus.cancelled:
+        return 0;
+    }
+  }
+
+  String _formatTime(DateTime? value) {
+    if (value == null) return '--';
+    final local = value.toLocal();
+    final day = local.day.toString().padLeft(2, '0');
+    final month = local.month.toString().padLeft(2, '0');
+    final hour = local.hour.toString().padLeft(2, '0');
+    final minute = local.minute.toString().padLeft(2, '0');
+    return '$day.$month $hour:$minute';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final ticketTone = luggage.status == LuggageStatus.dropped
+        ? const Color(0xFF2DD4BF)
+        : const Color(0xFF60A5FA);
+    return Container(
+      padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(18),
+        color: const Color(0xFF0A1628).withValues(alpha: 0.68),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Text(
+                'Aktif Bavul Rezervasyonu',
+                style: theme.textTheme.labelLarge?.copyWith(
+                  color: Colors.white.withValues(alpha: 0.9),
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              const Spacer(),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(999),
+                  color: ticketTone.withValues(alpha: 0.22),
+                ),
+                child: Text(
+                  luggage.statusLabel,
+                  style: theme.textTheme.labelSmall?.copyWith(
+                    color: ticketTone,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            luggage.displayLabel,
+            style: theme.textTheme.titleMedium?.copyWith(
+              color: Colors.white,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            luggage.dropLocationName.isEmpty
+                ? 'Lokasyon bekleniyor'
+                : luggage.dropLocationName,
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: Colors.white.withValues(alpha: 0.78),
+            ),
+          ),
+          const SizedBox(height: 12),
+          _TicketProgressLine(activeStep: _stepIndex),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              Expanded(
+                child: _TicketMeta(
+                  label: 'Teslim',
+                  value: _formatTime(luggage.scheduledDropTime),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: _TicketMeta(
+                  label: 'Alis',
+                  value: _formatTime(luggage.scheduledPickupTime),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: _TicketMeta(
+                  label: 'Ucret',
+                  value: luggage.totalPrice == null
+                      ? '--'
+                      : '${luggage.totalPrice} ₺',
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton.icon(
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: Colors.white,
+                    side: BorderSide(
+                      color: Colors.white.withValues(alpha: 0.28),
+                    ),
+                  ),
+                  onPressed: onQrTap,
+                  icon: const Icon(Icons.qr_code_rounded, size: 18),
+                  label: const Text('QR'),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: FilledButton(
+                  style: FilledButton.styleFrom(
+                    backgroundColor: Colors.white,
+                    foregroundColor: const Color(0xFF0F2744),
+                  ),
+                  onPressed: onDetailsTap,
+                  child: const Text('Detay'),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _TicketProgressLine extends StatelessWidget {
+  const _TicketProgressLine({required this.activeStep});
+
+  final int activeStep;
+
+  @override
+  Widget build(BuildContext context) {
+    const labels = ['Rezervasyon', 'Teslim', 'Alis'];
+    return Row(
+      children: List.generate(labels.length, (index) {
+        final step = index + 1;
+        final completed = activeStep >= step;
+        final isLast = index == labels.length - 1;
+        return Expanded(
+          child: Row(
+            children: [
+              Container(
+                width: 20,
+                height: 20,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: completed ? const Color(0xFF2DD4BF) : Colors.white12,
+                  border: Border.all(
+                    color: completed
+                        ? const Color(0xFF67E8F9)
+                        : Colors.white.withValues(alpha: 0.24),
+                  ),
+                ),
+                child: Icon(
+                  completed ? Icons.check_rounded : Icons.circle,
+                  size: completed ? 12 : 8,
+                  color: completed ? const Color(0xFF05283B) : Colors.white30,
+                ),
+              ),
+              const SizedBox(width: 6),
+              Expanded(
+                child: Text(
+                  labels[index],
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                    color: Colors.white.withValues(
+                      alpha: completed ? 0.95 : 0.6,
+                    ),
+                    fontWeight: completed ? FontWeight.w700 : FontWeight.w500,
+                  ),
+                ),
+              ),
+              if (!isLast)
+                Container(
+                  width: 16,
+                  height: 2,
+                  margin: const EdgeInsets.only(left: 4, right: 6),
+                  color: completed
+                      ? const Color(0xFF2DD4BF).withValues(alpha: 0.9)
+                      : Colors.white24,
+                ),
+            ],
+          ),
+        );
+      }),
+    );
+  }
+}
+
+class _TicketMeta extends StatelessWidget {
+  const _TicketMeta({required this.label, required this.value});
+
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 7),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(10),
+        color: Colors.white.withValues(alpha: 0.08),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: Theme.of(
+              context,
+            ).textTheme.labelSmall?.copyWith(color: Colors.white70),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            value,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: Theme.of(context).textTheme.labelMedium?.copyWith(
+              color: Colors.white,
+              fontWeight: FontWeight.w700,
             ),
           ),
         ],
