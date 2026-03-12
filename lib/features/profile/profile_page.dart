@@ -413,6 +413,7 @@ class _ProfilePageState extends State<ProfilePage> {
   Widget build(BuildContext context) {
     final loc = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
+    final listBottomPadding = MediaQuery.viewPaddingOf(context).bottom + 132;
     return Scaffold(
       backgroundColor: const Color(0xFFF7F8FA),
       appBar: AppBar(
@@ -442,7 +443,7 @@ class _ProfilePageState extends State<ProfilePage> {
       ),
       body: _loading
           ? ListView(
-              padding: const EdgeInsets.fromLTRB(16, 12, 16, 40),
+              padding: EdgeInsets.fromLTRB(16, 12, 16, listBottomPadding),
               children: const [
                 AppSkeleton(height: 180, radius: 28),
                 SizedBox(height: 12),
@@ -459,7 +460,7 @@ class _ProfilePageState extends State<ProfilePage> {
               onRetry: _restoreUser,
             )
           : ListView(
-              padding: const EdgeInsets.fromLTRB(16, 12, 16, 40),
+              padding: EdgeInsets.fromLTRB(16, 12, 16, listBottomPadding),
               children: [
                 if (_user != null)
                   _ProfileHero(
