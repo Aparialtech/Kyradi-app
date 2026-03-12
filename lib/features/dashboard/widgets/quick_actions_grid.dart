@@ -20,20 +20,29 @@ class QuickActionsGrid extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return GridView.builder(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      itemCount: actions.length,
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 3,
-        mainAxisSpacing: 10,
-        crossAxisSpacing: 10,
-        childAspectRatio: 0.95,
-      ),
-      itemBuilder: (context, index) => _QuickActionTile(
-        action: actions[index],
-        accent: _accentPalette(index, theme),
-      ),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        const spacing = 10.0;
+        const columns = 3;
+        final cardWidth =
+            (constraints.maxWidth - (spacing * (columns - 1))) / columns;
+        final cardHeight = cardWidth < 112 ? 118.0 : 112.0;
+        return GridView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          itemCount: actions.length,
+          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: columns,
+            mainAxisSpacing: spacing,
+            crossAxisSpacing: spacing,
+            childAspectRatio: cardWidth / cardHeight,
+          ),
+          itemBuilder: (context, index) => _QuickActionTile(
+            action: actions[index],
+            accent: _accentPalette(index, theme),
+          ),
+        );
+      },
     );
   }
 }
@@ -117,10 +126,10 @@ class _QuickActionTileState extends State<_QuickActionTile> {
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(20),
                         gradient: RadialGradient(
-                          center: const Alignment(-0.65, -0.78),
-                          radius: 1.1,
+                          center: Alignment.center,
+                          radius: 1.2,
                           colors: [
-                            accent.withValues(alpha: _hovered ? 0.2 : 0.13),
+                            accent.withValues(alpha: _hovered ? 0.14 : 0.09),
                             Colors.transparent,
                           ],
                         ),
@@ -187,7 +196,7 @@ class _ThreeDIcon extends StatelessWidget {
           decoration: BoxDecoration(
             shape: BoxShape.circle,
             gradient: RadialGradient(
-              center: const Alignment(-0.2, -0.2),
+              center: Alignment.center,
               colors: [
                 accent.withValues(alpha: 0.58),
                 accent.withValues(alpha: 0.06),

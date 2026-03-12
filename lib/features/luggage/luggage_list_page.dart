@@ -505,6 +505,10 @@ class _LuggageListPageState extends State<LuggageListPage> {
         activeLuggage != null &&
         _items.isNotEmpty;
     final activeSheetBottom = MediaQuery.viewPaddingOf(context).bottom + 14;
+    const activeSheetPeekHeight = 108.0;
+    final listBottomPadding = showActiveSheet
+        ? activeSheetBottom + activeSheetPeekHeight + 24
+        : 32.0;
     return Scaffold(
       backgroundColor: Colors.transparent,
       appBar: AppBar(
@@ -522,12 +526,7 @@ class _LuggageListPageState extends State<LuggageListPage> {
           RefreshIndicator(
             onRefresh: _load,
             child: ListView(
-              padding: EdgeInsets.fromLTRB(
-                16,
-                16,
-                16,
-                showActiveSheet ? 210 : 32,
-              ),
+              padding: EdgeInsets.fromLTRB(16, 16, 16, listBottomPadding),
               children: [
                 SectionCard(
                   padding: const EdgeInsets.all(16),
@@ -673,7 +672,10 @@ class _LuggageListPageState extends State<LuggageListPage> {
               right: 12,
               bottom: activeSheetBottom,
               child: SizedBox(
-                height: MediaQuery.sizeOf(context).height * 0.56,
+                height: (MediaQuery.sizeOf(context).height * 0.56).clamp(
+                  360.0,
+                  480.0,
+                ),
                 child: ActiveLuggageBottomSheet(
                   luggage: activeLuggage,
                   onDetails: () => _openDetail(activeLuggage),

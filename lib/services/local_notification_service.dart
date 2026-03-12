@@ -53,24 +53,16 @@ class LocalNotificationService {
   }
 
   Future<void> showReservationCreated(String reservationLabel) async {
-    final prefs = await SharedPreferences.getInstance();
-    final pushEnabled = prefs.getBool('pref_push_reminder') ?? true;
-    if (!pushEnabled) return;
-
-    await ensureInitialized();
-    if (!_initialized) return;
-
-    final safeLabel = reservationLabel.trim().isEmpty
-        ? 'Rezervasyonunuz'
-        : reservationLabel.trim();
+    if (!await _canNotify()) return;
+    final safeLabel = _safeReservationLabel(reservationLabel);
 
     try {
       await _show(
         channelId: 'kyradi_reservations',
         channelName: 'Rezervasyon Bildirimleri',
         channelDescription: 'Rezervasyon durum guncellemeleri',
-        title: 'KYRADI',
-        body: '$safeLabel isimli rezervasyonunuz alinmistir.',
+        title: 'Rezervasyon Alindi',
+        body: '$safeLabel basariyla olusturuldu.',
       );
     } catch (e) {
       appLog('local_notification', 'show failed: $e', level: AppLogLevel.warn);
@@ -81,16 +73,8 @@ class LocalNotificationService {
     required String reservationLabel,
     required String statusLabel,
   }) async {
-    final prefs = await SharedPreferences.getInstance();
-    final pushEnabled = prefs.getBool('pref_push_reminder') ?? true;
-    if (!pushEnabled) return;
-
-    await ensureInitialized();
-    if (!_initialized) return;
-
-    final safeLabel = reservationLabel.trim().isEmpty
-        ? 'Rezervasyonunuz'
-        : reservationLabel.trim();
+    if (!await _canNotify()) return;
+    final safeLabel = _safeReservationLabel(reservationLabel);
     final safeStatus = statusLabel.trim().isEmpty
         ? 'Guncellendi'
         : statusLabel.trim();
@@ -100,8 +84,8 @@ class LocalNotificationService {
         channelId: 'kyradi_status_updates',
         channelName: 'Durum Bildirimleri',
         channelDescription: 'Bavul durum degisiklikleri',
-        title: 'Durum Guncellendi',
-        body: '$safeLabel: $safeStatus',
+        title: 'Rezervasyon Guncellendi',
+        body: '$safeLabel durumu: $safeStatus',
       );
     } catch (e) {
       appLog(
@@ -116,16 +100,8 @@ class LocalNotificationService {
     required String reservationLabel,
     required int amountTry,
   }) async {
-    final prefs = await SharedPreferences.getInstance();
-    final pushEnabled = prefs.getBool('pref_push_reminder') ?? true;
-    if (!pushEnabled) return;
-
-    await ensureInitialized();
-    if (!_initialized) return;
-
-    final safeLabel = reservationLabel.trim().isEmpty
-        ? 'Rezervasyonunuz'
-        : reservationLabel.trim();
+    if (!await _canNotify()) return;
+    final safeLabel = _safeReservationLabel(reservationLabel);
     final amountLabel = amountTry > 0 ? '$amountTry ₺' : 'Odeme';
 
     try {
@@ -133,8 +109,8 @@ class LocalNotificationService {
         channelId: 'kyradi_payments',
         channelName: 'Odeme Bildirimleri',
         channelDescription: 'Odeme tamamlanma bildirimleri',
-        title: 'Odeme Basarili',
-        body: '$safeLabel icin $amountLabel odeme tamamlandi.',
+        title: 'Odeme Tamamlandi',
+        body: '$safeLabel icin $amountLabel islemi onaylandi.',
       );
     } catch (e) {
       appLog(
@@ -146,16 +122,8 @@ class LocalNotificationService {
   }
 
   Future<void> showReservationCancelled(String reservationLabel) async {
-    final prefs = await SharedPreferences.getInstance();
-    final pushEnabled = prefs.getBool('pref_push_reminder') ?? true;
-    if (!pushEnabled) return;
-
-    await ensureInitialized();
-    if (!_initialized) return;
-
-    final safeLabel = reservationLabel.trim().isEmpty
-        ? 'Rezervasyonunuz'
-        : reservationLabel.trim();
+    if (!await _canNotify()) return;
+    final safeLabel = _safeReservationLabel(reservationLabel);
 
     try {
       await _show(
@@ -172,6 +140,20 @@ class LocalNotificationService {
         level: AppLogLevel.warn,
       );
     }
+  }
+
+  Future<bool> _canNotify() async {
+    final prefs = await SharedPreferences.getInstance();
+    final pushEnabled = prefs.getBool('pref_push_reminder') ?? true;
+    if (!pushEnabled) return false;
+    await ensureInitialized();
+    return _initialized;
+  }
+
+  String _safeReservationLabel(String reservationLabel) {
+    final value = reservationLabel.trim();
+    if (value.isEmpty) return 'Rezervasyonunuz';
+    return value;
   }
 
   Future<void> _show({
