@@ -129,20 +129,33 @@ class _QuickActionTileState extends State<_QuickActionTile> {
                   ),
                 ),
                 Padding(
-                  padding: const EdgeInsets.all(8),
+                  padding: const EdgeInsets.fromLTRB(8, 8, 8, 10),
                   child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      _ThreeDIcon(icon: widget.action.icon, accent: accent),
-                      const SizedBox(height: 6),
-                      Text(
-                        widget.action.label,
-                        textAlign: TextAlign.center,
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          fontWeight: FontWeight.w600,
-                          fontSize: 12.6,
-                          color: Colors.white.withValues(alpha: 0.92),
-                          letterSpacing: 0.2,
+                      Expanded(
+                        child: Center(
+                          child: _ThreeDIcon(
+                            icon: widget.action.icon,
+                            accent: accent,
+                          ),
+                        ),
+                      ),
+                      SizedBox(
+                        height: 34,
+                        child: Center(
+                          child: Text(
+                            widget.action.label,
+                            textAlign: TextAlign.center,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: Theme.of(context).textTheme.bodySmall
+                                ?.copyWith(
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 12.6,
+                                  color: Colors.white.withValues(alpha: 0.92),
+                                  letterSpacing: 0.2,
+                                ),
+                          ),
                         ),
                       ),
                     ],
@@ -206,25 +219,19 @@ class _ThreeDIcon extends StatelessWidget {
             ],
           ),
         ),
-        Positioned(
-          top: 8,
-          left: 12,
-          right: 12,
-          child: Container(
-            height: 6,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(999),
-              color: Colors.white.withValues(alpha: 0.34),
+        SizedBox(
+          width: 18,
+          height: 18,
+          child: Center(
+            child: Icon(
+              icon,
+              size: 16,
+              color: accent,
+              shadows: [
+                Shadow(color: accent.withValues(alpha: 0.85), blurRadius: 14),
+              ],
             ),
           ),
-        ),
-        Icon(
-          icon,
-          size: 16,
-          color: accent,
-          shadows: [
-            Shadow(color: accent.withValues(alpha: 0.85), blurRadius: 14),
-          ],
         ),
       ],
     );
