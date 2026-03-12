@@ -178,7 +178,7 @@ class ProfileHeaderCard extends StatelessWidget {
                     Expanded(
                       child: _TinyInfo(
                         label: 'Bildirim',
-                        value: user.pushReminderEnabled ? 'ACIK' : 'KAPALI',
+                        value: user.pushReminderEnabled ? 'AÇIK' : 'KAPALI',
                       ),
                     ),
                   ],

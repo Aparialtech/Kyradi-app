@@ -447,7 +447,7 @@ class _WalletPageState extends State<WalletPage>
                 ),
                 const SizedBox(height: 6),
                 Text(
-                  'Tek dokunusla bakiye ekleyin',
+                  'Tek dokunuşla bakiye ekleyin',
                   style: Theme.of(sheetContext).textTheme.bodySmall,
                 ),
                 const SizedBox(height: 14),
@@ -471,7 +471,7 @@ class _WalletPageState extends State<WalletPage>
       },
     );
     if (!mounted || amount == null) return;
-    await _applyTopUpResult(amount: amount, label: 'Hizli Yukleme');
+    await _applyTopUpResult(amount: amount, label: 'Hızlı Yükleme');
   }
 
   double get _earnedTotal => _transactions
@@ -1083,14 +1083,14 @@ class _WalletStartCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Hizli Baslangic',
+            'Hızlı Başlangıç',
             style: theme.textTheme.titleSmall?.copyWith(
               fontWeight: FontWeight.w800,
             ),
           ),
           const SizedBox(height: 4),
           Text(
-            'En sik kullanilan islemler tek dokunusla.',
+            'En sık kullanılan işlemler tek dokunuşla.',
             style: theme.textTheme.bodySmall?.copyWith(
               color: theme.colorScheme.onSurfaceVariant,
             ),
@@ -1102,7 +1102,7 @@ class _WalletStartCard extends StatelessWidget {
                 child: FilledButton.icon(
                   onPressed: onTopUp,
                   icon: const Icon(Icons.add_circle_outline_rounded, size: 18),
-                  label: const Text('Para Yukle'),
+                  label: const Text('Para Yükle'),
                 ),
               ),
               const SizedBox(width: 8),
@@ -1110,7 +1110,7 @@ class _WalletStartCard extends StatelessWidget {
                 child: OutlinedButton.icon(
                   onPressed: onTransactions,
                   icon: const Icon(Icons.receipt_long_outlined, size: 18),
-                  label: const Text('Islemler'),
+                  label: const Text('İşlemler'),
                 ),
               ),
               const SizedBox(width: 8),
@@ -1147,7 +1147,7 @@ class _WeeklyFlowCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Haftalik Akis',
+            'Haftalık Akış',
             style: theme.textTheme.titleMedium?.copyWith(
               fontWeight: FontWeight.w700,
             ),
@@ -1331,7 +1331,7 @@ class _WalletMetricStrip extends StatelessWidget {
         Expanded(
           child: _MetricItem(
             icon: Icons.receipt_long_outlined,
-            label: 'Islem',
+            label: 'İşlem',
             value: '$txCount adet',
             accent: const Color(0xFF8B5CF6),
             tint: const Color(0xFF8B5CF6).withValues(alpha: 0.08),
@@ -1407,7 +1407,7 @@ class _TransactionFilterChips extends StatelessWidget {
       runSpacing: 8,
       children: [
         _TxChip(
-          label: 'Tum Islem',
+          label: 'Tüm İşlem',
           selected: value == _WalletTxFilter.all,
           onTap: () => onChanged(_WalletTxFilter.all),
         ),

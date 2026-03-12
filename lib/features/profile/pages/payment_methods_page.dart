@@ -45,7 +45,7 @@ class _PaymentMethodsPageState extends State<PaymentMethodsPage> {
     if (!mounted) return;
     AppNotification.show(
       context,
-      message: 'Odeme yontemi guncellendi.',
+      message: 'Ödeme yöntemi güncellendi.',
       type: AppNotificationType.success,
     );
   }
@@ -56,7 +56,7 @@ class _PaymentMethodsPageState extends State<PaymentMethodsPage> {
     final bottomSafePadding = MediaQuery.viewPaddingOf(context).bottom + 96;
     return Scaffold(
       backgroundColor: Colors.transparent,
-      appBar: AppBar(title: const Text('Odeme Yontemleri')),
+      appBar: AppBar(title: const Text('Ödeme Yöntemleri')),
       body: Stack(
         children: [
           const AppMeshBackground(),
@@ -74,9 +74,9 @@ class _PaymentMethodsPageState extends State<PaymentMethodsPage> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       SectionHeader(
-                        title: 'Odeme secenekleri',
+                        title: 'Ödeme seçenekleri',
                         subtitle:
-                            'Kullanici tarafinda aktif/kapali olarak yonet.',
+                            'Kullanıcı tarafında aktif/kapalı olarak yönet.',
                         iconWidget: ThreeDIconBadge(
                           icon: Icons.account_balance_wallet_outlined,
                         ),
@@ -93,7 +93,7 @@ class _PaymentMethodsPageState extends State<PaymentMethodsPage> {
                     children: [
                       _PaymentMethodTile(
                         icon: Icons.credit_card_rounded,
-                        title: 'Kredi Karti',
+                        title: 'Kredi Kartı',
                         subtitle: 'Visa, MasterCard vb.',
                         enabled: _creditCardEnabled,
                         onChanged: (value) => _setMethod(
@@ -106,8 +106,8 @@ class _PaymentMethodsPageState extends State<PaymentMethodsPage> {
                       const Divider(height: 20),
                       _PaymentMethodTile(
                         icon: Icons.account_balance_rounded,
-                        title: 'Banka Karti',
-                        subtitle: 'Debit kart ile odeme',
+                        title: 'Banka Kartı',
+                        subtitle: 'Debit kart ile ödeme',
                         enabled: _debitCardEnabled,
                         onChanged: (value) => _setMethod(
                           value: value,
@@ -119,8 +119,8 @@ class _PaymentMethodsPageState extends State<PaymentMethodsPage> {
                       const Divider(height: 20),
                       _PaymentMethodTile(
                         icon: Icons.storefront_rounded,
-                        title: 'Otelde Ode',
-                        subtitle: 'Lokasyonda nakit/kart odeme',
+                        title: 'Otelde Öde',
+                        subtitle: 'Lokasyonda nakit/kart ödeme',
                         enabled: _hotelPayEnabled,
                         onChanged: (value) => _setMethod(
                           value: value,
@@ -209,7 +209,7 @@ class _StatusChip extends StatelessWidget {
         border: Border.all(color: color.withValues(alpha: 0.36)),
       ),
       child: Text(
-        enabled ? 'Aktif' : 'Kapali',
+        enabled ? 'Aktif' : 'Kapalı',
         style: theme.textTheme.labelSmall?.copyWith(
           color: color,
           fontWeight: FontWeight.w700,

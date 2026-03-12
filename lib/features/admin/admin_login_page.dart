@@ -48,7 +48,7 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
       if (res['ok'] != true) {
         setState(() => _loading = false);
         _notify(
-          (res['error'] ?? res['message'] ?? 'Giris basarisiz').toString(),
+          (res['error'] ?? res['message'] ?? 'Giriş başarısız').toString(),
           type: AppNotificationType.error,
         );
         return;
@@ -64,7 +64,7 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
         if (!mounted) return;
         setState(() => _loading = false);
         _notify(
-          'Bu hesap yonetici yetkisine sahip degil.',
+          'Bu hesap yönetici yetkisine sahip değil.',
           type: AppNotificationType.warning,
         );
         return;
@@ -77,12 +77,12 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
       }
       if (!mounted) return;
       setState(() => _loading = false);
-      _notify('Yonetici girisi basarili', type: AppNotificationType.success);
+      _notify('Yönetici girişi başarılı', type: AppNotificationType.success);
       context.go('/admin/panel');
     } catch (e) {
       if (!mounted) return;
       setState(() => _loading = false);
-      _notify('Yonetici girisi hatasi: $e', type: AppNotificationType.error);
+      _notify('Yönetici girişi hatası: $e', type: AppNotificationType.error);
     }
   }
 
@@ -257,14 +257,14 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
                                         if (!RegExp(
                                           r'^\\S+@\\S+\\.\\S+$',
                                         ).hasMatch(v)) {
-                                          return 'Gecerli e-posta gir';
+                                          return 'Geçerli e-posta gir';
                                         }
                                         return null;
                                       },
                                     ),
                                     const SizedBox(height: 12),
                                     Text(
-                                      'Sifre',
+                                      'Şifre',
                                       style: theme.textTheme.labelLarge
                                           ?.copyWith(
                                             color: const Color(0xFF626878),
@@ -292,7 +292,7 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
                                       ),
                                       validator: (value) {
                                         final v = (value ?? '').trim();
-                                        if (v.isEmpty) return 'Sifre zorunlu';
+                                        if (v.isEmpty) return 'Şifre zorunlu';
                                         if (v.length < 6) {
                                           return 'En az 6 karakter gir';
                                         }
@@ -301,7 +301,7 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
                                     ),
                                     const SizedBox(height: 18),
                                     GradientButton(
-                                      text: 'Yonetim Paneline Gir',
+                                      text: 'Yönetim Paneline Gir',
                                       onPressed: _loading ? null : _submit,
                                       loading: _loading,
                                       gradient: const LinearGradient(

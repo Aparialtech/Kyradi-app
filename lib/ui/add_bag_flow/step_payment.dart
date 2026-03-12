@@ -179,7 +179,7 @@ class _StepPaymentState extends State<StepPayment> {
                 Padding(
                   padding: const EdgeInsets.only(left: 12, bottom: 8),
                   child: Text(
-                    'Kapali yontemleri Profil > Odeme Yontemleri alanindan acabilirsin.',
+                    'Kapalı yöntemleri Profil > Ödeme Yöntemleri alanından açabilirsin.',
                     style: Theme.of(context).textTheme.bodySmall,
                   ),
                 ),

@@ -124,7 +124,7 @@ class BalanceCard extends StatelessWidget {
                 child: FilledButton.icon(
                   onPressed: onQuickTopUp,
                   icon: const Icon(Icons.add_circle_outline_rounded, size: 18),
-                  label: const Text('Hizli Yukle'),
+                  label: const Text('Hızlı Yükle'),
                 ),
               ),
             ],

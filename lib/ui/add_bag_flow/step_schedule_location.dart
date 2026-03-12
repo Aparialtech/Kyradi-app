@@ -133,7 +133,7 @@ class _StepScheduleLocationState extends State<StepScheduleLocation> {
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
-                  'Lokasyon secin, sonra birakma ve teslim saatini belirleyin.',
+                  'Lokasyon seçin, sonra bırakma ve teslim saatini belirleyin.',
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
                     color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),

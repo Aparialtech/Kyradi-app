@@ -373,7 +373,7 @@ class _DashboardPageState extends State<DashboardPage> {
                   const SizedBox(height: 12),
                   _DashboardFoldSection(
                     title: loc.activeTripTitle,
-                    subtitle: 'Aktif bavul ve QR islemleri',
+                    subtitle: 'Aktif bavul ve QR işlemleri',
                     icon: Icons.luggage_outlined,
                     expanded: _expandLuggage,
                     onToggle: () =>
@@ -404,7 +404,7 @@ class _DashboardPageState extends State<DashboardPage> {
                   const SizedBox(height: 12),
                   _DashboardFoldSection(
                     title: loc.nearbyLocationsTitle,
-                    subtitle: 'Yakindaki noktalar ve uygunluk',
+                    subtitle: 'Yakındaki noktalar ve uygunluk',
                     icon: Icons.place_outlined,
                     expanded: _expandNearby,
                     onToggle: () =>
@@ -557,7 +557,7 @@ class _PremiumHeroPanel extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'SuperApp Cuzdan Bakiyesi',
+                            'SuperApp Cüzdan Bakiyesi',
                             style: theme.textTheme.labelLarge?.copyWith(
                               color: Colors.white.withValues(alpha: 0.84),
                               fontWeight: FontWeight.w600,
@@ -632,7 +632,7 @@ class _PremiumHeroPanel extends StatelessWidget {
                     icon: const Icon(Icons.add_box_rounded),
                     label: Text(
                       activeLuggage == null
-                          ? 'Ilk Bavulunu Olustur'
+                          ? 'İlk Bavulunu Oluştur'
                           : 'Yeni Bavul Ekle',
                     ),
                   ),

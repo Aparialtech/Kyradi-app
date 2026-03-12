@@ -743,7 +743,7 @@ class _LoginPageState extends State<LoginPage> {
                         ),
                         TextButton(
                           onPressed: () => context.push('/admin/login'),
-                          child: const Text('Yonetici Girisi'),
+                          child: const Text('Yönetici Girişi'),
                         ),
                         const SizedBox(height: 8),
                         Text(

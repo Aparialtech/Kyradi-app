@@ -327,7 +327,7 @@ class _ProfilePageState extends State<ProfilePage> {
       case ThemeMode.dark:
         return 'Koyu';
       case ThemeMode.light:
-        return 'Acik';
+        return 'Açık';
       case ThemeMode.system:
         return 'Sistem';
     }
@@ -470,11 +470,11 @@ class _ProfilePageState extends State<ProfilePage> {
                   ),
                 const SizedBox(height: 12),
                 _ProfileGroupCard(
-                  title: 'Odeme Bilgileri',
+                  title: 'Ödeme Bilgileri',
                   children: [
                     _ProfileMenuTile(
                       icon: Icons.credit_card_outlined,
-                      title: 'Odeme yontemleri',
+                      title: 'Ödeme yöntemleri',
                       trailing: 'Ayarla',
                       onTap: () {
                         Navigator.of(context).push(
@@ -517,13 +517,13 @@ class _ProfilePageState extends State<ProfilePage> {
                     _ProfileMenuTile(
                       icon: Icons.notifications_none_rounded,
                       title: 'Bildirimler',
-                      trailing: _inAppNotifications ? 'Etkin' : 'Kapali',
+                      trailing: _inAppNotifications ? 'Etkin' : 'Kapalı',
                       onTap: _openSettings,
                     ),
                     _ProfileMenuTile(
                       icon: Icons.support_agent_rounded,
-                      title: 'Iletisim ve destek',
-                      trailing: 'Ac',
+                      title: 'İletişim ve destek',
+                      trailing: 'Aç',
                       onTap: () {
                         Navigator.of(context).push(
                           MaterialPageRoute(builder: (_) => const FaqPage()),
@@ -538,20 +538,20 @@ class _ProfilePageState extends State<ProfilePage> {
                   children: [
                     _ProfileMenuTile(
                       icon: Icons.verified_user_outlined,
-                      title: 'Kimlik dogrulama',
+                      title: 'Kimlik doğrulama',
                       trailing: _verificationStatusLabel(loc),
                       onTap: _openVerification,
                     ),
                     _ProfileMenuTile(
                       icon: Icons.badge_outlined,
-                      title: 'Kisisel bilgiler',
+                      title: 'Kişisel bilgiler',
                       trailing: 'Detay',
                       onTap: _showProfileDetailsSheet,
                     ),
                     _ProfileMenuTile(
                       icon: Icons.lock_outline_rounded,
                       title: loc.changePasswordTitle,
-                      trailing: 'Ac',
+                      trailing: 'Aç',
                       onTap: () {
                         Navigator.of(context).push(
                           MaterialPageRoute(
@@ -562,8 +562,8 @@ class _ProfilePageState extends State<ProfilePage> {
                     ),
                     _ProfileMenuTile(
                       icon: Icons.info_outline_rounded,
-                      title: 'Hakkinda',
-                      trailing: 'Ac',
+                      title: 'Hakkında',
+                      trailing: 'Aç',
                       onTap: () {
                         Navigator.of(context).push(
                           MaterialPageRoute(builder: (_) => const AboutPage()),
@@ -575,12 +575,12 @@ class _ProfilePageState extends State<ProfilePage> {
                 if (_canOpenAdminPanel) ...[
                   const SizedBox(height: 12),
                   _ProfileGroupCard(
-                    title: 'Yonetim',
+                    title: 'Yönetim',
                     children: [
                       _ProfileMenuTile(
                         icon: Icons.admin_panel_settings_outlined,
-                        title: 'Yonetim paneli',
-                        trailing: 'Ac',
+                        title: 'Yönetim paneli',
+                        trailing: 'Aç',
                         onTap: () => context.push('/admin/panel'),
                       ),
                     ],
@@ -599,7 +599,7 @@ class _ProfilePageState extends State<ProfilePage> {
                       accent: theme.colorScheme.error,
                     ),
                     title: Text(
-                      'Cikis yap',
+                      'Çıkış yap',
                       style: theme.textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.w700,
                       ),
@@ -661,7 +661,7 @@ class _ProfileHero extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           Text(
-            fullName.isEmpty ? 'Kyradi Kullanici' : fullName,
+            fullName.isEmpty ? 'Kyradi Kullanıcı' : fullName,
             style: theme.textTheme.headlineSmall?.copyWith(
               fontWeight: FontWeight.w800,
             ),
@@ -678,7 +678,7 @@ class _ProfileHero extends StatelessWidget {
           OutlinedButton.icon(
             onPressed: onEdit,
             icon: const Icon(Icons.edit_outlined),
-            label: const Text('Profili duzenle'),
+            label: const Text('Profili düzenle'),
             style: OutlinedButton.styleFrom(
               padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
               side: BorderSide(

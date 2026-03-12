@@ -46,19 +46,19 @@ class _ReservationStepperShellState extends State<ReservationStepperShell> {
     ),
     _StepMeta(
       icon: Icons.location_on_outlined,
-      subtitle: 'Lokasyon ve birakma/teslim saatini secin.',
+      subtitle: 'Lokasyon ve bırakma/teslim saatini seçin.',
     ),
     _StepMeta(
       icon: Icons.auto_graph_rounded,
-      subtitle: 'Ucret ve opsiyonlari kontrol edin.',
+      subtitle: 'Ücret ve opsiyonları kontrol edin.',
     ),
     _StepMeta(
       icon: Icons.payments_outlined,
-      subtitle: 'Odeme yontemini secip islemi tamamlayin.',
+      subtitle: 'Ödeme yöntemini seçip işlemi tamamlayın.',
     ),
     _StepMeta(
       icon: Icons.verified_rounded,
-      subtitle: 'Rezervasyon olusturuldu.',
+      subtitle: 'Rezervasyon oluşturuldu.',
     ),
   ];
 

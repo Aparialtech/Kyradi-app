@@ -131,7 +131,7 @@ class _ExplorePageState extends State<ExplorePage> {
         final loc = AppLocalizations.of(context);
         AppNotification.show(
           context,
-          message: loc?.exploreEmptyTitle ?? 'Konum bilgisi alinamadi.',
+          message: loc?.exploreEmptyTitle ?? 'Konum bilgisi alınamadı.',
           type: AppNotificationType.warning,
         );
       }
@@ -792,7 +792,7 @@ class _MapGuideCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Haritada bir nokta sec',
+                  'Haritada bir nokta seç',
                   style: theme.textTheme.titleSmall?.copyWith(
                     fontWeight: FontWeight.w700,
                     color: const Color(0xFF0F172A),
@@ -800,7 +800,7 @@ class _MapGuideCard extends StatelessWidget {
                 ),
                 const SizedBox(height: 3),
                 Text(
-                  'Detaylari acip direkt rezervasyon baslatabilirsin.',
+                  'Detayları açıp direkt rezervasyon başlatabilirsin.',
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: const Color(0xFF475569),
                   ),
@@ -814,7 +814,7 @@ class _MapGuideCard extends StatelessWidget {
             child: const Text('Liste'),
           ),
           const SizedBox(width: 8),
-          FilledButton(onPressed: onPickNearest, child: const Text('En yakin')),
+          FilledButton(onPressed: onPickNearest, child: const Text('En yakın')),
         ],
       ),
     );

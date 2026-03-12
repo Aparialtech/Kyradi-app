@@ -183,13 +183,13 @@ class _AdminPanelPageState extends State<AdminPanelPage> {
                       ),
                       const Expanded(
                         child: Text(
-                          'Haritadan lokasyon sec',
+                          'Haritadan lokasyon seç',
                           style: TextStyle(fontWeight: FontWeight.w700),
                         ),
                       ),
                       FilledButton(
                         onPressed: () => Navigator.of(context).pop(selected),
-                        child: const Text('Sec'),
+                        child: const Text('Seç'),
                       ),
                     ],
                   ),
@@ -217,7 +217,7 @@ class _AdminPanelPageState extends State<AdminPanelPage> {
                 Padding(
                   padding: const EdgeInsets.fromLTRB(14, 10, 14, 12),
                   child: Text(
-                    'Secilen: ${selected.latitude.toStringAsFixed(6)}, ${selected.longitude.toStringAsFixed(6)}',
+                    'Seçilen: ${selected.latitude.toStringAsFixed(6)}, ${selected.longitude.toStringAsFixed(6)}',
                     style: Theme.of(
                       context,
                     ).textTheme.bodySmall?.copyWith(color: _adminTextSecondary),
@@ -319,7 +319,7 @@ class _AdminPanelPageState extends State<AdminPanelPage> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      item == null ? 'Lokasyon Ekle' : 'Lokasyon Duzenle',
+                      item == null ? 'Lokasyon Ekle' : 'Lokasyon Düzenle',
                       style: Theme.of(context).textTheme.titleLarge?.copyWith(
                         fontWeight: FontWeight.w700,
                       ),
@@ -352,7 +352,7 @@ class _AdminPanelPageState extends State<AdminPanelPage> {
                                 'Lokasyon ${selected.latitude.toStringAsFixed(3)}, ${selected.longitude.toStringAsFixed(3)}';
                           }
                           if (addressController.text.trim().isEmpty) {
-                            addressController.text = 'Haritadan secilen konum';
+                            addressController.text = 'Haritadan seçilen konum';
                           }
                           final total =
                               int.tryParse(totalSlotsController.text.trim()) ??
@@ -382,9 +382,9 @@ class _AdminPanelPageState extends State<AdminPanelPage> {
                         });
                       },
                       icon: const Icon(Icons.map_outlined),
-                      label: const Text('Haritadan sec ve otomatik doldur'),
+                      label: const Text('Haritadan seç ve otomatik doldur'),
                     ),
-                    _Field(label: 'Lokasyon adi', controller: nameController),
+                    _Field(label: 'Lokasyon adı', controller: nameController),
                     _Field(label: 'Adres', controller: addressController),
                     Row(
                       children: [
@@ -398,7 +398,7 @@ class _AdminPanelPageState extends State<AdminPanelPage> {
                         const SizedBox(width: 12),
                         Expanded(
                           child: _Field(
-                            label: 'Musait Slot',
+                            label: 'Müsait Slot',
                             controller: availableSlotsController,
                             keyboardType: TextInputType.number,
                           ),
@@ -458,7 +458,7 @@ class _AdminPanelPageState extends State<AdminPanelPage> {
                       width: double.infinity,
                       child: FilledButton(
                         onPressed: () => Navigator.of(context).pop(true),
-                        child: Text(item == null ? 'Kaydet' : 'Guncelle'),
+                        child: Text(item == null ? 'Kaydet' : 'Güncelle'),
                       ),
                     ),
                   ],
@@ -543,7 +543,7 @@ class _AdminPanelPageState extends State<AdminPanelPage> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      item == null ? 'Kampanya Ekle' : 'Kampanya Duzenle',
+                      item == null ? 'Kampanya Ekle' : 'Kampanya Düzenle',
                       style: Theme.of(context).textTheme.titleLarge?.copyWith(
                         fontWeight: FontWeight.w700,
                       ),
@@ -586,7 +586,7 @@ class _AdminPanelPageState extends State<AdminPanelPage> {
                       width: double.infinity,
                       child: FilledButton(
                         onPressed: () => Navigator.of(context).pop(true),
-                        child: Text(item == null ? 'Kaydet' : 'Guncelle'),
+                        child: Text(item == null ? 'Kaydet' : 'Güncelle'),
                       ),
                     ),
                   ],
@@ -632,7 +632,7 @@ class _AdminPanelPageState extends State<AdminPanelPage> {
     if (!mounted) return;
     if (response['ok'] != true) {
       _showError(
-        response['error']?.toString() ?? 'Kullanici hareketleri alinamadi',
+        response['error']?.toString() ?? 'Kullanıcı hareketleri alınamadı',
       );
       return;
     }
@@ -670,7 +670,7 @@ class _AdminPanelPageState extends State<AdminPanelPage> {
               ),
               const SizedBox(height: 12),
               _PanelCard(
-                title: 'Iletisim Bilgileri',
+                title: 'İletişim Bilgileri',
                 icon: Icons.contact_phone_outlined,
                 child: Column(
                   children: [
@@ -695,7 +695,7 @@ class _AdminPanelPageState extends State<AdminPanelPage> {
               ),
               const SizedBox(height: 10),
               _PanelCard(
-                title: 'Kisisel Bilgiler',
+                title: 'Kişisel Bilgiler',
                 icon: Icons.badge_outlined,
                 child: Column(
                   children: [
@@ -713,16 +713,16 @@ class _AdminPanelPageState extends State<AdminPanelPage> {
                       label: 'Dogum Tarihi',
                       value: _parseDate(detailUser['birthDate']) == null
                           ? '-'
-                          : _parseDate(detailUser['birthDate'])!
-                              .toIso8601String()
-                              .split('T')
-                              .first,
+                          : _parseDate(
+                              detailUser['birthDate'],
+                            )!.toIso8601String().split('T').first,
                     ),
                     _ReservationDetailRow(
                       label: 'Kimlik',
-                      value: (detailUser['nationalIdMasked'] ?? '-')
-                          .toString()
-                          .isEmpty
+                      value:
+                          (detailUser['nationalIdMasked'] ?? '-')
+                              .toString()
+                              .isEmpty
                           ? '-'
                           : (detailUser['nationalIdMasked'] ?? '-').toString(),
                     ),
@@ -737,7 +737,7 @@ class _AdminPanelPageState extends State<AdminPanelPage> {
               ),
               const SizedBox(height: 10),
               _PanelCard(
-                title: 'Rezervasyon Ozeti',
+                title: 'Rezervasyon Özeti',
                 icon: Icons.analytics_outlined,
                 child: Wrap(
                   spacing: 8,
@@ -755,7 +755,8 @@ class _AdminPanelPageState extends State<AdminPanelPage> {
                     ),
                     _PeriodStatPill(
                       label: 'Aktif',
-                      value: '${(summary['byStatus'] is Map ? (summary['byStatus']['awaiting_drop'] ?? 0) : 0)}',
+                      value:
+                          '${(summary['byStatus'] is Map ? (summary['byStatus']['awaiting_drop'] ?? 0) : 0)}',
                       icon: Icons.timeline_rounded,
                     ),
                   ],
@@ -765,17 +766,17 @@ class _AdminPanelPageState extends State<AdminPanelPage> {
               Align(
                 alignment: Alignment.centerLeft,
                 child: Text(
-                  'Yapilan Rezervasyonlar',
+                  'Yapılan Rezervasyonlar',
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        color: _adminTextPrimary,
-                        fontWeight: FontWeight.w700,
-                      ),
+                    color: _adminTextPrimary,
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
               ),
               const SizedBox(height: 6),
               Expanded(
                 child: activities.isEmpty
-                    ? const Center(child: Text('Hareket bulunamadi'))
+                    ? const Center(child: Text('Hareket bulunamadı'))
                     : ListView.separated(
                         itemBuilder: (context, index) {
                           final item = activities[index];
@@ -825,18 +826,18 @@ class _AdminPanelPageState extends State<AdminPanelPage> {
     final shouldLogout = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Yonetim panelinden cik'),
+        title: const Text('Yönetim panelinden çık'),
         content: const Text(
-          'Oturumu kapatip admin giris ekranina donulsun mu?',
+          'Oturumu kapatıp admin giriş ekranına dönülsün mü?',
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Vazgec'),
+            child: const Text('Vazgeç'),
           ),
           FilledButton(
             onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('Cikis yap'),
+            child: const Text('Çıkış yap'),
           ),
         ],
       ),
@@ -858,7 +859,7 @@ class _AdminPanelPageState extends State<AdminPanelPage> {
         appBar: AppBar(
           foregroundColor: _adminTextPrimary,
           title: const Text(
-            'Yonetim Paneli',
+            'Yönetim Paneli',
             style: TextStyle(fontWeight: FontWeight.w800, letterSpacing: 0.2),
           ),
           actions: [
@@ -869,7 +870,7 @@ class _AdminPanelPageState extends State<AdminPanelPage> {
             IconButton(
               onPressed: _confirmLogout,
               icon: const Icon(Icons.logout_rounded, color: _adminTextPrimary),
-              tooltip: 'Cikis yap',
+              tooltip: 'Çıkış yap',
             ),
           ],
         ),
@@ -960,7 +961,7 @@ class _AdminPanelPageState extends State<AdminPanelPage> {
                                 horizontal: 12,
                               ),
                               child: Text(
-                                'Kullanicilar',
+                                'Kullanıcılar',
                                 style: TextStyle(
                                   color: _adminTextPrimary,
                                   fontWeight: FontWeight.w600,
@@ -1039,7 +1040,7 @@ class _AdminPanelPageState extends State<AdminPanelPage> {
             textInputAction: TextInputAction.search,
             onSubmitted: (_) => _loadAll(),
             decoration: InputDecoration(
-              hintText: 'Kullanici ara (isim veya e-posta)',
+              hintText: 'Kullanıcı ara (isim veya e-posta)',
               prefixIcon: const Icon(Icons.search),
               suffixIcon: IconButton(
                 onPressed: _loadAll,
@@ -1116,7 +1117,7 @@ class _AdminPanelPageState extends State<AdminPanelPage> {
     final metricCards = [
       _KpiCardData(
         id: 'users_total',
-        title: 'Kullanicilar',
+        title: 'Kullanıcılar',
         value: _asInt(users['total']),
         subtitle: 'Toplam hesap',
         icon: Icons.people_alt_outlined,
@@ -1124,9 +1125,9 @@ class _AdminPanelPageState extends State<AdminPanelPage> {
       ),
       _KpiCardData(
         id: 'users_7d',
-        title: 'Yeni 7 gun',
+        title: 'Yeni 7 gün',
         value: _asInt(users['last7d']),
-        subtitle: 'Son kayitlar',
+        subtitle: 'Son kayıtlar',
         icon: Icons.person_add_alt_1_rounded,
         gradient: const [Color(0xFF14B8A6), Color(0xFF2DD4BF)],
       ),
@@ -1134,13 +1135,13 @@ class _AdminPanelPageState extends State<AdminPanelPage> {
         id: 'luggage_total',
         title: 'Rezervasyon',
         value: _asInt(luggage['total']),
-        subtitle: 'Tum bavullar',
+        subtitle: 'Tüm bavullar',
         icon: Icons.luggage_outlined,
         gradient: const [Color(0xFF6366F1), Color(0xFF818CF8)],
       ),
       _KpiCardData(
         id: 'payment_pending',
-        title: 'Odeme bekleyen',
+        title: 'Ödeme bekleyen',
         value: _asInt(luggage['paymentPending']),
         subtitle: 'Pending/failed',
         icon: Icons.warning_amber_rounded,
@@ -1159,17 +1160,17 @@ class _AdminPanelPageState extends State<AdminPanelPage> {
         id: 'locations_active',
         title: 'Aktif lokasyon',
         value: _asInt(locations['active']),
-        subtitle: '${_asInt(locations['total'])} icinde aktif',
+        subtitle: '${_asInt(locations['total'])} içinde aktif',
         icon: Icons.location_on_outlined,
         gradient: const [Color(0xFF9333EA), Color(0xFFA855F7)],
       ),
     ];
 
     return [
-      _HeaderAction(title: 'Canli Dashboard'),
+      _HeaderAction(title: 'Canlı Dashboard'),
       const SizedBox(height: 10),
       _PanelCard(
-        title: 'Donem Filtresi',
+        title: 'Dönem Filtresi',
         icon: Icons.date_range_rounded,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -1180,7 +1181,7 @@ class _AdminPanelPageState extends State<AdminPanelPage> {
               children: [7, 30, 90]
                   .map(
                     (days) => ChoiceChip(
-                      label: Text('Son $days gun'),
+                      label: Text('Son $days gün'),
                       selected: _dashboardWindowDays == days,
                       onSelected: (_) async {
                         setState(() => _dashboardWindowDays = days);
@@ -1201,12 +1202,12 @@ class _AdminPanelPageState extends State<AdminPanelPage> {
                   icon: Icons.luggage_rounded,
                 ),
                 _PeriodStatPill(
-                  label: 'Aktif Akis',
+                  label: 'Aktif Akış',
                   value: '$periodActive',
                   icon: Icons.timeline_rounded,
                 ),
                 _PeriodStatPill(
-                  label: 'Odeme Bekleyen',
+                  label: 'Ödeme Bekleyen',
                   value: '$periodPending',
                   icon: Icons.warning_amber_rounded,
                 ),
@@ -1250,7 +1251,7 @@ class _AdminPanelPageState extends State<AdminPanelPage> {
               ),
             ),
             _InsightToggleChip(
-              label: 'Odeme',
+              label: 'Ödeme',
               icon: Icons.pie_chart_outline_rounded,
               active: _showPaymentInsights,
               onTap: () =>
@@ -1265,7 +1266,7 @@ class _AdminPanelPageState extends State<AdminPanelPage> {
               ),
             ),
             _InsightToggleChip(
-              label: 'Akis',
+              label: 'Akış',
               icon: Icons.auto_graph_rounded,
               active: _showActivityInsights,
               onTap: () => setState(
@@ -1273,7 +1274,7 @@ class _AdminPanelPageState extends State<AdminPanelPage> {
               ),
             ),
             _InsightToggleChip(
-              label: 'Yonetim',
+              label: 'Yönetim',
               icon: Icons.manage_search_rounded,
               active: _showReservationManager,
               onTap: () => setState(
@@ -1301,7 +1302,7 @@ class _AdminPanelPageState extends State<AdminPanelPage> {
       ),
       const SizedBox(height: 14),
       _ExpandableInsightPanel(
-        title: 'Odeme Analizi',
+        title: 'Ödeme Analizi',
         icon: Icons.pie_chart_outline_rounded,
         expanded: _showPaymentInsights,
         onToggle: () =>
@@ -1325,7 +1326,7 @@ class _AdminPanelPageState extends State<AdminPanelPage> {
       ),
       const SizedBox(height: 14),
       _ExpandableInsightPanel(
-        title: 'Hareket Akisi',
+        title: 'Hareket Akışı',
         icon: Icons.auto_graph_rounded,
         expanded: _showActivityInsights,
         onToggle: () =>
@@ -1334,7 +1335,7 @@ class _AdminPanelPageState extends State<AdminPanelPage> {
       ),
       const SizedBox(height: 14),
       _ExpandableInsightPanel(
-        title: 'Rezervasyon Yonetimi',
+        title: 'Rezervasyon Yönetimi',
         icon: Icons.manage_search_rounded,
         expanded: _showReservationManager,
         onToggle: () =>
@@ -1352,14 +1353,14 @@ class _AdminPanelPageState extends State<AdminPanelPage> {
       const SizedBox(height: 14),
       _HeaderAction(
         title: 'Son Hareketler',
-        actionLabel: 'Tumunu Yenile',
+        actionLabel: 'Tümünü Yenile',
         onAction: _loadAll,
       ),
       const SizedBox(height: 8),
       if (filteredRecent.isEmpty)
         const _GlassTile(
           title: 'Hareket yok',
-          subtitle: 'Heniz islem kaydi bulunmuyor.',
+          subtitle: 'Henüz işlem kaydı bulunmuyor.',
         ),
       ...filteredRecent.map(
         (item) => _GlassTile(
@@ -1370,7 +1371,7 @@ class _AdminPanelPageState extends State<AdminPanelPage> {
         ),
       ),
       const SizedBox(height: 6),
-      _HeaderAction(title: 'Hizli Eylemler'),
+      _HeaderAction(title: 'Hızlı Eylemler'),
       const SizedBox(height: 8),
       Row(
         children: [
@@ -1395,7 +1396,7 @@ class _AdminPanelPageState extends State<AdminPanelPage> {
       ),
       const SizedBox(height: 8),
       _QuickActionButton(
-        label: 'Kullanicilari Yenile',
+        label: 'Kullanıcıları Yenile',
         icon: Icons.sync_rounded,
         accent: const Color(0xFF0F766E),
         onTap: _loadAll,
@@ -1457,12 +1458,12 @@ class _AdminPanelPageState extends State<AdminPanelPage> {
     if (date == null) return '-';
     final now = DateTime.now();
     final diff = now.difference(date);
-    if (diff.inMinutes < 1) return 'simdi';
-    if (diff.inMinutes < 60) return '${diff.inMinutes} dk once';
-    if (diff.inHours < 24) return '${diff.inHours} sa once';
-    if (diff.inDays < 30) return '${diff.inDays} gun once';
+    if (diff.inMinutes < 1) return 'şimdi';
+    if (diff.inMinutes < 60) return '${diff.inMinutes} dk önce';
+    if (diff.inHours < 24) return '${diff.inHours} sa önce';
+    if (diff.inDays < 30) return '${diff.inDays} gün önce';
     final months = (diff.inDays / 30).floor();
-    return '$months ay once';
+    return '$months ay önce';
   }
 
   List<Map<String, dynamic>> _buildAuditItems(
@@ -1472,16 +1473,16 @@ class _AdminPanelPageState extends State<AdminPanelPage> {
     for (final item in filteredRecent.take(40)) {
       entries.add({
         'type': 'reservation',
-        'title': 'Rezervasyon guncellemesi',
+        'title': 'Rezervasyon güncellemesi',
         'subtitle':
-            '${item['userName'] ?? 'Kullanici'} • ${item['status'] ?? '-'} • ${item['dropLocationName'] ?? '-'}',
+            '${item['userName'] ?? 'Kullanıcı'} • ${item['status'] ?? '-'} • ${item['dropLocationName'] ?? '-'}',
         'time': _parseDate(item['updatedAt'] ?? item['createdAt']),
       });
     }
     for (final item in _campaigns) {
       entries.add({
         'type': 'campaign',
-        'title': 'Kampanya guncellendi',
+        'title': 'Kampanya güncellendi',
         'subtitle':
             '${item['title'] ?? 'Kampanya'} • ${item['subtitle'] ?? ''}',
         'time': _parseDate(item['updatedAt'] ?? item['createdAt']),
@@ -1490,7 +1491,7 @@ class _AdminPanelPageState extends State<AdminPanelPage> {
     for (final item in _locations) {
       entries.add({
         'type': 'location',
-        'title': 'Lokasyon kaydi',
+        'title': 'Lokasyon kaydı',
         'subtitle': '${item['name'] ?? '-'} • ${item['address'] ?? '-'}',
         'time': _parseDate(item['updatedAt'] ?? item['createdAt']),
       });
@@ -1541,7 +1542,7 @@ class _AdminPanelPageState extends State<AdminPanelPage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Rezervasyon Detayi',
+                  'Rezervasyon Detayı',
                   style: Theme.of(
                     context,
                   ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
@@ -1552,11 +1553,11 @@ class _AdminPanelPageState extends State<AdminPanelPage> {
                   value: (item['id'] ?? '-').toString(),
                 ),
                 _ReservationDetailRow(
-                  label: 'Kullanici',
-                  value: (item['userName'] ?? 'Kullanici').toString(),
+                  label: 'Kullanıcı',
+                  value: (item['userName'] ?? 'Kullanıcı').toString(),
                 ),
                 _ReservationDetailRow(
-                  label: 'Odeme',
+                  label: 'Ödeme',
                   value: (item['paymentStatus'] ?? '-').toString(),
                 ),
                 _ReservationDetailRow(
@@ -1568,7 +1569,7 @@ class _AdminPanelPageState extends State<AdminPanelPage> {
                   value: '₺${item['totalPrice'] ?? 0}',
                 ),
                 _ReservationDetailRow(
-                  label: 'Guncelleme',
+                  label: 'Güncelleme',
                   value: _relativeTime(date),
                 ),
                 const SizedBox(height: 10),
@@ -1636,7 +1637,7 @@ class _AdminPanelPageState extends State<AdminPanelPage> {
                             _showError(
                               (response['error'] ??
                                       response['message'] ??
-                                      'Durum guncellenemedi')
+                                      'Durum güncellenemedi')
                                   .toString(),
                             );
                           },
@@ -1653,7 +1654,7 @@ class _AdminPanelPageState extends State<AdminPanelPage> {
     if (updated == true && mounted) {
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(const SnackBar(content: Text('Rezervasyon guncellendi')));
+      ).showSnackBar(const SnackBar(content: Text('Rezervasyon güncellendi')));
     }
   }
 
@@ -1662,14 +1663,14 @@ class _AdminPanelPageState extends State<AdminPanelPage> {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Toplu durum guncelle'),
+        title: const Text('Toplu durum güncelle'),
         content: Text(
-          '${_selectedReservationIds.length} rezervasyon "$_bulkReservationStatus" durumuna guncellensin mi?',
+          '${_selectedReservationIds.length} rezervasyon "$_bulkReservationStatus" durumuna güncellensin mi?',
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Vazgec'),
+            child: const Text('Vazgeç'),
           ),
           FilledButton(
             onPressed: () => Navigator.of(context).pop(true),
@@ -1697,7 +1698,7 @@ class _AdminPanelPageState extends State<AdminPanelPage> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            'Toplu guncelleme tamamlandi: $success basarili, $failed hatali',
+            'Toplu güncelleme tamamlandı: $success başarılı, $failed hatalı',
           ),
         ),
       );
@@ -1705,7 +1706,7 @@ class _AdminPanelPageState extends State<AdminPanelPage> {
     }
 
     _showError(
-      (response['error'] ?? response['message'] ?? 'Toplu guncelleme basarisiz')
+      (response['error'] ?? response['message'] ?? 'Toplu güncelleme başarısız')
           .toString(),
     );
   }
@@ -1728,7 +1729,7 @@ class _AdminPanelPageState extends State<AdminPanelPage> {
 
   Widget _buildReservationManagerPanel(List<Map<String, dynamic>> items) {
     final statusOptions = const <MapEntry<String, String>>[
-      MapEntry('all', 'Tum Durumlar'),
+      MapEntry('all', 'Tüm Durumlar'),
       MapEntry('awaiting_drop', 'Awaiting Drop'),
       MapEntry('assigned', 'Assigned'),
       MapEntry('dropped', 'Dropped'),
@@ -1846,7 +1847,7 @@ class _AdminPanelPageState extends State<AdminPanelPage> {
                   children: [
                     Expanded(
                       child: Text(
-                        '${_selectedReservationIds.length} secili',
+                        '${_selectedReservationIds.length} seçili',
                         style: Theme.of(context).textTheme.labelLarge?.copyWith(
                           color: _adminTextPrimary,
                           fontWeight: FontWeight.w700,
@@ -1873,8 +1874,8 @@ class _AdminPanelPageState extends State<AdminPanelPage> {
                       },
                       child: Text(
                         _selectedReservationIds.length == items.length
-                            ? 'Secimi temizle'
-                            : 'Tumunu sec',
+                            ? 'Seçimi temizle'
+                            : 'Tümünü seç',
                       ),
                     ),
                   ],
@@ -1915,7 +1916,7 @@ class _AdminPanelPageState extends State<AdminPanelPage> {
                           : _runBulkReservationUpdate,
                       child: Text(
                         _bulkReservationUpdating
-                            ? 'Calisiyor...'
+                            ? 'Çalışıyor...'
                             : 'Toplu uygula',
                       ),
                     );
@@ -1943,7 +1944,7 @@ class _AdminPanelPageState extends State<AdminPanelPage> {
         if (items.isEmpty)
           const Padding(
             padding: EdgeInsets.symmetric(vertical: 8),
-            child: Text('Bu filtrede rezervasyon bulunamadi.'),
+            child: Text('Bu filtrede rezervasyon bulunamadı.'),
           )
         else
           ...items.take(16).map((item) {
@@ -1990,7 +1991,7 @@ class _AdminPanelPageState extends State<AdminPanelPage> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              (item['userName'] ?? 'Kullanici').toString(),
+                              (item['userName'] ?? 'Kullanıcı').toString(),
                               style: Theme.of(context).textTheme.labelLarge
                                   ?.copyWith(
                                     color: _adminTextPrimary,
@@ -2055,7 +2056,7 @@ class _AdminPanelPageState extends State<AdminPanelPage> {
 
   Widget _buildAuditLogPanel(List<Map<String, dynamic>> entries) {
     if (entries.isEmpty) {
-      return const Text('Audit kaydi bulunamadi.');
+      return const Text('Audit kaydı bulunamadı.');
     }
     IconData resolveIcon(String type) {
       switch (type) {
@@ -2143,12 +2144,12 @@ class _AdminPanelPageState extends State<AdminPanelPage> {
     final avgTicket = paidCount <= 0 ? 0 : (revenue / paidCount).round();
     final details = switch (card.id) {
       'users_total' => [
-        'Toplam kayitli kullanici: ${_asInt(users['total'])}',
-        'Son 7 gun kayit: ${_asInt(users['last7d'])}',
+        'Toplam kayıtlı kullanıcı: ${_asInt(users['total'])}',
+        'Son 7 gün kayıt: ${_asInt(users['last7d'])}',
       ],
       'users_7d' => [
-        'Son 7 gun kayit: ${_asInt(users['last7d'])}',
-        'Toplam kullanicilar: ${_asInt(users['total'])}',
+        'Son 7 gün kayıt: ${_asInt(users['last7d'])}',
+        'Toplam kullanıcılar: ${_asInt(users['total'])}',
       ],
       'luggage_total' => [
         'Toplam rezervasyon: $totalLuggage',
@@ -2157,9 +2158,9 @@ class _AdminPanelPageState extends State<AdminPanelPage> {
         'Picked up: ${_asInt(statusCounts['picked_up'])}',
       ],
       'payment_pending' => [
-        'Bekleyen odeme: $pendingCount',
-        'Basarisiz odeme: $failedCount',
-        'Paid odeme: $paidCount',
+        'Bekleyen ödeme: $pendingCount',
+        'Başarısız ödeme: $failedCount',
+        'Paid ödeme: $paidCount',
       ],
       'revenue_total' => [
         'Toplam gelir: ₺$revenue',
@@ -2304,7 +2305,7 @@ class _GlassHero extends StatelessWidget {
               ),
               const SizedBox(height: 4),
               Text(
-                'Canli rezervasyon, odeme, lokasyon ve kampanya paneli',
+                'Canlı rezervasyon, ödeme, lokasyon ve kampanya paneli',
                 style: Theme.of(
                   context,
                 ).textTheme.bodySmall?.copyWith(color: _adminTextSecondary),
@@ -2315,7 +2316,7 @@ class _GlassHero extends StatelessWidget {
                 runSpacing: 8,
                 children: [
                   _StatChip(
-                    label: 'Kullanici',
+                    label: 'Kullanıcı',
                     value: '${users['total'] ?? 0}',
                   ),
                   _StatChip(
@@ -2729,7 +2730,7 @@ class _StatusDistributionCard extends StatelessWidget {
           ..sort((a, b) => b.value.compareTo(a.value));
     final maxValue = items.isEmpty ? 1 : items.first.value;
     return items.isEmpty
-        ? const Text('Veri bulunamadi')
+        ? const Text('Veri bulunamadı')
         : Column(
             children: items
                 .map(
@@ -2855,7 +2856,7 @@ class _PaymentDistributionCard extends StatelessWidget {
         .toList();
     final total = entries.fold<int>(0, (sum, e) => sum + e.value);
     return entries.isEmpty
-        ? const Text('Veri bulunamadi')
+        ? const Text('Veri bulunamadı')
         : LayoutBuilder(
             builder: (context, constraints) {
               final isCompact = constraints.maxWidth < 560;
@@ -3520,7 +3521,7 @@ class _ActivityTimelineCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (recent.isEmpty) return const Text('Hareket verisi bulunamadi');
+    if (recent.isEmpty) return const Text('Hareket verisi bulunamadı');
     final buckets = List<int>.filled(7, 0);
     final now = DateTime.now();
     for (final item in recent) {
@@ -3553,7 +3554,7 @@ class _ActivityTimelineCard extends StatelessWidget {
         ),
         const SizedBox(height: 8),
         Text(
-          'Son 7 gunde toplam ${buckets.fold<int>(0, (a, b) => a + b)} hareket izlendi.',
+          'Son 7 günde toplam ${buckets.fold<int>(0, (a, b) => a + b)} hareket izlendi.',
           style: Theme.of(
             context,
           ).textTheme.bodySmall?.copyWith(color: _adminTextSecondary),

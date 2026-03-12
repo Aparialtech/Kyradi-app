@@ -220,7 +220,7 @@ class _PaymentPageState extends State<PaymentPage> {
   Future<void> _completePayment() async {
     final loc = AppLocalizations.of(context)!;
     if (!_isMethodEnabled(_paymentMethod)) {
-      _showError('Secilen odeme yontemi profil ayarlarinda kapali.');
+      _showError('Seçilen ödeme yöntemi profil ayarlarında kapalı.');
       return;
     }
     if (_paymentMethod != 'pay_at_hotel' && _paymentMethod != 'wallet') {
@@ -705,7 +705,7 @@ class _PaymentPageState extends State<PaymentPage> {
           Padding(
             padding: const EdgeInsets.only(left: 8, right: 8, bottom: 8),
             child: Text(
-              'Kapali yontemleri Profil > Odeme Yontemleri alanindan acabilirsin.',
+              'Kapalı yöntemleri Profil > Ödeme Yöntemleri alanından açabilirsin.',
               style: theme.textTheme.bodySmall?.copyWith(
                 color: theme.colorScheme.onSurfaceVariant,
               ),

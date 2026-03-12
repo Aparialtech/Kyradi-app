@@ -60,9 +60,9 @@ class LocalNotificationService {
       await _show(
         channelId: 'kyradi_reservations',
         channelName: 'Rezervasyon Bildirimleri',
-        channelDescription: 'Rezervasyon durum guncellemeleri',
-        title: 'Rezervasyon Alindi',
-        body: '$safeLabel basariyla olusturuldu.',
+        channelDescription: 'Rezervasyon durum güncellemeleri',
+        title: 'Rezervasyon Alındı',
+        body: '$safeLabel başarıyla oluşturuldu.',
       );
     } catch (e) {
       appLog('local_notification', 'show failed: $e', level: AppLogLevel.warn);
@@ -76,15 +76,15 @@ class LocalNotificationService {
     if (!await _canNotify()) return;
     final safeLabel = _safeReservationLabel(reservationLabel);
     final safeStatus = statusLabel.trim().isEmpty
-        ? 'Guncellendi'
+        ? 'Güncellendi'
         : statusLabel.trim();
 
     try {
       await _show(
         channelId: 'kyradi_status_updates',
         channelName: 'Durum Bildirimleri',
-        channelDescription: 'Bavul durum degisiklikleri',
-        title: 'Rezervasyon Guncellendi',
+        channelDescription: 'Bavul durum değişiklikleri',
+        title: 'Rezervasyon Güncellendi',
         body: '$safeLabel durumu: $safeStatus',
       );
     } catch (e) {
@@ -102,15 +102,15 @@ class LocalNotificationService {
   }) async {
     if (!await _canNotify()) return;
     final safeLabel = _safeReservationLabel(reservationLabel);
-    final amountLabel = amountTry > 0 ? '$amountTry ₺' : 'Odeme';
+    final paymentLabel = amountTry > 0 ? '$amountTry ₺' : 'Ödeme';
 
     try {
       await _show(
         channelId: 'kyradi_payments',
-        channelName: 'Odeme Bildirimleri',
-        channelDescription: 'Odeme tamamlanma bildirimleri',
-        title: 'Odeme Tamamlandi',
-        body: '$safeLabel icin $amountLabel islemi onaylandi.',
+        channelName: 'Ödeme Bildirimleri',
+        channelDescription: 'Ödeme tamamlanma bildirimleri',
+        title: 'Ödeme Tamamlandı',
+        body: '$safeLabel için $paymentLabel işlemi onaylandı.',
       );
     } catch (e) {
       appLog(
@@ -128,10 +128,10 @@ class LocalNotificationService {
     try {
       await _show(
         channelId: 'kyradi_reservation_cancelled',
-        channelName: 'Rezervasyon Iptal',
-        channelDescription: 'Iptal edilen rezervasyon bildirimleri',
-        title: 'Rezervasyon Iptal Edildi',
-        body: '$safeLabel icin iptal islemi tamamlandi.',
+        channelName: 'Rezervasyon İptal',
+        channelDescription: 'İptal edilen rezervasyon bildirimleri',
+        title: 'Rezervasyon İptal Edildi',
+        body: '$safeLabel için iptal işlemi tamamlandı.',
       );
     } catch (e) {
       appLog(

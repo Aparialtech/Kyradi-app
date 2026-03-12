@@ -38,6 +38,7 @@ class _LuggageListPageState extends State<LuggageListPage> {
   List<LuggageModel> _items = [];
   String? _userId;
   String _query = '';
+  String? _expandedCardId;
   LuggageStatus? _statusFilter;
   String? _paymentFilter;
   String? _locationFilter;
@@ -92,6 +93,7 @@ class _LuggageListPageState extends State<LuggageListPage> {
       setState(() {
         _items = luggages;
         _page = 1;
+        _expandedCardId = null;
         _loading = false;
       });
       _statusSnapshotInitialized = true;
@@ -241,6 +243,7 @@ class _LuggageListPageState extends State<LuggageListPage> {
     if (result is LuggageModel) {
       setState(() {
         _items = [result, ..._items];
+        _expandedCardId = result.id;
       });
       AppNotification.show(
         context,
@@ -370,6 +373,7 @@ class _LuggageListPageState extends State<LuggageListPage> {
                         _paymentFilter = null;
                         _locationFilter = null;
                         _sizeFilter = null;
+                        _expandedCardId = null;
                         _page = 1;
                       });
                     },
@@ -384,6 +388,7 @@ class _LuggageListPageState extends State<LuggageListPage> {
                         _paymentFilter = payment;
                         _locationFilter = location;
                         _sizeFilter = size;
+                        _expandedCardId = null;
                         _page = 1;
                       });
                     },
@@ -536,6 +541,7 @@ class _LuggageListPageState extends State<LuggageListPage> {
                         controller: _searchCtrl,
                         onChanged: (value) => setState(() {
                           _query = value;
+                          _expandedCardId = null;
                           _page = 1;
                         }),
                         decoration: InputDecoration(
@@ -549,6 +555,7 @@ class _LuggageListPageState extends State<LuggageListPage> {
                                     _searchCtrl.clear();
                                     setState(() {
                                       _query = '';
+                                      _expandedCardId = null;
                                       _page = 1;
                                     });
                                   },
@@ -585,6 +592,7 @@ class _LuggageListPageState extends State<LuggageListPage> {
                               if (value == null) return;
                               setState(() {
                                 _sort = value;
+                                _expandedCardId = null;
                                 _page = 1;
                               });
                             },
@@ -641,6 +649,7 @@ class _LuggageListPageState extends State<LuggageListPage> {
                         _paymentFilter = null;
                         _locationFilter = null;
                         _sizeFilter = null;
+                        _expandedCardId = null;
                         _page = 1;
                       });
                     },
@@ -698,15 +707,23 @@ class _LuggageListPageState extends State<LuggageListPage> {
           .map(
             (luggage) => Padding(
               padding: const EdgeInsets.only(bottom: 14),
-              child: _LuggageTicketCard(
-                luggage: luggage,
-                localeTag: locale,
-                paymentLabel: _paymentStatusLabel(loc, luggage),
-                onDetails: () => _openDetail(luggage),
-                onCancel: () => _cancelLuggage(luggage),
-                detailLabel: loc.detailsAction,
-                cancelLabel: loc.luggageCancelAction,
-                unknownTimeLabel: loc.luggageTimelineTimeUnknown,
+              child: _CollapsibleTicketCard(
+                expanded: _expandedCardId == luggage.id,
+                onTap: () {
+                  setState(() {
+                    _expandedCardId = luggage.id;
+                  });
+                },
+                child: _LuggageTicketCard(
+                  luggage: luggage,
+                  localeTag: locale,
+                  paymentLabel: _paymentStatusLabel(loc, luggage),
+                  onDetails: () => _openDetail(luggage),
+                  onCancel: () => _cancelLuggage(luggage),
+                  detailLabel: loc.detailsAction,
+                  cancelLabel: loc.luggageCancelAction,
+                  unknownTimeLabel: loc.luggageTimelineTimeUnknown,
+                ),
               ),
             ),
           )
@@ -757,7 +774,7 @@ class _LuggageQuickBar extends StatelessWidget {
           Row(
             children: [
               Text(
-                'Hizli Islemler',
+                'Hızlı İşlemler',
                 style: theme.textTheme.titleSmall?.copyWith(
                   fontWeight: FontWeight.w800,
                 ),
@@ -928,6 +945,64 @@ class _CountPill extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _CollapsibleTicketCard extends StatelessWidget {
+  const _CollapsibleTicketCard({
+    required this.child,
+    required this.expanded,
+    required this.onTap,
+  });
+
+  final Widget child;
+  final bool expanded;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: onTap,
+      child: AnimatedSize(
+        duration: const Duration(milliseconds: 220),
+        curve: Curves.easeOutCubic,
+        alignment: Alignment.topCenter,
+        child: Stack(
+          children: [
+            ClipRect(
+              child: Align(
+                alignment: Alignment.topCenter,
+                heightFactor: expanded ? 1 : 0.52,
+                child: AbsorbPointer(absorbing: !expanded, child: child),
+              ),
+            ),
+            if (!expanded)
+              Positioned(
+                left: 18,
+                right: 18,
+                bottom: 12,
+                child: IgnorePointer(
+                  child: Container(
+                    height: 68,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(20),
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [
+                          Colors.transparent,
+                          Colors.black.withValues(alpha: 0.26),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+          ],
+        ),
       ),
     );
   }
@@ -1132,7 +1207,7 @@ class _LuggageTicketCard extends StatelessWidget {
                         ),
                         Expanded(
                           child: _TicketInfoCell(
-                            label: 'Odeme',
+                            label: 'Ödeme',
                             value: paymentLabel,
                             valueColor: luggage.isPaymentPaid
                                 ? const Color(0xFF34D399)
