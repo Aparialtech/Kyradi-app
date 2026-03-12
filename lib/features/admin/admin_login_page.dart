@@ -255,7 +255,7 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
                                         final v = (value ?? '').trim();
                                         if (v.isEmpty) return 'E-posta zorunlu';
                                         if (!RegExp(
-                                          r'^\\S+@\\S+\\.\\S+$',
+                                          r'^\S+@\S+\.\S+$',
                                         ).hasMatch(v)) {
                                           return 'Geçerli e-posta gir';
                                         }
