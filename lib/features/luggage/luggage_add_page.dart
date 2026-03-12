@@ -60,8 +60,7 @@ class _LuggageAddPageState extends State<LuggageAddPage> {
   }
 
   String _generateQrCode() {
-    final stamp = DateTime.now()
-        .millisecondsSinceEpoch
+    final stamp = DateTime.now().millisecondsSinceEpoch
         .toRadixString(36)
         .toUpperCase();
     final suffix = (_random.nextInt(9000) + 1000).toString();
@@ -150,8 +149,8 @@ class _LuggageAddPageState extends State<LuggageAddPage> {
       final payload = <String, dynamic>{
         'qrCode': _generateQrCode(),
         'label': _labelCtrl.text.trim().isEmpty
-          ? loc.quickAddLuggage
-          : _labelCtrl.text.trim(),
+            ? loc.quickAddLuggage
+            : _labelCtrl.text.trim(),
         'weight': _weightCtrl.text.trim(),
         'size': _size,
         'color': _color,
@@ -195,22 +194,22 @@ class _LuggageAddPageState extends State<LuggageAddPage> {
   @override
   Widget build(BuildContext context) {
     final loc = AppLocalizations.of(context)!;
+    final bottomSafePadding = MediaQuery.viewPaddingOf(context).bottom + 104;
     return Scaffold(
       backgroundColor: Colors.transparent,
-      appBar: AppBar(
-        title: Text(loc.addLuggageTitle),
-      ),
+      appBar: AppBar(title: Text(loc.addLuggageTitle)),
       body: Stack(
         children: [
           const AppMeshBackground(),
           Form(
             key: _formKey,
             child: ListView(
-              padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
+              padding: EdgeInsets.fromLTRB(16, 16, 16, bottomSafePadding),
               children: [
                 SectionCard(
-                  backgroundColor:
-                      Theme.of(context).colorScheme.surface.withValues(alpha: 0.95),
+                  backgroundColor: Theme.of(
+                    context,
+                  ).colorScheme.surface.withValues(alpha: 0.95),
                   child: Column(
                     children: [
                       if (_locationsReady)
@@ -226,7 +225,8 @@ class _LuggageAddPageState extends State<LuggageAddPage> {
                               .toList(),
                           onChanged: _saving
                               ? null
-                              : (value) => setState(() => _selectedLocation = value),
+                              : (value) =>
+                                    setState(() => _selectedLocation = value),
                           decoration: InputDecoration(
                             labelText: loc.findLocation,
                             prefixIcon: const Icon(Icons.location_on_outlined),
@@ -261,11 +261,21 @@ class _LuggageAddPageState extends State<LuggageAddPage> {
                       DropdownButtonFormField<String>(
                         value: _size,
                         items: [
-                          DropdownMenuItem(value: 'small', child: Text(loc.small)),
-                          DropdownMenuItem(value: 'medium', child: Text(loc.medium)),
-                          DropdownMenuItem(value: 'large', child: Text(loc.large)),
+                          DropdownMenuItem(
+                            value: 'small',
+                            child: Text(loc.small),
+                          ),
+                          DropdownMenuItem(
+                            value: 'medium',
+                            child: Text(loc.medium),
+                          ),
+                          DropdownMenuItem(
+                            value: 'large',
+                            child: Text(loc.large),
+                          ),
                         ],
-                        onChanged: (value) => setState(() => _size = value ?? _size),
+                        onChanged: (value) =>
+                            setState(() => _size = value ?? _size),
                         decoration: InputDecoration(
                           labelText: loc.luggageInfoSize(''),
                           prefixIcon: const Icon(Icons.straighten_outlined),
@@ -275,14 +285,30 @@ class _LuggageAddPageState extends State<LuggageAddPage> {
                       DropdownButtonFormField<String>(
                         value: _color,
                         items: [
-                          DropdownMenuItem(value: 'black', child: Text(loc.black)),
-                          DropdownMenuItem(value: 'grey', child: Text(loc.grey)),
+                          DropdownMenuItem(
+                            value: 'black',
+                            child: Text(loc.black),
+                          ),
+                          DropdownMenuItem(
+                            value: 'grey',
+                            child: Text(loc.grey),
+                          ),
                           DropdownMenuItem(value: 'red', child: Text(loc.red)),
-                          DropdownMenuItem(value: 'blue', child: Text(loc.blue)),
-                          DropdownMenuItem(value: 'green', child: Text(loc.green)),
-                          DropdownMenuItem(value: 'other', child: Text(loc.other)),
+                          DropdownMenuItem(
+                            value: 'blue',
+                            child: Text(loc.blue),
+                          ),
+                          DropdownMenuItem(
+                            value: 'green',
+                            child: Text(loc.green),
+                          ),
+                          DropdownMenuItem(
+                            value: 'other',
+                            child: Text(loc.other),
+                          ),
                         ],
-                        onChanged: (value) => setState(() => _color = value ?? _color),
+                        onChanged: (value) =>
+                            setState(() => _color = value ?? _color),
                         decoration: InputDecoration(
                           labelText: loc.luggageInfoColor(''),
                           prefixIcon: const Icon(Icons.palette_outlined),
@@ -302,8 +328,9 @@ class _LuggageAddPageState extends State<LuggageAddPage> {
                 ),
                 const SizedBox(height: 16),
                 SectionCard(
-                  backgroundColor:
-                      Theme.of(context).colorScheme.surface.withValues(alpha: 0.95),
+                  backgroundColor: Theme.of(
+                    context,
+                  ).colorScheme.surface.withValues(alpha: 0.95),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -344,9 +371,13 @@ class _LuggageAddPageState extends State<LuggageAddPage> {
                 ),
                 const SizedBox(height: 16),
                 SectionCard(
-                  backgroundColor:
-                      Theme.of(context).colorScheme.surface.withValues(alpha: 0.95),
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  backgroundColor: Theme.of(
+                    context,
+                  ).colorScheme.surface.withValues(alpha: 0.95),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 8,
+                  ),
                   child: Column(
                     children: [
                       ListTile(
@@ -359,7 +390,9 @@ class _LuggageAddPageState extends State<LuggageAddPage> {
                               : _dropTime!.toLocal().toString(),
                         ),
                         trailing: const Icon(Icons.calendar_today),
-                        onTap: _saving ? null : () => _pickDateTime(isDrop: true),
+                        onTap: _saving
+                            ? null
+                            : () => _pickDateTime(isDrop: true),
                       ),
                       ListTile(
                         contentPadding: EdgeInsets.zero,
@@ -371,7 +404,9 @@ class _LuggageAddPageState extends State<LuggageAddPage> {
                               : _pickupTime!.toLocal().toString(),
                         ),
                         trailing: const Icon(Icons.calendar_today),
-                        onTap: _saving ? null : () => _pickDateTime(isDrop: false),
+                        onTap: _saving
+                            ? null
+                            : () => _pickDateTime(isDrop: false),
                       ),
                     ],
                   ),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../../core/payment_method_prefs.dart';
 import '../../l10n/app_localizations.dart';
 import '../../models/reservation_draft.dart';
 import '../../services/pricing_service.dart';
@@ -31,6 +32,8 @@ class _StepPaymentState extends State<StepPayment> {
   final FocusNode _cvvFocus = FocusNode();
   bool _showBack = false;
   double _walletBalance = 0;
+  PaymentMethodAvailability _methodAvailability =
+      const PaymentMethodAvailability.defaults();
 
   @override
   void initState() {
@@ -41,6 +44,7 @@ class _StepPaymentState extends State<StepPayment> {
     _cardCvvCtrl = TextEditingController(text: widget.draft.cardCvv);
     _cvvFocus.addListener(_handleCvvFocus);
     _loadBalance();
+    _loadPaymentMethods();
   }
 
   @override
@@ -65,6 +69,26 @@ class _StepPaymentState extends State<StepPayment> {
     setState(() => _walletBalance = value);
   }
 
+  Future<void> _loadPaymentMethods() async {
+    final methods = await PaymentMethodPrefs.load();
+    if (!mounted) return;
+    setState(() => _methodAvailability = methods);
+    _ensureSelectedMethodEnabled();
+  }
+
+  bool _isMethodEnabled(String method) {
+    if (method == 'card') return _methodAvailability.cardEnabled;
+    if (method == 'pay_at_hotel') return _methodAvailability.hotelPayEnabled;
+    return true;
+  }
+
+  void _ensureSelectedMethodEnabled() {
+    if (_isMethodEnabled(widget.draft.paymentMethod)) return;
+    _updateDraft((draft) {
+      draft.paymentMethod = _isMethodEnabled('wallet') ? 'wallet' : 'transfer';
+    });
+  }
+
   void _updateDraft(void Function(ReservationDraft draft) apply) {
     final next = widget.draft.copy();
     apply(next);
@@ -76,10 +100,15 @@ class _StepPaymentState extends State<StepPayment> {
   @override
   Widget build(BuildContext context) {
     final loc = AppLocalizations.of(context)!;
-    final pricing = widget.draft.pricing ??
+    final cardMethodsEnabled = _methodAvailability.cardEnabled;
+    final hotelEnabled = _methodAvailability.hotelPayEnabled;
+    final pricing =
+        widget.draft.pricing ??
         PricingService.calculate(
           start: widget.draft.dropAt ?? DateTime.now(),
-          end: widget.draft.pickupAt ?? DateTime.now().add(const Duration(hours: 1)),
+          end:
+              widget.draft.pickupAt ??
+              DateTime.now().add(const Duration(hours: 1)),
           insurance: widget.draft.insurance,
           paymentMethod: widget.draft.paymentMethod,
         );
@@ -88,9 +117,9 @@ class _StepPaymentState extends State<StepPayment> {
       children: [
         Text(
           loc.stepPaymentTitle,
-          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w700,
-              ),
+          style: Theme.of(
+            context,
+          ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
         ),
         const SizedBox(height: 12),
         SectionCard(
@@ -99,9 +128,9 @@ class _StepPaymentState extends State<StepPayment> {
             children: [
               Text(
                 loc.paymentMethodTitle,
-                style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                      fontWeight: FontWeight.w700,
-                    ),
+                style: Theme.of(
+                  context,
+                ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
               ),
               const SizedBox(height: 8),
               RadioListTile<String>(
@@ -120,24 +149,40 @@ class _StepPaymentState extends State<StepPayment> {
               RadioListTile<String>(
                 value: 'card',
                 groupValue: widget.draft.paymentMethod,
-                onChanged: (value) =>
-                    _updateDraft((draft) => draft.paymentMethod = value ?? 'card'),
+                onChanged: cardMethodsEnabled
+                    ? (value) => _updateDraft(
+                        (draft) => draft.paymentMethod = value ?? 'card',
+                      )
+                    : null,
                 title: Text(loc.paymentMethodCard),
               ),
               RadioListTile<String>(
                 value: 'transfer',
                 groupValue: widget.draft.paymentMethod,
-                onChanged: (value) =>
-                    _updateDraft((draft) => draft.paymentMethod = value ?? 'transfer'),
+                onChanged: (value) => _updateDraft(
+                  (draft) => draft.paymentMethod = value ?? 'transfer',
+                ),
                 title: Text(loc.paymentMethodTransfer),
               ),
               RadioListTile<String>(
                 value: 'pay_at_hotel',
                 groupValue: widget.draft.paymentMethod,
-                onChanged: (value) =>
-                    _updateDraft((draft) => draft.paymentMethod = value ?? 'pay_at_hotel'),
+                onChanged: hotelEnabled
+                    ? (value) => _updateDraft(
+                        (draft) =>
+                            draft.paymentMethod = value ?? 'pay_at_hotel',
+                      )
+                    : null,
                 title: Text(loc.paymentMethodPayAtHotel),
               ),
+              if (!cardMethodsEnabled || !hotelEnabled)
+                Padding(
+                  padding: const EdgeInsets.only(left: 12, bottom: 8),
+                  child: Text(
+                    'Kapali yontemleri Profil > Odeme Yontemleri alanindan acabilirsin.',
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                ),
               if (widget.draft.paymentMethod == 'pay_at_hotel')
                 Padding(
                   padding: const EdgeInsets.only(left: 12, bottom: 8),
@@ -166,8 +211,8 @@ class _StepPaymentState extends State<StepPayment> {
                 Text(
                   loc.paymentPageSubtitle,
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
-                      ),
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
                 ),
                 const SizedBox(height: 12),
                 _AnimatedCardPreview(
@@ -233,8 +278,8 @@ class _StepPaymentState extends State<StepPayment> {
                 Text(
                   loc.paymentDemoBadge,
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Theme.of(context).colorScheme.primary,
-                      ),
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
                 ),
               ],
             ),
@@ -245,16 +290,16 @@ class _StepPaymentState extends State<StepPayment> {
             children: [
               Text(
                 loc.pricingTotalLabel,
-                style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                      fontWeight: FontWeight.w700,
-                    ),
+                style: Theme.of(
+                  context,
+                ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
               ),
               const Spacer(),
               Text(
                 _formatAmount(pricing.total),
-                style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                      fontWeight: FontWeight.w700,
-                    ),
+                style: Theme.of(
+                  context,
+                ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
               ),
             ],
           ),
@@ -295,12 +340,10 @@ class _AnimatedCardPreview extends StatelessWidget {
     final theme = Theme.of(context);
     final displayNumber = cardNumber.isEmpty
         ? '#### #### #### ####'
-        : cardNumber.replaceAllMapped(
-            RegExp(r'.{4}'),
-            (m) => '${m.group(0)} ',
-          );
-    final displayName =
-        cardName.isEmpty ? 'CARDHOLDER' : cardName.toUpperCase();
+        : cardNumber.replaceAllMapped(RegExp(r'.{4}'), (m) => '${m.group(0)} ');
+    final displayName = cardName.isEmpty
+        ? 'CARDHOLDER'
+        : cardName.toUpperCase();
     final displayExpiry = expiry.isEmpty ? 'MM/YY' : expiry;
     final displayCvv = cvv.isEmpty ? '***' : cvv;
     return AnimatedSwitcher(
@@ -375,11 +418,7 @@ class _CardFront extends StatelessWidget {
 }
 
 class _CardBack extends StatelessWidget {
-  const _CardBack({
-    super.key,
-    required this.cvv,
-    required this.theme,
-  });
+  const _CardBack({super.key, required this.cvv, required this.theme});
 
   final String cvv;
   final ThemeData theme;
@@ -389,10 +428,7 @@ class _CardBack extends StatelessWidget {
     return _CardShell(
       child: Column(
         children: [
-          Container(
-            height: 28,
-            color: Colors.black.withOpacity(0.5),
-          ),
+          Container(height: 28, color: Colors.black.withOpacity(0.5)),
           const SizedBox(height: 12),
           Align(
             alignment: Alignment.centerRight,

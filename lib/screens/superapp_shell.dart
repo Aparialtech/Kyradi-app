@@ -120,7 +120,7 @@ class _GlassBottomBar extends StatelessWidget {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     final bottomInset = MediaQuery.viewPaddingOf(context).bottom;
-    final bottomOffset = (bottomInset * 0.10).clamp(2.0, 6.0).toDouble();
+    final bottomOffset = (bottomInset * 0.02).clamp(0.0, 1.5).toDouble();
     const contentPadding = EdgeInsets.symmetric(horizontal: 7, vertical: 4);
     return SafeArea(
       top: false,
@@ -128,7 +128,7 @@ class _GlassBottomBar extends StatelessWidget {
       right: false,
       bottom: true,
       child: Padding(
-        padding: EdgeInsets.fromLTRB(16, 4, 16, bottomOffset),
+        padding: EdgeInsets.fromLTRB(16, 2, 16, bottomOffset),
         child: RepaintBoundary(
           child: SizedBox(
             height: 62,

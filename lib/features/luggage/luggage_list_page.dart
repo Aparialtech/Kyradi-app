@@ -1,14 +1,15 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:intl/intl.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import '../../core/repositories/luggage_repository.dart';
-import '../../core/drop_locations.dart';
 import '../../models/luggage.dart';
 import '../../l10n/app_localizations.dart';
 import '../../utils/crash_log.dart';
 import 'package:go_router/go_router.dart';
-import '../bookings/widgets/trip_card.dart';
+import '../../services/local_notification_service.dart';
 import '../../widgets/app_notification.dart';
 import '../../ui/components/app_empty_state.dart';
 import '../../ui/components/app_error_state.dart';
@@ -28,6 +29,9 @@ class LuggageListPage extends StatefulWidget {
 class _LuggageListPageState extends State<LuggageListPage> {
   final LuggageRepository _repo = const LuggageRepository();
   final TextEditingController _searchCtrl = TextEditingController();
+  Timer? _statusRefreshTimer;
+  bool _statusSnapshotInitialized = false;
+  final Map<String, LuggageStatus> _knownStatuses = <String, LuggageStatus>{};
   bool _loading = true;
   String? _error;
   bool _canceling = false;
@@ -39,7 +43,6 @@ class _LuggageListPageState extends State<LuggageListPage> {
   String? _locationFilter;
   String? _sizeFilter;
   LuggageSort _sort = LuggageSort.date;
-  LuggageView _view = LuggageView.cards;
   int _page = 1;
   static const int _pageSize = 10;
 
@@ -47,12 +50,21 @@ class _LuggageListPageState extends State<LuggageListPage> {
   void initState() {
     super.initState();
     _load();
+    _startStatusRefresh();
   }
 
   @override
   void dispose() {
+    _statusRefreshTimer?.cancel();
     _searchCtrl.dispose();
     super.dispose();
+  }
+
+  void _startStatusRefresh() {
+    _statusRefreshTimer?.cancel();
+    _statusRefreshTimer = Timer.periodic(const Duration(seconds: 30), (_) {
+      _refreshStatusesSilently();
+    });
   }
 
   Future<void> _load() async {
@@ -72,12 +84,20 @@ class _LuggageListPageState extends State<LuggageListPage> {
         return;
       }
       final luggages = await _repo.getUserLuggages(id);
+      final changedItems = _captureStatusChanges(
+        luggages,
+        notify: _statusSnapshotInitialized,
+      );
       if (!mounted) return;
       setState(() {
         _items = luggages;
         _page = 1;
         _loading = false;
       });
+      _statusSnapshotInitialized = true;
+      if (changedItems.isNotEmpty) {
+        await _notifyStatusChanges(changedItems);
+      }
     } catch (e) {
       appLog('luggage', 'load failed $e', level: AppLogLevel.error);
       if (!mounted) return;
@@ -88,30 +108,56 @@ class _LuggageListPageState extends State<LuggageListPage> {
     }
   }
 
-  void _openQr(LuggageModel luggage) {
-    context.push('/luggage/${luggage.id}/qr', extra: luggage);
+  Future<void> _refreshStatusesSilently() async {
+    final id = _userId;
+    if (id == null || id.isEmpty) return;
+    try {
+      final luggages = await _repo.getUserLuggages(id);
+      final changedItems = _captureStatusChanges(
+        luggages,
+        notify: _statusSnapshotInitialized,
+      );
+      if (!mounted) return;
+      setState(() => _items = luggages);
+      _statusSnapshotInitialized = true;
+      if (changedItems.isNotEmpty) {
+        await _notifyStatusChanges(changedItems);
+      }
+    } catch (_) {
+      // Keep UI stable; silent refresh failures should not interrupt user flow.
+    }
+  }
+
+  List<LuggageModel> _captureStatusChanges(
+    List<LuggageModel> nextItems, {
+    required bool notify,
+  }) {
+    final changed = <LuggageModel>[];
+    if (notify) {
+      for (final item in nextItems) {
+        final previous = _knownStatuses[item.id];
+        if (previous != null && previous != item.status) {
+          changed.add(item);
+        }
+      }
+    }
+    _knownStatuses
+      ..clear()
+      ..addEntries(nextItems.map((e) => MapEntry(e.id, e.status)));
+    return changed;
+  }
+
+  Future<void> _notifyStatusChanges(List<LuggageModel> changedItems) async {
+    for (final item in changedItems) {
+      await LocalNotificationService.instance.showLuggageStatusUpdated(
+        reservationLabel: item.displayLabel,
+        statusLabel: item.statusLabel,
+      );
+    }
   }
 
   void _openDetail(LuggageModel luggage) {
     context.push('/luggage/${luggage.id}', extra: luggage);
-  }
-
-  void _showSupport() {
-    final loc = AppLocalizations.of(context)!;
-    AppNotification.show(
-      context,
-      message: loc.supportSoonMessage,
-      type: AppNotificationType.info,
-    );
-  }
-
-  void _showScanInfo() {
-    final loc = AppLocalizations.of(context)!;
-    AppNotification.show(
-      context,
-      message: loc.qrScanSoonMessage,
-      type: AppNotificationType.info,
-    );
   }
 
   List<LuggageModel> get _filteredItems {
@@ -398,6 +444,9 @@ class _LuggageListPageState extends State<LuggageListPage> {
         setState(() {
           _items = _items.map((e) => e.id == updated.id ? updated : e).toList();
         });
+        await LocalNotificationService.instance.showReservationCancelled(
+          updated.displayLabel,
+        );
         AppNotification.show(
           context,
           message: loc.reservationCancelledMessage,
@@ -455,7 +504,7 @@ class _LuggageListPageState extends State<LuggageListPage> {
         _error == null &&
         activeLuggage != null &&
         _items.isNotEmpty;
-    final activeSheetBottom = MediaQuery.viewPaddingOf(context).bottom + 84;
+    final activeSheetBottom = MediaQuery.viewPaddingOf(context).bottom + 14;
     return Scaffold(
       backgroundColor: Colors.transparent,
       appBar: AppBar(
@@ -541,36 +590,6 @@ class _LuggageListPageState extends State<LuggageListPage> {
                               });
                             },
                           ),
-                          const SizedBox(height: 12),
-                          SingleChildScrollView(
-                            scrollDirection: Axis.horizontal,
-                            child: SegmentedButton<LuggageView>(
-                              segments: [
-                                ButtonSegment(
-                                  value: LuggageView.list,
-                                  label: Text(loc.luggageViewList),
-                                  icon: const Icon(Icons.list_alt),
-                                ),
-                                ButtonSegment(
-                                  value: LuggageView.cards,
-                                  label: Text(loc.luggageViewCards),
-                                  icon: const Icon(Icons.view_module_outlined),
-                                ),
-                                ButtonSegment(
-                                  value: LuggageView.calendar,
-                                  label: Text(loc.luggageViewCalendar),
-                                  icon: const Icon(
-                                    Icons.calendar_month_outlined,
-                                  ),
-                                ),
-                              ],
-                              selected: {_view},
-                              onSelectionChanged: (value) {
-                                final next = value.first;
-                                setState(() => _view = next);
-                              },
-                            ),
-                          ),
                         ],
                       ),
                     ],
@@ -628,41 +647,15 @@ class _LuggageListPageState extends State<LuggageListPage> {
                     },
                   ),
                 ] else ...[
-                  if (_view == LuggageView.list) ...[
-                    ...paged.map(
-                      (luggage) => Padding(
-                        padding: const EdgeInsets.only(bottom: 12),
-                        child: TripCard(
-                          luggage: luggage,
-                          onShowQr: () => _openQr(luggage),
-                          onScanQr: _showScanInfo,
-                          onDetails: () => _openDetail(luggage),
-                          onSupport: _showSupport,
-                          onCancel: () => _cancelLuggage(luggage),
-                        ),
+                  _buildCardView(context, loc, paged),
+                  if (hasMore)
+                    Center(
+                      child: TextButton.icon(
+                        onPressed: () => setState(() => _page += 1),
+                        icon: const Icon(Icons.expand_more),
+                        label: Text(loc.luggageShowMore),
                       ),
                     ),
-                    if (hasMore)
-                      Center(
-                        child: TextButton.icon(
-                          onPressed: () => setState(() => _page += 1),
-                          icon: const Icon(Icons.expand_more),
-                          label: Text(loc.luggageShowMore),
-                        ),
-                      ),
-                  ] else if (_view == LuggageView.cards) ...[
-                    _buildCardView(context, loc, paged),
-                    if (hasMore)
-                      Center(
-                        child: TextButton.icon(
-                          onPressed: () => setState(() => _page += 1),
-                          icon: const Icon(Icons.expand_more),
-                          label: Text(loc.luggageShowMore),
-                        ),
-                      ),
-                  ] else ...[
-                    _buildCalendarView(context, loc),
-                  ],
                 ],
               ],
             ),
@@ -689,11 +682,6 @@ class _LuggageListPageState extends State<LuggageListPage> {
             ),
         ],
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: _openAddLuggageFlow,
-        icon: const Icon(Icons.add),
-        label: Text(loc.quickAddLuggage),
-      ),
     );
   }
 
@@ -717,150 +705,6 @@ class _LuggageListPageState extends State<LuggageListPage> {
                 detailLabel: loc.detailsAction,
                 cancelLabel: loc.luggageCancelAction,
                 unknownTimeLabel: loc.luggageTimelineTimeUnknown,
-              ),
-            ),
-          )
-          .toList(),
-    );
-  }
-
-  Widget _buildCalendarView(BuildContext context, AppLocalizations loc) {
-    final theme = Theme.of(context);
-    final locale = Localizations.localeOf(context).toLanguageTag();
-    final dayLabel = DateFormat('EEE', locale);
-    final dateLabel = DateFormat('dd MMM', locale);
-    final days = List.generate(
-      7,
-      (index) => DateTime.now().add(Duration(days: index)),
-    );
-    final locations = DropLocationsRepository.locations;
-    return Column(
-      children: locations
-          .map(
-            (location) => Padding(
-              padding: const EdgeInsets.only(bottom: 14),
-              child: SectionCard(
-                padding: const EdgeInsets.all(18),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                location.name,
-                                style: theme.textTheme.titleMedium?.copyWith(
-                                  fontWeight: FontWeight.w700,
-                                ),
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                location.address,
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
-                                style: theme.textTheme.bodySmall?.copyWith(
-                                  color: theme.colorScheme.onSurfaceVariant,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 10,
-                            vertical: 6,
-                          ),
-                          decoration: BoxDecoration(
-                            color:
-                                (location.availableSlots > 0
-                                        ? theme.colorScheme.tertiary
-                                        : theme.colorScheme.error)
-                                    .withValues(alpha: 0.12),
-                            borderRadius: BorderRadius.circular(999),
-                          ),
-                          child: Text(
-                            loc.availableSlotsLabel(
-                              location.availableSlots,
-                              location.totalSlots,
-                            ),
-                            style: theme.textTheme.labelSmall?.copyWith(
-                              fontWeight: FontWeight.w600,
-                              color: location.availableSlots > 0
-                                  ? theme.colorScheme.tertiary
-                                  : theme.colorScheme.error,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                    Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
-                      children: days
-                          .map(
-                            (day) => Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 10,
-                                vertical: 8,
-                              ),
-                              decoration: BoxDecoration(
-                                color: theme.colorScheme.surfaceVariant
-                                    .withValues(alpha: 0.6),
-                                borderRadius: BorderRadius.circular(14),
-                                border: Border.all(
-                                  color: theme.colorScheme.outlineVariant
-                                      .withValues(alpha: 0.4),
-                                ),
-                              ),
-                              child: Column(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Text(
-                                    dayLabel.format(day),
-                                    style: theme.textTheme.labelSmall?.copyWith(
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 2),
-                                  Text(
-                                    dateLabel.format(day),
-                                    style: theme.textTheme.bodySmall?.copyWith(
-                                      color: theme.colorScheme.onSurfaceVariant,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          )
-                          .toList(),
-                    ),
-                    const SizedBox(height: 12),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: OutlinedButton.icon(
-                            onPressed: () => context.push('/explore'),
-                            icon: const Icon(Icons.info_outline),
-                            label: Text(loc.detailsAction),
-                          ),
-                        ),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: FilledButton.icon(
-                            onPressed: () => context.push('/explore'),
-                            icon: const Icon(Icons.map_outlined),
-                            label: Text(loc.directionsAction),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
               ),
             ),
           )
@@ -1089,8 +933,6 @@ class _CountPill extends StatelessWidget {
 
 enum LuggageSort { date, status, location, payment }
 
-enum LuggageView { list, cards, calendar }
-
 class _LuggageTicketCard extends StatelessWidget {
   const _LuggageTicketCard({
     required this.luggage,
@@ -1268,6 +1110,8 @@ class _LuggageTicketCard extends StatelessWidget {
                 ),
                 child: Column(
                   children: [
+                    _TicketStatusTimeline(luggage: luggage),
+                    const SizedBox(height: 10),
                     Row(
                       children: [
                         Expanded(
@@ -1489,6 +1333,143 @@ class _AirportCode extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+class _TicketStatusTimeline extends StatelessWidget {
+  const _TicketStatusTimeline({required this.luggage});
+
+  final LuggageModel luggage;
+
+  @override
+  Widget build(BuildContext context) {
+    final activeStep = _activeStepFromStatus(luggage.status);
+    final isCancelled = luggage.status == LuggageStatus.cancelled;
+    final steps = const <({String label, IconData icon})>[
+      (label: 'Rezervasyon', icon: Icons.check_circle_outline_rounded),
+      (label: 'Teslim', icon: Icons.inventory_2_outlined),
+      (label: 'Alis', icon: Icons.move_to_inbox_outlined),
+    ];
+
+    return Column(
+      children: [
+        Row(
+          children: List.generate(steps.length, (index) {
+            final done = !isCancelled && index < activeStep;
+            final active =
+                !isCancelled && index == activeStep && activeStep < 3;
+            return Expanded(
+              child: Row(
+                children: [
+                  _TimelineNode(
+                    icon: steps[index].icon,
+                    done: done,
+                    active: active,
+                  ),
+                  if (index < steps.length - 1)
+                    Expanded(
+                      child: Container(
+                        margin: const EdgeInsets.symmetric(horizontal: 6),
+                        height: 2,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(999),
+                          color: done
+                              ? const Color(0xFF34D399)
+                              : Colors.white.withValues(alpha: 0.24),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            );
+          }),
+        ),
+        const SizedBox(height: 6),
+        Row(
+          children: steps
+              .map(
+                (step) => Expanded(
+                  child: Text(
+                    step.label,
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                      color: Colors.white.withValues(alpha: 0.78),
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              )
+              .toList(),
+        ),
+        if (isCancelled)
+          Padding(
+            padding: const EdgeInsets.only(top: 6),
+            child: Text(
+              'Rezervasyon iptal edildi',
+              style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                color: const Color(0xFFFCA5A5),
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+
+  int _activeStepFromStatus(LuggageStatus status) {
+    switch (status) {
+      case LuggageStatus.awaitingDrop:
+        return 1;
+      case LuggageStatus.dropped:
+        return 2;
+      case LuggageStatus.pickedUp:
+        return 3;
+      case LuggageStatus.cancelled:
+        return 0;
+    }
+  }
+}
+
+class _TimelineNode extends StatelessWidget {
+  const _TimelineNode({
+    required this.icon,
+    required this.done,
+    required this.active,
+  });
+
+  final IconData icon;
+  final bool done;
+  final bool active;
+
+  @override
+  Widget build(BuildContext context) {
+    final Color fgColor;
+    final Color bgColor;
+    final Color borderColor;
+    if (done) {
+      fgColor = const Color(0xFF34D399);
+      bgColor = const Color(0xFF34D399).withValues(alpha: 0.16);
+      borderColor = const Color(0xFF34D399).withValues(alpha: 0.45);
+    } else if (active) {
+      fgColor = const Color(0xFF60A5FA);
+      bgColor = const Color(0xFF60A5FA).withValues(alpha: 0.18);
+      borderColor = const Color(0xFF60A5FA).withValues(alpha: 0.45);
+    } else {
+      fgColor = Colors.white.withValues(alpha: 0.62);
+      bgColor = Colors.white.withValues(alpha: 0.08);
+      borderColor = Colors.white.withValues(alpha: 0.22);
+    }
+
+    return Container(
+      width: 26,
+      height: 26,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: bgColor,
+        border: Border.all(color: borderColor),
+      ),
+      child: Icon(icon, size: 14, color: fgColor),
     );
   }
 }

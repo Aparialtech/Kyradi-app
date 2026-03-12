@@ -837,35 +837,57 @@ class _SortBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final loc = AppLocalizations.of(context)!;
-    return Row(
-      children: [
-        Text(
-          loc.exploreResultsCount(totalCount),
-          style: Theme.of(context).textTheme.bodySmall,
+    final theme = Theme.of(context);
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(14),
+        color: Colors.white.withValues(alpha: 0.62),
+        border: Border.all(
+          color: theme.colorScheme.outlineVariant.withValues(alpha: 0.35),
         ),
-        const Spacer(),
-        DropdownButton<ExploreSort>(
-          value: selected,
-          underline: const SizedBox.shrink(),
-          onChanged: (value) {
-            if (value != null) onChanged(value);
-          },
-          items: [
-            DropdownMenuItem(
-              value: ExploreSort.nearby,
-              child: Text(loc.exploreSortNearby),
+      ),
+      child: Row(
+        children: [
+          Icon(
+            Icons.place_outlined,
+            size: 17,
+            color: theme.colorScheme.onSurfaceVariant,
+          ),
+          const SizedBox(width: 6),
+          Text(
+            loc.exploreResultsCount(totalCount),
+            style: theme.textTheme.titleSmall?.copyWith(
+              fontWeight: FontWeight.w700,
+              color: theme.colorScheme.onSurfaceVariant,
             ),
-            DropdownMenuItem(
-              value: ExploreSort.name,
-              child: Text(loc.exploreSortName),
+          ),
+          const Spacer(),
+          DropdownButtonHideUnderline(
+            child: DropdownButton<ExploreSort>(
+              value: selected,
+              borderRadius: BorderRadius.circular(14),
+              onChanged: (value) {
+                if (value != null) onChanged(value);
+              },
+              items: [
+                DropdownMenuItem(
+                  value: ExploreSort.nearby,
+                  child: Text(loc.exploreSortNearby),
+                ),
+                DropdownMenuItem(
+                  value: ExploreSort.name,
+                  child: Text(loc.exploreSortName),
+                ),
+                DropdownMenuItem(
+                  value: ExploreSort.availability,
+                  child: Text(loc.exploreSortAvailability),
+                ),
+              ],
             ),
-            DropdownMenuItem(
-              value: ExploreSort.availability,
-              child: Text(loc.exploreSortAvailability),
-            ),
-          ],
-        ),
-      ],
+          ),
+        ],
+      ),
     );
   }
 }

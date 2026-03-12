@@ -37,9 +37,7 @@ class ActiveLuggageBottomSheet extends StatelessWidget {
               decoration: BoxDecoration(
                 color: Colors.white.withValues(alpha: 0.97),
                 borderRadius: BorderRadius.circular(24),
-                border: Border.all(
-                  color: Colors.white.withValues(alpha: 0.90),
-                ),
+                border: Border.all(color: Colors.white.withValues(alpha: 0.90)),
                 boxShadow: [
                   BoxShadow(
                     color: Colors.black.withValues(alpha: 0.10),
@@ -104,7 +102,9 @@ class ActiveLuggageBottomSheet extends StatelessWidget {
                             style: FilledButton.styleFrom(
                               backgroundColor: const Color(0xFF0F766E),
                               foregroundColor: Colors.white,
-                              padding: const EdgeInsets.symmetric(horizontal: 14),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 14,
+                              ),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(18),
                               ),
@@ -115,6 +115,8 @@ class ActiveLuggageBottomSheet extends StatelessWidget {
                         ),
                       ],
                     ),
+                    const SizedBox(height: 12),
+                    _SheetStatusTimeline(status: luggage.status),
                     const SizedBox(height: 14),
                     const Divider(height: 1),
                     const SizedBox(height: 14),
@@ -175,7 +177,9 @@ class ActiveLuggageBottomSheet extends StatelessWidget {
 
   String _scheduleLabel(BuildContext context, LuggageModel luggage) {
     final target =
-        luggage.scheduledPickupTime ?? luggage.scheduledDropTime ?? luggage.createdAt;
+        luggage.scheduledPickupTime ??
+        luggage.scheduledDropTime ??
+        luggage.createdAt;
     final locale = Localizations.localeOf(context).toLanguageTag();
     final formatter = DateFormat('dd MMM • HH:mm', locale);
     return formatter.format(target.toLocal());
@@ -183,10 +187,7 @@ class ActiveLuggageBottomSheet extends StatelessWidget {
 }
 
 class _SheetChip extends StatelessWidget {
-  const _SheetChip({
-    required this.icon,
-    required this.label,
-  });
+  const _SheetChip({required this.icon, required this.label});
 
   final IconData icon;
   final String label;
@@ -199,9 +200,7 @@ class _SheetChip extends StatelessWidget {
       decoration: BoxDecoration(
         color: const Color(0xFFF8FAFC),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: const Color(0xFFE2E8F0),
-        ),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -235,9 +234,7 @@ class _StatusChip extends StatelessWidget {
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(999),
-        border: Border.all(
-          color: color.withValues(alpha: 0.24),
-        ),
+        border: Border.all(color: color.withValues(alpha: 0.24)),
       ),
       child: Text(
         luggage.statusLabel,
@@ -246,6 +243,106 @@ class _StatusChip extends StatelessWidget {
           fontWeight: FontWeight.w700,
         ),
       ),
+    );
+  }
+}
+
+class _SheetStatusTimeline extends StatelessWidget {
+  const _SheetStatusTimeline({required this.status});
+
+  final LuggageStatus status;
+
+  @override
+  Widget build(BuildContext context) {
+    final activeStep = _activeStep(status);
+    const labels = <({String label, IconData icon})>[
+      (label: 'Rezervasyon', icon: Icons.check_circle_outline_rounded),
+      (label: 'Teslim', icon: Icons.inventory_2_outlined),
+      (label: 'Alis', icon: Icons.move_to_inbox_outlined),
+    ];
+
+    return Column(
+      children: [
+        Row(
+          children: List.generate(labels.length, (index) {
+            final step = index + 1;
+            final completed = activeStep >= step;
+            final isLast = index == labels.length - 1;
+            return Expanded(
+              child: Row(
+                children: [
+                  _TimelineNode(completed: completed, icon: labels[index].icon),
+                  if (!isLast)
+                    Expanded(
+                      child: Container(
+                        margin: const EdgeInsets.symmetric(horizontal: 6),
+                        height: 2,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(999),
+                          color: completed
+                              ? const Color(0xFF2DD4BF)
+                              : const Color(0xFFCBD5E1),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            );
+          }),
+        ),
+        const SizedBox(height: 6),
+        Row(
+          children: labels
+              .map(
+                (label) => Expanded(
+                  child: Text(
+                    label.label,
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                      color: const Color(0xFF64748B),
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              )
+              .toList(),
+        ),
+      ],
+    );
+  }
+
+  int _activeStep(LuggageStatus value) {
+    switch (value) {
+      case LuggageStatus.awaitingDrop:
+        return 1;
+      case LuggageStatus.dropped:
+        return 2;
+      case LuggageStatus.pickedUp:
+        return 3;
+      case LuggageStatus.cancelled:
+        return 0;
+    }
+  }
+}
+
+class _TimelineNode extends StatelessWidget {
+  const _TimelineNode({required this.completed, required this.icon});
+
+  final bool completed;
+  final IconData icon;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = completed ? const Color(0xFF14B8A6) : const Color(0xFF94A3B8);
+    return Container(
+      width: 22,
+      height: 22,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: color.withValues(alpha: 0.15),
+        border: Border.all(color: color.withValues(alpha: 0.45)),
+      ),
+      child: Icon(icon, size: 12, color: color),
     );
   }
 }

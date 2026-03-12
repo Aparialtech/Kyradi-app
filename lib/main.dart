@@ -5,9 +5,11 @@ import 'package:flutter/services.dart';
 import 'l10n/app_localizations.dart';
 import 'core/app_locale.dart';
 import 'core/app_theme_mode.dart';
+import 'core/app_currency_mode.dart';
 import 'core/background_theme_mode.dart';
 import 'core/feature_flags.dart';
 import 'services/api_service.dart';
+import 'services/local_notification_service.dart';
 import 'ui/components/config_missing_page.dart';
 import 'ui/components/error_fallback_page.dart';
 import 'utils/crash_log.dart';
@@ -63,6 +65,7 @@ Future<void> main() async {
 
       await _safeBootstrap();
       await AppThemeMode.load();
+      await AppCurrencyMode.load();
       await AppBackgroundThemeMode.load();
       runApp(const MyApp());
     },
@@ -87,6 +90,9 @@ Future<void> _safeBootstrap() async {
   try {
     await ApiService.ensureInitialized().timeout(const Duration(seconds: 6));
     ApiService.logBaseUrlStatus();
+    await LocalNotificationService.instance.ensureInitialized().timeout(
+      const Duration(seconds: 6),
+    );
     if (kDebugMode) {
       appLog('flags', 'FeatureFlags: ${FeatureFlags.snapshot()}');
     }
@@ -108,18 +114,17 @@ class MyApp extends StatelessWidget {
     return ValueListenableBuilder<ThemeMode>(
       valueListenable: AppThemeMode.notifier,
       builder: (context, themeMode, _) {
-        final overlayStyle =
-            themeMode == ThemeMode.dark
-                ? SystemUiOverlayStyle.light.copyWith(
-                    statusBarColor: Colors.transparent,
-                    systemNavigationBarColor: Colors.transparent,
-                    systemNavigationBarIconBrightness: Brightness.light,
-                  )
-                : SystemUiOverlayStyle.dark.copyWith(
-                    statusBarColor: Colors.transparent,
-                    systemNavigationBarColor: Colors.transparent,
-                    systemNavigationBarIconBrightness: Brightness.dark,
-                  );
+        final overlayStyle = themeMode == ThemeMode.dark
+            ? SystemUiOverlayStyle.light.copyWith(
+                statusBarColor: Colors.transparent,
+                systemNavigationBarColor: Colors.transparent,
+                systemNavigationBarIconBrightness: Brightness.light,
+              )
+            : SystemUiOverlayStyle.dark.copyWith(
+                statusBarColor: Colors.transparent,
+                systemNavigationBarColor: Colors.transparent,
+                systemNavigationBarIconBrightness: Brightness.dark,
+              );
         SystemChrome.setSystemUIOverlayStyle(overlayStyle);
         return ValueListenableBuilder<Locale?>(
           valueListenable: AppLocale.notifier,

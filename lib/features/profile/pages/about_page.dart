@@ -9,6 +9,7 @@ class AboutPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final loc = AppLocalizations.of(context)!;
+    final bottomSafePadding = MediaQuery.viewPaddingOf(context).bottom + 96;
     return Scaffold(
       backgroundColor: Colors.transparent,
       appBar: AppBar(title: Text(loc.aboutKyradiTitle)),
@@ -16,13 +17,13 @@ class AboutPage extends StatelessWidget {
         children: [
           const AppMeshBackground(),
           ListView(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
+            padding: EdgeInsets.fromLTRB(16, 16, 16, bottomSafePadding),
             children: [
               Text(
                 'Kyradi',
                 style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                      fontWeight: FontWeight.w700,
-                    ),
+                  fontWeight: FontWeight.w700,
+                ),
               ),
               const SizedBox(height: 8),
               Text(

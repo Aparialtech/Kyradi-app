@@ -9,6 +9,7 @@ class FaqPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final loc = AppLocalizations.of(context)!;
+    final bottomSafePadding = MediaQuery.viewPaddingOf(context).bottom + 96;
     final items = [
       [loc.faqQ1, loc.faqA1],
       [loc.faqQ2, loc.faqA2],
@@ -22,7 +23,7 @@ class FaqPage extends StatelessWidget {
         children: [
           const AppMeshBackground(),
           ListView(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
+            padding: EdgeInsets.fromLTRB(16, 16, 16, bottomSafePadding),
             children: items.map((item) {
               return Padding(
                 padding: const EdgeInsets.only(bottom: 12),
@@ -34,9 +35,8 @@ class FaqPage extends StatelessWidget {
                       children: [
                         Text(
                           item[0],
-                          style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                                fontWeight: FontWeight.w700,
-                              ),
+                          style: Theme.of(context).textTheme.titleSmall
+                              ?.copyWith(fontWeight: FontWeight.w700),
                         ),
                         const SizedBox(height: 6),
                         Text(

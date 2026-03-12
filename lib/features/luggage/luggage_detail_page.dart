@@ -10,6 +10,7 @@ import '../../models/luggage.dart';
 import '../../l10n/app_localizations.dart';
 import '../../core/repositories/luggage_repository.dart';
 import '../../services/api_service.dart';
+import '../../services/local_notification_service.dart';
 import '../bookings/widgets/trip_timeline_sheet.dart';
 import '../../widgets/app_notification.dart';
 import '../../widgets/section_card.dart';
@@ -20,11 +21,7 @@ import 'package:go_router/go_router.dart';
 import '../../screens/payment_page.dart';
 
 class LuggageDetailPage extends StatefulWidget {
-  const LuggageDetailPage({
-    super.key,
-    required this.luggageId,
-    this.initial,
-  });
+  const LuggageDetailPage({super.key, required this.luggageId, this.initial});
 
   final String luggageId;
   final LuggageModel? initial;
@@ -131,6 +128,10 @@ class _LuggageDetailPageState extends State<LuggageDetailPage> {
           Map<String, dynamic>.from(result['luggage'] as Map),
         );
         setState(() => _luggage = next);
+        await LocalNotificationService.instance.showLuggageStatusUpdated(
+          reservationLabel: next.displayLabel,
+          statusLabel: next.statusLabel,
+        );
         AppNotification.show(
           context,
           message: status == 'dropped'
@@ -170,24 +171,24 @@ class _LuggageDetailPageState extends State<LuggageDetailPage> {
 
   Future<void> _handlePaymentRequired() async {
     if (!mounted || _luggage == null || _userId == null) return;
-      final loc = AppLocalizations.of(context)!;
-      final go = await showDialog<bool>(
-        context: context,
-        builder: (ctx) => AlertDialog(
-          title: Text(loc.paymentPageTitle),
-          content: Text(loc.paymentRequiredBeforeDropMessage),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(ctx).pop(false),
-              child: Text(loc.dialogDismiss),
-            ),
-            FilledButton(
-              onPressed: () => Navigator.of(ctx).pop(true),
-              child: Text(loc.paymentStartAction),
-            ),
-          ],
-        ),
-      );
+    final loc = AppLocalizations.of(context)!;
+    final go = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(loc.paymentPageTitle),
+        content: Text(loc.paymentRequiredBeforeDropMessage),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: Text(loc.dialogDismiss),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: Text(loc.paymentStartAction),
+          ),
+        ],
+      ),
+    );
     if (go != true) return;
     final luggage = _luggage!;
     final result = await Navigator.of(context).push<bool>(
@@ -251,40 +252,34 @@ class _LuggageDetailPageState extends State<LuggageDetailPage> {
       );
     }
     final luggage = _luggage!;
+    final bottomSafePadding = MediaQuery.viewPaddingOf(context).bottom + 104;
     return Scaffold(
       backgroundColor: Colors.transparent,
-      appBar: AppBar(
-        title: Text(luggage.displayLabel),
-      ),
+      appBar: AppBar(title: Text(luggage.displayLabel)),
       body: Stack(
         children: [
           const AppMeshBackground(),
           ListView(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
+            padding: EdgeInsets.fromLTRB(16, 16, 16, bottomSafePadding),
             children: [
               SectionCard(
                 child: Theme(
-                  data: Theme.of(context).copyWith(
-                    dividerColor: Colors.transparent,
-                  ),
+                  data: Theme.of(
+                    context,
+                  ).copyWith(dividerColor: Colors.transparent),
                   child: ExpansionTile(
                     tilePadding: EdgeInsets.zero,
                     childrenPadding: const EdgeInsets.only(top: 12),
                     title: Text(
                       loc.reservationInfoTitle,
                       style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                            fontWeight: FontWeight.w700,
-                          ),
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
                     subtitle: Text(loc.reservationInfoSubtitle),
-                    leading: const ThreeDIconBadge(
-                      icon: Icons.info_outline,
-                    ),
+                    leading: const ThreeDIconBadge(icon: Icons.info_outline),
                     children: [
-                      _InfoRow(
-                        label: loc.luggageIdLabel,
-                        value: luggage.id,
-                      ),
+                      _InfoRow(label: loc.luggageIdLabel, value: luggage.id),
                       _InfoRow(
                         label: loc.statusLabel,
                         value: _statusLabel(loc, luggage.status),
@@ -319,10 +314,7 @@ class _LuggageDetailPageState extends State<LuggageDetailPage> {
                         ),
                       ),
                       const SizedBox(height: 12),
-                      _InfoRow(
-                        label: 'Havayolu',
-                        value: _flightInfo!.airline,
-                      ),
+                      _InfoRow(label: 'Havayolu', value: _flightInfo!.airline),
                       _InfoRow(
                         label: 'Uçuş Saati',
                         value: _formatDateTime(_flightInfo!.flightAt, context),
@@ -338,9 +330,8 @@ class _LuggageDetailPageState extends State<LuggageDetailPage> {
                       Text(
                         'Öneri: ${_travelSuggestion!.typeLabel} bölgesinde ortalama ${_travelSuggestion!.transferMinutes} dk transfer süresi.',
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color:
-                                  Theme.of(context).colorScheme.onSurfaceVariant,
-                            ),
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
                       ),
                     ],
                   ),
@@ -349,17 +340,17 @@ class _LuggageDetailPageState extends State<LuggageDetailPage> {
                 const SizedBox(height: 16),
               SectionCard(
                 child: Theme(
-                  data: Theme.of(context).copyWith(
-                    dividerColor: Colors.transparent,
-                  ),
+                  data: Theme.of(
+                    context,
+                  ).copyWith(dividerColor: Colors.transparent),
                   child: ExpansionTile(
                     tilePadding: EdgeInsets.zero,
                     childrenPadding: const EdgeInsets.only(top: 12),
                     title: Text(
                       loc.luggageInfoSectionTitle,
                       style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                            fontWeight: FontWeight.w700,
-                          ),
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
                     subtitle: Text(loc.luggageInfoSectionSubtitle),
                     leading: const ThreeDIconBadge(
@@ -388,20 +379,22 @@ class _LuggageDetailPageState extends State<LuggageDetailPage> {
                         label: loc.dropTimeTitle,
                         value: luggage.scheduledDropTime == null
                             ? '-'
-                            : _formatDateTime(luggage.scheduledDropTime!, context),
+                            : _formatDateTime(
+                                luggage.scheduledDropTime!,
+                                context,
+                              ),
                       ),
                       _InfoRow(
                         label: loc.pickupTimeTitle,
                         value: luggage.scheduledPickupTime == null
                             ? '-'
                             : _formatDateTime(
-                                luggage.scheduledPickupTime!, context),
+                                luggage.scheduledPickupTime!,
+                                context,
+                              ),
                       ),
                       if ((luggage.note ?? '').isNotEmpty)
-                        _InfoRow(
-                          label: loc.note,
-                          value: luggage.note ?? '',
-                        ),
+                        _InfoRow(label: loc.note, value: luggage.note ?? ''),
                     ],
                   ),
                 ),
@@ -410,9 +403,11 @@ class _LuggageDetailPageState extends State<LuggageDetailPage> {
               ListTile(
                 contentPadding: EdgeInsets.zero,
                 title: Text(_statusLabel(loc, luggage.status)),
-                subtitle: Text(luggage.dropLocationName.isNotEmpty
-                    ? luggage.dropLocationName
-                    : luggage.dropLocationId),
+                subtitle: Text(
+                  luggage.dropLocationName.isNotEmpty
+                      ? luggage.dropLocationName
+                      : luggage.dropLocationId,
+                ),
               ),
               const SizedBox(height: 12),
               FilledButton.icon(
@@ -477,7 +472,9 @@ class _LuggageDetailPageState extends State<LuggageDetailPage> {
                 ),
               if (luggage.isDropped)
                 FilledButton(
-                  onPressed: _updating ? null : () => _updateStatus('picked_up'),
+                  onPressed: _updating
+                      ? null
+                      : () => _updateStatus('picked_up'),
                   child: _updating
                       ? const SizedBox(
                           height: 20,
@@ -518,11 +515,15 @@ class _LuggageDetailPageState extends State<LuggageDetailPage> {
         dir ??= await getExternalStorageDirectory();
       }
       dir ??= await getApplicationDocumentsDirectory();
-      final safeId = luggage.id.isNotEmpty ? luggage.id.substring(0, 8) : 'KYRADI';
+      final safeId = luggage.id.isNotEmpty
+          ? luggage.id.substring(0, 8)
+          : 'KYRADI';
       final filename = 'kyradi_invoice_$safeId.pdf';
       final file = File('${dir.path}/$filename');
       final date = DateFormat('dd.MM.yyyy HH:mm').format(luggage.createdAt);
-      final total = luggage.totalPrice == null ? '-' : '${luggage.totalPrice} ₺';
+      final total = luggage.totalPrice == null
+          ? '-'
+          : '${luggage.totalPrice} ₺';
       final customer = (_customerName ?? '').isNotEmpty
           ? _customerName!
           : loc.invoiceCustomerFallback;
@@ -539,10 +540,7 @@ class _LuggageDetailPageState extends State<LuggageDetailPage> {
       final light = PdfColor.fromInt(0xFFF8FAFC);
       final accent = PdfColor.fromInt(0xFF2563EB);
       final doc = pw.Document(
-        theme: pw.ThemeData.withFont(
-          base: fontBase,
-          bold: fontBold,
-        ),
+        theme: pw.ThemeData.withFont(base: fontBase, bold: fontBold),
       );
       doc.addPage(
         pw.Page(
@@ -555,7 +553,9 @@ class _LuggageDetailPageState extends State<LuggageDetailPage> {
                   padding: const pw.EdgeInsets.all(18),
                   decoration: pw.BoxDecoration(
                     color: navy,
-                    borderRadius: const pw.BorderRadius.all(pw.Radius.circular(16)),
+                    borderRadius: const pw.BorderRadius.all(
+                      pw.Radius.circular(16),
+                    ),
                   ),
                   child: pw.Row(
                     mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
@@ -610,10 +610,15 @@ class _LuggageDetailPageState extends State<LuggageDetailPage> {
                           ),
                           pw.SizedBox(height: 6),
                           pw.Container(
-                            padding: const pw.EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                            padding: const pw.EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 4,
+                            ),
                             decoration: pw.BoxDecoration(
                               color: accent,
-                              borderRadius: const pw.BorderRadius.all(pw.Radius.circular(10)),
+                              borderRadius: const pw.BorderRadius.all(
+                                pw.Radius.circular(10),
+                              ),
                             ),
                             child: pw.Text(
                               paymentStatus,
@@ -634,17 +639,16 @@ class _LuggageDetailPageState extends State<LuggageDetailPage> {
                   padding: const pw.EdgeInsets.all(14),
                   decoration: pw.BoxDecoration(
                     color: light,
-                    borderRadius: const pw.BorderRadius.all(pw.Radius.circular(14)),
+                    borderRadius: const pw.BorderRadius.all(
+                      pw.Radius.circular(14),
+                    ),
                   ),
                   child: pw.Column(
                     crossAxisAlignment: pw.CrossAxisAlignment.start,
                     children: [
                       pw.Text(
                         loc.invoiceCustomerLabel,
-                        style: pw.TextStyle(
-                          color: slate,
-                          fontSize: 10,
-                        ),
+                        style: pw.TextStyle(color: slate, fontSize: 10),
                       ),
                       pw.SizedBox(height: 6),
                       pw.Text(
@@ -656,7 +660,12 @@ class _LuggageDetailPageState extends State<LuggageDetailPage> {
                         ),
                       ),
                       pw.SizedBox(height: 8),
-                      _pdfRow(loc.invoiceEmailLabel, email, labelColor: slate, valueColor: navy),
+                      _pdfRow(
+                        loc.invoiceEmailLabel,
+                        email,
+                        labelColor: slate,
+                        valueColor: navy,
+                      ),
                       _pdfRow(
                         loc.invoiceLocationLabel,
                         location,
@@ -680,7 +689,9 @@ class _LuggageDetailPageState extends State<LuggageDetailPage> {
                   padding: const pw.EdgeInsets.all(12),
                   decoration: pw.BoxDecoration(
                     border: pw.Border.all(color: PdfColor.fromInt(0xFFE2E8F0)),
-                    borderRadius: const pw.BorderRadius.all(pw.Radius.circular(12)),
+                    borderRadius: const pw.BorderRadius.all(
+                      pw.Radius.circular(12),
+                    ),
                   ),
                   child: pw.Column(
                     crossAxisAlignment: pw.CrossAxisAlignment.start,
@@ -712,7 +723,9 @@ class _LuggageDetailPageState extends State<LuggageDetailPage> {
                   padding: const pw.EdgeInsets.all(12),
                   decoration: pw.BoxDecoration(
                     color: PdfColor.fromInt(0xFFF1F5F9),
-                    borderRadius: const pw.BorderRadius.all(pw.Radius.circular(12)),
+                    borderRadius: const pw.BorderRadius.all(
+                      pw.Radius.circular(12),
+                    ),
                   ),
                   child: pw.Column(
                     children: [
@@ -883,10 +896,7 @@ String _formatDateTime(DateTime date, BuildContext context) {
 }
 
 class _InfoRow extends StatelessWidget {
-  const _InfoRow({
-    required this.label,
-    required this.value,
-  });
+  const _InfoRow({required this.label, required this.value});
 
   final String label;
   final String value;
@@ -992,10 +1002,7 @@ class _InvoiceSheet extends StatelessWidget {
                 SectionCard(
                   child: Column(
                     children: [
-                      _InfoRow(
-                        label: loc.invoiceNumberLabel,
-                        value: invoiceNo,
-                      ),
+                      _InfoRow(label: loc.invoiceNumberLabel, value: invoiceNo),
                       _InfoRow(
                         label: loc.invoiceDateLabel,
                         value: _formatDateTime(luggage.createdAt, context),

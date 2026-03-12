@@ -12,11 +12,7 @@ import '../../../core/profile_avatar_cache.dart';
 import '../../../l10n/app_localizations.dart';
 
 class ProfileEditPage extends StatefulWidget {
-  const ProfileEditPage({
-    super.key,
-    required this.user,
-    this.avatarPath,
-  });
+  const ProfileEditPage({super.key, required this.user, this.avatarPath});
 
   final UserModel user;
   final String? avatarPath;
@@ -71,7 +67,10 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
 
   Future<void> _pickAvatar() async {
     final picker = ImagePicker();
-    final file = await picker.pickImage(source: ImageSource.gallery, imageQuality: 85);
+    final file = await picker.pickImage(
+      source: ImageSource.gallery,
+      imageQuality: 85,
+    );
     if (file == null) return;
     final storedPath = await _persistAvatar(file.path);
     if (!mounted) return;
@@ -121,7 +120,9 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
             _avatarUploadUrl = avatarUrl;
           } else {
             final err =
-                (uploadRes['error'] ?? uploadRes['message'] ?? 'Yükleme başarısız')
+                (uploadRes['error'] ??
+                        uploadRes['message'] ??
+                        'Yükleme başarısız')
                     .toString();
             AppNotification.show(
               context,
@@ -149,7 +150,9 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
       if (!mounted) return;
       if (res['ok'] == true || (res['statusCode'] ?? 0) == 200) {
         final cacheValue = (avatarUrl.isNotEmpty) ? avatarUrl : _avatarPath;
-        final resolvedCache = cacheValue != null ? _resolveAvatarUrl(cacheValue) : null;
+        final resolvedCache = cacheValue != null
+            ? _resolveAvatarUrl(cacheValue)
+            : null;
         await ProfileAvatarCache.set(widget.user.id, resolvedCache);
         AppNotification.show(
           context,
@@ -159,7 +162,8 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
         if (!mounted) return;
         Navigator.of(context).pop(true);
       } else {
-        final msg = (res['message'] ?? res['error'] ?? 'Güncelleme başarısız').toString();
+        final msg = (res['message'] ?? res['error'] ?? 'Güncelleme başarısız')
+            .toString();
         AppNotification.show(
           context,
           message: msg.isNotEmpty ? msg : loc.profileSaveFailed,
@@ -198,6 +202,7 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
     final theme = Theme.of(context);
     final loc = AppLocalizations.of(context)!;
     final resolvedPath = _resolveAvatarUrl(_avatarPath ?? '');
+    final bottomSafePadding = MediaQuery.viewPaddingOf(context).bottom + 104;
     return Scaffold(
       backgroundColor: Colors.transparent,
       appBar: AppBar(
@@ -219,7 +224,7 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
         children: [
           const AppMeshBackground(),
           ListView(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
+            padding: EdgeInsets.fromLTRB(16, 16, 16, bottomSafePadding),
             children: [
               SectionCard(
                 child: Column(
@@ -242,10 +247,12 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
                               shape: BoxShape.circle,
                               gradient: LinearGradient(
                                 colors: [
-                                  theme.colorScheme.primary
-                                      .withValues(alpha: 0.9),
-                                  theme.colorScheme.secondary
-                                      .withValues(alpha: 0.8),
+                                  theme.colorScheme.primary.withValues(
+                                    alpha: 0.9,
+                                  ),
+                                  theme.colorScheme.secondary.withValues(
+                                    alpha: 0.8,
+                                  ),
                                 ],
                                 begin: Alignment.topLeft,
                                 end: Alignment.bottomRight,
@@ -315,8 +322,9 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
                       const SizedBox(height: 16),
                       TextFormField(
                         controller: _nameCtrl,
-                        decoration:
-                            InputDecoration(labelText: loc.profileFirstNameLabel),
+                        decoration: InputDecoration(
+                          labelText: loc.profileFirstNameLabel,
+                        ),
                         validator: (value) {
                           if (value == null || value.trim().isEmpty) {
                             return loc.validationRequired;
@@ -327,8 +335,9 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
                       const SizedBox(height: 12),
                       TextFormField(
                         controller: _surCtrl,
-                        decoration:
-                            InputDecoration(labelText: loc.profileLastNameLabel),
+                        decoration: InputDecoration(
+                          labelText: loc.profileLastNameLabel,
+                        ),
                         validator: (value) {
                           if (value == null || value.trim().isEmpty) {
                             return loc.validationRequired;
@@ -339,14 +348,16 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
                       const SizedBox(height: 12),
                       TextFormField(
                         controller: _birthCtrl,
-                        decoration:
-                            InputDecoration(labelText: loc.profileBirthDateLabel),
+                        decoration: InputDecoration(
+                          labelText: loc.profileBirthDateLabel,
+                        ),
                       ),
                       const SizedBox(height: 12),
                       TextFormField(
                         controller: _nationalIdCtrl,
                         decoration: InputDecoration(
-                            labelText: loc.profileNationalIdLabel),
+                          labelText: loc.profileNationalIdLabel,
+                        ),
                       ),
                     ],
                   ),
@@ -365,12 +376,16 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
                     const SizedBox(height: 16),
                     TextFormField(
                       controller: _phoneCtrl,
-                      decoration: InputDecoration(labelText: loc.profilePhoneLabel),
+                      decoration: InputDecoration(
+                        labelText: loc.profilePhoneLabel,
+                      ),
                     ),
                     const SizedBox(height: 12),
                     TextFormField(
                       controller: _addressCtrl,
-                      decoration: InputDecoration(labelText: loc.profileAddressLabel),
+                      decoration: InputDecoration(
+                        labelText: loc.profileAddressLabel,
+                      ),
                       maxLines: 2,
                     ),
                   ],

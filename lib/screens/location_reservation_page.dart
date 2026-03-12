@@ -1,6 +1,5 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -8,7 +7,6 @@ import 'package:url_launcher/url_launcher.dart';
 import '../core/drop_locations.dart';
 import '../core/ios/ios_config_service.dart';
 import '../l10n/app_localizations.dart';
-import '../services/api_service.dart';
 import '../widgets/section_card.dart';
 import '../widgets/app_mesh_background.dart';
 
@@ -23,6 +21,7 @@ class LocationReservationPage extends StatefulWidget {
 
 class _LocationReservationPageState extends State<LocationReservationPage> {
   bool? _iosMapReady;
+  _LocationInfoSection? _activeInfoSection;
 
   @override
   void initState() {
@@ -64,9 +63,9 @@ class _LocationReservationPageState extends State<LocationReservationPage> {
             Text(label, style: Theme.of(context).textTheme.bodyMedium),
             Text(
               hoursLabel,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    fontWeight: FontWeight.w600,
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
             ),
           ],
         ),
@@ -111,6 +110,350 @@ class _LocationReservationPageState extends State<LocationReservationPage> {
     return ['📍 Merkez → 10 dk', '✈️ Havalimanı → 35 dk'];
   }
 
+  Widget _buildInfoHubCard({
+    required BuildContext context,
+    required DropLocation location,
+    required AppLocalizations loc,
+    required ThemeData theme,
+    required DateFormat fmt,
+  }) {
+    final sections = <_InfoHubSectionItem>[
+      _InfoHubSectionItem(
+        section: _LocationInfoSection.details,
+        label: 'Detay',
+        icon: Icons.store_mall_directory_outlined,
+      ),
+      _InfoHubSectionItem(
+        section: _LocationInfoSection.guide,
+        label: 'Rehber',
+        icon: Icons.explore_rounded,
+      ),
+      _InfoHubSectionItem(
+        section: _LocationInfoSection.trust,
+        label: 'Güvence',
+        icon: Icons.verified_user_outlined,
+      ),
+      _InfoHubSectionItem(
+        section: _LocationInfoSection.support,
+        label: 'Destek',
+        icon: Icons.support_agent_rounded,
+      ),
+      _InfoHubSectionItem(
+        section: _LocationInfoSection.hours,
+        label: 'Saatler',
+        icon: Icons.access_time_rounded,
+      ),
+      _InfoHubSectionItem(
+        section: _LocationInfoSection.reservations,
+        label: 'Rezerv.',
+        icon: Icons.calendar_today_outlined,
+      ),
+    ];
+
+    return SectionCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const SectionHeader(
+            title: 'Bilgi Merkezi',
+            subtitle: 'Detayları görmek için ikonlara dokun.',
+            iconWidget: ThreeDIconBadge(icon: Icons.widgets_outlined),
+          ),
+          const SizedBox(height: 12),
+          Wrap(
+            spacing: 10,
+            runSpacing: 10,
+            children: sections.map((item) {
+              final isSelected = _activeInfoSection == item.section;
+              return InkWell(
+                borderRadius: BorderRadius.circular(14),
+                onTap: () {
+                  setState(() {
+                    _activeInfoSection = isSelected ? null : item.section;
+                  });
+                },
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 180),
+                  curve: Curves.easeOutCubic,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 10,
+                  ),
+                  decoration: BoxDecoration(
+                    color: isSelected
+                        ? theme.colorScheme.primary.withValues(alpha: 0.14)
+                        : theme.colorScheme.surfaceContainerHighest.withValues(
+                            alpha: 0.55,
+                          ),
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(
+                      color: isSelected
+                          ? theme.colorScheme.primary.withValues(alpha: 0.45)
+                          : theme.colorScheme.outlineVariant.withValues(
+                              alpha: 0.45,
+                            ),
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      _MiniThreeDIcon(
+                        icon: item.icon,
+                        accent: isSelected
+                            ? theme.colorScheme.primary
+                            : theme.colorScheme.onSurfaceVariant,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        item.label,
+                        style: theme.textTheme.labelMedium?.copyWith(
+                          fontWeight: FontWeight.w700,
+                          color: isSelected
+                              ? theme.colorScheme.primary
+                              : theme.colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            }).toList(),
+          ),
+          const SizedBox(height: 12),
+          AnimatedSwitcher(
+            duration: const Duration(milliseconds: 220),
+            switchInCurve: Curves.easeOutCubic,
+            switchOutCurve: Curves.easeInCubic,
+            child: _activeInfoSection == null
+                ? Container(
+                    key: const ValueKey('empty-info'),
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.surfaceContainerHighest
+                          .withValues(alpha: 0.4),
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Text(
+                      'Bir ikon seç ve bilgileri görüntüle.',
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  )
+                : Container(
+                    key: ValueKey<String>('info-${_activeInfoSection!.name}'),
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.surfaceContainerHighest
+                          .withValues(alpha: 0.4),
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: _buildInfoHubContent(
+                      context: context,
+                      location: location,
+                      loc: loc,
+                      theme: theme,
+                      fmt: fmt,
+                      section: _activeInfoSection!,
+                    ),
+                  ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildInfoHubContent({
+    required BuildContext context,
+    required DropLocation location,
+    required AppLocalizations loc,
+    required ThemeData theme,
+    required DateFormat fmt,
+    required _LocationInfoSection section,
+  }) {
+    switch (section) {
+      case _LocationInfoSection.details:
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              loc.occupancyLabel(
+                location.currentOccupancy,
+                location.maxCapacity,
+              ),
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            const SizedBox(height: 6),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(999),
+              child: LinearProgressIndicator(
+                value: location.occupancyRate,
+                backgroundColor: theme.colorScheme.primary.withValues(
+                  alpha: 0.08,
+                ),
+              ),
+            ),
+            const SizedBox(height: 10),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                _InfoChip(
+                  label: location.isOpenNow
+                      ? loc.locationOpenLabel
+                      : loc.locationClosedLabel,
+                  color: location.isOpenNow
+                      ? theme.colorScheme.primary
+                      : theme.colorScheme.error,
+                  icon: Icons.access_time_rounded,
+                ),
+                _InfoChip(
+                  label: loc.locationSlotsLabel(
+                    location.availableSlots,
+                    location.totalSlots,
+                  ),
+                  color: location.availableSlots == 0
+                      ? theme.colorScheme.error
+                      : theme.colorScheme.secondary,
+                  icon: Icons.inventory_2_outlined,
+                ),
+                _InfoChip(
+                  label: loc.directionsAction,
+                  color: theme.colorScheme.primary,
+                  icon: Icons.navigation_rounded,
+                  onTap: () => _showDirectionsSheet(context, location),
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: _travelTimesFor(location)
+                  .map(
+                    (label) => _InfoChip(
+                      label: label,
+                      color: theme.colorScheme.primary,
+                      icon: Icons.navigation_rounded,
+                    ),
+                  )
+                  .toList(),
+            ),
+          ],
+        );
+      case _LocationInfoSection.guide:
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: _miniGuideFor(location)
+              .map(
+                (item) => Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 4),
+                  child: Text(item, style: theme.textTheme.bodyMedium),
+                ),
+              )
+              .toList(),
+        );
+      case _LocationInfoSection.trust:
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Kyradi noktalarında bırakılan bavullar sigortalıdır.',
+              style: theme.textTheme.bodyMedium,
+            ),
+            const SizedBox(height: 10),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: const [
+                _TrustBadge(label: 'Sigortalı Alan', icon: Icons.lock_rounded),
+                _TrustBadge(
+                  label: 'Kamera İzleme',
+                  icon: Icons.videocam_rounded,
+                ),
+                _TrustBadge(
+                  label: 'Yetkili Personel',
+                  icon: Icons.person_pin_rounded,
+                ),
+                _TrustBadge(
+                  label: 'KVKK Uyumlu',
+                  icon: Icons.verified_outlined,
+                ),
+              ],
+            ),
+          ],
+        );
+      case _LocationInfoSection.support:
+        return Column(
+          children: [
+            ListTile(
+              contentPadding: EdgeInsets.zero,
+              leading: const ThreeDIconBadge(icon: Icons.phone_outlined),
+              title: const Text('Lokasyon Telefonu'),
+              subtitle: Text(_locationContacts(location)['phone'] ?? ''),
+            ),
+            ListTile(
+              contentPadding: EdgeInsets.zero,
+              leading: const ThreeDIconBadge(icon: Icons.chat_bubble_outline),
+              title: const Text('WhatsApp Destek'),
+              onTap: () => launchUrl(
+                Uri.parse('https://wa.me/905000000000'),
+                mode: LaunchMode.externalApplication,
+              ),
+            ),
+            ListTile(
+              contentPadding: EdgeInsets.zero,
+              leading: const ThreeDIconBadge(icon: Icons.email_outlined),
+              title: const Text('E-posta'),
+              onTap: () => launchUrl(Uri.parse('mailto:support@kyradi.com')),
+            ),
+          ],
+        );
+      case _LocationInfoSection.hours:
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: location.openingHours.isEmpty
+              ? [
+                  Text(
+                    loc.openingHoursAlwaysOpen,
+                    style: theme.textTheme.bodyMedium,
+                  ),
+                ]
+              : _buildOpeningHoursList(context, location),
+        );
+      case _LocationInfoSection.reservations:
+        if (location.reservations.isEmpty) {
+          return Text(
+            loc.upcomingReservationsEmpty,
+            style: theme.textTheme.bodyMedium,
+          );
+        }
+        return Column(
+          children: location.reservations
+              .map(
+                (slot) => ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: const ThreeDIconBadge(
+                    icon: Icons.event_available_outlined,
+                  ),
+                  title: Text(loc.reservationTileTitle(slot.code)),
+                  subtitle: Text(
+                    loc.reservationSlotSummary(
+                      slot.luggageCount,
+                      fmt.format(slot.time),
+                    ),
+                  ),
+                ),
+              )
+              .toList(),
+        );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final loc = AppLocalizations.of(context)!;
@@ -129,313 +472,37 @@ class _LocationReservationPageState extends State<LocationReservationPage> {
     }
 
     final theme = Theme.of(context);
-    final fmt = DateFormat('dd MMM HH:mm', Localizations.localeOf(context).toLanguageTag());
+    final fmt = DateFormat(
+      'dd MMM HH:mm',
+      Localizations.localeOf(context).toLanguageTag(),
+    );
+    final bottomContentPadding = MediaQuery.viewPaddingOf(context).bottom + 108;
 
     return Scaffold(
       backgroundColor: Colors.transparent,
-      appBar: AppBar(
-        title: Text(location.name),
-      ),
+      appBar: AppBar(title: Text(location.name)),
       body: Stack(
         children: [
           const AppMeshBackground(),
           ListView(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
+            padding: EdgeInsets.fromLTRB(16, 16, 16, bottomContentPadding),
             children: [
-          _HeroHeader(location: location),
-          const SizedBox(height: 16),
-          _MapCard(
-            location: location,
-            isReady: _iosMapReady,
-            onDirections: () => _showDirectionsSheet(context, location),
-          ),
-          const SizedBox(height: 16),
-          SectionCard(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                SectionHeader(
-                  title: loc.locationDetailsTitle,
-                  subtitle: loc.locationDetailsSubtitle,
-                  iconWidget: const ThreeDIconBadge(
-                    icon: Icons.store_mall_directory_outlined,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  loc.occupancyLabel(
-                    location.currentOccupancy,
-                    location.maxCapacity,
-                  ),
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  location.isOpenNow
-                      ? loc.locationOpenLabel
-                      : loc.locationClosedLabel,
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: location.isOpenNow
-                        ? theme.colorScheme.primary
-                        : theme.colorScheme.error,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(999),
-                  child: LinearProgressIndicator(
-                    value: location.occupancyRate,
-                    backgroundColor:
-                        theme.colorScheme.primary.withValues(alpha: 0.08),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: [
-                    _InfoChip(
-                      label: location.isOpenNow
-                          ? loc.locationOpenLabel
-                          : loc.locationClosedLabel,
-                      color: location.isOpenNow
-                          ? theme.colorScheme.primary
-                          : theme.colorScheme.error,
-                      icon: Icons.access_time_rounded,
-                    ),
-                    _InfoChip(
-                      label: loc.locationSlotsLabel(
-                        location.availableSlots,
-                        location.totalSlots,
-                      ),
-                      color: location.availableSlots == 0
-                          ? theme.colorScheme.error
-                          : theme.colorScheme.secondary,
-                      icon: Icons.inventory_2_outlined,
-                    ),
-                    _InfoChip(
-                      label: loc.directionsAction,
-                      color: theme.colorScheme.primary,
-                      icon: Icons.navigation_rounded,
-                      onTap: () => _showDirectionsSheet(context, location),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: _travelTimesFor(location)
-                      .map(
-                        (label) => _InfoChip(
-                          label: label,
-                          color: theme.colorScheme.primary,
-                          icon: Icons.navigation_rounded,
-                        ),
-                      )
-                      .toList(),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 18),
-          SectionCard(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const SectionHeader(
-                  title: 'Mini Rehber',
-                  subtitle: 'Yakın çevrede hızlı öneriler.',
-                  iconWidget: ThreeDIconBadge(icon: Icons.explore_rounded),
-                ),
-                const SizedBox(height: 12),
-                ..._miniGuideFor(location).map(
-                  (item) => Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 4),
-                    child: Text(item, style: theme.textTheme.bodyMedium),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 18),
-          SectionCard(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const SectionHeader(
-                  title: 'Güvence & Güven',
-                  subtitle: 'Kısa ve net güvence bilgileri.',
-                  iconWidget: ThreeDIconBadge(icon: Icons.verified_user_outlined),
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  'Kyradi noktalarında bırakılan bavullar sigortalıdır.',
-                  style: theme.textTheme.bodyMedium,
-                ),
-                const SizedBox(height: 10),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: const [
-                    _TrustBadge(label: 'Sigortalı Alan', icon: Icons.lock_rounded),
-                    _TrustBadge(label: 'Kamera İzleme', icon: Icons.videocam_rounded),
-                    _TrustBadge(label: 'Yetkili Personel', icon: Icons.person_pin_rounded),
-                    _TrustBadge(label: 'KVKK Uyumlu', icon: Icons.verified_outlined),
-                  ],
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 18),
-          SectionCard(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const SectionHeader(
-                  title: 'Yardıma mı ihtiyacın var?',
-                  subtitle: 'Hızlı destek kanalları.',
-                  iconWidget: ThreeDIconBadge(icon: Icons.support_agent_rounded),
-                ),
-                const SizedBox(height: 12),
-                ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  leading: const ThreeDIconBadge(icon: Icons.phone_outlined),
-                  title: const Text('Lokasyon Telefonu'),
-                  subtitle: Text(_locationContacts(location)['phone'] ?? ''),
-                ),
-                ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  leading: const ThreeDIconBadge(icon: Icons.chat_bubble_outline),
-                  title: const Text('WhatsApp Destek'),
-                  onTap: () => launchUrl(
-                    Uri.parse('https://wa.me/905000000000'),
-                    mode: LaunchMode.externalApplication,
-                  ),
-                ),
-                ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  leading: const ThreeDIconBadge(icon: Icons.email_outlined),
-                  title: const Text('E-posta'),
-                  onTap: () => launchUrl(
-                    Uri.parse('mailto:support@kyradi.com'),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 18),
-          SectionCard(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                SectionHeader(
-                  title: loc.openingHoursTitle,
-                  subtitle: location.openingHours.isEmpty
-                      ? loc.openingHoursAlwaysOpen
-                      : loc.openingHoursSubtitle,
-                  iconWidget: const ThreeDIconBadge(
-                    icon: Icons.access_time,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                if (location.openingHours.isEmpty)
-                  Text(
-                    loc.openingHoursAlwaysOpen,
-                    style: theme.textTheme.bodyMedium,
-                  )
-                else
-                  ..._buildOpeningHoursList(context, location),
-              ],
-            ),
-          ),
-          const SizedBox(height: 18),
-          SectionCard(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                SectionHeader(
-                  title: loc.upcomingReservationsTitle,
-                  subtitle: loc.upcomingReservationsSubtitle,
-                  iconWidget: const ThreeDIconBadge(
-                    icon: Icons.calendar_today_outlined,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                if (location.reservations.isEmpty)
-                  Text(
-                    loc.upcomingReservationsEmpty,
-                    style: theme.textTheme.bodyMedium,
-                  )
-                else
-                  ...location.reservations.map(
-                    (slot) => ListTile(
-                      contentPadding: EdgeInsets.zero,
-                      leading: const ThreeDIconBadge(
-                        icon: Icons.event_available_outlined,
-                      ),
-                      title: Text(loc.reservationTileTitle(slot.code)),
-                      subtitle: Text(
-                        loc.reservationSlotSummary(
-                          slot.luggageCount,
-                          fmt.format(slot.time),
-                        ),
-                      ),
-                    ),
-                  ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 18),
-          SectionCard(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                SectionHeader(
-                  title: loc.continueSectionTitle,
-                  subtitle: loc.continueSectionSubtitle,
-                  iconWidget: const ThreeDIconBadge(
-                    icon: Icons.person_outline,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                FutureBuilder<bool>(
-                  future: ApiService.isAuthenticatedAsync(),
-                  builder: (context, snapshot) {
-                    final authed = snapshot.data == true;
-                    if (authed) {
-                      return Text(
-                        loc.locationAuthReadyMessage,
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                          color: theme.colorScheme.onSurfaceVariant,
-                        ),
-                      );
-                    }
-                    return Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        FilledButton.icon(
-                          onPressed: () => context.push('/login'),
-                          icon: const Icon(Icons.lock_open),
-                          label: Text(loc.loginButtonLabel),
-                        ),
-                        const SizedBox(height: 10),
-                        OutlinedButton.icon(
-                          onPressed: () => context.push('/register'),
-                          icon: const Icon(Icons.person_add_alt_1),
-                          label: Text(loc.registerButtonLabel),
-                        ),
-                      ],
-                    );
-                  },
-                ),
-              ],
-            ),
-          ),
-        ],
+              _HeroHeader(location: location),
+              const SizedBox(height: 16),
+              _MapCard(
+                location: location,
+                isReady: _iosMapReady,
+                onDirections: () => _showDirectionsSheet(context, location),
+              ),
+              const SizedBox(height: 16),
+              _buildInfoHubCard(
+                context: context,
+                location: location,
+                loc: loc,
+                theme: theme,
+                fmt: fmt,
+              ),
+            ],
           ),
         ],
       ),
@@ -462,10 +529,9 @@ class _LocationReservationPageState extends State<LocationReservationPage> {
           children: [
             Text(
               loc.directionsSheetTitle,
-              style: Theme.of(context)
-                  .textTheme
-                  .titleMedium
-                  ?.copyWith(fontWeight: FontWeight.w700),
+              style: Theme.of(
+                context,
+              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
             ),
             const SizedBox(height: 6),
             Text(
@@ -504,8 +570,9 @@ class _LocationReservationPageState extends State<LocationReservationPage> {
     );
     if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(loc.mapsOpenFailed)));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(loc.mapsOpenFailed)));
     }
   }
 
@@ -516,10 +583,32 @@ class _LocationReservationPageState extends State<LocationReservationPage> {
     );
     if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(loc.mapsOpenFailed)));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(loc.mapsOpenFailed)));
     }
   }
+}
+
+enum _LocationInfoSection {
+  details,
+  guide,
+  trust,
+  support,
+  hours,
+  reservations,
+}
+
+class _InfoHubSectionItem {
+  const _InfoHubSectionItem({
+    required this.section,
+    required this.label,
+    required this.icon,
+  });
+
+  final _LocationInfoSection section;
+  final String label;
+  final IconData icon;
 }
 
 class _HeroHeader extends StatelessWidget {
@@ -544,7 +633,7 @@ class _HeroHeader extends StatelessWidget {
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.15),
+            color: Colors.black.withValues(alpha: 0.15),
             blurRadius: 18,
             offset: const Offset(0, 10),
           ),
@@ -556,7 +645,7 @@ class _HeroHeader extends StatelessWidget {
             height: 56,
             width: 56,
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.16),
+              color: Colors.white.withValues(alpha: 0.16),
               borderRadius: BorderRadius.circular(18),
             ),
             child: const Icon(Icons.location_on_rounded, color: Colors.white),
@@ -631,7 +720,9 @@ class _MapCardState extends State<_MapCard> {
           SizedBox(
             height: 200,
             child: ClipRRect(
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(20),
+              ),
               child: widget.isReady == false
                   ? Center(
                       child: Text(
@@ -705,10 +796,7 @@ class _MapCardState extends State<_MapCard> {
 }
 
 class _ZoomButton extends StatelessWidget {
-  const _ZoomButton({
-    required this.icon,
-    required this.onTap,
-  });
+  const _ZoomButton({required this.icon, required this.onTap});
 
   final IconData icon;
   final VoidCallback onTap;
@@ -765,9 +853,9 @@ class _InfoChip extends StatelessWidget {
             Text(
               label,
               style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                    color: color,
-                    fontWeight: FontWeight.w700,
-                  ),
+                color: color,
+                fontWeight: FontWeight.w700,
+              ),
             ),
           ],
         ),
@@ -777,17 +865,13 @@ class _InfoChip extends StatelessWidget {
 }
 
 class _MiniThreeDIcon extends StatelessWidget {
-  const _MiniThreeDIcon({
-    required this.icon,
-    required this.accent,
-  });
+  const _MiniThreeDIcon({required this.icon, required this.accent});
 
   final IconData icon;
   final Color accent;
 
   @override
   Widget build(BuildContext context) {
-    final base = Theme.of(context).colorScheme.surface;
     return Container(
       height: 22,
       width: 22,
@@ -801,22 +885,13 @@ class _MiniThreeDIcon extends StatelessWidget {
         ),
         border: Border.all(color: accent.withValues(alpha: 0.35)),
       ),
-      child: Center(
-        child: Icon(
-          icon,
-          size: 12,
-          color: accent,
-        ),
-      ),
+      child: Center(child: Icon(icon, size: 12, color: accent)),
     );
   }
 }
 
 class _TrustBadge extends StatelessWidget {
-  const _TrustBadge({
-    required this.label,
-    required this.icon,
-  });
+  const _TrustBadge({required this.label, required this.icon});
 
   final String label;
   final IconData icon;
@@ -827,7 +902,7 @@ class _TrustBadge extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
       decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceVariant.withValues(alpha: 0.6),
+        color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.6),
         borderRadius: BorderRadius.circular(14),
         border: Border.all(
           color: theme.colorScheme.outlineVariant.withValues(alpha: 0.4),

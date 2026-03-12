@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../l10n/app_localizations.dart';
+import '../../../core/app_currency_mode.dart';
 import '../../../core/app_locale.dart';
 import '../../../core/app_theme_mode.dart';
 import '../../../core/background_theme_mode.dart';
@@ -14,6 +15,8 @@ class SettingsSection extends StatelessWidget {
     required this.onEmailChanged,
     required this.languageCode,
     required this.onLanguageChanged,
+    required this.currencyCode,
+    required this.onCurrencyChanged,
     required this.themeMode,
     required this.onThemeChanged,
     required this.criticalOnly,
@@ -26,6 +29,8 @@ class SettingsSection extends StatelessWidget {
   final ValueChanged<bool> onEmailChanged;
   final String languageCode;
   final ValueChanged<String> onLanguageChanged;
+  final String currencyCode;
+  final ValueChanged<String> onCurrencyChanged;
   final ThemeMode themeMode;
   final ValueChanged<ThemeMode> onThemeChanged;
   final bool criticalOnly;
@@ -110,6 +115,28 @@ class SettingsSection extends StatelessWidget {
                 if (value == null) return;
                 onThemeChanged(value);
                 AppThemeMode.set(value);
+              },
+            ),
+          ),
+          ListTile(
+            contentPadding: EdgeInsets.zero,
+            leading: const ThreeDIconBadge(icon: Icons.payments_outlined),
+            title: const Text('Para birimi'),
+            trailing: DropdownButton<AppCurrency>(
+              value: AppCurrencyMode.fromCode(currencyCode),
+              underline: const SizedBox.shrink(),
+              items: AppCurrency.values
+                  .map(
+                    (item) => DropdownMenuItem(
+                      value: item,
+                      child: Text(AppCurrencyMode.uiLabel(item)),
+                    ),
+                  )
+                  .toList(),
+              onChanged: (value) {
+                if (value == null) return;
+                onCurrencyChanged(AppCurrencyMode.toCode(value));
+                AppCurrencyMode.set(value);
               },
             ),
           ),
@@ -270,7 +297,9 @@ class _BackgroundThemeCard extends StatelessWidget {
                   shape: BoxShape.circle,
                   color: themeData.colorScheme.surface.withValues(alpha: 0.55),
                   border: Border.all(
-                    color: themeData.colorScheme.onSurface.withValues(alpha: 0.08),
+                    color: themeData.colorScheme.onSurface.withValues(
+                      alpha: 0.08,
+                    ),
                   ),
                 ),
                 child: Icon(

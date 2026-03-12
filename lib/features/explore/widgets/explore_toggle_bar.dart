@@ -19,65 +19,87 @@ class ExploreToggleBar extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
-    final selectedColor = theme.colorScheme.primary.withValues(alpha: 0.14);
-    final borderColor = theme.colorScheme.outlineVariant.withValues(alpha: 0.6);
-
     return ClipRRect(
-      borderRadius: BorderRadius.circular(18),
+      borderRadius: BorderRadius.circular(20),
       child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+        filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
         child: Container(
           padding: const EdgeInsets.all(4),
           decoration: BoxDecoration(
-            color: theme.colorScheme.surface.withValues(
-              alpha: isDark ? 0.25 : 0.9,
+            borderRadius: BorderRadius.circular(20),
+            color: Colors.white.withValues(alpha: isDark ? 0.12 : 0.82),
+            border: Border.all(
+              color: theme.colorScheme.outlineVariant.withValues(alpha: 0.45),
             ),
-            borderRadius: BorderRadius.circular(18),
-            border: Border.all(color: borderColor),
           ),
-          child: SegmentedButton<bool>(
-            segments: [
-              ButtonSegment<bool>(
-                value: false,
-                label: Text(listLabel),
-                icon: const Icon(Icons.view_list_outlined),
-              ),
-              ButtonSegment<bool>(
-                value: true,
-                label: Text(mapLabel),
-                icon: const Icon(Icons.map_outlined),
-              ),
-            ],
-            selected: {showMap},
-            style: ButtonStyle(
-              padding: WidgetStateProperty.all(
-                const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-              ),
-              backgroundColor: WidgetStateProperty.resolveWith(
-                (states) => states.contains(WidgetState.selected)
-                    ? selectedColor
-                    : Colors.transparent,
-              ),
-              foregroundColor: WidgetStateProperty.resolveWith(
-                (states) => states.contains(WidgetState.selected)
-                    ? theme.colorScheme.primary
-                    : theme.colorScheme.onSurfaceVariant,
-              ),
-              iconColor: WidgetStateProperty.resolveWith(
-                (states) => states.contains(WidgetState.selected)
-                    ? theme.colorScheme.primary
-                    : theme.colorScheme.onSurfaceVariant,
-              ),
-              shape: WidgetStateProperty.all(
-                RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(14),
+          child: Row(
+            children: [
+              Expanded(
+                child: _ToggleSegment(
+                  selected: !showMap,
+                  label: listLabel,
+                  icon: Icons.view_list_outlined,
+                  onTap: () => onChanged(false),
                 ),
               ),
-            ),
-            onSelectionChanged: (value) {
-              if (value.isEmpty) return;
-              onChanged(value.first);
-            },
+              Expanded(
+                child: _ToggleSegment(
+                  selected: showMap,
+                  label: mapLabel,
+                  icon: Icons.map_outlined,
+                  onTap: () => onChanged(true),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _ToggleSegment extends StatelessWidget {
+  const _ToggleSegment({
+    required this.selected,
+    required this.label,
+    required this.icon,
+    required this.onTap,
+  });
+
+  final bool selected;
+  final String label;
+  final IconData icon;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final fg = selected
+        ? theme.colorScheme.primary
+        : theme.colorScheme.onSurfaceVariant;
+    return Material(
+      color: selected
+          ? theme.colorScheme.primary.withValues(alpha: 0.14)
+          : Colors.transparent,
+      borderRadius: BorderRadius.circular(16),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(16),
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(icon, size: 18, color: fg),
+              const SizedBox(width: 8),
+              Text(
+                label,
+                style: theme.textTheme.titleSmall?.copyWith(
+                  color: fg,
+                  fontWeight: selected ? FontWeight.w800 : FontWeight.w600,
+                ),
+              ),
+            ],
           ),
         ),
       ),

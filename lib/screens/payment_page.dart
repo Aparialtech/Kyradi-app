@@ -5,7 +5,9 @@ import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:go_router/go_router.dart';
+import '../core/payment_method_prefs.dart';
 import '../services/api_service.dart';
+import '../services/local_notification_service.dart';
 import '../models/pricing_models.dart';
 import '../l10n/app_localizations.dart';
 import 'payment_result_page.dart';
@@ -58,6 +60,8 @@ class _PaymentPageState extends State<PaymentPage> {
   int? _basePriceValue;
   int? _totalPriceValue;
   double _walletBalance = 0;
+  PaymentMethodAvailability _methodAvailability =
+      const PaymentMethodAvailability.defaults();
 
   late String _paymentMethod;
   late String _protectionLevel;
@@ -69,7 +73,9 @@ class _PaymentPageState extends State<PaymentPage> {
   @override
   void initState() {
     super.initState();
-    _paymentMethod = widget.paymentMethod.isNotEmpty ? widget.paymentMethod : 'card';
+    _paymentMethod = widget.paymentMethod.isNotEmpty
+        ? widget.paymentMethod
+        : 'card';
     _protectionLevel = 'standard';
     _sizeLabel = widget.sizeLabel.isNotEmpty ? widget.sizeLabel : 'Orta';
     _dropAt = widget.dropAt;
@@ -80,6 +86,7 @@ class _PaymentPageState extends State<PaymentPage> {
       _quoteFuture = _fetchQuote();
     }
     _loadWalletBalance();
+    _loadPaymentMethods();
   }
 
   @override
@@ -100,6 +107,33 @@ class _PaymentPageState extends State<PaymentPage> {
     final balance = prefs.getDouble('wallet_balance') ?? 0;
     if (!mounted) return;
     setState(() => _walletBalance = balance);
+  }
+
+  Future<void> _loadPaymentMethods() async {
+    final methods = await PaymentMethodPrefs.load();
+    if (!mounted) return;
+    setState(() {
+      _methodAvailability = methods;
+      _paymentMethod = _fallbackPaymentMethod(_paymentMethod);
+    });
+  }
+
+  bool _isMethodEnabled(String method) {
+    if (method == 'card' || method == 'installment') {
+      return _methodAvailability.cardEnabled;
+    }
+    if (method == 'pay_at_hotel') {
+      return _methodAvailability.hotelPayEnabled;
+    }
+    return true;
+  }
+
+  String _fallbackPaymentMethod(String current) {
+    if (_isMethodEnabled(current)) return current;
+    if (_isMethodEnabled('wallet')) return 'wallet';
+    if (_isMethodEnabled('card')) return 'card';
+    if (_isMethodEnabled('pay_at_hotel')) return 'pay_at_hotel';
+    return current;
   }
 
   Future<PricingQuoteResponse?> _fetchQuote() async {
@@ -125,16 +159,22 @@ class _PaymentPageState extends State<PaymentPage> {
       final sizeClass = _sizeClassValue(_sizeLabel);
       final baseUrl = ApiService.apiBaseUrl;
       final uri = baseUrl.isNotEmpty
-          ? Uri.parse('$baseUrl/pricing/quote').replace(queryParameters: {
-              'sizeClass': sizeClass,
-              'startAt': _dropAt!.toUtc().toIso8601String(),
-              'endAt': _pickupAt!.toUtc().toIso8601String(),
-              if (_protectionLevel.isNotEmpty) 'protectionLevel': _protectionLevel,
-            })
+          ? Uri.parse('$baseUrl/pricing/quote').replace(
+              queryParameters: {
+                'sizeClass': sizeClass,
+                'startAt': _dropAt!.toUtc().toIso8601String(),
+                'endAt': _pickupAt!.toUtc().toIso8601String(),
+                if (_protectionLevel.isNotEmpty)
+                  'protectionLevel': _protectionLevel,
+              },
+            )
           : null;
       if (kDebugMode) {
-        appLog('pay_quote', 'start url=${uri?.toString() ?? 'unset'}',
-            level: AppLogLevel.debug);
+        appLog(
+          'pay_quote',
+          'start url=${uri?.toString() ?? 'unset'}',
+          level: AppLogLevel.debug,
+        );
       }
       final quote = await ApiService.getPricingQuote(
         sizeClass: sizeClass,
@@ -148,7 +188,8 @@ class _PaymentPageState extends State<PaymentPage> {
         _quoteError = null;
         _basePriceValue = _basePriceFromQuote(quote);
         _totalPriceValue =
-            (_basePriceValue ?? 0) + (_protectionLevel == 'premium' ? _premiumFee : 0);
+            (_basePriceValue ?? 0) +
+            (_protectionLevel == 'premium' ? _premiumFee : 0);
       });
       final basePrice = _basePriceFromQuote(quote);
       if (kDebugMode) {
@@ -178,6 +219,10 @@ class _PaymentPageState extends State<PaymentPage> {
 
   Future<void> _completePayment() async {
     final loc = AppLocalizations.of(context)!;
+    if (!_isMethodEnabled(_paymentMethod)) {
+      _showError('Secilen odeme yontemi profil ayarlarinda kapali.');
+      return;
+    }
     if (_paymentMethod != 'pay_at_hotel' && _paymentMethod != 'wallet') {
       final cardDigits = _digitsOnly(_cardNumberCtrl.text);
       final name = _nameCtrl.text.trim();
@@ -224,7 +269,9 @@ class _PaymentPageState extends State<PaymentPage> {
       setState(() => _loading = false);
       final ok = result['ok'] == true || result['status'] == 'success';
       if (!ok) {
-        final msg = (result['error'] ?? result['message'] ?? '').toString().trim();
+        final msg = (result['error'] ?? result['message'] ?? '')
+            .toString()
+            .trim();
         _showError(msg.isNotEmpty ? msg : loc.paymentFailedMessage);
         return;
       }
@@ -232,6 +279,10 @@ class _PaymentPageState extends State<PaymentPage> {
       _nameCtrl.clear();
       _expiryCtrl.clear();
       _cvcCtrl.clear();
+      await LocalNotificationService.instance.showPaymentSuccess(
+        reservationLabel: widget.reservationId,
+        amountTry: amount,
+      );
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(
           builder: (_) => PaymentResultPage(
@@ -275,9 +326,9 @@ class _PaymentPageState extends State<PaymentPage> {
 
   void _showError(String message) {
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message)),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
   }
 
   @override
@@ -302,179 +353,187 @@ class _PaymentPageState extends State<PaymentPage> {
                 return SingleChildScrollView(
                   padding: const EdgeInsets.fromLTRB(16, 16, 16, 140),
                   child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  _buildQuoteSummaryCard(theme, loc, quotePrice),
-                  const SizedBox(height: 16),
-                  SectionCard(
-                    backgroundColor:
-                        theme.colorScheme.surface.withValues(alpha: 0.95),
-                    child: _buildProtectionSection(loc, theme),
-                  ),
-                  const SizedBox(height: 12),
-                  SectionCard(
-                    backgroundColor:
-                        theme.colorScheme.surface.withValues(alpha: 0.95),
-                    child: _buildPaymentMethodSection(loc, theme),
-                  ),
-                  const SizedBox(height: 16),
-                  if (_paymentMethod == 'pay_at_hotel') ...[
-                    SectionCard(
-                      backgroundColor:
-                          theme.colorScheme.surface.withValues(alpha: 0.92),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            loc.paymentPayAtHotelTitle,
-                            style: theme.textTheme.titleMedium,
-                          ),
-                          const SizedBox(height: 8),
-                          Text(loc.paymentPayAtHotelBody),
-                        ],
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      _buildQuoteSummaryCard(theme, loc, quotePrice),
+                      const SizedBox(height: 16),
+                      SectionCard(
+                        backgroundColor: theme.colorScheme.surface.withValues(
+                          alpha: 0.95,
+                        ),
+                        child: _buildProtectionSection(loc, theme),
                       ),
-                    ),
-                    const SizedBox(height: 16),
-                  ] else ...[
-                    SectionCard(
-                      backgroundColor:
-                          theme.colorScheme.surface.withValues(alpha: 0.95),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            loc.paymentPageSubtitle,
-                            style: theme.textTheme.bodyMedium,
+                      const SizedBox(height: 12),
+                      SectionCard(
+                        backgroundColor: theme.colorScheme.surface.withValues(
+                          alpha: 0.95,
+                        ),
+                        child: _buildPaymentMethodSection(loc, theme),
+                      ),
+                      const SizedBox(height: 16),
+                      if (_paymentMethod == 'pay_at_hotel') ...[
+                        SectionCard(
+                          backgroundColor: theme.colorScheme.surface.withValues(
+                            alpha: 0.92,
                           ),
-                          const SizedBox(height: 16),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.end,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              _CardBrandPill(
-                                label: 'VISA',
-                                color: const Color(0xFF1A1F71),
+                              Text(
+                                loc.paymentPayAtHotelTitle,
+                                style: theme.textTheme.titleMedium,
                               ),
-                              const SizedBox(width: 8),
-                              _CardBrandPill(
-                                label: 'MC',
-                                color: const Color(0xFFEB001B),
-                              ),
+                              const SizedBox(height: 8),
+                              Text(loc.paymentPayAtHotelBody),
                             ],
                           ),
-                          const SizedBox(height: 10),
-                          TextField(
-                            controller: _cardNumberCtrl,
-                            focusNode: _cardNumberFocus,
-                            keyboardType: TextInputType.number,
-                            textInputAction: TextInputAction.next,
-                            maxLength: 19,
-                            inputFormatters: [
-                              FilteringTextInputFormatter.digitsOnly,
-                              CardNumberInputFormatter(),
-                            ],
-                            decoration: InputDecoration(
-                              labelText: loc.paymentCardNumberLabel,
-                              hintText: '1234 5678 9012 3456',
-                              prefixIcon:
-                                  const Icon(Icons.credit_card_outlined),
-                            ),
-                            onSubmitted: (_) => _nameFocus.requestFocus(),
+                        ),
+                        const SizedBox(height: 16),
+                      ] else ...[
+                        SectionCard(
+                          backgroundColor: theme.colorScheme.surface.withValues(
+                            alpha: 0.95,
                           ),
-                          const SizedBox(height: 12),
-                          TextField(
-                            controller: _nameCtrl,
-                            focusNode: _nameFocus,
-                            textCapitalization: TextCapitalization.characters,
-                            textInputAction: TextInputAction.next,
-                            inputFormatters: [
-                              FilteringTextInputFormatter.allow(
-                                RegExp(r"[A-Za-zÀ-ÖØ-öø-ÿ\s]"),
-                              ),
-                              UpperCaseTextFormatter(),
-                            ],
-                            decoration: InputDecoration(
-                              labelText: loc.paymentCardNameLabel,
-                              hintText: 'AD SOYAD',
-                              prefixIcon: const Icon(Icons.person_outline),
-                            ),
-                            onSubmitted: (_) => _expiryFocus.requestFocus(),
-                          ),
-                          const SizedBox(height: 12),
-                          Row(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Expanded(
-                                child: TextField(
-                                  controller: _expiryCtrl,
-                                  focusNode: _expiryFocus,
-                                  keyboardType: TextInputType.number,
-                                  textInputAction: TextInputAction.next,
-                                  maxLength: 5,
-                                  inputFormatters: [
-                                    FilteringTextInputFormatter.digitsOnly,
-                                    ExpiryDateInputFormatter(),
-                                  ],
-                                  decoration: InputDecoration(
-                                    labelText: loc.paymentExpiryLabel,
-                                    hintText: 'MM/YY',
-                                    prefixIcon: const Icon(
-                                      Icons.calendar_today_outlined,
+                              Text(
+                                loc.paymentPageSubtitle,
+                                style: theme.textTheme.bodyMedium,
+                              ),
+                              const SizedBox(height: 16),
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.end,
+                                children: [
+                                  _CardBrandPill(
+                                    label: 'VISA',
+                                    color: const Color(0xFF1A1F71),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  _CardBrandPill(
+                                    label: 'MC',
+                                    color: const Color(0xFFEB001B),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 10),
+                              TextField(
+                                controller: _cardNumberCtrl,
+                                focusNode: _cardNumberFocus,
+                                keyboardType: TextInputType.number,
+                                textInputAction: TextInputAction.next,
+                                maxLength: 19,
+                                inputFormatters: [
+                                  FilteringTextInputFormatter.digitsOnly,
+                                  CardNumberInputFormatter(),
+                                ],
+                                decoration: InputDecoration(
+                                  labelText: loc.paymentCardNumberLabel,
+                                  hintText: '1234 5678 9012 3456',
+                                  prefixIcon: const Icon(
+                                    Icons.credit_card_outlined,
+                                  ),
+                                ),
+                                onSubmitted: (_) => _nameFocus.requestFocus(),
+                              ),
+                              const SizedBox(height: 12),
+                              TextField(
+                                controller: _nameCtrl,
+                                focusNode: _nameFocus,
+                                textCapitalization:
+                                    TextCapitalization.characters,
+                                textInputAction: TextInputAction.next,
+                                inputFormatters: [
+                                  FilteringTextInputFormatter.allow(
+                                    RegExp(r"[A-Za-zÀ-ÖØ-öø-ÿ\s]"),
+                                  ),
+                                  UpperCaseTextFormatter(),
+                                ],
+                                decoration: InputDecoration(
+                                  labelText: loc.paymentCardNameLabel,
+                                  hintText: 'AD SOYAD',
+                                  prefixIcon: const Icon(Icons.person_outline),
+                                ),
+                                onSubmitted: (_) => _expiryFocus.requestFocus(),
+                              ),
+                              const SizedBox(height: 12),
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: TextField(
+                                      controller: _expiryCtrl,
+                                      focusNode: _expiryFocus,
+                                      keyboardType: TextInputType.number,
+                                      textInputAction: TextInputAction.next,
+                                      maxLength: 5,
+                                      inputFormatters: [
+                                        FilteringTextInputFormatter.digitsOnly,
+                                        ExpiryDateInputFormatter(),
+                                      ],
+                                      decoration: InputDecoration(
+                                        labelText: loc.paymentExpiryLabel,
+                                        hintText: 'MM/YY',
+                                        prefixIcon: const Icon(
+                                          Icons.calendar_today_outlined,
+                                        ),
+                                      ),
+                                      onSubmitted: (_) =>
+                                          _cvcFocus.requestFocus(),
                                     ),
                                   ),
-                                  onSubmitted: (_) => _cvcFocus.requestFocus(),
-                                ),
-                              ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: TextField(
-                                  controller: _cvcCtrl,
-                                  focusNode: _cvcFocus,
-                                  keyboardType: TextInputType.number,
-                                  textInputAction: TextInputAction.done,
-                                  maxLength: 4,
-                                  obscureText: true,
-                                  inputFormatters: [
-                                    FilteringTextInputFormatter.digitsOnly,
-                                  ],
-                                  decoration: InputDecoration(
-                                    labelText: loc.paymentCvcLabel,
-                                    hintText: 'CVV',
-                                    prefixIcon:
-                                        const Icon(Icons.lock_outline),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: TextField(
+                                      controller: _cvcCtrl,
+                                      focusNode: _cvcFocus,
+                                      keyboardType: TextInputType.number,
+                                      textInputAction: TextInputAction.done,
+                                      maxLength: 4,
+                                      obscureText: true,
+                                      inputFormatters: [
+                                        FilteringTextInputFormatter.digitsOnly,
+                                      ],
+                                      decoration: InputDecoration(
+                                        labelText: loc.paymentCvcLabel,
+                                        hintText: 'CVV',
+                                        prefixIcon: const Icon(
+                                          Icons.lock_outline,
+                                        ),
+                                      ),
+                                      onSubmitted: (_) => _completePayment(),
+                                    ),
                                   ),
-                                  onSubmitted: (_) => _completePayment(),
-                                ),
+                                ],
                               ),
                             ],
                           ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                  ],
-                  Align(
-                    alignment: Alignment.centerLeft,
-                    child: Text(
-                      priceLabel,
-                      style: theme.textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ),
-                  if (_quoteError != null)
-                    Align(
-                      alignment: Alignment.centerLeft,
-                      child: Padding(
-                        padding: const EdgeInsets.only(top: 6),
+                        ),
+                        const SizedBox(height: 16),
+                      ],
+                      Align(
+                        alignment: Alignment.centerLeft,
                         child: Text(
-                          loc.pricingQuoteFailedMessage,
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: theme.colorScheme.error,
+                          priceLabel,
+                          style: theme.textTheme.titleLarge?.copyWith(
+                            fontWeight: FontWeight.w700,
                           ),
                         ),
                       ),
-                    ),
-                  const SizedBox(height: 12),
-                ],
+                      if (_quoteError != null)
+                        Align(
+                          alignment: Alignment.centerLeft,
+                          child: Padding(
+                            padding: const EdgeInsets.only(top: 6),
+                            child: Text(
+                              loc.pricingQuoteFailedMessage,
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: theme.colorScheme.error,
+                              ),
+                            ),
+                          ),
+                        ),
+                      const SizedBox(height: 12),
+                    ],
                   ),
                 );
               },
@@ -490,17 +549,22 @@ class _PaymentPageState extends State<PaymentPage> {
             Align(
               alignment: Alignment.centerLeft,
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 6,
+                ),
                 decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.12),
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.primary.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(999),
                 ),
                 child: Text(
                   loc.paymentDemoBadge,
                   style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                        color: Theme.of(context).colorScheme.primary,
-                        fontWeight: FontWeight.w700,
-                      ),
+                    color: Theme.of(context).colorScheme.primary,
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
               ),
             ),
@@ -534,7 +598,8 @@ class _PaymentPageState extends State<PaymentPage> {
               _protectionLevel = value ?? 'standard';
               _quoteFuture = _fetchQuote();
               _totalPriceValue =
-                  _basePrice() + (_protectionLevel == 'premium' ? _premiumFee : 0);
+                  _basePrice() +
+                  (_protectionLevel == 'premium' ? _premiumFee : 0);
             });
             if (kDebugMode) {
               appLog(
@@ -555,7 +620,8 @@ class _PaymentPageState extends State<PaymentPage> {
               _protectionLevel = value ?? 'premium';
               _quoteFuture = _fetchQuote();
               _totalPriceValue =
-                  _basePrice() + (_protectionLevel == 'premium' ? _premiumFee : 0);
+                  _basePrice() +
+                  (_protectionLevel == 'premium' ? _premiumFee : 0);
             });
             if (kDebugMode) {
               appLog(
@@ -573,6 +639,8 @@ class _PaymentPageState extends State<PaymentPage> {
   }
 
   Widget _buildPaymentMethodSection(AppLocalizations loc, ThemeData theme) {
+    final cardMethodsEnabled = _methodAvailability.cardEnabled;
+    final hotelEnabled = _methodAvailability.hotelPayEnabled;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -584,27 +652,29 @@ class _PaymentPageState extends State<PaymentPage> {
             setState(() => _paymentMethod = value ?? 'wallet');
           },
           title: Text(
-            loc.paymentMethodWallet(
-              _walletBalance.toStringAsFixed(2),
-            ),
+            loc.paymentMethodWallet(_walletBalance.toStringAsFixed(2)),
           ),
           contentPadding: EdgeInsets.zero,
         ),
         RadioListTile<String>(
           value: 'card',
           groupValue: _paymentMethod,
-          onChanged: (value) {
-            setState(() => _paymentMethod = value ?? 'card');
-          },
+          onChanged: cardMethodsEnabled
+              ? (value) {
+                  setState(() => _paymentMethod = value ?? 'card');
+                }
+              : null,
           title: Text(loc.paymentMethodCard),
           contentPadding: EdgeInsets.zero,
         ),
         RadioListTile<String>(
           value: 'installment',
           groupValue: _paymentMethod,
-          onChanged: (value) {
-            setState(() => _paymentMethod = value ?? 'installment');
-          },
+          onChanged: cardMethodsEnabled
+              ? (value) {
+                  setState(() => _paymentMethod = value ?? 'installment');
+                }
+              : null,
           title: Text(loc.paymentMethodInstallment),
           contentPadding: EdgeInsets.zero,
         ),
@@ -613,12 +683,7 @@ class _PaymentPageState extends State<PaymentPage> {
             value: _installmentCount,
             decoration: InputDecoration(labelText: loc.installmentCountLabel),
             items: [2, 3, 6, 9, 12]
-                .map(
-                  (v) => DropdownMenuItem(
-                    value: v,
-                    child: Text('$v'),
-                  ),
-                )
+                .map((v) => DropdownMenuItem(value: v, child: Text('$v')))
                 .toList(),
             onChanged: (value) {
               if (value == null) return;
@@ -628,12 +693,24 @@ class _PaymentPageState extends State<PaymentPage> {
         RadioListTile<String>(
           value: 'pay_at_hotel',
           groupValue: _paymentMethod,
-          onChanged: (value) {
-            setState(() => _paymentMethod = value ?? 'pay_at_hotel');
-          },
+          onChanged: hotelEnabled
+              ? (value) {
+                  setState(() => _paymentMethod = value ?? 'pay_at_hotel');
+                }
+              : null,
           title: Text(loc.paymentMethodPayAtHotel),
           contentPadding: EdgeInsets.zero,
         ),
+        if (!cardMethodsEnabled || !hotelEnabled)
+          Padding(
+            padding: const EdgeInsets.only(left: 8, right: 8, bottom: 8),
+            child: Text(
+              'Kapali yontemleri Profil > Odeme Yontemleri alanindan acabilirsin.',
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+          ),
         if (_paymentMethod == 'pay_at_hotel')
           Padding(
             padding: const EdgeInsets.only(left: 8, bottom: 8),
@@ -661,10 +738,9 @@ class _PaymentPageState extends State<PaymentPage> {
             children: [
               Text(
                 loc.paymentWalletInsufficientTitle,
-                style: Theme.of(context)
-                    .textTheme
-                    .titleMedium
-                    ?.copyWith(fontWeight: FontWeight.w700),
+                style: Theme.of(
+                  context,
+                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
               ),
               const SizedBox(height: 8),
               Text(
@@ -751,92 +827,93 @@ class _PaymentPageState extends State<PaymentPage> {
       backgroundColor: theme.colorScheme.surface.withValues(alpha: 0.95),
       padding: const EdgeInsets.all(12),
       child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    loc.pricingSummaryTitle,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  loc.pricingSummaryTitle,
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+              TextButton(
+                onPressed: _openEditReservation,
+                child: Text(loc.pricingSummaryEdit),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          FutureBuilder<PricingQuoteResponse?>(
+            future: _quoteFuture,
+            builder: (context, snapshot) {
+              final waiting =
+                  _loadingQuote ||
+                  snapshot.connectionState == ConnectionState.waiting;
+              if (waiting) {
+                return Padding(
+                  padding: const EdgeInsets.only(top: 6),
+                  child: Row(
+                    children: [
+                      const SizedBox(
+                        height: 16,
+                        width: 16,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      ),
+                      const SizedBox(width: 8),
+                      Text(loc.pricingEstimateLoading),
+                    ],
+                  ),
+                );
+              }
+              if (_quoteError != null) {
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      _quoteError!,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.error,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    TextButton.icon(
+                      onPressed: () {
+                        setState(() => _quoteFuture = _fetchQuote());
+                      },
+                      icon: const Icon(Icons.refresh),
+                      label: Text(loc.refreshAction),
+                    ),
+                  ],
+                );
+              }
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('${loc.pricingSummarySizeLabel}: $sizeLabel'),
+                  Text('${loc.pricingSummaryDurationLabel}: $tierLabel'),
+                  const SizedBox(height: 6),
+                  Text(
+                    '${loc.pricingBasePriceLabel}: ${_formatPrice(basePrice)} ₺',
+                  ),
+                  if (premiumFee > 0)
+                    Text(
+                      '${loc.pricingPremiumFeeLabel}: +${_formatPrice(premiumFee)} ₺',
+                    ),
+                  Text(
+                    '${loc.pricingSummaryAmountLabel}: ${_formatPrice(total)} ₺',
                     style: theme.textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.w700,
                     ),
                   ),
-                ),
-                TextButton(
-                  onPressed: _openEditReservation,
-                  child: Text(loc.pricingSummaryEdit),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            FutureBuilder<PricingQuoteResponse?>(
-              future: _quoteFuture,
-              builder: (context, snapshot) {
-                final waiting = _loadingQuote ||
-                    snapshot.connectionState == ConnectionState.waiting;
-                if (waiting) {
-                  return Padding(
-                    padding: const EdgeInsets.only(top: 6),
-                    child: Row(
-                      children: [
-                        const SizedBox(
-                          height: 16,
-                          width: 16,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        ),
-                        const SizedBox(width: 8),
-                        Text(loc.pricingEstimateLoading),
-                      ],
-                    ),
-                  );
-                }
-                if (_quoteError != null) {
-                  return Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        _quoteError!,
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: theme.colorScheme.error,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      TextButton.icon(
-                        onPressed: () {
-                          setState(() => _quoteFuture = _fetchQuote());
-                        },
-                        icon: const Icon(Icons.refresh),
-                        label: Text(loc.refreshAction),
-                      ),
-                    ],
-                  );
-                }
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('${loc.pricingSummarySizeLabel}: $sizeLabel'),
-                    Text('${loc.pricingSummaryDurationLabel}: $tierLabel'),
-                    const SizedBox(height: 6),
-                    Text(
-                      '${loc.pricingBasePriceLabel}: ${_formatPrice(basePrice)} ₺',
-                    ),
-                    if (premiumFee > 0)
-                      Text(
-                        '${loc.pricingPremiumFeeLabel}: +${_formatPrice(premiumFee)} ₺',
-                      ),
-                    Text(
-                      '${loc.pricingSummaryAmountLabel}: ${_formatPrice(total)} ₺',
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ],
-                );
-              },
-            ),
-          ],
-        ),
+                ],
+              );
+            },
+          ),
+        ],
+      ),
     );
   }
 
@@ -965,10 +1042,7 @@ class UpperCaseTextFormatter extends TextInputFormatter {
     TextEditingValue newValue,
   ) {
     final upper = newValue.text.toUpperCase();
-    return TextEditingValue(
-      text: upper,
-      selection: newValue.selection,
-    );
+    return TextEditingValue(text: upper, selection: newValue.selection);
   }
 }
 
@@ -1057,9 +1131,9 @@ class _ReservationEditPageState extends State<ReservationEditPage> {
   Future<void> _save() async {
     final loc = AppLocalizations.of(context)!;
     if (_dropAt == null || _pickupAt == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(loc.scheduleTimesRequired)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(loc.scheduleTimesRequired)));
       return;
     }
     setState(() => _saving = true);
@@ -1076,13 +1150,13 @@ class _ReservationEditPageState extends State<ReservationEditPage> {
       if (!mounted) return;
       setState(() => _saving = false);
       if (result['ok'] == true) {
-        Navigator.of(context).pop({
-          'size': _size,
-          'dropAt': _dropAt,
-          'pickupAt': _pickupAt,
-        });
+        Navigator.of(
+          context,
+        ).pop({'size': _size, 'dropAt': _dropAt, 'pickupAt': _pickupAt});
       } else {
-        final msg = (result['error'] ?? result['message'] ?? '').toString().trim();
+        final msg = (result['error'] ?? result['message'] ?? '')
+            .toString()
+            .trim();
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(msg.isNotEmpty ? msg : loc.operationFailed)),
         );
@@ -1118,55 +1192,59 @@ class _ReservationEditPageState extends State<ReservationEditPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-              DropdownButtonFormField<String>(
-                value: _size,
-                items: ['Küçük', 'Orta', 'Büyük']
-                    .map(
-                      (value) => DropdownMenuItem(
-                        value: value,
-                        child: Text(_localizedSizeLabel(value, loc)),
-                      ),
-                    )
-                    .toList(),
-                onChanged: _saving ? null : (value) => setState(() => _size = value ?? 'Orta'),
-                decoration: InputDecoration(
-                  labelText: loc.size,
-                  prefixIcon: const Icon(Icons.luggage_outlined),
-                ),
-              ),
-              const SizedBox(height: 16),
-              ListTile(
-                contentPadding: EdgeInsets.zero,
-                leading: const Icon(Icons.event_available_rounded),
-                title: Text(dropLabel),
-                onTap: _saving
-                    ? null
-                    : () async {
-                        final selected =
-                            await _pickDateTime(_dropAt, loc.dropDatePickerHelp);
-                        if (!mounted) return;
-                        if (selected != null) {
-                          setState(() => _dropAt = selected);
-                        }
-                      },
-              ),
-              ListTile(
-                contentPadding: EdgeInsets.zero,
-                leading: const Icon(Icons.event_available_rounded),
-                title: Text(pickupLabel),
-                onTap: _saving
-                    ? null
-                    : () async {
-                        final selected = await _pickDateTime(
-                          _pickupAt,
-                          loc.pickupDatePickerHelp,
-                        );
-                        if (!mounted) return;
-                        if (selected != null) {
-                          setState(() => _pickupAt = selected);
-                        }
-                      },
-              ),
+                  DropdownButtonFormField<String>(
+                    value: _size,
+                    items: ['Küçük', 'Orta', 'Büyük']
+                        .map(
+                          (value) => DropdownMenuItem(
+                            value: value,
+                            child: Text(_localizedSizeLabel(value, loc)),
+                          ),
+                        )
+                        .toList(),
+                    onChanged: _saving
+                        ? null
+                        : (value) => setState(() => _size = value ?? 'Orta'),
+                    decoration: InputDecoration(
+                      labelText: loc.size,
+                      prefixIcon: const Icon(Icons.luggage_outlined),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    leading: const Icon(Icons.event_available_rounded),
+                    title: Text(dropLabel),
+                    onTap: _saving
+                        ? null
+                        : () async {
+                            final selected = await _pickDateTime(
+                              _dropAt,
+                              loc.dropDatePickerHelp,
+                            );
+                            if (!mounted) return;
+                            if (selected != null) {
+                              setState(() => _dropAt = selected);
+                            }
+                          },
+                  ),
+                  ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    leading: const Icon(Icons.event_available_rounded),
+                    title: Text(pickupLabel),
+                    onTap: _saving
+                        ? null
+                        : () async {
+                            final selected = await _pickDateTime(
+                              _pickupAt,
+                              loc.pickupDatePickerHelp,
+                            );
+                            if (!mounted) return;
+                            if (selected != null) {
+                              setState(() => _pickupAt = selected);
+                            }
+                          },
+                  ),
                   const Spacer(),
                   FilledButton(
                     onPressed: _saving ? null : _save,

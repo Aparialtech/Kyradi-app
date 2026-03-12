@@ -7,6 +7,7 @@ import '../../models/reservation_draft.dart';
 import '../../payments/demo_payment_repository.dart';
 import '../../payments/wallet_payment_handler.dart';
 import '../../services/pricing_service.dart';
+import '../../services/local_notification_service.dart';
 import '../../core/repositories/luggage_repository.dart';
 import '../../services/api_service.dart';
 import '../../utils/crash_log.dart';
@@ -234,6 +235,9 @@ class _ReservationStepperShellState extends State<ReservationStepperShell> {
       final payload = _buildPayload(draft, pricing);
       final luggage = await _repo.createLuggage(userId, payload);
       _created = luggage;
+      await LocalNotificationService.instance.showReservationCreated(
+        luggage.displayLabel,
+      );
       _controller.setStep(4);
       _pageController.animateToPage(
         4,

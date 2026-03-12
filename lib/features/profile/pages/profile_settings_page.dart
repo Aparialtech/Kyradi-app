@@ -12,6 +12,8 @@ class ProfileSettingsPage extends StatelessWidget {
     required this.onEmailChanged,
     required this.languageCode,
     required this.onLanguageChanged,
+    required this.currencyCode,
+    required this.onCurrencyChanged,
     required this.themeMode,
     required this.onThemeChanged,
     required this.criticalOnly,
@@ -24,6 +26,8 @@ class ProfileSettingsPage extends StatelessWidget {
   final ValueChanged<bool> onEmailChanged;
   final String languageCode;
   final ValueChanged<String> onLanguageChanged;
+  final String currencyCode;
+  final ValueChanged<String> onCurrencyChanged;
   final ThemeMode themeMode;
   final ValueChanged<ThemeMode> onThemeChanged;
   final bool criticalOnly;
@@ -32,15 +36,14 @@ class ProfileSettingsPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final loc = AppLocalizations.of(context)!;
+    final bottomSafePadding = MediaQuery.viewPaddingOf(context).bottom + 96;
     return Scaffold(
-      appBar: AppBar(
-        title: Text(loc.settingsTitle),
-      ),
+      appBar: AppBar(title: Text(loc.settingsTitle)),
       body: Stack(
         children: [
           const AppMeshBackground(),
           ListView(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
+            padding: EdgeInsets.fromLTRB(16, 16, 16, bottomSafePadding),
             children: [
               SettingsSection(
                 inAppNotifications: inAppNotifications,
@@ -49,6 +52,8 @@ class ProfileSettingsPage extends StatelessWidget {
                 onEmailChanged: onEmailChanged,
                 languageCode: languageCode,
                 onLanguageChanged: onLanguageChanged,
+                currencyCode: currencyCode,
+                onCurrencyChanged: onCurrencyChanged,
                 themeMode: themeMode,
                 onThemeChanged: onThemeChanged,
                 criticalOnly: criticalOnly,
@@ -61,4 +66,3 @@ class ProfileSettingsPage extends StatelessWidget {
     );
   }
 }
-

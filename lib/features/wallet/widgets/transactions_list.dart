@@ -1,40 +1,43 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import '../../../core/app_currency_mode.dart';
 import '../../../widgets/section_card.dart';
 import '../models/wallet_transaction.dart';
 
 class TransactionsList extends StatelessWidget {
-  const TransactionsList({
-    super.key,
-    required this.items,
-  });
+  const TransactionsList({super.key, required this.items});
 
   final List<WalletTransaction> items;
 
   @override
   Widget build(BuildContext context) {
     final grouped = _groupByMonth(items);
-    return Column(
-      children: grouped.entries.map((entry) {
-        return SectionCard(
-          margin: const EdgeInsets.only(bottom: 12),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Padding(
-                padding: const EdgeInsets.only(bottom: 12),
-                child: Text(
-                  entry.key,
-                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                        fontWeight: FontWeight.w700,
-                      ),
+    return ValueListenableBuilder<AppCurrency>(
+      valueListenable: AppCurrencyMode.notifier,
+      builder: (context, currency, _) => Column(
+        children: grouped.entries.map((entry) {
+          return SectionCard(
+            margin: const EdgeInsets.only(bottom: 12),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: Text(
+                    entry.key,
+                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
                 ),
-              ),
-              ...entry.value.map((tx) => _TransactionTile(tx: tx)),
-            ],
-          ),
-        );
-      }).toList(),
+                ...entry.value.map(
+                  (tx) => _TransactionTile(tx: tx, currency: currency),
+                ),
+              ],
+            ),
+          );
+        }).toList(),
+      ),
     );
   }
 
@@ -53,9 +56,10 @@ class TransactionsList extends StatelessWidget {
 }
 
 class _TransactionTile extends StatelessWidget {
-  const _TransactionTile({required this.tx});
+  const _TransactionTile({required this.tx, required this.currency});
 
   final WalletTransaction tx;
+  final AppCurrency currency;
 
   @override
   Widget build(BuildContext context) {
@@ -65,13 +69,13 @@ class _TransactionTile extends StatelessWidget {
     final color = isEarn
         ? theme.colorScheme.primary
         : isAdjust
-            ? theme.colorScheme.secondary
-            : theme.colorScheme.error;
+        ? theme.colorScheme.secondary
+        : theme.colorScheme.error;
     final sign = isEarn
         ? '+'
         : isAdjust
-            ? '+'
-            : '-';
+        ? '+'
+        : '-';
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
       child: ListTile(
@@ -99,16 +103,16 @@ class _TransactionTile extends StatelessWidget {
         title: Text(tx.title),
         subtitle: Text(tx.category),
         trailing: Text(
-          '$sign${tx.amount.toStringAsFixed(2)} ₺',
+          '$sign${AppCurrencyMode.formatFromTry(tx.amount, currency: currency)}',
           style: theme.textTheme.titleSmall?.copyWith(
             fontWeight: FontWeight.w700,
             color: color,
           ),
         ),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(14),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+        tileColor: theme.colorScheme.surfaceContainerHighest.withValues(
+          alpha: 0.5,
         ),
-        tileColor: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
       ),
     );
   }

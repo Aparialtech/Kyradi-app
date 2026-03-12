@@ -15,7 +15,6 @@ import 'package:flutter/foundation.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import '../dashboard/widgets/active_trip_card.dart';
-import '../dashboard/widgets/campaign_carousel.dart';
 import '../dashboard/widgets/dashboard_search_bar.dart';
 import '../dashboard/widgets/dashboard_top_bar.dart';
 import '../dashboard/widgets/nearby_locations_carousel.dart';
@@ -44,7 +43,6 @@ class _DashboardPageState extends State<DashboardPage> {
   bool _expandMap = false;
   bool _expandLuggage = false;
   bool _expandNearby = false;
-  bool _expandCampaigns = false;
   double _walletBalance = 0;
 
   @override
@@ -285,44 +283,6 @@ class _DashboardPageState extends State<DashboardPage> {
         )
         .length;
 
-    final campaigns = [
-      CampaignItem(
-        title: 'Kahve Dünyası Hediyesi',
-        subtitle: 'İlk rezervasyonuna özel 1 kahve ücretsiz.',
-        tag: loc.campaignNewTag,
-        icon: Icons.local_cafe_outlined,
-        gradient: [const Color(0xFF8B5E34), const Color(0xFFD9A15A)],
-      ),
-      CampaignItem(
-        title: '3+ Gün %50 İndirim',
-        subtitle: '3 gün ve üzeri rezervasyonlarda yarı fiyat.',
-        tag: loc.campaignHotTag,
-        icon: Icons.local_offer_outlined,
-        gradient: [const Color(0xFF1E3A8A), const Color(0xFF3B82F6)],
-      ),
-      CampaignItem(
-        title: 'Boyner %10 İndirim',
-        subtitle: 'Boyner mağazalarında ekstra avantaj.',
-        tag: loc.campaignBonusTag,
-        icon: Icons.shopping_bag_outlined,
-        gradient: [const Color(0xFF7C3AED), const Color(0xFFA78BFA)],
-      ),
-      CampaignItem(
-        title: 'Kyradi Vadi & Axis',
-        subtitle: 'Vadi İstanbul ve Axis AVM’de hizmetinizde.',
-        tag: 'YENİ NOKTA',
-        icon: Icons.location_on_outlined,
-        gradient: [const Color(0xFF0F766E), const Color(0xFF5EEAD4)],
-      ),
-      CampaignItem(
-        title: 'Öğrenci %30 İndirim',
-        subtitle: 'Edu mail ile kayıt ol, %30 indirim kazan.',
-        tag: 'GENÇ',
-        icon: Icons.school_outlined,
-        gradient: [const Color(0xFFB45309), const Color(0xFFF59E0B)],
-      ),
-    ];
-
     return Scaffold(
       backgroundColor: Colors.transparent,
       body: Stack(
@@ -458,30 +418,6 @@ class _DashboardPageState extends State<DashboardPage> {
                       onRetry: _loadLocations,
                       onLocationTap: _openLocationDetails,
                       emptyLabel: loc.mapNoLocations,
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  _DashboardFoldSection(
-                    title: loc.campaignsTitle,
-                    subtitle: 'Avantajlar ve kampanyalar',
-                    icon: Icons.local_activity_outlined,
-                    expanded: _expandCampaigns,
-                    onToggle: () =>
-                        setState(() => _expandCampaigns = !_expandCampaigns),
-                    actionLabel: loc.seeAllAction,
-                    onAction: () {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (_) => const CampaignsPage(),
-                        ),
-                      );
-                    },
-                    child: CampaignCarousel(
-                      loading: false,
-                      errorMessage: null,
-                      items: campaigns,
-                      onRetry: () {},
-                      emptyLabel: loc.campaignsEmptyState,
                     ),
                   ),
                   const SizedBox(height: 12),

@@ -10,18 +10,17 @@ import '../../screens/change_password_page.dart';
 import '../../ui/components/app_error_state.dart';
 import '../../ui/components/app_skeleton.dart';
 import '../../widgets/app_notification.dart';
+import '../../widgets/avatar_image.dart';
 import '../../core/profile_avatar_cache.dart';
 import '../../core/app_theme_mode.dart';
+import '../../core/app_currency_mode.dart';
 import '../../core/notification_prefs.dart';
 import '../../widgets/section_card.dart';
 import '../../widgets/app_logo_overlay.dart';
-import '../../widgets/app_mesh_background.dart';
 import 'pages/about_page.dart';
+import 'pages/currency_settings_page.dart';
 import 'pages/faq_page.dart';
-import 'widgets/profile_header_card.dart';
-import 'widgets/security_section.dart';
-import 'widgets/support_section.dart';
-import 'widgets/verification_section.dart';
+import 'pages/payment_methods_page.dart';
 import '../../screens/crash_log_page.dart';
 import 'pages/verification_form_page.dart';
 import 'pages/profile_edit_page.dart';
@@ -44,6 +43,7 @@ class _ProfilePageState extends State<ProfilePage> {
   bool _emailNotifications = true;
   bool _criticalOnly = false;
   String _languageCode = 'tr';
+  String _currencyCode = 'tl';
   ThemeMode _themeMode = AppThemeMode.notifier.value;
   String? _avatarPath;
 
@@ -58,6 +58,8 @@ class _ProfilePageState extends State<ProfilePage> {
     ProfileAvatarCache.notifier.addListener(_handleAvatarUpdate);
     _restoreUser();
     AppThemeMode.notifier.addListener(_handleThemeUpdate);
+    AppCurrencyMode.notifier.addListener(_handleCurrencyUpdate);
+    _currencyCode = AppCurrencyMode.toCode(AppCurrencyMode.notifier.value);
     NotificationPrefs.load().then((_) {
       if (!mounted) return;
       setState(() => _criticalOnly = NotificationPrefs.criticalOnly.value);
@@ -68,6 +70,7 @@ class _ProfilePageState extends State<ProfilePage> {
   void dispose() {
     ProfileAvatarCache.notifier.removeListener(_handleAvatarUpdate);
     AppThemeMode.notifier.removeListener(_handleThemeUpdate);
+    AppCurrencyMode.notifier.removeListener(_handleCurrencyUpdate);
     super.dispose();
   }
 
@@ -79,6 +82,15 @@ class _ProfilePageState extends State<ProfilePage> {
   void _handleThemeUpdate() {
     if (!mounted) return;
     setState(() => _themeMode = AppThemeMode.notifier.value);
+  }
+
+  void _handleCurrencyUpdate() {
+    if (!mounted) return;
+    setState(
+      () => _currencyCode = AppCurrencyMode.toCode(
+        AppCurrencyMode.notifier.value,
+      ),
+    );
   }
 
   Future<void> _restoreUser() async {
@@ -162,6 +174,8 @@ class _ProfilePageState extends State<ProfilePage> {
           onEmailChanged: (value) => _updateNotificationSettings(email: value),
           languageCode: _languageCode,
           onLanguageChanged: (value) => setState(() => _languageCode = value),
+          currencyCode: _currencyCode,
+          onCurrencyChanged: (value) => setState(() => _currencyCode = value),
           themeMode: _themeMode,
           onThemeChanged: (value) => setState(() => _themeMode = value),
           criticalOnly: _criticalOnly,
@@ -295,13 +309,115 @@ class _ProfilePageState extends State<ProfilePage> {
     }
   }
 
+  String _languageLabel() {
+    switch (_languageCode.toLowerCase()) {
+      case 'en':
+        return 'English';
+      case 'es':
+        return 'Espanol';
+      case 'ru':
+        return 'Russkiy';
+      default:
+        return 'Turkce';
+    }
+  }
+
+  String _themeLabel() {
+    switch (_themeMode) {
+      case ThemeMode.dark:
+        return 'Koyu';
+      case ThemeMode.light:
+        return 'Acik';
+      case ThemeMode.system:
+        return 'Sistem';
+    }
+  }
+
+  String _currencyLabel() {
+    final currency = AppCurrencyMode.fromCode(_currencyCode);
+    return AppCurrencyMode.uiLabel(currency);
+  }
+
+  String _verificationStatusLabel(AppLocalizations loc) {
+    final status = (_user?.verificationStatus ?? '').toLowerCase();
+    if (_user?.identityVerified == true || status == 'verified') {
+      return loc.profileVerifiedLabel;
+    }
+    if (status == 'pending') return loc.profileVerificationPending;
+    return loc.profileVerificationMissing;
+  }
+
+  Future<void> _showProfileDetailsSheet() async {
+    final user = _user;
+    if (user == null || !mounted) return;
+    final loc = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
+    await showModalBottomSheet<void>(
+      context: context,
+      showDragHandle: true,
+      useSafeArea: true,
+      backgroundColor: theme.colorScheme.surface,
+      builder: (_) => Padding(
+        padding: const EdgeInsets.fromLTRB(16, 8, 16, 20),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              loc.profileDetailsTitle,
+              style: theme.textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+            const SizedBox(height: 12),
+            _InfoTile(
+              icon: Icons.email_outlined,
+              label: loc.profileEmailLabel,
+              value: user.email,
+            ),
+            _InfoTile(
+              icon: Icons.phone_outlined,
+              label: loc.profilePhoneLabel,
+              value: user.phone.isEmpty ? '-' : user.phone,
+            ),
+            _InfoTile(
+              icon: Icons.badge_outlined,
+              label: loc.profileNationalIdLabel,
+              value: _maskNationalId(user.nationalId),
+            ),
+            _InfoTile(
+              icon: Icons.cake_outlined,
+              label: loc.profileBirthDateLabel,
+              value: _formatBirthDate(user.birthDate),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  String _maskNationalId(String? raw) {
+    final value = (raw ?? '').trim();
+    if (value.isEmpty) return '-';
+    if (value.length <= 4) return value;
+    final tail = value.substring(value.length - 4);
+    return '**** **** $tail';
+  }
+
+  String _formatBirthDate(String? raw) {
+    if (raw == null || raw.isEmpty) return '-';
+    return raw.split('T').first;
+  }
+
   @override
   Widget build(BuildContext context) {
     final loc = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
     return Scaffold(
+      backgroundColor: const Color(0xFFF7F8FA),
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        surfaceTintColor: Colors.transparent,
+        backgroundColor: const Color(0xFFF7F8FA),
+        surfaceTintColor: const Color(0xFFF7F8FA),
         elevation: 0,
         scrolledUnderElevation: 0,
         centerTitle: false,
@@ -324,138 +440,130 @@ class _ProfilePageState extends State<ProfilePage> {
           ),
         ],
       ),
-      body: Stack(
-        children: [
-          const AppMeshBackground(),
-          Positioned(
-            top: -80,
-            right: -40,
-            child: IgnorePointer(
-              child: Container(
-                height: 200,
-                width: 200,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  gradient: RadialGradient(
-                    colors: [
-                      Theme.of(
-                        context,
-                      ).colorScheme.primary.withValues(alpha: 0.24),
-                      Colors.transparent,
-                    ],
+      body: _loading
+          ? ListView(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 40),
+              children: const [
+                AppSkeleton(height: 180, radius: 28),
+                SizedBox(height: 12),
+                AppSkeleton(height: 172, radius: 24),
+                SizedBox(height: 12),
+                AppSkeleton(height: 220, radius: 24),
+              ],
+            )
+          : _error != null
+          ? AppErrorState(
+              message: _error == 'USER_ID_MISSING'
+                  ? loc.userIdMissing
+                  : _error!,
+              onRetry: _restoreUser,
+            )
+          : ListView(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 40),
+              children: [
+                if (_user != null)
+                  _ProfileHero(
+                    user: _user!,
+                    avatarPath: _avatarPath,
+                    onEdit: _openEditProfile,
                   ),
-                ),
-              ),
-            ),
-          ),
-          _loading
-              ? ListView(
-                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 40),
-                  children: const [
-                    AppSkeleton(height: 180, radius: 28),
-                    SizedBox(height: 12),
-                    AppSkeleton(height: 112, radius: 24),
-                    SizedBox(height: 12),
-                    AppSkeleton(height: 160, radius: 24),
-                    SizedBox(height: 12),
-                    AppSkeleton(height: 180, radius: 24),
-                  ],
-                )
-              : _error != null
-              ? AppErrorState(
-                  message: _error == 'USER_ID_MISSING'
-                      ? loc.userIdMissing
-                      : _error!,
-                  onRetry: _restoreUser,
-                )
-              : ListView(
-                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 40),
+                const SizedBox(height: 12),
+                _ProfileGroupCard(
+                  title: 'Odeme Bilgileri',
                   children: [
-                    if (_user != null)
-                      ProfileHeaderCard(
-                        user: _user!,
-                        onEdit: _openEditProfile,
-                        avatarPath: _avatarPath,
-                      ),
-                    const SizedBox(height: 12),
-                    _ProfileQuickActionsCard(
-                      onEdit: _openEditProfile,
-                      onVerification: _openVerification,
-                      onSettings: _openSettings,
-                      onAdmin: _canOpenAdminPanel
-                          ? () => context.push('/admin/panel')
-                          : null,
-                    ),
-                    if (_user != null) ...[
-                      const SizedBox(height: 12),
-                      _ProfileDetailsCard(user: _user!),
-                    ],
-                    const SizedBox(height: 12),
-                    VerificationSection(
-                      status: _user?.verificationStatus ?? 'unverified',
-                      identityVerified: _user?.identityVerified ?? false,
-                      onManage: _openVerification,
-                    ),
-                    const SizedBox(height: 12),
-                    SectionCard(
-                      backgroundColor: Theme.of(
-                        context,
-                      ).colorScheme.surface.withValues(alpha: 0.92),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 4,
-                      ),
-                      child: ListTile(
-                        leading: const ThreeDIconBadge(
-                          icon: Icons.settings_outlined,
-                        ),
-                        title: Text(loc.settingsTitle),
-                        trailing: const Icon(Icons.chevron_right),
-                        onTap: _openSettings,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    if (_canOpenAdminPanel)
-                      SectionCard(
-                        backgroundColor: Theme.of(
-                          context,
-                        ).colorScheme.surface.withValues(alpha: 0.92),
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 4,
-                        ),
-                        child: ListTile(
-                          leading: const ThreeDIconBadge(
-                            icon: Icons.admin_panel_settings_outlined,
+                    _ProfileMenuTile(
+                      icon: Icons.credit_card_outlined,
+                      title: 'Odeme yontemleri',
+                      trailing: 'Ayarla',
+                      onTap: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (_) => const PaymentMethodsPage(),
                           ),
-                          title: const Text('Yonetim Paneli'),
-                          subtitle: Text(
-                            'Lokasyon, kampanya ve kullanici yonetimi',
-                            style: Theme.of(context).textTheme.bodySmall,
+                        );
+                      },
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                _ProfileGroupCard(
+                  title: 'Ayarlar',
+                  children: [
+                    _ProfileMenuTile(
+                      icon: Icons.language_rounded,
+                      title: 'Dil',
+                      trailing: _languageLabel(),
+                      onTap: _openSettings,
+                    ),
+                    _ProfileMenuTile(
+                      icon: Icons.palette_outlined,
+                      title: 'Tema',
+                      trailing: _themeLabel(),
+                      onTap: _openSettings,
+                    ),
+                    _ProfileMenuTile(
+                      icon: Icons.payments_outlined,
+                      title: 'Para birimi',
+                      trailing: _currencyLabel(),
+                      onTap: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (_) => const CurrencySettingsPage(),
                           ),
-                          trailing: const Icon(Icons.chevron_right),
-                          onTap: () => context.push('/admin/panel'),
-                        ),
-                      ),
-                    if (_canOpenAdminPanel) const SizedBox(height: 12),
-                    SecuritySection(
-                      onChangePassword: () {
+                        );
+                      },
+                    ),
+                    _ProfileMenuTile(
+                      icon: Icons.notifications_none_rounded,
+                      title: 'Bildirimler',
+                      trailing: _inAppNotifications ? 'Etkin' : 'Kapali',
+                      onTap: _openSettings,
+                    ),
+                    _ProfileMenuTile(
+                      icon: Icons.support_agent_rounded,
+                      title: 'Iletisim ve destek',
+                      trailing: 'Ac',
+                      onTap: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(builder: (_) => const FaqPage()),
+                        );
+                      },
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                _ProfileGroupCard(
+                  title: 'Hesap',
+                  children: [
+                    _ProfileMenuTile(
+                      icon: Icons.verified_user_outlined,
+                      title: 'Kimlik dogrulama',
+                      trailing: _verificationStatusLabel(loc),
+                      onTap: _openVerification,
+                    ),
+                    _ProfileMenuTile(
+                      icon: Icons.badge_outlined,
+                      title: 'Kisisel bilgiler',
+                      trailing: 'Detay',
+                      onTap: _showProfileDetailsSheet,
+                    ),
+                    _ProfileMenuTile(
+                      icon: Icons.lock_outline_rounded,
+                      title: loc.changePasswordTitle,
+                      trailing: 'Ac',
+                      onTap: () {
                         Navigator.of(context).push(
                           MaterialPageRoute(
                             builder: (_) => const ChangePasswordPage(),
                           ),
                         );
                       },
-                      onLogout: _confirmLogout,
                     ),
-                    const SizedBox(height: 12),
-                    SupportSection(
-                      onFaq: () {
-                        Navigator.of(context).push(
-                          MaterialPageRoute(builder: (_) => const FaqPage()),
-                        );
-                      },
-                      onAbout: () {
+                    _ProfileMenuTile(
+                      icon: Icons.info_outline_rounded,
+                      title: 'Hakkinda',
+                      trailing: 'Ac',
+                      onTap: () {
                         Navigator.of(context).push(
                           MaterialPageRoute(builder: (_) => const AboutPage()),
                         );
@@ -463,94 +571,173 @@ class _ProfilePageState extends State<ProfilePage> {
                     ),
                   ],
                 ),
+                if (_canOpenAdminPanel) ...[
+                  const SizedBox(height: 12),
+                  _ProfileGroupCard(
+                    title: 'Yonetim',
+                    children: [
+                      _ProfileMenuTile(
+                        icon: Icons.admin_panel_settings_outlined,
+                        title: 'Yonetim paneli',
+                        trailing: 'Ac',
+                        onTap: () => context.push('/admin/panel'),
+                      ),
+                    ],
+                  ),
+                ],
+                const SizedBox(height: 12),
+                SectionCard(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
+                  backgroundColor: theme.colorScheme.surface,
+                  child: ListTile(
+                    leading: ThreeDIconBadge(
+                      icon: Icons.logout_rounded,
+                      accent: theme.colorScheme.error,
+                    ),
+                    title: Text(
+                      'Cikis yap',
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    trailing: const Icon(Icons.chevron_right_rounded),
+                    onTap: _confirmLogout,
+                  ),
+                ),
+              ],
+            ),
+    );
+  }
+}
+
+class _ProfileHero extends StatelessWidget {
+  const _ProfileHero({
+    required this.user,
+    required this.onEdit,
+    this.avatarPath,
+  });
+
+  final UserModel user;
+  final VoidCallback onEdit;
+  final String? avatarPath;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final fullName = '${user.name} ${user.surname}'.trim();
+    final avatar = avatarPath?.trim() ?? '';
+    return SectionCard(
+      radius: 26,
+      backgroundColor: theme.colorScheme.surface,
+      padding: const EdgeInsets.fromLTRB(18, 22, 18, 18),
+      child: Column(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(3),
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: LinearGradient(
+                colors: [
+                  theme.colorScheme.primary.withValues(alpha: 0.95),
+                  theme.colorScheme.secondary.withValues(alpha: 0.95),
+                ],
+              ),
+            ),
+            child: CircleAvatar(
+              radius: 38,
+              backgroundColor: theme.colorScheme.surfaceContainerHighest,
+              child: AvatarImage(
+                path: avatar,
+                size: 76,
+                icon: Icons.person_rounded,
+                iconColor: theme.colorScheme.primary,
+                backgroundColor: theme.colorScheme.surfaceContainerHighest,
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
+          Text(
+            fullName.isEmpty ? 'Kyradi Kullanici' : fullName,
+            style: theme.textTheme.headlineSmall?.copyWith(
+              fontWeight: FontWeight.w800,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 4),
+          Text(
+            user.email,
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
+          const SizedBox(height: 14),
+          OutlinedButton.icon(
+            onPressed: onEdit,
+            icon: const Icon(Icons.edit_outlined),
+            label: const Text('Profili duzenle'),
+            style: OutlinedButton.styleFrom(
+              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+              side: BorderSide(
+                color: theme.colorScheme.primary.withValues(alpha: 0.55),
+              ),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(999),
+              ),
+            ),
+          ),
         ],
       ),
     );
   }
 }
 
-class _ProfileQuickActionsCard extends StatelessWidget {
-  const _ProfileQuickActionsCard({
-    required this.onEdit,
-    required this.onVerification,
-    required this.onSettings,
-    this.onAdmin,
-  });
+class _ProfileGroupCard extends StatelessWidget {
+  const _ProfileGroupCard({required this.title, required this.children});
 
-  final VoidCallback onEdit;
-  final VoidCallback onVerification;
-  final VoidCallback onSettings;
-  final VoidCallback? onAdmin;
+  final String title;
+  final List<Widget> children;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final chips = <_QuickActionChipData>[
-      _QuickActionChipData(
-        icon: Icons.edit_outlined,
-        label: 'Profili Duzenle',
-        onTap: onEdit,
-      ),
-      _QuickActionChipData(
-        icon: Icons.verified_user_outlined,
-        label: 'Dogrulama',
-        onTap: onVerification,
-      ),
-      _QuickActionChipData(
-        icon: Icons.tune_rounded,
-        label: 'Ayarlar',
-        onTap: onSettings,
-      ),
-      if (onAdmin != null)
-        _QuickActionChipData(
-          icon: Icons.admin_panel_settings_outlined,
-          label: 'Yonetim',
-          onTap: onAdmin!,
-        ),
-    ];
     return SectionCard(
-      padding: const EdgeInsets.all(14),
-      radius: 24,
-      backgroundColor: theme.colorScheme.surface.withValues(alpha: 0.94),
-      child: Wrap(
-        spacing: 8,
-        runSpacing: 8,
-        children: chips
-            .map(
-              (item) => _QuickActionPill(
-                icon: item.icon,
-                label: item.label,
-                onTap: item.onTap,
+      radius: 22,
+      backgroundColor: theme.colorScheme.surface,
+      padding: const EdgeInsets.fromLTRB(12, 10, 12, 8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(6, 4, 6, 10),
+            child: Text(
+              title,
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w800,
               ),
-            )
-            .toList(),
+            ),
+          ),
+          ...children,
+        ],
       ),
     );
   }
 }
 
-class _QuickActionChipData {
-  const _QuickActionChipData({
+class _ProfileMenuTile extends StatelessWidget {
+  const _ProfileMenuTile({
     required this.icon,
-    required this.label,
-    required this.onTap,
+    required this.title,
+    this.trailing,
+    this.onTap,
   });
 
   final IconData icon;
-  final String label;
-  final VoidCallback onTap;
-}
-
-class _QuickActionPill extends StatelessWidget {
-  const _QuickActionPill({
-    required this.icon,
-    required this.label,
-    required this.onTap,
-  });
-
-  final IconData icon;
-  final String label;
-  final VoidCallback onTap;
+  final String title;
+  final String? trailing;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -558,150 +745,41 @@ class _QuickActionPill extends StatelessWidget {
     return Material(
       color: Colors.transparent,
       child: InkWell(
-        borderRadius: BorderRadius.circular(999),
+        borderRadius: BorderRadius.circular(14),
         onTap: onTap,
-        child: Ink(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(999),
-            gradient: LinearGradient(
-              colors: [
-                theme.colorScheme.primary.withValues(alpha: 0.14),
-                theme.colorScheme.primary.withValues(alpha: 0.05),
-              ],
-            ),
-            border: Border.all(
-              color: theme.colorScheme.primary.withValues(alpha: 0.18),
-            ),
-          ),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
           child: Row(
-            mainAxisSize: MainAxisSize.min,
             children: [
-              ThreeDIconBadge(icon: icon, accent: theme.colorScheme.primary),
-              const SizedBox(width: 8),
-              Text(
-                label,
-                style: theme.textTheme.labelLarge?.copyWith(
-                  fontWeight: FontWeight.w700,
+              ThreeDIconBadge(icon: icon),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  title,
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
+              ),
+              if (trailing != null && trailing!.isNotEmpty)
+                Text(
+                  trailing!,
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              const SizedBox(width: 4),
+              Icon(
+                Icons.chevron_right_rounded,
+                size: 20,
+                color: theme.colorScheme.onSurfaceVariant,
               ),
             ],
           ),
         ),
       ),
     );
-  }
-}
-
-class _ProfileDetailsCard extends StatelessWidget {
-  const _ProfileDetailsCard({required this.user});
-
-  final UserModel user;
-
-  @override
-  Widget build(BuildContext context) {
-    final loc = AppLocalizations.of(context)!;
-    final theme = Theme.of(context);
-    return SectionCard(
-      backgroundColor: theme.colorScheme.surface.withValues(alpha: 0.94),
-      child: Theme(
-        // Make ExpansionTile feel like a button, without extra Material padding/dividers.
-        data: theme.copyWith(dividerColor: Colors.transparent),
-        child: ExpansionTile(
-          tilePadding: EdgeInsets.zero,
-          childrenPadding: EdgeInsets.zero,
-          leading: const ThreeDIconBadge(icon: Icons.badge_outlined),
-          title: Text(
-            loc.profileDetailsTitle,
-            style: theme.textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.w800,
-            ),
-          ),
-          subtitle: Text(
-            loc.profileDetailsSubtitle,
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
-            ),
-          ),
-          children: [
-            const SizedBox(height: 12),
-            _InfoTile(
-              icon: Icons.email_outlined,
-              label: loc.profileEmailLabel,
-              value: user.email,
-            ),
-            _InfoTile(
-              icon: Icons.phone_outlined,
-              label: loc.profilePhoneLabel,
-              value: user.phone.isEmpty ? '-' : user.phone,
-            ),
-            _InfoTile(
-              icon: Icons.badge_outlined,
-              label: loc.profileNationalIdLabel,
-              value: _maskNationalId(user.nationalId),
-            ),
-            _InfoTile(
-              icon: Icons.cake_outlined,
-              label: loc.profileBirthDateLabel,
-              value: _formatBirthDate(user.birthDate),
-            ),
-            _InfoTile(
-              icon: Icons.person_outline,
-              label: loc.profileGenderLabel,
-              value: _genderLabel(loc, user.gender),
-            ),
-            _InfoTile(
-              icon: Icons.location_on_outlined,
-              label: loc.profileAddressLabel,
-              value: user.address.isEmpty ? '-' : user.address,
-            ),
-            const SizedBox(height: 4),
-            Divider(color: theme.colorScheme.outlineVariant),
-            const SizedBox(height: 4),
-            _InfoTile(
-              icon: Icons.verified_user_outlined,
-              label: loc.profileVerificationStatus,
-              value: _statusLabel(loc, user.verificationStatus),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  String _maskNationalId(String? raw) {
-    final value = (raw ?? '').trim();
-    if (value.isEmpty) return '-';
-    if (value.length <= 4) return value;
-    final tail = value.substring(value.length - 4);
-    return '**** **** $tail';
-  }
-
-  String _formatBirthDate(String? raw) {
-    if (raw == null || raw.isEmpty) return '-';
-    return raw.split('T').first;
-  }
-
-  String _statusLabel(AppLocalizations loc, String status) {
-    switch (status) {
-      case 'verified':
-        return loc.profileVerifiedLabel;
-      case 'pending':
-        return loc.profileVerificationPending;
-      default:
-        return loc.profileVerificationMissing;
-    }
-  }
-
-  String _genderLabel(AppLocalizations loc, String? raw) {
-    switch ((raw ?? '').toLowerCase()) {
-      case 'female':
-        return loc.profileGenderFemale;
-      case 'male':
-        return loc.profileGenderMale;
-      default:
-        return loc.profileGenderUnspecified;
-    }
   }
 }
 
