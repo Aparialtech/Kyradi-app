@@ -14,6 +14,36 @@ export class UsersService {
     private readonly userModel: Model<User>,
   ) {}
 
+  private normalizeNationalId(raw?: string): string | undefined {
+    const digits = (raw ?? '').replace(/\D/g, '');
+    if (!digits) return undefined;
+    if (digits.length !== 11) {
+      throw new BadRequestException('NATIONAL_ID_INVALID');
+    }
+    return digits;
+  }
+
+  private async ensureNationalIdAvailable(
+    nationalId: string,
+    excludeUserId?: string,
+  ) {
+    const query: Record<string, any> = {
+      nationalId,
+      $or: [
+        { verified: true },
+        { identityVerified: true },
+        { verificationStatus: 'verified' },
+      ],
+    };
+    if (excludeUserId) {
+      query._id = { $ne: excludeUserId };
+    }
+    const existing = await this.userModel.findOne(query).select('_id').lean().exec();
+    if (existing) {
+      throw new ConflictException('NATIONAL_ID_ALREADY_REGISTERED');
+    }
+  }
+
   async create(dto: CreateUserDto) {
     const existing = await this.userModel
       .findOne({ email: dto.email.toLowerCase() })
@@ -22,12 +52,17 @@ export class UsersService {
     if (existing) {
       throw new ConflictException('Bu e-posta adresi zaten kayıtlı');
     }
+    const normalizedNationalId = this.normalizeNationalId(dto.nationalId);
+    if (normalizedNationalId) {
+      await this.ensureNationalIdAvailable(normalizedNationalId);
+    }
     const created = await this.userModel.create({
       name: dto.name,
       surname: dto.surname,
       email: dto.email.toLowerCase(),
       passwordHash: hashPassword(dto.password),
       phone: dto.phone,
+      nationalId: normalizedNationalId,
       verified: false,
     });
     return this.toSafeObject(created as unknown as User);
@@ -90,6 +125,10 @@ export class UsersService {
   }
 
   async updateProfile(id: string, dto: UpdateUserDto) {
+    const normalizedNationalId = this.normalizeNationalId(dto.nationalId);
+    if (normalizedNationalId) {
+      await this.ensureNationalIdAvailable(normalizedNationalId, id);
+    }
     const updated = await this.userModel
       .findByIdAndUpdate(
         id,
@@ -102,7 +141,7 @@ export class UsersService {
             ...(dto.address && { address: dto.address }),
             ...(dto.gender && { gender: dto.gender }),
             ...(dto.birthDate && { birthDate: new Date(dto.birthDate) }),
-            ...(dto.nationalId && { nationalId: dto.nationalId }),
+            ...(normalizedNationalId && { nationalId: normalizedNationalId }),
             ...(dto.pushReminderEnabled !== undefined && {
               pushReminderEnabled: dto.pushReminderEnabled,
             }),

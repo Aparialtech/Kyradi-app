@@ -9,8 +9,12 @@ export class ProfileVerificationCode extends Document {
   @Prop({ required: true })
   email: string;
 
+  // Legacy plain code field kept optional for backward compatibility.
+  @Prop()
+  code?: string;
+
   @Prop({ required: true })
-  code: string;
+  codeHash: string;
 
   @Prop({ required: true })
   expiresAt: Date;
@@ -24,3 +28,5 @@ export class ProfileVerificationCode extends Document {
 
 export const ProfileVerificationCodeSchema =
   SchemaFactory.createForClass(ProfileVerificationCode);
+
+ProfileVerificationCodeSchema.index({ userId: 1, lastSentAt: -1 });

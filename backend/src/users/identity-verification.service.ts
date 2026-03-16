@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, ConflictException, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { createHash } from 'crypto';
@@ -66,6 +66,29 @@ export class IdentityVerificationService {
       throw new BadRequestException('BIRTHDATE_INVALID');
     }
     return value;
+  }
+
+  private _normalizeNationalId(raw: string): string {
+    return (raw ?? '').replace(/\D/g, '');
+  }
+
+  private async _ensureNationalIdAvailable(tcNo: string, userId: string) {
+    const existing = await this.userModel
+      .findOne({
+        nationalId: tcNo,
+        _id: { $ne: userId },
+        $or: [
+          { verified: true },
+          { identityVerified: true },
+          { verificationStatus: 'verified' },
+        ],
+      })
+      .select('_id')
+      .lean()
+      .exec();
+    if (existing) {
+      throw new ConflictException('NATIONAL_ID_ALREADY_REGISTERED');
+    }
   }
 
   // Turkish ID number validation (11 digits + checksum).
@@ -181,11 +204,12 @@ export class IdentityVerificationService {
     meta?: { ip?: string; userAgent?: string },
   ) {
     const record = await this.ensureDraft(userId, meta);
-    const tcNo = dto.tcNo.trim();
+    const tcNo = this._normalizeNationalId(dto.tcNo);
     if (!this.validateTcNo(tcNo)) {
       console.log('KYC', 'tc_invalid', `userId=${userId}`, `tc=${this._maskTc(tcNo)}`);
       throw new BadRequestException('TC_INVALID');
     }
+    await this._ensureNationalIdAvailable(tcNo, userId);
     const birthDate = this._normalizeBirthDate(dto.birthDate);
     record.personal = {
       name: dto.name.trim(),
@@ -352,6 +376,11 @@ export class IdentityVerificationService {
       throw new BadRequestException('INVALID_STATE');
     }
     const now = new Date();
+    const tcNo = this._normalizeNationalId(record.personal?.tcNo ?? '');
+    if (!this.validateTcNo(tcNo)) {
+      throw new BadRequestException('TC_INVALID');
+    }
+    await this._ensureNationalIdAvailable(tcNo, userId);
     const recentCodes = await this.kycCodeModel
       .find({ userId, purpose: 'kyc_identity' })
       .sort({ updatedAt: -1, createdAt: -1 })
@@ -391,6 +420,7 @@ export class IdentityVerificationService {
         {
           $set: {
             identityVerified: true,
+            nationalId: tcNo,
           },
         },
         { new: true },
@@ -426,6 +456,11 @@ export class IdentityVerificationService {
     this.ensureEnabled();
     const record = await this.identityModel.findOne({ userId }).exec();
     if (!record) throw new BadRequestException('KYC_NOT_STARTED');
+    const tcNo = this._normalizeNationalId(record.personal?.tcNo ?? '');
+    if (!this.validateTcNo(tcNo)) {
+      throw new BadRequestException('TC_INVALID');
+    }
+    await this._ensureNationalIdAvailable(tcNo, userId);
     record.status = 'verified';
     record.review = {
       reviewedBy,
@@ -441,6 +476,7 @@ export class IdentityVerificationService {
             verified: true,
             verificationStatus: 'verified',
             verifiedAt: new Date(),
+            nationalId: tcNo,
           },
         },
         { new: true },

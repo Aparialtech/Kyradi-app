@@ -163,8 +163,9 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
         if (!mounted) return;
         Navigator.of(context).pop(true);
       } else {
-        final msg = (res['message'] ?? res['error'] ?? 'Güncelleme başarısız')
-            .toString();
+        final msg = _friendlyApiError(
+          (res['message'] ?? res['error'] ?? 'Güncelleme başarısız').toString(),
+        );
         AppNotification.show(
           context,
           message: msg.isNotEmpty ? msg : loc.profileSaveFailed,
@@ -175,7 +176,7 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
       if (!mounted) return;
       AppNotification.show(
         context,
-        message: loc.profileSaveFailedWithDetails('$e'),
+        message: _friendlyApiError(loc.profileSaveFailedWithDetails('$e')),
         type: AppNotificationType.error,
       );
     } finally {
@@ -196,6 +197,17 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
           : '$base$trimmed';
     }
     return trimmed;
+  }
+
+  String _friendlyApiError(String raw) {
+    final upper = raw.toUpperCase();
+    if (upper.contains('NATIONAL_ID_ALREADY_REGISTERED')) {
+      return 'Bu T.C. kimlik numarası ile doğrulanmış bir hesap zaten var.';
+    }
+    if (upper.contains('NATIONAL_ID_INVALID') || upper.contains('TC_INVALID')) {
+      return 'Geçerli bir T.C. kimlik numarası girin.';
+    }
+    return raw;
   }
 
   @override

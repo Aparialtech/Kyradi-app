@@ -52,6 +52,10 @@ export class CreateUserDto {
   @IsString()
   phone?: string;
 
+  @IsOptional()
+  @IsString()
+  nationalId?: string;
+
   @Validate(NameOrFullNameConstraint)
   nameOrFullNameCheck?: string;
 }

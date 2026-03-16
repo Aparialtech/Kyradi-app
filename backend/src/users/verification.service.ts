@@ -1,6 +1,7 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
+import { createHash } from 'crypto';
 import { ProfileVerificationCode } from './schemas/profile-verification.schema';
 import { User } from './schemas/user.schema';
 import { MailService } from '../common/mail/mail.service';
@@ -14,6 +15,13 @@ export class ProfileVerificationService {
     private readonly userModel: Model<User>,
     private readonly mailService: MailService,
   ) {}
+
+  private hashOtp(code: string, userId: string): string {
+    const secret = process.env.JWT_SECRET || 'kyradi-email-otp';
+    return createHash('sha256')
+      .update(`${code}:${secret}:${userId}`)
+      .digest('hex');
+  }
 
   async startEmailVerification(userId: string) {
     const user = await this.userModel.findById(userId).exec();
@@ -29,12 +37,13 @@ export class ProfileVerificationService {
       }
     }
     const code = Math.floor(100000 + Math.random() * 900000).toString();
+    const codeHash = this.hashOtp(code, userId);
     const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
     await this.verificationModel.deleteMany({ userId });
     await this.verificationModel.create({
       userId,
       email: user.email.toLowerCase(),
-      code,
+      codeHash,
       expiresAt,
       attempts: 0,
       lastSentAt: new Date(),
@@ -71,7 +80,12 @@ export class ProfileVerificationService {
     if ((record.attempts ?? 0) >= 5) {
       throw new BadRequestException('OTP_ATTEMPTS_EXCEEDED');
     }
-    if (record.code !== normalizedCode) {
+    const hash = this.hashOtp(normalizedCode, userId);
+    const isMatch =
+      (record.codeHash?.length ?? 0) > 0
+        ? record.codeHash === hash
+        : record.code === normalizedCode;
+    if (!isMatch) {
       record.attempts = (record.attempts ?? 0) + 1;
       await record.save();
       throw new BadRequestException('OTP_INVALID');

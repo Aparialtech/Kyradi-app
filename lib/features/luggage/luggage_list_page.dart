@@ -16,7 +16,7 @@ import '../../ui/components/app_error_state.dart';
 import '../../ui/components/app_skeleton.dart';
 import '../../widgets/section_card.dart';
 import '../../widgets/app_mesh_background.dart';
-import 'widgets/active_luggage_bottom_sheet.dart';
+import '../../ui/shell/shell_spacing.dart';
 import 'widgets/luggage_color_icon.dart';
 
 class LuggageListPage extends StatefulWidget {
@@ -212,20 +212,6 @@ class _LuggageListPageState extends State<LuggageListPage> {
     final max = _page * _pageSize;
     if (items.length <= max) return items;
     return items.take(max).toList();
-  }
-
-  LuggageModel? get _activeLuggage {
-    final active =
-        _items
-            .where(
-              (item) =>
-                  item.status == LuggageStatus.awaitingDrop ||
-                  item.status == LuggageStatus.dropped,
-            )
-            .toList()
-          ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
-    if (active.isEmpty) return null;
-    return active.first;
   }
 
   int get _activeCount => _items
@@ -503,17 +489,9 @@ class _LuggageListPageState extends State<LuggageListPage> {
     final filtered = _filteredItems;
     final paged = _pagedItems;
     final hasMore = paged.length < filtered.length;
-    final activeLuggage = _activeLuggage;
-    final showActiveSheet =
-        !_loading &&
-        _error == null &&
-        activeLuggage != null &&
-        _items.isNotEmpty;
-    final activeSheetBottom = MediaQuery.viewPaddingOf(context).bottom + 14;
-    const activeSheetPeekHeight = 108.0;
-    final listBottomPadding = showActiveSheet
-        ? activeSheetBottom + activeSheetPeekHeight + 24
-        : 32.0;
+    final shellBottomInset = shellBottomContentPadding(context);
+    final listBottomPadding = shellBottomInset + 24;
+
     return Scaffold(
       backgroundColor: Colors.transparent,
       appBar: AppBar(
@@ -528,167 +506,95 @@ class _LuggageListPageState extends State<LuggageListPage> {
       body: Stack(
         children: [
           const AppMeshBackground(),
-          RefreshIndicator(
-            onRefresh: _load,
-            child: ListView(
-              padding: EdgeInsets.fromLTRB(16, 16, 16, listBottomPadding),
-              children: [
-                SectionCard(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
+          Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
+                child: _buildStickyHeader(context, loc),
+              ),
+              Expanded(
+                child: RefreshIndicator(
+                  onRefresh: _load,
+                  child: ListView(
+                    padding: EdgeInsets.fromLTRB(16, 0, 16, listBottomPadding),
                     children: [
-                      TextField(
-                        controller: _searchCtrl,
-                        onChanged: (value) => setState(() {
-                          _query = value;
-                          _expandedCardId = null;
-                          _page = 1;
-                        }),
-                        decoration: InputDecoration(
-                          labelText: loc.luggageSearchHint,
-                          prefixIcon: const Icon(Icons.search),
-                          suffixIcon: _query.isEmpty
-                              ? null
-                              : IconButton(
-                                  icon: const Icon(Icons.close),
-                                  onPressed: () {
-                                    _searchCtrl.clear();
-                                    setState(() {
-                                      _query = '';
-                                      _expandedCardId = null;
-                                      _page = 1;
-                                    });
-                                  },
-                                ),
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                      Column(
-                        children: [
-                          DropdownButtonFormField<LuggageSort>(
-                            value: _sort,
-                            decoration: InputDecoration(
-                              labelText: loc.luggageSortLabel,
+                      if (_loading) ...[
+                        const SizedBox(height: 6),
+                        Column(
+                          children: List.generate(
+                            3,
+                            (index) => const Padding(
+                              padding: EdgeInsets.only(bottom: 12),
+                              child: AppSkeleton(height: 86, radius: 18),
                             ),
-                            items: [
-                              DropdownMenuItem(
-                                value: LuggageSort.date,
-                                child: Text(loc.luggageSortDate),
-                              ),
-                              DropdownMenuItem(
-                                value: LuggageSort.status,
-                                child: Text(loc.luggageSortStatus),
-                              ),
-                              DropdownMenuItem(
-                                value: LuggageSort.location,
-                                child: Text(loc.luggageSortLocation),
-                              ),
-                              DropdownMenuItem(
-                                value: LuggageSort.payment,
-                                child: Text(loc.luggageSortPayment),
-                              ),
-                            ],
-                            onChanged: (value) {
-                              if (value == null) return;
-                              setState(() {
-                                _sort = value;
-                                _expandedCardId = null;
-                                _page = 1;
-                              });
-                            },
                           ),
-                        ],
-                      ),
+                        ),
+                      ] else if (_error != null) ...[
+                        AppErrorState(
+                          message: _error == 'USER_ID_MISSING'
+                              ? loc.userIdMissing
+                              : _error!,
+                          onRetry: _load,
+                        ),
+                      ] else if (_items.isEmpty) ...[
+                        AppEmptyState(
+                          title: loc.myLuggages,
+                          subtitle: loc.luggageEmptyStateNoItems,
+                          actionLabel: loc.quickAddLuggage,
+                          onAction: _openAddLuggageFlow,
+                        ),
+                      ] else if (filtered.isEmpty) ...[
+                        AppEmptyState(
+                          title: loc.luggageNoResultsTitle,
+                          subtitle: loc.luggageNoResultsSubtitle,
+                          actionLabel: loc.luggageFilterReset,
+                          onAction: () {
+                            setState(() {
+                              _query = '';
+                              _searchCtrl.clear();
+                              _statusFilter = null;
+                              _paymentFilter = null;
+                              _locationFilter = null;
+                              _sizeFilter = null;
+                              _expandedCardId = null;
+                              _page = 1;
+                            });
+                          },
+                        ),
+                      ] else ...[
+                        AnimatedSwitcher(
+                          duration: const Duration(milliseconds: 260),
+                          switchInCurve: Curves.easeOutCubic,
+                          switchOutCurve: Curves.easeInCubic,
+                          child: _buildCardView(
+                            context,
+                            loc,
+                            paged,
+                            key: ValueKey(
+                              "${_statusFilter?.name ?? 'all'}-${_query.trim()}-${_sort.name}-${paged.length}",
+                            ),
+                          ),
+                        ),
+                        if (hasMore)
+                          Center(
+                            child: TextButton.icon(
+                              onPressed: () => setState(() => _page += 1),
+                              icon: const Icon(Icons.expand_more),
+                              label: Text(loc.luggageShowMore),
+                            ),
+                          ),
+                      ],
                     ],
                   ),
                 ),
-                const SizedBox(height: 12),
-                _LuggageQuickBar(
-                  totalCount: _items.length,
-                  activeCount: _activeCount,
-                  onAdd: _openAddLuggageFlow,
-                  onFilter: _items.isEmpty ? null : _openFilters,
-                  onRefresh: _load,
-                ),
-                const SizedBox(height: 16),
-                if (_loading) ...[
-                  const SizedBox(height: 6),
-                  Column(
-                    children: List.generate(
-                      3,
-                      (index) => const Padding(
-                        padding: EdgeInsets.only(bottom: 12),
-                        child: AppSkeleton(height: 86, radius: 18),
-                      ),
-                    ),
-                  ),
-                ] else if (_error != null) ...[
-                  AppErrorState(
-                    message: _error == 'USER_ID_MISSING'
-                        ? loc.userIdMissing
-                        : _error!,
-                    onRetry: _load,
-                  ),
-                ] else if (_items.isEmpty) ...[
-                  AppEmptyState(
-                    title: loc.myLuggages,
-                    subtitle: loc.luggageEmptyStateNoItems,
-                    actionLabel: loc.quickAddLuggage,
-                    onAction: _openAddLuggageFlow,
-                  ),
-                ] else if (filtered.isEmpty) ...[
-                  AppEmptyState(
-                    title: loc.luggageNoResultsTitle,
-                    subtitle: loc.luggageNoResultsSubtitle,
-                    actionLabel: loc.luggageFilterReset,
-                    onAction: () {
-                      setState(() {
-                        _query = '';
-                        _searchCtrl.clear();
-                        _statusFilter = null;
-                        _paymentFilter = null;
-                        _locationFilter = null;
-                        _sizeFilter = null;
-                        _expandedCardId = null;
-                        _page = 1;
-                      });
-                    },
-                  ),
-                ] else ...[
-                  _buildCardView(context, loc, paged),
-                  if (hasMore)
-                    Center(
-                      child: TextButton.icon(
-                        onPressed: () => setState(() => _page += 1),
-                        icon: const Icon(Icons.expand_more),
-                        label: Text(loc.luggageShowMore),
-                      ),
-                    ),
-                ],
-              ],
-            ),
+              ),
+            ],
           ),
           if (_canceling)
             Positioned.fill(
               child: Container(
                 color: Colors.black.withValues(alpha: 0.15),
                 child: const Center(child: CircularProgressIndicator()),
-              ),
-            ),
-          if (showActiveSheet)
-            Positioned(
-              left: 12,
-              right: 12,
-              bottom: activeSheetBottom,
-              child: SizedBox(
-                height: (MediaQuery.sizeOf(context).height * 0.56).clamp(
-                  360.0,
-                  480.0,
-                ),
-                child: ActiveLuggageBottomSheet(
-                  luggage: activeLuggage,
-                  onDetails: () => _openDetail(activeLuggage),
-                ),
               ),
             ),
         ],
@@ -699,10 +605,12 @@ class _LuggageListPageState extends State<LuggageListPage> {
   Widget _buildCardView(
     BuildContext context,
     AppLocalizations loc,
-    List<LuggageModel> items,
-  ) {
+    List<LuggageModel> items, {
+    Key? key,
+  }) {
     final locale = Localizations.localeOf(context).toLanguageTag();
     return Column(
+      key: key,
       children: items
           .map(
             (luggage) => Padding(
@@ -731,6 +639,104 @@ class _LuggageListPageState extends State<LuggageListPage> {
     );
   }
 
+  Widget _buildStickyHeader(BuildContext context, AppLocalizations loc) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 220),
+      curve: Curves.easeOutCubic,
+      padding: const EdgeInsets.fromLTRB(12, 12, 12, 10),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surface.withValues(
+          alpha: isDark ? 0.90 : 0.94,
+        ),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: theme.colorScheme.outline.withValues(
+            alpha: isDark ? 0.20 : 0.10,
+          ),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: isDark ? 0.20 : 0.06),
+            blurRadius: 18,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          TextField(
+            controller: _searchCtrl,
+            onChanged: (value) => setState(() {
+              _query = value;
+              _expandedCardId = null;
+              _page = 1;
+            }),
+            decoration: InputDecoration(
+              labelText: loc.luggageSearchHint,
+              prefixIcon: const Icon(Icons.search),
+              suffixIcon: _query.isEmpty
+                  ? null
+                  : IconButton(
+                      icon: const Icon(Icons.close),
+                      onPressed: () {
+                        _searchCtrl.clear();
+                        setState(() {
+                          _query = '';
+                          _expandedCardId = null;
+                          _page = 1;
+                        });
+                      },
+                    ),
+            ),
+          ),
+          const SizedBox(height: 10),
+          _SortSegmentBar(
+            selected: _sort,
+            onSelected: (value) => setState(() {
+              _sort = value;
+              _expandedCardId = null;
+              _page = 1;
+            }),
+            dateLabel: loc.luggageSortDate,
+            statusLabel: loc.luggageSortStatus,
+            locationLabel: loc.luggageSortLocation,
+            paymentLabel: loc.luggageSortPayment,
+          ),
+          const SizedBox(height: 10),
+          _LuggageQuickBar(
+            totalCount: _items.length,
+            activeCount: _activeCount,
+            onAdd: _openAddLuggageFlow,
+            onFilter: _items.isEmpty ? null : _openFilters,
+            onRefresh: _load,
+            embedded: true,
+          ),
+          const SizedBox(height: 10),
+          _StatusFilterChips(
+            selected: _statusFilter,
+            onSelected: (value) => setState(() {
+              _statusFilter = value;
+              _expandedCardId = null;
+              _page = 1;
+            }),
+            totalCount: _items.length,
+            awaitingCount: _countByStatus(LuggageStatus.awaitingDrop),
+            droppedCount: _countByStatus(LuggageStatus.dropped),
+            pickedUpCount: _countByStatus(LuggageStatus.pickedUp),
+            cancelledCount: _countByStatus(LuggageStatus.cancelled),
+            allLabel: loc.allLabel,
+            awaitingLabel: loc.luggageStatusAwaitingDrop,
+            droppedLabel: loc.luggageStatusDropped,
+            pickedUpLabel: loc.luggageStatusPickedUp,
+            cancelledLabel: loc.luggageStatusCancelled,
+          ),
+        ],
+      ),
+    );
+  }
+
   String _paymentStatusLabel(AppLocalizations loc, LuggageModel luggage) {
     final status = (luggage.paymentStatus ?? '').toLowerCase();
     switch (status) {
@@ -746,6 +752,10 @@ class _LuggageListPageState extends State<LuggageListPage> {
         return loc.paymentStatusUnknown;
     }
   }
+
+  int _countByStatus(LuggageStatus status) {
+    return _items.where((item) => item.status == status).length;
+  }
 }
 
 class _LuggageQuickBar extends StatelessWidget {
@@ -755,6 +765,7 @@ class _LuggageQuickBar extends StatelessWidget {
     required this.onAdd,
     required this.onFilter,
     required this.onRefresh,
+    this.embedded = false,
   });
 
   final int totalCount;
@@ -762,106 +773,61 @@ class _LuggageQuickBar extends StatelessWidget {
   final VoidCallback onAdd;
   final VoidCallback? onFilter;
   final Future<void> Function() onRefresh;
+  final bool embedded;
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    final content = Column(
+      children: [
+        Row(
+          children: [
+            _CountPill(
+              label: 'Toplam',
+              value: '$totalCount',
+              accent: const Color(0xFF334155),
+            ),
+            const SizedBox(width: 6),
+            _CountPill(
+              label: 'Aktif',
+              value: '$activeCount',
+              accent: const Color(0xFF0F766E),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        Row(
+          children: [
+            Expanded(
+              child: _QuickBarButton.filled(
+                onPressed: onAdd,
+                icon: Icons.add_rounded,
+                label: 'Yeni',
+              ),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: _QuickBarButton.outlined(
+                onPressed: onFilter,
+                icon: Icons.tune_rounded,
+                label: 'Filtre',
+              ),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: _QuickBarButton.outlined(
+                onPressed: () => onRefresh(),
+                icon: Icons.refresh_rounded,
+                label: 'Yenile',
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+    if (embedded) return content;
     return SectionCard(
       padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Text(
-                'Hızlı İşlemler',
-                style: theme.textTheme.titleSmall?.copyWith(
-                  fontWeight: FontWeight.w800,
-                ),
-              ),
-              const Spacer(),
-              _CountPill(
-                label: 'Toplam',
-                value: '$totalCount',
-                accent: const Color(0xFF334155),
-              ),
-              const SizedBox(width: 6),
-              _CountPill(
-                label: 'Aktif',
-                value: '$activeCount',
-                accent: const Color(0xFF0F766E),
-              ),
-            ],
-          ),
-          const SizedBox(height: 10),
-          LayoutBuilder(
-            builder: (context, constraints) {
-              final compact = constraints.maxWidth < 360;
-              if (compact) {
-                return Column(
-                  children: [
-                    Row(
-                      children: [
-                        Expanded(
-                          child: _QuickBarButton.filled(
-                            onPressed: onAdd,
-                            icon: Icons.add_box_rounded,
-                            label: 'Yeni Bavul',
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: _QuickBarButton.outlined(
-                            onPressed: onFilter,
-                            icon: Icons.tune_rounded,
-                            label: 'Filtrele',
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    SizedBox(
-                      width: double.infinity,
-                      child: _QuickBarButton.outlined(
-                        onPressed: () => onRefresh(),
-                        icon: Icons.refresh_rounded,
-                        label: 'Yenile',
-                      ),
-                    ),
-                  ],
-                );
-              }
-              return Row(
-                children: [
-                  Expanded(
-                    child: _QuickBarButton.filled(
-                      onPressed: onAdd,
-                      icon: Icons.add_box_rounded,
-                      label: 'Yeni Bavul',
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: _QuickBarButton.outlined(
-                      onPressed: onFilter,
-                      icon: Icons.tune_rounded,
-                      label: 'Filtrele',
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: _QuickBarButton.outlined(
-                      onPressed: () => onRefresh(),
-                      icon: Icons.refresh_rounded,
-                      label: 'Yenile',
-                    ),
-                  ),
-                ],
-              );
-            },
-          ),
-        ],
-      ),
+      child: content,
     );
   }
 }
@@ -895,15 +861,25 @@ class _QuickBarButton extends StatelessWidget {
     if (_filled) {
       return FilledButton.icon(
         onPressed: onPressed,
-        style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(46)),
-        icon: Icon(icon, size: 18),
+        style: FilledButton.styleFrom(
+          minimumSize: const Size.fromHeight(40),
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 0),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14),
+          ),
+        ),
+        icon: Icon(icon, size: 17),
         label: text,
       );
     }
     return OutlinedButton.icon(
       onPressed: onPressed,
-      style: OutlinedButton.styleFrom(minimumSize: const Size.fromHeight(46)),
-      icon: Icon(icon, size: 18),
+      style: OutlinedButton.styleFrom(
+        minimumSize: const Size.fromHeight(40),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 0),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+      ),
+      icon: Icon(icon, size: 17),
       label: text,
     );
   }
@@ -963,45 +939,53 @@ class _CollapsibleTicketCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
       onTap: onTap,
-      child: AnimatedSize(
-        duration: const Duration(milliseconds: 220),
-        curve: Curves.easeOutCubic,
-        alignment: Alignment.topCenter,
-        child: Stack(
-          children: [
-            ClipRect(
-              child: Align(
-                alignment: Alignment.topCenter,
-                heightFactor: expanded ? 1 : 0.52,
-                child: AbsorbPointer(absorbing: !expanded, child: child),
+      child: AnimatedScale(
+        duration: const Duration(milliseconds: 260),
+        curve: Curves.easeOutBack,
+        scale: expanded ? 1 : 0.985,
+        child: AnimatedSize(
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeOutBack,
+          alignment: Alignment.topCenter,
+          child: Stack(
+            children: [
+              ClipRect(
+                child: Align(
+                  alignment: Alignment.topCenter,
+                  heightFactor: expanded ? 1 : 0.52,
+                  child: AbsorbPointer(absorbing: !expanded, child: child),
+                ),
               ),
-            ),
-            if (!expanded)
-              Positioned(
-                left: 18,
-                right: 18,
-                bottom: 12,
-                child: IgnorePointer(
-                  child: Container(
-                    height: 68,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(20),
-                      gradient: LinearGradient(
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                        colors: [
-                          Colors.transparent,
-                          Colors.black.withValues(alpha: 0.26),
-                        ],
+              if (!expanded)
+                Positioned(
+                  left: 18,
+                  right: 18,
+                  bottom: 12,
+                  child: IgnorePointer(
+                    child: Container(
+                      height: 68,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(20),
+                        gradient: LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: [
+                            Colors.transparent,
+                            Colors.black.withValues(
+                              alpha: isDark ? 0.34 : 0.26,
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ),
                 ),
-              ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -1009,6 +993,198 @@ class _CollapsibleTicketCard extends StatelessWidget {
 }
 
 enum LuggageSort { date, status, location, payment }
+
+class _StatusFilterChips extends StatelessWidget {
+  const _StatusFilterChips({
+    required this.selected,
+    required this.onSelected,
+    required this.totalCount,
+    required this.awaitingCount,
+    required this.droppedCount,
+    required this.pickedUpCount,
+    required this.cancelledCount,
+    required this.allLabel,
+    required this.awaitingLabel,
+    required this.droppedLabel,
+    required this.pickedUpLabel,
+    required this.cancelledLabel,
+  });
+
+  final LuggageStatus? selected;
+  final ValueChanged<LuggageStatus?> onSelected;
+  final int totalCount;
+  final int awaitingCount;
+  final int droppedCount;
+  final int pickedUpCount;
+  final int cancelledCount;
+  final String allLabel;
+  final String awaitingLabel;
+  final String droppedLabel;
+  final String pickedUpLabel;
+  final String cancelledLabel;
+
+  @override
+  Widget build(BuildContext context) {
+    final chips = <({LuggageStatus? status, String label, int count})>[
+      (status: null, label: allLabel, count: totalCount),
+      (
+        status: LuggageStatus.awaitingDrop,
+        label: awaitingLabel,
+        count: awaitingCount,
+      ),
+      (status: LuggageStatus.dropped, label: droppedLabel, count: droppedCount),
+      (
+        status: LuggageStatus.pickedUp,
+        label: pickedUpLabel,
+        count: pickedUpCount,
+      ),
+      (
+        status: LuggageStatus.cancelled,
+        label: cancelledLabel,
+        count: cancelledCount,
+      ),
+    ];
+    return SizedBox(
+      height: 42,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        itemBuilder: (context, index) {
+          final chip = chips[index];
+          final isSelected = selected == chip.status;
+          final theme = Theme.of(context);
+          final isDark = theme.brightness == Brightness.dark;
+          final primary = theme.colorScheme.primary;
+          return InkWell(
+            borderRadius: BorderRadius.circular(999),
+            onTap: () => onSelected(chip.status),
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 220),
+              curve: Curves.easeOutCubic,
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(999),
+                gradient: isSelected
+                    ? LinearGradient(
+                        colors: [
+                          primary.withValues(alpha: 0.96),
+                          theme.colorScheme.secondary.withValues(alpha: 0.88),
+                        ],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      )
+                    : null,
+                color: isSelected
+                    ? null
+                    : theme.colorScheme.surface.withValues(
+                        alpha: isDark ? 0.48 : 0.72,
+                      ),
+                border: Border.all(
+                  color: isSelected
+                      ? Colors.white.withValues(alpha: 0.38)
+                      : theme.colorScheme.outline.withValues(
+                          alpha: isDark ? 0.34 : 0.22,
+                        ),
+                ),
+                boxShadow: isSelected
+                    ? [
+                        BoxShadow(
+                          color: primary.withValues(alpha: 0.24),
+                          blurRadius: 14,
+                          offset: const Offset(0, 5),
+                        ),
+                      ]
+                    : null,
+              ),
+              child: Text(
+                '${chip.label} (${chip.count})',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: theme.textTheme.labelLarge?.copyWith(
+                  color: isSelected
+                      ? Colors.white
+                      : theme.colorScheme.onSurfaceVariant,
+                  fontWeight: isSelected ? FontWeight.w700 : FontWeight.w600,
+                ),
+              ),
+            ),
+          );
+        },
+        separatorBuilder: (_, __) => const SizedBox(width: 8),
+        itemCount: chips.length,
+      ),
+    );
+  }
+}
+
+class _SortSegmentBar extends StatelessWidget {
+  const _SortSegmentBar({
+    required this.selected,
+    required this.onSelected,
+    required this.dateLabel,
+    required this.statusLabel,
+    required this.locationLabel,
+    required this.paymentLabel,
+  });
+
+  final LuggageSort selected;
+  final ValueChanged<LuggageSort> onSelected;
+  final String dateLabel;
+  final String statusLabel;
+  final String locationLabel;
+  final String paymentLabel;
+
+  @override
+  Widget build(BuildContext context) {
+    final options = <({LuggageSort sort, String label})>[
+      (sort: LuggageSort.date, label: dateLabel),
+      (sort: LuggageSort.status, label: statusLabel),
+      (sort: LuggageSort.location, label: locationLabel),
+      (sort: LuggageSort.payment, label: paymentLabel),
+    ];
+    final theme = Theme.of(context);
+    return SizedBox(
+      height: 38,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        itemCount: options.length,
+        separatorBuilder: (_, __) => const SizedBox(width: 8),
+        itemBuilder: (context, index) {
+          final option = options[index];
+          final isSelected = option.sort == selected;
+          return InkWell(
+            borderRadius: BorderRadius.circular(999),
+            onTap: () => onSelected(option.sort),
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 220),
+              curve: Curves.easeOutCubic,
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(999),
+                color: isSelected
+                    ? theme.colorScheme.primary.withValues(alpha: 0.16)
+                    : theme.colorScheme.surface.withValues(alpha: 0.52),
+                border: Border.all(
+                  color: isSelected
+                      ? theme.colorScheme.primary.withValues(alpha: 0.44)
+                      : theme.colorScheme.outline.withValues(alpha: 0.20),
+                ),
+              ),
+              child: Text(
+                option.label,
+                style: theme.textTheme.labelLarge?.copyWith(
+                  color: isSelected
+                      ? theme.colorScheme.primary
+                      : theme.colorScheme.onSurfaceVariant,
+                  fontWeight: isSelected ? FontWeight.w700 : FontWeight.w600,
+                ),
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+}
 
 class _LuggageTicketCard extends StatelessWidget {
   const _LuggageTicketCard({

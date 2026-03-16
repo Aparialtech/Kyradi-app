@@ -116,8 +116,9 @@ class _VerificationFormPageState extends State<VerificationFormPage> {
           context,
         ).push(MaterialPageRoute(builder: (_) => const EmailOtpVerifyPage()));
       } else {
-        final msg = (res['message'] ?? res['error'] ?? loc.saveProfileError)
-            .toString();
+        final msg = _friendlyError(
+          (res['message'] ?? res['error'] ?? loc.saveProfileError).toString(),
+        );
         setState(() => _loading = false);
         _notify(msg, type: AppNotificationType.error);
       }
@@ -125,10 +126,21 @@ class _VerificationFormPageState extends State<VerificationFormPage> {
       if (!mounted) return;
       setState(() => _loading = false);
       _notify(
-        loc.genericErrorWithDetails('$e'),
+        _friendlyError(loc.genericErrorWithDetails('$e')),
         type: AppNotificationType.error,
       );
     }
+  }
+
+  String _friendlyError(String raw) {
+    final code = raw.toUpperCase();
+    if (code.contains('NATIONAL_ID_ALREADY_REGISTERED')) {
+      return 'Bu T.C. kimlik numarası ile doğrulanmış bir hesap zaten var.';
+    }
+    if (code.contains('NATIONAL_ID_INVALID') || code.contains('TC_INVALID')) {
+      return 'Geçerli bir T.C. kimlik numarası girin.';
+    }
+    return raw;
   }
 
   @override
