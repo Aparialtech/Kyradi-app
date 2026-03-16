@@ -19,6 +19,7 @@ import '../../utils/crash_log.dart';
 import '../../core/travel_companion_store.dart';
 import 'package:go_router/go_router.dart';
 import '../../screens/payment_page.dart';
+import '../../ui/shell/shell_spacing.dart';
 
 class LuggageDetailPage extends StatefulWidget {
   const LuggageDetailPage({super.key, required this.luggageId, this.initial});
@@ -252,7 +253,7 @@ class _LuggageDetailPageState extends State<LuggageDetailPage> {
       );
     }
     final luggage = _luggage!;
-    final bottomSafePadding = MediaQuery.viewPaddingOf(context).bottom + 104;
+    final bottomSafePadding = shellBottomContentPadding(context, extra: -8);
     return Scaffold(
       backgroundColor: Colors.transparent,
       appBar: AppBar(title: Text(luggage.displayLabel)),

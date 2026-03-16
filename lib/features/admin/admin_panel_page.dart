@@ -7,7 +7,9 @@ import 'package:go_router/go_router.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 import '../../services/api_service.dart';
+import '../../services/push_messaging_service.dart';
 import '../../widgets/section_card.dart';
+import 'admin_session_service.dart';
 
 const _adminTextPrimary = Color(0xFF0F172A);
 const _adminTextSecondary = Color(0xFF64748B);
@@ -52,7 +54,7 @@ class _AdminPanelPageState extends State<AdminPanelPage> {
   @override
   void initState() {
     super.initState();
-    _loadAll();
+    _guardAndLoad();
   }
 
   @override
@@ -115,6 +117,31 @@ class _AdminPanelPageState extends State<AdminPanelPage> {
         setState(() => _loading = false);
       }
     }
+  }
+
+  Future<void> _guardAndLoad() async {
+    final hasSession = await AdminSessionService.hasValidSession();
+    if (!mounted) return;
+    if (!hasSession) {
+      context.go('/admin/login');
+      return;
+    }
+    final me = await ApiService.getMe();
+    if (!mounted) return;
+    final profile = (me['profile'] is Map<String, dynamic>)
+        ? Map<String, dynamic>.from(me['profile'] as Map<String, dynamic>)
+        : <String, dynamic>{};
+    final role = (profile['role'] ?? 'user').toString().toLowerCase();
+    final isAdmin = role == 'admin' || role == 'editor';
+    if (me['ok'] != true || !isAdmin) {
+      await AdminSessionService.clear();
+      await PushMessagingService.instance.unregisterCurrentToken();
+      await ApiService.clearSession();
+      if (!mounted) return;
+      context.go('/admin/login');
+      return;
+    }
+    await _loadAll();
   }
 
   List<Map<String, dynamic>> _asMapList(dynamic raw) {
@@ -844,7 +871,9 @@ class _AdminPanelPageState extends State<AdminPanelPage> {
     );
 
     if (shouldLogout != true || !mounted) return;
+    await PushMessagingService.instance.unregisterCurrentToken();
     await ApiService.clearSession();
+    await AdminSessionService.clear();
     if (!mounted) return;
     context.go('/admin/login');
   }

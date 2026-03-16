@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../core/app_currency_mode.dart';
+import '../../../ui/shell/shell_spacing.dart';
 import '../../../widgets/app_mesh_background.dart';
 import '../../../widgets/section_card.dart';
 
@@ -23,7 +24,7 @@ class _CurrencySettingsPageState extends State<CurrencySettingsPage> {
 
   @override
   Widget build(BuildContext context) {
-    final bottomSafePadding = MediaQuery.viewPaddingOf(context).bottom + 96;
+    final bottomSafePadding = shellBottomContentPadding(context, extra: -16);
     final theme = Theme.of(context);
     return Scaffold(
       backgroundColor: Colors.transparent,

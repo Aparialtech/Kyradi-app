@@ -3,6 +3,8 @@ import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../services/api_service.dart';
+import '../../services/push_messaging_service.dart';
+import 'admin_session_service.dart';
 import '../../widgets/app_notification.dart';
 import '../../widgets/auth_mesh_background.dart';
 import '../../widgets/gradient_button.dart';
@@ -75,8 +77,11 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString('userId', userId);
       }
+      await AdminSessionService.markAuthenticated(role: role, email: email);
       if (!mounted) return;
       setState(() => _loading = false);
+      await PushMessagingService.instance.syncTokenWithBackend();
+      if (!mounted) return;
       _notify('Yönetici girişi başarılı', type: AppNotificationType.success);
       context.go('/admin/panel');
     } catch (e) {

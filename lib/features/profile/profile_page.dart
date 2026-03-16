@@ -6,6 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../l10n/app_localizations.dart';
 import '../../models/user.dart';
 import '../../services/api_service.dart';
+import '../../services/push_messaging_service.dart';
 import '../../screens/change_password_page.dart';
 import '../../ui/components/app_error_state.dart';
 import '../../ui/components/app_skeleton.dart';
@@ -17,6 +18,7 @@ import '../../core/app_currency_mode.dart';
 import '../../core/notification_prefs.dart';
 import '../../widgets/section_card.dart';
 import '../../widgets/app_logo_overlay.dart';
+import '../../ui/shell/shell_spacing.dart';
 import 'pages/about_page.dart';
 import 'pages/currency_settings_page.dart';
 import 'pages/faq_page.dart';
@@ -302,6 +304,7 @@ class _ProfilePageState extends State<ProfilePage> {
     );
 
     if (result == true) {
+      await PushMessagingService.instance.unregisterCurrentToken();
       await ApiService.clearSession();
       if (!mounted) return;
       AppLogoOverlayController.hide();
@@ -413,7 +416,7 @@ class _ProfilePageState extends State<ProfilePage> {
   Widget build(BuildContext context) {
     final loc = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
-    final listBottomPadding = MediaQuery.viewPaddingOf(context).bottom + 132;
+    final listBottomPadding = shellBottomContentPadding(context, extra: 20);
     return Scaffold(
       backgroundColor: const Color(0xFFF7F8FA),
       appBar: AppBar(

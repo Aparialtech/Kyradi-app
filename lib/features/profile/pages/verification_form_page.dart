@@ -33,7 +33,8 @@ class _VerificationFormPageState extends State<VerificationFormPage> {
     _nationalIdCtrl = TextEditingController(text: widget.user.nationalId ?? '');
     _phoneCtrl = TextEditingController(text: widget.user.phone);
     _addressCtrl = TextEditingController(text: widget.user.address);
-    _birthDate = widget.user.birthDate != null && widget.user.birthDate!.isNotEmpty
+    _birthDate =
+        widget.user.birthDate != null && widget.user.birthDate!.isNotEmpty
         ? DateTime.tryParse(widget.user.birthDate!)
         : null;
   }
@@ -60,7 +61,10 @@ class _VerificationFormPageState extends State<VerificationFormPage> {
     if (picked != null) setState(() => _birthDate = picked);
   }
 
-  void _notify(String message, {AppNotificationType type = AppNotificationType.info}) {
+  void _notify(
+    String message, {
+    AppNotificationType type = AppNotificationType.info,
+  }) {
     AppNotification.show(context, message: message, type: type);
   }
 
@@ -84,12 +88,33 @@ class _VerificationFormPageState extends State<VerificationFormPage> {
       final res = await ApiService.updateMyProfile(payload);
       if (!mounted) return;
       if (res['ok'] == true) {
-        await ApiService.startEmailVerification();
+        final startRes = await ApiService.startEmailVerification();
         if (!mounted) return;
+        final startOk = startRes['ok'] == true;
+        final rateLimited = '${startRes['error'] ?? startRes['message'] ?? ''}'
+            .toUpperCase()
+            .contains('OTP_RATE_LIMIT');
+        if (!startOk && !rateLimited) {
+          setState(() => _loading = false);
+          _notify(
+            (startRes['message'] ??
+                    startRes['error'] ??
+                    loc.verificationSendErrorMessage)
+                .toString(),
+            type: AppNotificationType.error,
+          );
+          return;
+        }
         setState(() => _loading = false);
-        Navigator.of(context).push(
-          MaterialPageRoute(builder: (_) => const EmailOtpVerifyPage()),
-        );
+        if (rateLimited) {
+          _notify(
+            'Kod zaten gönderildi. Lütfen mevcut kodu kullanın veya 60 sn bekleyin.',
+            type: AppNotificationType.warning,
+          );
+        }
+        Navigator.of(
+          context,
+        ).push(MaterialPageRoute(builder: (_) => const EmailOtpVerifyPage()));
       } else {
         final msg = (res['message'] ?? res['error'] ?? loc.saveProfileError)
             .toString();
@@ -99,7 +124,10 @@ class _VerificationFormPageState extends State<VerificationFormPage> {
     } catch (e) {
       if (!mounted) return;
       setState(() => _loading = false);
-      _notify(loc.genericErrorWithDetails('$e'), type: AppNotificationType.error);
+      _notify(
+        loc.genericErrorWithDetails('$e'),
+        type: AppNotificationType.error,
+      );
     }
   }
 
@@ -137,7 +165,9 @@ class _VerificationFormPageState extends State<VerificationFormPage> {
                     const SizedBox(height: 12),
                     TextFormField(
                       controller: _nationalIdCtrl,
-                      decoration: InputDecoration(labelText: loc.nationalIdLabel),
+                      decoration: InputDecoration(
+                        labelText: loc.nationalIdLabel,
+                      ),
                     ),
                     const SizedBox(height: 12),
                     TextFormField(
@@ -153,9 +183,11 @@ class _VerificationFormPageState extends State<VerificationFormPage> {
                     const SizedBox(height: 12),
                     ListTile(
                       contentPadding: EdgeInsets.zero,
-                      title: Text(_birthDate == null
-                          ? loc.birthDateSelectLabel
-                          : _birthDate!.toLocal().toString().split(' ').first),
+                      title: Text(
+                        _birthDate == null
+                            ? loc.birthDateSelectLabel
+                            : _birthDate!.toLocal().toString().split(' ').first,
+                      ),
                       trailing: const Icon(Icons.calendar_today_outlined),
                       onTap: _pickBirthDate,
                     ),

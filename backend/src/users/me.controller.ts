@@ -6,12 +6,19 @@ import { ProfileVerificationService } from './verification.service';
 import { IdentityVerificationService } from './identity-verification.service';
 import { IdentityPersonalDto } from './dto/identity-personal.dto';
 import { IdentityOtpDto } from './dto/identity-otp.dto';
+import { PushTokenDto } from './dto/push-token.dto';
 import { IsString, Length } from 'class-validator';
 
 class EmailVerifyDto {
   @IsString()
   @Length(6, 6)
   code: string;
+}
+
+class PushTokenRemoveDto {
+  @IsString()
+  @Length(8, 2048)
+  token: string;
 }
 
 @UseGuards(AuthGuard)
@@ -82,5 +89,15 @@ export class MeController {
   @Get('verification/identity/status')
   identityStatus(@Req() req: any) {
     return this.identityService.getStatus(req.user.id);
+  }
+
+  @Post('notifications/push-token')
+  registerPushToken(@Req() req: any, @Body() dto: PushTokenDto) {
+    return this.usersService.registerPushToken(req.user.id, dto);
+  }
+
+  @Post('notifications/push-token/remove')
+  removePushToken(@Req() req: any, @Body() dto: PushTokenRemoveDto) {
+    return this.usersService.unregisterPushToken(req.user.id, dto.token);
   }
 }

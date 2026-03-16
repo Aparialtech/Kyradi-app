@@ -19,6 +19,7 @@ import { Location } from '../locations/schemas/location.schema';
 import { User } from '../users/schemas/user.schema';
 import { MailService } from '../common/mail/mail.service';
 import { hashPassword, verifyPassword } from '../common/utils/password.util';
+import { LuggagePushService } from './luggage-push.service';
 
 @Injectable()
 export class LuggagesService {
@@ -37,6 +38,7 @@ export class LuggagesService {
     @InjectModel(User.name)
     private readonly userModel: Model<User>,
     private readonly mailService: MailService,
+    private readonly pushService: LuggagePushService,
   ) {}
 
   private _escapeRegex(value: string) {
@@ -245,6 +247,12 @@ export class LuggagesService {
         console.log('[PIN_MAIL] send failed', (err as Error)?.message || err);
       }
     }
+    await this.pushService.notifyLuggageEvent(userId, 'created', {
+      luggageId: created._id?.toString() ?? '',
+      luggageLabel: created.label || 'Rezervasyon',
+      locationName: created.dropLocationName,
+      status: created.status,
+    });
     return {
       luggage: this._decorateLuggage(created.toObject()),
       pinSent,
@@ -407,6 +415,21 @@ export class LuggagesService {
       }
       const saved = await luggage.save();
       await this.refreshLocationOccupancy(saved.dropLocationId?.toString());
+      if (status === LuggageStatus.DROPPED) {
+        await this.pushService.notifyLuggageEvent(userId, 'dropped', {
+          luggageId: saved._id?.toString() ?? luggageId,
+          luggageLabel: saved.label || 'Rezervasyon',
+          locationName: saved.dropLocationName,
+          status: saved.status,
+        });
+      } else if (status === LuggageStatus.PICKED) {
+        await this.pushService.notifyLuggageEvent(userId, 'picked', {
+          luggageId: saved._id?.toString() ?? luggageId,
+          luggageLabel: saved.label || 'Rezervasyon',
+          locationName: saved.dropLocationName,
+          status: saved.status,
+        });
+      }
       return this._decorateLuggage(saved.toObject());
     } catch (error) {
       this.logger.error(
@@ -432,6 +455,12 @@ export class LuggagesService {
     }
     existing.status = LuggageStatus.CANCELLED;
     await existing.save();
+    await this.pushService.notifyLuggageEvent(userId, 'cancelled', {
+      luggageId: existing._id?.toString() ?? luggageId,
+      luggageLabel: existing.label || 'Rezervasyon',
+      locationName: existing.dropLocationName,
+      status: existing.status,
+    });
     return { luggage: this._decorateLuggage(existing.toObject()) };
   }
 

@@ -134,6 +134,10 @@ export class AuthService {
     const raw = process.env.FIREBASE_SERVICE_ACCOUNT_JSON;
     if (!raw) return null;
     try {
+      if (admin.apps.length > 0) {
+        this.firebaseApp = admin.app();
+        return this.firebaseApp;
+      }
       const creds = JSON.parse(raw);
       this.firebaseApp = admin.initializeApp({
         credential: admin.credential.cert(creds),

@@ -561,6 +561,37 @@ class ApiService {
     return response;
   }
 
+  static Future<Map<String, dynamic>> registerPushToken({
+    required String token,
+    String? platform,
+    String? appVersion,
+  }) async {
+    if (_usingMockBackend) {
+      return {'ok': true, 'message': 'Mock push token registered'};
+    }
+    final response = await _post('/me/notifications/push-token', {
+      'token': token,
+      if (platform != null && platform.trim().isNotEmpty)
+        'platform': platform.trim(),
+      if (appVersion != null && appVersion.trim().isNotEmpty)
+        'appVersion': appVersion.trim(),
+      'enabled': true,
+    });
+    response['statusCode'] ??= response['_httpStatus'];
+    return response;
+  }
+
+  static Future<Map<String, dynamic>> removePushToken(String token) async {
+    if (_usingMockBackend) {
+      return {'ok': true, 'message': 'Mock push token removed'};
+    }
+    final response = await _post('/me/notifications/push-token/remove', {
+      'token': token,
+    });
+    response['statusCode'] ??= response['_httpStatus'];
+    return response;
+  }
+
   // ───────────────────────────────────────────────────────────────────────────
   // KYC / Identity verification (feature-flagged on backend)
   static Future<Map<String, dynamic>> kycIdentityStart() async {

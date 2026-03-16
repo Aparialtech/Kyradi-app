@@ -7,6 +7,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../core/drop_locations.dart';
 import '../core/ios/ios_config_service.dart';
 import '../l10n/app_localizations.dart';
+import '../ui/shell/shell_spacing.dart';
 import '../widgets/section_card.dart';
 import '../widgets/app_mesh_background.dart';
 
@@ -476,7 +477,7 @@ class _LocationReservationPageState extends State<LocationReservationPage> {
       'dd MMM HH:mm',
       Localizations.localeOf(context).toLanguageTag(),
     );
-    final bottomContentPadding = MediaQuery.viewPaddingOf(context).bottom + 108;
+    final bottomContentPadding = shellBottomContentPadding(context, extra: -4);
 
     return Scaffold(
       backgroundColor: Colors.transparent,

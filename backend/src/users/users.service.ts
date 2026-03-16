@@ -1,9 +1,10 @@
-import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
+import { Injectable, NotFoundException, ConflictException, BadRequestException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { User } from './schemas/user.schema';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { PushTokenDto } from './dto/push-token.dto';
 import { hashPassword } from '../common/utils/password.util';
 
 @Injectable()
@@ -133,10 +134,60 @@ export class UsersService {
     return this.toSafeObject(updated as unknown as User);
   }
 
+  async registerPushToken(id: string, dto: PushTokenDto) {
+    const normalizedToken = dto.token.trim();
+    if (!normalizedToken) {
+      throw new BadRequestException('PUSH_TOKEN_REQUIRED');
+    }
+    await this.userModel
+      .updateMany(
+        {},
+        {
+          $pull: {
+            pushDevices: { token: normalizedToken },
+          },
+        },
+      )
+      .exec();
+    const user = await this.userModel.findById(id).exec();
+    if (!user) throw new NotFoundException('User not found');
+    const devices = Array.isArray((user as any).pushDevices)
+      ? [...(user as any).pushDevices]
+      : [];
+    const next = devices.filter((device: any) => device?.token !== normalizedToken);
+    next.push({
+      token: normalizedToken,
+      platform: dto.platform?.trim() || undefined,
+      appVersion: dto.appVersion?.trim() || undefined,
+      enabled: dto.enabled ?? true,
+      updatedAt: new Date(),
+    });
+    (user as any).pushDevices = next;
+    await user.save();
+    return { ok: true, devices: next.length };
+  }
+
+  async unregisterPushToken(id: string, token: string) {
+    const normalizedToken = token.trim();
+    if (!normalizedToken) {
+      return { ok: true, devices: 0 };
+    }
+    const user = await this.userModel.findById(id).exec();
+    if (!user) throw new NotFoundException('User not found');
+    const devices = Array.isArray((user as any).pushDevices)
+      ? [...(user as any).pushDevices]
+      : [];
+    const next = devices.filter((device: any) => device?.token !== normalizedToken);
+    (user as any).pushDevices = next;
+    await user.save();
+    return { ok: true, devices: next.length };
+  }
+
   toSafeObject(user: User | (User & { toObject?: () => any })) {
     const obj =
       typeof user.toObject === 'function' ? (user.toObject() as Record<string, any>) : (user as any);
     delete obj.passwordHash;
+    delete obj.pushDevices;
     if (!obj.role) {
       obj.role = 'user';
     }

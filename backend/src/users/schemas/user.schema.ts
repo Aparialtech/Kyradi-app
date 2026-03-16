@@ -35,6 +35,26 @@ export class OAuthAccount {
 
 export const OAuthAccountSchema = SchemaFactory.createForClass(OAuthAccount);
 
+@Schema({ _id: false })
+export class PushDevice {
+  @Prop({ required: true })
+  token: string;
+
+  @Prop()
+  platform?: string;
+
+  @Prop()
+  appVersion?: string;
+
+  @Prop({ default: true })
+  enabled?: boolean;
+
+  @Prop({ default: Date.now })
+  updatedAt?: Date;
+}
+
+export const PushDeviceSchema = SchemaFactory.createForClass(PushDevice);
+
 @Schema({ collection: 'users', timestamps: true })
 export class User extends Document {
   @Prop({ enum: ['user', 'editor', 'admin'], default: 'user', index: true })
@@ -100,6 +120,9 @@ export class User extends Document {
 
   @Prop({ type: [OAuthAccountSchema], default: [] })
   oauthAccounts: OAuthAccount[];
+
+  @Prop({ type: [PushDeviceSchema], default: [] })
+  pushDevices?: PushDevice[];
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

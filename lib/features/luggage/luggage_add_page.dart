@@ -5,12 +5,14 @@ import 'package:go_router/go_router.dart';
 import '../../core/repositories/luggage_repository.dart';
 import '../../core/drop_locations.dart';
 import '../../models/luggage.dart';
+import '../../services/api_service.dart';
 import '../../l10n/app_localizations.dart';
 import '../../widgets/app_notification.dart';
 import '../../utils/crash_log.dart';
 import '../../widgets/section_card.dart';
 import '../../widgets/app_mesh_background.dart';
 import '../../core/travel_companion_store.dart';
+import '../../ui/shell/shell_spacing.dart';
 
 class LuggageAddPage extends StatefulWidget {
   const LuggageAddPage({super.key});
@@ -52,11 +54,37 @@ class _LuggageAddPageState extends State<LuggageAddPage> {
     setState(() => _userId = id);
   }
 
-  void _loadLocations() {
-    final locations = DropLocationsRepository.locations;
-    _locations = locations;
-    _selectedLocation = locations.isNotEmpty ? locations.first : null;
-    _locationsReady = true;
+  Future<void> _loadLocations() async {
+    try {
+      final response = await ApiService.getLocations();
+      final rawItems = response['locations'];
+      if (response['ok'] == true && rawItems is List) {
+        final parsed = rawItems
+            .whereType<Map>()
+            .map((raw) => DropLocation.fromJson(Map<String, dynamic>.from(raw)))
+            .where((location) => location.id.trim().isNotEmpty)
+            .toList();
+        if (parsed.isNotEmpty) {
+          if (!mounted) return;
+          setState(() {
+            _locations = parsed;
+            _selectedLocation = parsed.first;
+            _locationsReady = true;
+          });
+          return;
+        }
+      }
+    } catch (_) {
+      // Keep local fallback when API is unavailable.
+    }
+
+    final fallback = DropLocationsRepository.locations;
+    if (!mounted) return;
+    setState(() {
+      _locations = fallback;
+      _selectedLocation = fallback.isNotEmpty ? fallback.first : null;
+      _locationsReady = true;
+    });
   }
 
   String _generateQrCode() {
@@ -194,7 +222,7 @@ class _LuggageAddPageState extends State<LuggageAddPage> {
   @override
   Widget build(BuildContext context) {
     final loc = AppLocalizations.of(context)!;
-    final bottomSafePadding = MediaQuery.viewPaddingOf(context).bottom + 104;
+    final bottomSafePadding = shellBottomContentPadding(context, extra: -8);
     return Scaffold(
       backgroundColor: Colors.transparent,
       appBar: AppBar(title: Text(loc.addLuggageTitle)),

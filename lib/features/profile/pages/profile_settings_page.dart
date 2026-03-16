@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../l10n/app_localizations.dart';
+import '../../../ui/shell/shell_spacing.dart';
 import '../../../widgets/app_mesh_background.dart';
 import '../widgets/settings_section.dart';
 
@@ -36,7 +37,7 @@ class ProfileSettingsPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final loc = AppLocalizations.of(context)!;
-    final bottomSafePadding = MediaQuery.viewPaddingOf(context).bottom + 96;
+    final bottomSafePadding = shellBottomContentPadding(context, extra: -16);
     return Scaffold(
       appBar: AppBar(title: Text(loc.settingsTitle)),
       body: Stack(

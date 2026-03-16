@@ -9,6 +9,7 @@ import 'package:go_router/go_router.dart';
 import '../services/auth_service.dart';
 import '../widgets/gradient_button.dart';
 import '../services/api_service.dart';
+import '../services/push_messaging_service.dart';
 import '../widgets/app_notification.dart';
 import '../l10n/app_localizations.dart';
 import '../utils/crash_log.dart';
@@ -218,6 +219,8 @@ class _LoginPageState extends State<LoginPage> {
           await prefs.setString('userId', userId.toString());
           if (!mounted) return;
         }
+        await PushMessagingService.instance.syncTokenWithBackend();
+        if (!mounted) return;
         _notify(
           AppLocalizations.of(context)!.loginSuccess,
           type: AppNotificationType.success,
@@ -370,6 +373,7 @@ class _LoginPageState extends State<LoginPage> {
         }
 
         await _persistRememberedEmail(email);
+        await PushMessagingService.instance.syncTokenWithBackend();
         _notify(l10n.loginSuccess, type: AppNotificationType.success);
         if (!mounted) return;
         context.go('/home');

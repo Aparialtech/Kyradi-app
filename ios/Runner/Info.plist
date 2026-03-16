@@ -59,6 +59,10 @@
 	<string>Fotoğraflara erişim gerekli.</string>
 	<key>NSUserNotificationUsageDescription</key>
 	<string>Bildirimleri göstermek için izin gereklidir.</string>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>remote-notification</string>
+	</array>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

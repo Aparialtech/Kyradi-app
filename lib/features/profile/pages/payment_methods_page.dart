@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../core/payment_method_prefs.dart';
+import '../../../ui/shell/shell_spacing.dart';
 import '../../../widgets/app_mesh_background.dart';
 import '../../../widgets/app_notification.dart';
 import '../../../widgets/section_card.dart';
@@ -53,7 +54,7 @@ class _PaymentMethodsPageState extends State<PaymentMethodsPage> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final bottomSafePadding = MediaQuery.viewPaddingOf(context).bottom + 96;
+    final bottomSafePadding = shellBottomContentPadding(context, extra: -16);
     return Scaffold(
       backgroundColor: Colors.transparent,
       appBar: AppBar(title: const Text('Ödeme Yöntemleri')),

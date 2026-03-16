@@ -7,6 +7,7 @@ import { Luggage, LuggageSchema } from './schemas/luggage.schema';
 import { Location, LocationSchema } from '../locations/schemas/location.schema';
 import { User, UserSchema } from '../users/schemas/user.schema';
 import { MailService } from '../common/mail/mail.service';
+import { LuggagePushService } from './luggage-push.service';
 
 @Module({
   imports: [
@@ -17,7 +18,7 @@ import { MailService } from '../common/mail/mail.service';
     ]),
   ],
   controllers: [LuggagesController, PricingController],
-  providers: [LuggagesService, MailService],
+  providers: [LuggagesService, MailService, LuggagePushService],
   exports: [LuggagesService],
 })
 export class LuggagesModule {}

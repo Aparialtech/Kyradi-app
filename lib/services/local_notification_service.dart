@@ -142,6 +142,35 @@ class LocalNotificationService {
     }
   }
 
+  Future<void> showGeneric({
+    required String title,
+    required String body,
+    String channelId = 'kyradi_general',
+    String channelName = 'Genel Bildirimler',
+    String channelDescription = 'Uygulama bildirimleri',
+  }) async {
+    if (!await _canNotify()) return;
+    final safeTitle = title.trim().isEmpty ? 'KYRADI' : title.trim();
+    final safeBody = body.trim().isEmpty
+        ? 'Yeni bir bildirimin var.'
+        : body.trim();
+    try {
+      await _show(
+        channelId: channelId,
+        channelName: channelName,
+        channelDescription: channelDescription,
+        title: safeTitle,
+        body: safeBody,
+      );
+    } catch (e) {
+      appLog(
+        'local_notification',
+        'generic show failed: $e',
+        level: AppLogLevel.warn,
+      );
+    }
+  }
+
   Future<bool> _canNotify() async {
     final prefs = await SharedPreferences.getInstance();
     final pushEnabled = prefs.getBool('pref_push_reminder') ?? true;

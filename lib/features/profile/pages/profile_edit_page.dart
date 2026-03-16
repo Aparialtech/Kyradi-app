@@ -10,6 +10,7 @@ import '../../../widgets/section_card.dart';
 import '../../../widgets/avatar_image.dart';
 import '../../../core/profile_avatar_cache.dart';
 import '../../../l10n/app_localizations.dart';
+import '../../../ui/shell/shell_spacing.dart';
 
 class ProfileEditPage extends StatefulWidget {
   const ProfileEditPage({super.key, required this.user, this.avatarPath});
@@ -202,7 +203,7 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
     final theme = Theme.of(context);
     final loc = AppLocalizations.of(context)!;
     final resolvedPath = _resolveAvatarUrl(_avatarPath ?? '');
-    final bottomSafePadding = MediaQuery.viewPaddingOf(context).bottom + 104;
+    final bottomSafePadding = shellBottomContentPadding(context, extra: -8);
     return Scaffold(
       backgroundColor: Colors.transparent,
       appBar: AppBar(
