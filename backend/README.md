@@ -66,6 +66,17 @@ npm run smoke
 # custom base URL (for staging/prod)
 SMOKE_BASE_URL="https://your-api-domain.com" npm run smoke
 
+# use an already verified account (recommended for prod)
+SMOKE_BASE_URL="https://your-api-domain.com" \
+SMOKE_LOGIN_EMAIL="smoke-verified@example.com" \
+SMOKE_LOGIN_PASSWORD="StrongPass123!" \
+npm run smoke
+
+# or use a ready bearer token
+SMOKE_BASE_URL="https://your-api-domain.com" \
+SMOKE_AUTH_TOKEN="<jwt>" \
+npm run smoke
+
 # skip reservation create step (if you only want core health/auth checks)
 SMOKE_SKIP_RESERVATION=true npm run smoke
 ```

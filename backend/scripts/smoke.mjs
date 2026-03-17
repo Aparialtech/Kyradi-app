@@ -3,6 +3,9 @@
 const baseUrl = (process.env.SMOKE_BASE_URL || 'http://127.0.0.1:3000').replace(/\/+$/, '');
 const skipReservation = (process.env.SMOKE_SKIP_RESERVATION || '').toLowerCase() === 'true';
 const timeoutMs = Number(process.env.SMOKE_TIMEOUT_MS || 15000);
+const providedToken = (process.env.SMOKE_AUTH_TOKEN || '').trim();
+const loginEmail = (process.env.SMOKE_LOGIN_EMAIL || '').trim().toLowerCase();
+const loginPassword = process.env.SMOKE_LOGIN_PASSWORD || '';
 
 const randomSuffix = `${Date.now()}${Math.floor(Math.random() * 100000)}`;
 const email = `smoke_${randomSuffix}@example.com`;
@@ -56,29 +59,58 @@ async function main() {
   ensure(version.status === 200, `GET /__version failed: ${version.status}`);
   console.log('[SMOKE] ok: __version');
 
-  const register = await request('/auth/register', {
-    method: 'POST',
-    body: JSON.stringify({
-      email,
-      password,
-      name: 'Smoke',
-      surname: 'User',
-    }),
-  });
-  ensure(
-    register.status === 200 || register.status === 201,
-    `POST /auth/register failed: ${register.status} ${parseMessage(register.body)}`,
-  );
-  console.log('[SMOKE] ok: auth/register');
+  let token = providedToken;
+  if (token) {
+    console.log('[SMOKE] ok: auth/token (env)');
+  } else if (loginEmail && loginPassword) {
+    const login = await request('/auth/login', {
+      method: 'POST',
+      body: JSON.stringify({ email: loginEmail, password: loginPassword }),
+    });
+    ensure(
+      login.status === 200,
+      `POST /auth/login failed: ${login.status} ${parseMessage(login.body)}`,
+    );
+    token = login.body?.accessToken ?? '';
+    ensure(typeof token === 'string' && token.length > 20, 'Login token missing');
+    console.log('[SMOKE] ok: auth/login (env user)');
+  } else {
+    const register = await request('/auth/register', {
+      method: 'POST',
+      body: JSON.stringify({
+        email,
+        password,
+        name: 'Smoke',
+        surname: 'User',
+      }),
+    });
+    ensure(
+      register.status === 200 || register.status === 201,
+      `POST /auth/register failed: ${register.status} ${parseMessage(register.body)}`,
+    );
+    console.log('[SMOKE] ok: auth/register');
 
-  const login = await request('/auth/login', {
-    method: 'POST',
-    body: JSON.stringify({ email, password }),
-  });
-  ensure(login.status === 200, `POST /auth/login failed: ${login.status} ${parseMessage(login.body)}`);
-  const token = login.body?.accessToken;
-  ensure(typeof token === 'string' && token.length > 20, 'Login token missing');
-  console.log('[SMOKE] ok: auth/login');
+    const login = await request('/auth/login', {
+      method: 'POST',
+      body: JSON.stringify({ email, password }),
+    });
+    const loginMessage = parseMessage(login.body);
+    if (
+      login.status === 403 &&
+      loginMessage.toLowerCase().includes('doğrulaman gerekiyor')
+    ) {
+      throw new Error(
+        'Smoke kullanıcı doğrulama bekliyor. Prod için SMOKE_LOGIN_EMAIL/SMOKE_LOGIN_PASSWORD veya SMOKE_AUTH_TOKEN kullan.',
+      );
+    }
+    ensure(
+      login.status === 200,
+      `POST /auth/login failed: ${login.status} ${loginMessage}`,
+    );
+    token = login.body?.accessToken ?? '';
+    ensure(typeof token === 'string' && token.length > 20, 'Login token missing');
+    console.log('[SMOKE] ok: auth/login');
+  }
 
   const me = await request('/me', {
     headers: { Authorization: `Bearer ${token}` },
