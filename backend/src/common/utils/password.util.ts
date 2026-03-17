@@ -1,6 +1,8 @@
 import * as crypto from 'crypto';
+import { promisify } from 'util';
 
 const SALT_LENGTH = 16;
+const pbkdf2Async = promisify(crypto.pbkdf2);
 
 export function hashPassword(raw: string): string {
   const salt = crypto.randomBytes(SALT_LENGTH).toString('hex');
@@ -8,9 +10,22 @@ export function hashPassword(raw: string): string {
   return `${salt}:${hash}`;
 }
 
+export async function hashPasswordAsync(raw: string): Promise<string> {
+  const salt = crypto.randomBytes(SALT_LENGTH).toString('hex');
+  const hash = (await pbkdf2Async(raw, salt, 10000, 64, 'sha512')).toString('hex');
+  return `${salt}:${hash}`;
+}
+
 export function verifyPassword(raw: string, hashed: string): boolean {
   const [salt, hash] = hashed.split(':');
   if (!salt || !hash) return false;
   const candidate = crypto.pbkdf2Sync(raw, salt, 10000, 64, 'sha512').toString('hex');
+  return crypto.timingSafeEqual(Buffer.from(hash, 'hex'), Buffer.from(candidate, 'hex'));
+}
+
+export async function verifyPasswordAsync(raw: string, hashed: string): Promise<boolean> {
+  const [salt, hash] = hashed.split(':');
+  if (!salt || !hash) return false;
+  const candidate = (await pbkdf2Async(raw, salt, 10000, 64, 'sha512')).toString('hex');
   return crypto.timingSafeEqual(Buffer.from(hash, 'hex'), Buffer.from(candidate, 'hex'));
 }

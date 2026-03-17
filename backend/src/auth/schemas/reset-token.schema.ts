@@ -14,3 +14,6 @@ export class ResetToken extends Document {
 }
 
 export const ResetTokenSchema = SchemaFactory.createForClass(ResetToken);
+ResetTokenSchema.index({ email: 1 });
+ResetTokenSchema.index({ email: 1, code: 1 });
+ResetTokenSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });

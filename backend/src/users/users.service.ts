@@ -5,7 +5,7 @@ import { User } from './schemas/user.schema';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { PushTokenDto } from './dto/push-token.dto';
-import { hashPassword } from '../common/utils/password.util';
+import { hashPasswordAsync } from '../common/utils/password.util';
 
 @Injectable()
 export class UsersService {
@@ -60,7 +60,7 @@ export class UsersService {
       name: dto.name,
       surname: dto.surname,
       email: dto.email.toLowerCase(),
-      passwordHash: hashPassword(dto.password),
+      passwordHash: await hashPasswordAsync(dto.password),
       phone: dto.phone,
       nationalId: normalizedNationalId,
       verified: false,
@@ -89,7 +89,9 @@ export class UsersService {
       name: params.name,
       surname: params.surname,
       email: params.email.toLowerCase(),
-      passwordHash: hashPassword(`${params.provider}-${Date.now()}-${Math.random()}`),
+      passwordHash: await hashPasswordAsync(
+        `${params.provider}-${Date.now()}-${Math.random()}`,
+      ),
       verified: true,
       oauthAccounts: [{ provider: params.provider, sub: params.sub, email: params.email }],
     });

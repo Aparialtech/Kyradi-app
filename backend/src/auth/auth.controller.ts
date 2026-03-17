@@ -12,13 +12,20 @@ import { SocialLoginDto } from './dto/social-login.dto';
 import { SocialProviderLoginDto } from './dto/social-provider-login.dto';
 import { Public } from '../common/decorators/public.decorator';
 
+const registerRateLimit = Number(process.env.AUTH_REGISTER_LIMIT ?? 30);
+
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
   @Post('register')
   @Public()
-  @Throttle({ default: { limit: 10, ttl: 60_000 } })
+  @Throttle({
+    default: {
+      limit: Number.isFinite(registerRateLimit) ? registerRateLimit : 30,
+      ttl: 60_000,
+    },
+  })
   @UsePipes(new ValidationPipe({ transform: true, whitelist: true }))
   register(@Body() dto: CreateUserDto) {
     return this.authService.register(dto);

@@ -14,3 +14,6 @@ export class VerificationCode extends Document {
 }
 
 export const VerificationCodeSchema = SchemaFactory.createForClass(VerificationCode);
+VerificationCodeSchema.index({ email: 1 });
+VerificationCodeSchema.index({ email: 1, code: 1 });
+VerificationCodeSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });

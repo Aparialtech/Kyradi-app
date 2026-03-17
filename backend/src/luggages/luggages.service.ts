@@ -18,7 +18,10 @@ import { PricingEstimateDto } from './dto/pricing-estimate.dto';
 import { Location } from '../locations/schemas/location.schema';
 import { User } from '../users/schemas/user.schema';
 import { MailService } from '../common/mail/mail.service';
-import { hashPassword, verifyPassword } from '../common/utils/password.util';
+import {
+  hashPasswordAsync,
+  verifyPasswordAsync,
+} from '../common/utils/password.util';
 import { LuggagePushService } from './luggage-push.service';
 
 @Injectable()
@@ -203,7 +206,7 @@ export class LuggagesService {
 
     const qrCode = await this.ensureUniqueQrCode(dto.qrCode);
     const pickupPin = this.generatePickupPin();
-    const pickupPinHash = hashPassword(pickupPin);
+    const pickupPinHash = await hashPasswordAsync(pickupPin);
     const created = await this.luggageModel.create({
       userId,
       ...dto,
@@ -322,7 +325,7 @@ export class LuggagesService {
                 email: dto.pickupDelegateEmail?.trim() ?? '',
               },
               ...(delegateCode && {
-                delegateCodeHash: hashPassword(delegateCode ?? ''),
+                delegateCodeHash: await hashPasswordAsync(delegateCode ?? ''),
                 delegateExpiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
                 delegateUsedAt: null,
               }),
@@ -376,12 +379,12 @@ export class LuggagesService {
         const validPin =
           !!pickupPin &&
           !!luggage.pickupPinHash &&
-          verifyPassword(pickupPin, luggage.pickupPinHash);
+          (await verifyPasswordAsync(pickupPin, luggage.pickupPinHash));
         const hasDelegate = !!luggage.delegateCodeHash;
         const validDelegate =
           !!delegateCode &&
           !!luggage.delegateCodeHash &&
-          verifyPassword(delegateCode, luggage.delegateCodeHash);
+          (await verifyPasswordAsync(delegateCode, luggage.delegateCodeHash));
         if (!pickupPin && !delegateCode) {
           throw new BadRequestException(
             hasDelegate ? 'DELEGATE_CODE_REQUIRED' : 'PICKUP_PIN_REQUIRED',

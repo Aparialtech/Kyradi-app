@@ -4,7 +4,10 @@ import { Model } from 'mongoose';
 import { UsersService } from '../users/users.service';
 import { CreateUserDto } from '../users/dto/create-user.dto';
 import { LoginDto } from './dto/login.dto';
-import { verifyPassword, hashPassword } from '../common/utils/password.util';
+import {
+  hashPasswordAsync,
+  verifyPasswordAsync,
+} from '../common/utils/password.util';
 import { generateToken } from '../common/utils/token.util';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
@@ -46,7 +49,7 @@ export class AuthService {
       surname,
     });
     const token = this.generateToken(user._id?.toString() ?? user['id'], user.email);
-    await this.issueVerificationCode(user.email);
+    await this.issueVerificationCode(user.email, { waitForDelivery: false });
     return {
       accessToken: token,
       user,
@@ -85,7 +88,7 @@ export class AuthService {
     if (!userDoc) {
       throw new UnauthorizedException('Invalid credentials');
     }
-    if (!verifyPassword(dto.password, userDoc.passwordHash)) {
+    if (!(await verifyPasswordAsync(dto.password, userDoc.passwordHash))) {
       throw new UnauthorizedException('Invalid credentials');
     }
     if ((userDoc.verified ?? true) === false) {
@@ -399,12 +402,26 @@ export class AuthService {
     return response;
   }
 
-  private async issueVerificationCode(email: string) {
+  private async issueVerificationCode(
+    email: string,
+    options: { waitForDelivery?: boolean } = {},
+  ) {
     const normalized = email.toLowerCase();
     await this.verificationCodeModel.deleteMany({ email: normalized });
     const code = Math.floor(100000 + Math.random() * 900000).toString();
     const expiresAt = new Date(Date.now() + 15 * 60 * 1000);
     await this.verificationCodeModel.create({ email: normalized, code, expiresAt });
+    if (options.waitForDelivery === false) {
+      void this.mailService
+        .sendVerificationCode(email, code)
+        .catch((err) =>
+          console.warn(
+            '[AUTH_REGISTER_MAIL_FAIL]',
+            (err as Error)?.message ?? String(err),
+          ),
+        );
+      return { code, delivered: false };
+    }
     const delivered = await this.mailService.sendVerificationCode(email, code);
     return { code, delivered };
   }
@@ -455,7 +472,7 @@ export class AuthService {
     }
     const user = await this.usersService.findByEmail(dto.email);
     if (!user) throw new NotFoundException('Kullanıcı bulunamadı');
-    user.passwordHash = hashPassword(dto.newPassword);
+    user.passwordHash = await hashPasswordAsync(dto.newPassword);
     await user.save();
     await this.resetTokenModel.deleteMany({ email: dto.email.toLowerCase() });
     return { message: 'Şifre güncellendi' };
@@ -463,10 +480,13 @@ export class AuthService {
 
   async changePassword(dto: ChangePasswordDto) {
     const userDoc = await this.usersService.findDocumentById(dto.userId);
-    if (!userDoc || !verifyPassword(dto.oldPassword, userDoc.passwordHash)) {
+    if (
+      !userDoc ||
+      !(await verifyPasswordAsync(dto.oldPassword, userDoc.passwordHash))
+    ) {
       throw new UnauthorizedException('Eski şifre hatalı');
     }
-    userDoc.passwordHash = hashPassword(dto.newPassword);
+    userDoc.passwordHash = await hashPasswordAsync(dto.newPassword);
     await userDoc.save();
     return { message: 'Şifre değiştirildi' };
   }
