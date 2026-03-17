@@ -15,6 +15,7 @@
     "start:dev": "nest start --watch",
     "start:debug": "nest start --debug --watch",
     "start:prod": "node dist/main.js",
+    "smoke": "node scripts/smoke.mjs",
     "db:up": "bash scripts/db_up.sh",
     "db:down": "bash scripts/db_down.sh",
     "db:export": "bash scripts/db_export.sh",

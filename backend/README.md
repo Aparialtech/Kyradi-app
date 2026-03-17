@@ -57,6 +57,19 @@ $ npm run test:e2e
 $ npm run test:cov
 ```
 
+## Smoke test (deploy-safe)
+
+```bash
+# local default
+npm run smoke
+
+# custom base URL (for staging/prod)
+SMOKE_BASE_URL="https://your-api-domain.com" npm run smoke
+
+# skip reservation create step (if you only want core health/auth checks)
+SMOKE_SKIP_RESERVATION=true npm run smoke
+```
+
 ## Auth register smoke tests
 
 ```bash
