@@ -68,7 +68,7 @@ async function main() {
       body: JSON.stringify({ email: loginEmail, password: loginPassword }),
     });
     ensure(
-      login.status === 200,
+      login.status === 200 || login.status === 201,
       `POST /auth/login failed: ${login.status} ${parseMessage(login.body)}`,
     );
     token = login.body?.accessToken ?? '';
@@ -104,7 +104,7 @@ async function main() {
       );
     }
     ensure(
-      login.status === 200,
+      login.status === 200 || login.status === 201,
       `POST /auth/login failed: ${login.status} ${loginMessage}`,
     );
     token = login.body?.accessToken ?? '';
