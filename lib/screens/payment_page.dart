@@ -1095,6 +1095,8 @@ class ReservationEditPage extends StatefulWidget {
 }
 
 class _ReservationEditPageState extends State<ReservationEditPage> {
+  static const List<String> _sizeOptions = <String>['small', 'medium', 'large'];
+
   late String _size;
   DateTime? _dropAt;
   DateTime? _pickupAt;
@@ -1103,7 +1105,7 @@ class _ReservationEditPageState extends State<ReservationEditPage> {
   @override
   void initState() {
     super.initState();
-    _size = widget.initialSize.isNotEmpty ? widget.initialSize : 'Orta';
+    _size = _normalizeSizeValue(widget.initialSize);
     _dropAt = widget.initialDropAt;
     _pickupAt = widget.initialPickupAt;
   }
@@ -1150,7 +1152,8 @@ class _ReservationEditPageState extends State<ReservationEditPage> {
               child: const Text('İptal'),
             ),
             FilledButton(
-              onPressed: () => Navigator.of(context).pop(controller.text.trim()),
+              onPressed: () =>
+                  Navigator.of(context).pop(controller.text.trim()),
               child: const Text('Onayla'),
             ),
           ],
@@ -1251,7 +1254,7 @@ class _ReservationEditPageState extends State<ReservationEditPage> {
                 children: [
                   DropdownButtonFormField<String>(
                     value: _size,
-                    items: ['Küçük', 'Orta', 'Büyük']
+                    items: _sizeOptions
                         .map(
                           (value) => DropdownMenuItem(
                             value: value,
@@ -1261,7 +1264,9 @@ class _ReservationEditPageState extends State<ReservationEditPage> {
                         .toList(),
                     onChanged: _saving
                         ? null
-                        : (value) => setState(() => _size = value ?? 'Orta'),
+                        : (value) => setState(
+                            () => _size = _normalizeSizeValue(value ?? ''),
+                          ),
                     decoration: InputDecoration(
                       labelText: loc.size,
                       prefixIcon: const Icon(Icons.luggage_outlined),
@@ -1328,17 +1333,33 @@ class _ReservationEditPageState extends State<ReservationEditPage> {
   }
 
   String _localizedSizeLabel(String value, AppLocalizations loc) {
-    switch (value.toLowerCase()) {
-      case 'küçük':
-      case 'kucuk':
+    switch (_normalizeSizeValue(value)) {
+      case 'small':
         return loc.small;
-      case 'orta':
+      case 'medium':
         return loc.medium;
-      case 'büyük':
-      case 'buyuk':
+      case 'large':
         return loc.large;
       default:
-        return value;
+        return loc.medium;
+    }
+  }
+
+  String _normalizeSizeValue(String value) {
+    switch (value.toLowerCase().trim()) {
+      case 'küçük':
+      case 'kucuk':
+      case 'small':
+        return 'small';
+      case 'orta':
+      case 'medium':
+        return 'medium';
+      case 'büyük':
+      case 'buyuk':
+      case 'large':
+        return 'large';
+      default:
+        return 'medium';
     }
   }
 }
