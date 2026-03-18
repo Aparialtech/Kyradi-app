@@ -1369,6 +1369,51 @@ class ApiService {
     return result;
   }
 
+  static Future<Map<String, dynamic>> requestLuggageMetadataChange(
+    String userId,
+    String luggageId,
+    Map<String, dynamic> data,
+  ) async {
+    if (_usingMockBackend) {
+      return {'ok': true, 'status': 'pending_otp', 'code': '123456'};
+    }
+    final payload = Map<String, dynamic>.from(data)
+      ..removeWhere((key, value) => value == null);
+    if (payload['scheduledDropTime'] is DateTime) {
+      payload['scheduledDropTime'] = (payload['scheduledDropTime'] as DateTime)
+          .toIso8601String();
+    }
+    if (payload['scheduledPickupTime'] is DateTime) {
+      payload['scheduledPickupTime'] =
+          (payload['scheduledPickupTime'] as DateTime).toIso8601String();
+    }
+    final result = await _post(
+      '/users/$userId/luggages/$luggageId/change-request',
+      payload,
+    );
+    result['statusCode'] ??= result['_httpStatus'];
+    return result;
+  }
+
+  static Future<Map<String, dynamic>> confirmLuggageMetadataChange(
+    String userId,
+    String luggageId,
+    String code,
+  ) async {
+    if (_usingMockBackend) {
+      return {'ok': true, 'verified': true, 'message': 'Rezervasyon güncellendi'};
+    }
+    final result = await _post('/users/$userId/luggages/$luggageId/change-confirm', {
+      'code': code.trim(),
+    });
+    result['statusCode'] ??= result['_httpStatus'];
+    if (result['ok'] == true && result['luggage'] is! Map) {
+      final doc = _stripMeta(result);
+      if (doc.isNotEmpty) result['luggage'] = doc;
+    }
+    return result;
+  }
+
   static Future<Map<String, dynamic>> supportChat({
     required String message,
     String? sessionId,

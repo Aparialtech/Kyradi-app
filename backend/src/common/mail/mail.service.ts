@@ -244,6 +244,59 @@ export class MailService {
     }
   }
 
+  async sendReservationChangeCode(
+    email: string,
+    code: string,
+    ttlMin: number,
+  ): Promise<boolean> {
+    const subject = 'KYRADI Rezervasyon Degisiklik Onay Kodu';
+    const text =
+      `Merhaba,\n\n` +
+      `Rezervasyon degisikligini onaylamak icin kodunuz:\n\n` +
+      `${code}\n\n` +
+      `Bu kod ${ttlMin} dakika gecerlidir.\n\n` +
+      `Tesekkurler,\n` +
+      `KYRADI Ekibi`;
+    const html =
+      `<p>Merhaba,</p>` +
+      `<p>Rezervasyon degisikligini onaylamak icin kodunuz:</p>` +
+      `<p style="font-size:22px;font-weight:bold;letter-spacing:4px;">${code}</p>` +
+      `<p>Bu kod ${ttlMin} dakika gecerlidir.</p>` +
+      `<p>Tesekkurler,<br/>KYRADI Ekibi</p>`;
+
+    this.logProviderContext();
+    if (this.provider === 'resend') {
+      const ok = await this.sendResendEmail({
+        to: email,
+        subject,
+        text,
+        html,
+      });
+      if (ok) this.logger.log('[MailService] resend sent ok (reservation-change)');
+      else this.logger.error('[MailService] resend failed (reservation-change)');
+      return ok;
+    }
+
+    const transporter = await this.getTransporter();
+    if (!transporter) return false;
+    try {
+      await transporter.sendMail({
+        from: this.fromAddress(),
+        to: email,
+        subject,
+        text,
+        html,
+      });
+      return true;
+    } catch (error) {
+      this.logger.error(
+        'Rezervasyon degisiklik onay e-postasi gonderilemedi',
+        (error as Error).message,
+      );
+      return false;
+    }
+  }
+
   async sendPickupPin(params: {
     to: string;
     pin: string;

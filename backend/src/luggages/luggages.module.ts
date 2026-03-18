@@ -6,6 +6,10 @@ import { LuggagesService } from './luggages.service';
 import { Luggage, LuggageSchema } from './schemas/luggage.schema';
 import { Location, LocationSchema } from '../locations/schemas/location.schema';
 import { User, UserSchema } from '../users/schemas/user.schema';
+import {
+  ReservationChangeCode,
+  ReservationChangeCodeSchema,
+} from './schemas/reservation-change-code.schema';
 import { MailService } from '../common/mail/mail.service';
 import { LuggagePushService } from './luggage-push.service';
 
@@ -15,6 +19,7 @@ import { LuggagePushService } from './luggage-push.service';
       { name: Luggage.name, schema: LuggageSchema },
       { name: Location.name, schema: LocationSchema },
       { name: User.name, schema: UserSchema },
+      { name: ReservationChangeCode.name, schema: ReservationChangeCodeSchema },
     ]),
   ],
   controllers: [LuggagesController, PricingController],

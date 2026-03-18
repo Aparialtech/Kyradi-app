@@ -7,6 +7,7 @@ import {
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
+import { createHash } from 'crypto';
 import {
   Luggage,
   LuggageStatus,
@@ -23,6 +24,7 @@ import {
   verifyPasswordAsync,
 } from '../common/utils/password.util';
 import { LuggagePushService } from './luggage-push.service';
+import { ReservationChangeCode } from './schemas/reservation-change-code.schema';
 
 @Injectable()
 export class LuggagesService {
@@ -40,12 +42,165 @@ export class LuggagesService {
     private readonly locationModel: Model<Location>,
     @InjectModel(User.name)
     private readonly userModel: Model<User>,
+    @InjectModel(ReservationChangeCode.name)
+    private readonly reservationChangeCodeModel: Model<ReservationChangeCode>,
     private readonly mailService: MailService,
     private readonly pushService: LuggagePushService,
   ) {}
 
   private _escapeRegex(value: string) {
     return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  }
+
+  private reservationChangeOtpTtlMin(): number {
+    const raw = Number(process.env.RESERVATION_CHANGE_OTP_TTL_MIN ?? 10);
+    if (!Number.isFinite(raw) || raw <= 0) return 10;
+    return Math.min(Math.floor(raw), 60);
+  }
+
+  private hashReservationChangeOtp(
+    code: string,
+    userId: string,
+    luggageId: string,
+  ): string {
+    const secret = process.env.JWT_SECRET || 'kyradi-reservation-change-otp';
+    return createHash('sha256')
+      .update(`${code}:${secret}:${userId}:${luggageId}`)
+      .digest('hex');
+  }
+
+  private normalizeOtp(code: string): string {
+    return (code ?? '').replace(/[^0-9]/g, '');
+  }
+
+  private extractChangePayload(dto: UpdateLuggageDto): UpdateLuggageDto {
+    const payload = { ...dto } as Record<string, any>;
+    Object.keys(payload).forEach((key) => {
+      if (payload[key] === null || payload[key] === undefined) {
+        delete payload[key];
+      }
+    });
+    return payload as UpdateLuggageDto;
+  }
+
+  async requestMetadataChange(
+    userId: string,
+    luggageId: string,
+    dto: UpdateLuggageDto,
+  ) {
+    const luggage = await this.luggageModel
+      .findOne({ _id: luggageId, userId })
+      .lean()
+      .exec();
+    if (!luggage) throw new NotFoundException('Luggage not found');
+    if (
+      luggage.status === LuggageStatus.PICKED ||
+      luggage.status === LuggageStatus.CANCELLED
+    ) {
+      throw new BadRequestException('RESERVATION_CHANGE_NOT_ALLOWED');
+    }
+
+    const pendingChanges = this.extractChangePayload(dto);
+    if (Object.keys(pendingChanges).length === 0) {
+      throw new BadRequestException('NO_CHANGES_DETECTED');
+    }
+
+    const user = await this.userModel.findById(userId).lean().exec();
+    if (!user?.email) {
+      throw new BadRequestException('USER_EMAIL_REQUIRED');
+    }
+
+    const existing = await this.reservationChangeCodeModel
+      .findOne({ userId, luggageId })
+      .sort({ lastSentAt: -1 })
+      .exec();
+    if (existing?.lastSentAt) {
+      const delta = Date.now() - new Date(existing.lastSentAt).getTime();
+      if (delta < 60 * 1000) {
+        throw new BadRequestException('OTP_RATE_LIMIT');
+      }
+    }
+
+    const code = Math.floor(100000 + Math.random() * 900000).toString();
+    const ttlMin = this.reservationChangeOtpTtlMin();
+    const expiresAt = new Date(Date.now() + ttlMin * 60 * 1000);
+    const codeHash = this.hashReservationChangeOtp(code, userId, luggageId);
+
+    await this.reservationChangeCodeModel.findOneAndUpdate(
+      { userId, luggageId },
+      {
+        $set: {
+          userId,
+          luggageId,
+          email: user.email.toLowerCase(),
+          codeHash,
+          pendingChanges,
+          expiresAt,
+          attempts: 0,
+          lastSentAt: new Date(),
+        },
+      },
+      { upsert: true, new: true },
+    );
+
+    const delivered = await this.mailService.sendReservationChangeCode(
+      user.email,
+      code,
+      ttlMin,
+    );
+
+    const response: Record<string, any> = {
+      delivered,
+      status: 'pending_otp',
+      message: delivered
+        ? 'Degisiklik kodu e-posta adresine gonderildi'
+        : 'Kod olusturuldu ancak e-posta gonderimi basarisiz',
+    };
+    const exposeCode =
+      (process.env.NODE_ENV !== 'production' &&
+        process.env.EXPOSE_RESERVATION_CHANGE_CODE !== 'false') ||
+      !delivered;
+    if (exposeCode) {
+      response.code = code;
+    }
+    return response;
+  }
+
+  async confirmMetadataChange(userId: string, luggageId: string, code: string) {
+    const normalizedCode = this.normalizeOtp(code);
+    if (normalizedCode.length !== 6) {
+      throw new BadRequestException('OTP_INVALID');
+    }
+
+    const record = await this.reservationChangeCodeModel
+      .findOne({ userId, luggageId })
+      .sort({ lastSentAt: -1, createdAt: -1 })
+      .exec();
+    if (!record) {
+      throw new BadRequestException('OTP_INVALID');
+    }
+    if (record.expiresAt < new Date()) {
+      throw new BadRequestException('OTP_EXPIRED');
+    }
+    if ((record.attempts ?? 0) >= 5) {
+      throw new BadRequestException('OTP_ATTEMPTS_EXCEEDED');
+    }
+
+    const hash = this.hashReservationChangeOtp(normalizedCode, userId, luggageId);
+    if (record.codeHash !== hash) {
+      record.attempts = (record.attempts ?? 0) + 1;
+      await record.save();
+      throw new BadRequestException('OTP_INVALID');
+    }
+
+    const pendingChanges = (record.pendingChanges ?? {}) as UpdateLuggageDto;
+    await this.reservationChangeCodeModel.deleteMany({ userId, luggageId });
+    const result = await this.updateMetadata(userId, luggageId, pendingChanges);
+    return {
+      ...result,
+      verified: true,
+      message: 'Rezervasyon degisikligi onaylandi',
+    };
   }
 
   estimatePricing(dto: PricingEstimateDto) {

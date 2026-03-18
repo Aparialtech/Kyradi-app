@@ -220,6 +220,30 @@ class _LuggageDetailPageState extends State<LuggageDetailPage> {
     );
   }
 
+  Future<void> _openReservationEdit(LuggageModel luggage) async {
+    final userId = _userId;
+    if (userId == null || userId.isEmpty) return;
+    final result = await Navigator.of(context).push<Map<String, dynamic>?>(
+      MaterialPageRoute(
+        builder: (_) => ReservationEditPage(
+          userId: userId,
+          reservationId: luggage.id,
+          initialSize: luggage.size ?? 'Orta',
+          initialDropAt: luggage.scheduledDropTime,
+          initialPickupAt: luggage.scheduledPickupTime,
+        ),
+      ),
+    );
+    if (!mounted || result == null) return;
+    await _load();
+    if (!mounted) return;
+    AppNotification.show(
+      context,
+      message: 'Rezervasyon güncelleme isteği gönderildi.',
+      type: AppNotificationType.info,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final loc = AppLocalizations.of(context)!;
@@ -423,6 +447,12 @@ class _LuggageDetailPageState extends State<LuggageDetailPage> {
                 onPressed: () => _showTimeline(luggage),
                 icon: const Icon(Icons.timeline),
                 label: Text(loc.detailsAction),
+              ),
+              const SizedBox(height: 12),
+              FilledButton.icon(
+                onPressed: () => _openReservationEdit(luggage),
+                icon: const Icon(Icons.edit_calendar_outlined),
+                label: const Text('Rezervasyonu Düzenle'),
               ),
               const SizedBox(height: 12),
               SectionCard(

@@ -1128,6 +1128,39 @@ class _ReservationEditPageState extends State<ReservationEditPage> {
     return DateTime(date.year, date.month, date.day, time.hour, time.minute);
   }
 
+  Future<String?> _askReservationChangeOtp() async {
+    final controller = TextEditingController();
+    final code = await showDialog<String>(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('E-posta Onayı'),
+          content: TextField(
+            controller: controller,
+            keyboardType: TextInputType.number,
+            maxLength: 6,
+            decoration: const InputDecoration(
+              labelText: '6 haneli doğrulama kodu',
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('İptal'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.of(context).pop(controller.text.trim()),
+              child: const Text('Onayla'),
+            ),
+          ],
+        );
+      },
+    );
+    controller.dispose();
+    return code;
+  }
+
   Future<void> _save() async {
     final loc = AppLocalizations.of(context)!;
     if (_dropAt == null || _pickupAt == null) {
@@ -1138,7 +1171,7 @@ class _ReservationEditPageState extends State<ReservationEditPage> {
     }
     setState(() => _saving = true);
     try {
-      final result = await ApiService.updateLuggageMetadata(
+      final request = await ApiService.requestLuggageMetadataChange(
         widget.userId,
         widget.reservationId,
         {
@@ -1148,19 +1181,43 @@ class _ReservationEditPageState extends State<ReservationEditPage> {
         },
       );
       if (!mounted) return;
-      setState(() => _saving = false);
-      if (result['ok'] == true) {
-        Navigator.of(
-          context,
-        ).pop({'size': _size, 'dropAt': _dropAt, 'pickupAt': _pickupAt});
-      } else {
-        final msg = (result['error'] ?? result['message'] ?? '')
+      if (request['ok'] != true) {
+        setState(() => _saving = false);
+        final msg = (request['error'] ?? request['message'] ?? '')
             .toString()
             .trim();
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(msg.isNotEmpty ? msg : loc.operationFailed)),
         );
+        return;
       }
+
+      final otp = await _askReservationChangeOtp();
+      if (!mounted) return;
+      if (otp == null || otp.isEmpty) {
+        setState(() => _saving = false);
+        return;
+      }
+
+      final result = await ApiService.confirmLuggageMetadataChange(
+        widget.userId,
+        widget.reservationId,
+        otp,
+      );
+      if (!mounted) return;
+      setState(() => _saving = false);
+      if (result['ok'] == true) {
+        Navigator.of(
+          context,
+        ).pop({'size': _size, 'dropAt': _dropAt, 'pickupAt': _pickupAt});
+        return;
+      }
+      final msg = (result['error'] ?? result['message'] ?? '')
+          .toString()
+          .trim();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(msg.isNotEmpty ? msg : loc.operationFailed)),
+      );
     } catch (e) {
       if (!mounted) return;
       setState(() => _saving = false);

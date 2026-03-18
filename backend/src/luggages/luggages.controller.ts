@@ -1,8 +1,21 @@
-import { Body, Controller, Get, Param, Post, Put, ForbiddenException, Req } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Post,
+  Put,
+  ForbiddenException,
+  Req,
+  UsePipes,
+  ValidationPipe,
+} from '@nestjs/common';
 import { LuggagesService } from './luggages.service';
 import { CreateLuggageDto } from './dto/create-luggage.dto';
 import { UpdateLuggageDto } from './dto/update-luggage.dto';
 import { UpdateLuggageStatusDto } from './dto/update-status.dto';
+import { RequestReservationChangeDto } from './dto/request-reservation-change.dto';
+import { ConfirmReservationChangeDto } from './dto/confirm-reservation-change.dto';
 
 @Controller('users/:userId/luggages')
 export class LuggagesController {
@@ -40,6 +53,34 @@ export class LuggagesController {
       throw new ForbiddenException('FORBIDDEN');
     }
     return this.luggagesService.updateMetadata(userId, luggageId, dto);
+  }
+
+  @Post(':luggageId/change-request')
+  @UsePipes(new ValidationPipe({ transform: true, whitelist: true }))
+  requestChange(
+    @Param('userId') userId: string,
+    @Param('luggageId') luggageId: string,
+    @Body() dto: RequestReservationChangeDto,
+    @Req() req: any,
+  ) {
+    if (req?.user?.id !== userId) {
+      throw new ForbiddenException('FORBIDDEN');
+    }
+    return this.luggagesService.requestMetadataChange(userId, luggageId, dto);
+  }
+
+  @Post(':luggageId/change-confirm')
+  @UsePipes(new ValidationPipe({ transform: true, whitelist: true }))
+  confirmChange(
+    @Param('userId') userId: string,
+    @Param('luggageId') luggageId: string,
+    @Body() dto: ConfirmReservationChangeDto,
+    @Req() req: any,
+  ) {
+    if (req?.user?.id !== userId) {
+      throw new ForbiddenException('FORBIDDEN');
+    }
+    return this.luggagesService.confirmMetadataChange(userId, luggageId, dto.code);
   }
 
   @Put(':luggageId/status')
