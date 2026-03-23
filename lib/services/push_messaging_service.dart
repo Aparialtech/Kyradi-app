@@ -43,7 +43,7 @@ class PushMessagingService {
       final messaging = FirebaseMessaging.instance;
       await messaging.requestPermission(alert: true, badge: true, sound: true);
       await messaging.setForegroundNotificationPresentationOptions(
-        alert: false,
+        alert: true,
         badge: true,
         sound: true,
       );

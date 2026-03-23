@@ -14,12 +14,22 @@ class LocalNotificationService {
 
   bool _initialized = false;
   bool _permissionRequested = false;
+  int _lastNotificationId = 0;
 
   Future<void> ensureInitialized() async {
     if (_initialized || kIsWeb) return;
     try {
       const android = AndroidInitializationSettings('@mipmap/ic_launcher');
-      const ios = DarwinInitializationSettings();
+      const ios = DarwinInitializationSettings(
+        requestAlertPermission: true,
+        requestBadgePermission: true,
+        requestSoundPermission: true,
+        defaultPresentAlert: true,
+        defaultPresentBadge: true,
+        defaultPresentSound: true,
+        defaultPresentBanner: true,
+        defaultPresentList: true,
+      );
       const settings = InitializationSettings(android: android, iOS: ios);
       await _plugin.initialize(settings);
       _initialized = true;
@@ -202,15 +212,23 @@ class LocalNotificationService {
       ),
       iOS: const DarwinNotificationDetails(
         presentAlert: true,
+        presentBanner: true,
+        presentList: true,
         presentBadge: true,
         presentSound: true,
+        interruptionLevel: InterruptionLevel.active,
       ),
     );
-    await _plugin.show(
-      DateTime.now().millisecondsSinceEpoch ~/ 1000,
-      title,
-      body,
-      details,
-    );
+    await _plugin.show(_nextNotificationId(), title, body, details);
+  }
+
+  int _nextNotificationId() {
+    final now = DateTime.now().millisecondsSinceEpoch.remainder(1 << 30);
+    if (now <= _lastNotificationId) {
+      _lastNotificationId = _lastNotificationId + 1;
+      return _lastNotificationId;
+    }
+    _lastNotificationId = now;
+    return now;
   }
 }
