@@ -20,6 +20,25 @@ class GlassSearchBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final glassTint = isDark
+        ? theme.colorScheme.surface.withValues(alpha: 0.58)
+        : Colors.white.withValues(alpha: 0.74);
+    final borderColor = isDark
+        ? theme.colorScheme.outlineVariant.withValues(alpha: 0.55)
+        : Colors.white.withValues(alpha: 0.70);
+    final shadowColor = Colors.black.withValues(alpha: isDark ? 0.28 : 0.10);
+    final iconColor = isDark
+        ? theme.colorScheme.onSurface.withValues(alpha: 0.78)
+        : const Color(0xFF475569);
+    final inputColor = isDark
+        ? theme.colorScheme.onSurface
+        : const Color(0xFF0F172A);
+    final hintColor = isDark
+        ? theme.colorScheme.onSurface.withValues(alpha: 0.62)
+        : const Color(0xFF64748B);
+
     return RepaintBoundary(
       child: ClipRRect(
         borderRadius: BorderRadius.circular(22),
@@ -34,14 +53,12 @@ class GlassSearchBar extends StatelessWidget {
             Positioned.fill(
               child: DecoratedBox(
                 decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.74),
+                  color: glassTint,
                   borderRadius: BorderRadius.circular(22),
-                  border: Border.all(
-                    color: Colors.white.withValues(alpha: 0.70),
-                  ),
+                  border: Border.all(color: borderColor),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.10),
+                      color: shadowColor,
                       blurRadius: 20,
                       offset: const Offset(0, 8),
                     ),
@@ -54,7 +71,7 @@ class GlassSearchBar extends StatelessWidget {
               child: Row(
                 children: [
                   const SizedBox(width: 14),
-                  const Icon(Icons.search_rounded, size: 22, color: Color(0xFF475569)),
+                  Icon(Icons.search_rounded, size: 22, color: iconColor),
                   const SizedBox(width: 10),
                   Expanded(
                     child: TextField(
@@ -65,17 +82,15 @@ class GlassSearchBar extends StatelessWidget {
                       style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w500,
-                        color: Color(0xFF0F172A),
-                      ),
+                      ).copyWith(color: inputColor),
                       decoration: InputDecoration(
                         filled: false,
                         isCollapsed: true,
                         hintText: hintText,
                         hintStyle: const TextStyle(
                           fontSize: 15,
-                          color: Color(0xFF64748B),
                           fontWeight: FontWeight.w500,
-                        ),
+                        ).copyWith(color: hintColor),
                         border: InputBorder.none,
                       ),
                     ),
@@ -110,6 +125,14 @@ class _MiniGlassButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final tint = isDark
+        ? theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.60)
+        : Colors.white.withValues(alpha: 0.45);
+    final iconTint = isDark
+        ? theme.colorScheme.secondary
+        : const Color(0xFF0F766E);
     return Semantics(
       button: true,
       label: semanticLabel,
@@ -121,15 +144,11 @@ class _MiniGlassButton extends StatelessWidget {
           child: BackdropFilter(
             filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
             child: Material(
-              color: Colors.white.withValues(alpha: 0.45),
+              color: tint,
               child: InkWell(
                 onTap: onTap,
                 borderRadius: BorderRadius.circular(20),
-                child: Icon(
-                  icon,
-                  size: 19,
-                  color: const Color(0xFF0F766E),
-                ),
+                child: Icon(icon, size: 19, color: iconTint),
               ),
             ),
           ),

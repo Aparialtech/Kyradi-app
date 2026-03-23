@@ -418,10 +418,10 @@ class _ProfilePageState extends State<ProfilePage> {
     final theme = Theme.of(context);
     final listBottomPadding = shellBottomContentPadding(context, extra: 20);
     return Scaffold(
-      backgroundColor: const Color(0xFFF7F8FA),
+      backgroundColor: theme.colorScheme.surface,
       appBar: AppBar(
-        backgroundColor: const Color(0xFFF7F8FA),
-        surfaceTintColor: const Color(0xFFF7F8FA),
+        backgroundColor: theme.colorScheme.surface,
+        surfaceTintColor: theme.colorScheme.surface,
         elevation: 0,
         scrolledUnderElevation: 0,
         centerTitle: false,

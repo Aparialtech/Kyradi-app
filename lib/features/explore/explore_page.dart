@@ -504,6 +504,7 @@ class _ExplorePageState extends State<ExplorePage> {
 
   Widget _buildMapView(List<DropLocation> locations) {
     final loc = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
     if (_loading) {
       return const AppSkeleton(radius: 0);
     }
@@ -595,12 +596,12 @@ class _ExplorePageState extends State<ExplorePage> {
                       onTap: () => setState(() => _showMap = false),
                     ),
                     const SizedBox(width: 10),
-                    const Text(
+                    Text(
                       'Harita',
                       style: TextStyle(
                         fontSize: 24,
                         fontWeight: FontWeight.w800,
-                        color: Color(0xFF0F172A),
+                        color: theme.colorScheme.onSurface,
                         letterSpacing: -0.2,
                       ),
                     ),
@@ -737,20 +738,24 @@ class _MapBackButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
     return SizedBox(
       width: 44,
       height: 44,
       child: ClipRRect(
         borderRadius: BorderRadius.circular(22),
         child: Material(
-          color: Colors.white.withValues(alpha: 0.72),
+          color: isDark
+              ? theme.colorScheme.surface.withValues(alpha: 0.78)
+              : Colors.white.withValues(alpha: 0.72),
           child: InkWell(
             onTap: onTap,
             borderRadius: BorderRadius.circular(22),
-            child: const Icon(
+            child: Icon(
               Icons.arrow_back_ios_new_rounded,
               size: 18,
-              color: Color(0xFF0F172A),
+              color: theme.colorScheme.onSurface,
             ),
           ),
         ),
@@ -771,15 +776,22 @@ class _MapGuideCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
     return Container(
       padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(20),
-        color: Colors.white.withValues(alpha: 0.86),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.95)),
+        color: isDark
+            ? theme.colorScheme.surface.withValues(alpha: 0.90)
+            : Colors.white.withValues(alpha: 0.86),
+        border: Border.all(
+          color: isDark
+              ? theme.colorScheme.outlineVariant.withValues(alpha: 0.55)
+              : Colors.white.withValues(alpha: 0.95),
+        ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.08),
+            color: Colors.black.withValues(alpha: isDark ? 0.24 : 0.08),
             blurRadius: 22,
             offset: const Offset(0, 12),
           ),
@@ -795,14 +807,14 @@ class _MapGuideCard extends StatelessWidget {
                   'Haritada bir nokta seç',
                   style: theme.textTheme.titleSmall?.copyWith(
                     fontWeight: FontWeight.w700,
-                    color: const Color(0xFF0F172A),
+                    color: theme.colorScheme.onSurface,
                   ),
                 ),
                 const SizedBox(height: 3),
                 Text(
                   'Detayları açıp direkt rezervasyon başlatabilirsin.',
                   style: theme.textTheme.bodySmall?.copyWith(
-                    color: const Color(0xFF475569),
+                    color: theme.colorScheme.onSurfaceVariant,
                   ),
                 ),
               ],
@@ -838,11 +850,14 @@ class _SortBar extends StatelessWidget {
   Widget build(BuildContext context) {
     final loc = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(14),
-        color: Colors.white.withValues(alpha: 0.62),
+        color: isDark
+            ? theme.colorScheme.surface.withValues(alpha: 0.86)
+            : Colors.white.withValues(alpha: 0.62),
         border: Border.all(
           color: theme.colorScheme.outlineVariant.withValues(alpha: 0.35),
         ),

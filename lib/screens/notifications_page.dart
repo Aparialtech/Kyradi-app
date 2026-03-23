@@ -40,8 +40,10 @@ class NotificationsPage extends StatelessWidget {
                 return _EmptyState(theme: theme, loc: loc);
               }
               return ListView.builder(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
                 itemCount: entries.length,
                 itemBuilder: (context, index) {
                   final item = entries[index];
@@ -81,8 +83,10 @@ class _NotificationCard extends StatelessWidget {
         ],
       ),
       child: ListTile(
-        contentPadding:
-            const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 18,
+          vertical: 12,
+        ),
         leading: Container(
           padding: const EdgeInsets.all(10),
           decoration: BoxDecoration(
@@ -105,10 +109,7 @@ class _NotificationCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const SizedBox(height: 6),
-            Text(
-              entry.message,
-              style: theme.textTheme.bodyMedium,
-            ),
+            Text(entry.message, style: theme.textTheme.bodyMedium),
             const SizedBox(height: 6),
             Text(
               _formatRelative(context, entry.timestamp),
@@ -131,6 +132,7 @@ class _EmptyState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = theme.brightness == Brightness.dark;
     return Center(
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -139,14 +141,16 @@ class _EmptyState extends StatelessWidget {
           children: [
             Container(
               padding: const EdgeInsets.all(18),
-              decoration: const BoxDecoration(
+              decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: Color(0xFFE7EEF5),
+                color: theme.colorScheme.surfaceContainerHighest.withValues(
+                  alpha: isDark ? 0.55 : 1,
+                ),
               ),
-              child: const Icon(
+              child: Icon(
                 Icons.notifications_off_rounded,
                 size: 36,
-                color: Color(0xFF2C3E50),
+                color: theme.colorScheme.onSurfaceVariant,
               ),
             ),
             const SizedBox(height: 18),
@@ -183,7 +187,10 @@ class _NotificationVisual {
   });
 }
 
-_NotificationVisual _typeVisual(AppNotificationType type, AppLocalizations loc) {
+_NotificationVisual _typeVisual(
+  AppNotificationType type,
+  AppLocalizations loc,
+) {
   switch (type) {
     case AppNotificationType.success:
       return _NotificationVisual(
@@ -211,6 +218,7 @@ _NotificationVisual _typeVisual(AppNotificationType type, AppLocalizations loc) 
       );
   }
 }
+
 String _formatRelative(BuildContext context, DateTime time) {
   final loc = AppLocalizations.of(context)!;
   final now = DateTime.now();
