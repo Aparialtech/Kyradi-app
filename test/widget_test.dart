@@ -12,8 +12,12 @@ import 'package:kyradi_app/main.dart';
 
 void main() {
   testWidgets('App builds without layout issues', (WidgetTester tester) async {
+    final originalErrorBuilder = ErrorWidget.builder;
+
     await tester.pumpWidget(const MyApp());
-    await tester.pumpAndSettle();
+    // App has continuous animations (e.g. glow/mesh), so avoid pumpAndSettle timeout.
+    await tester.pump(const Duration(milliseconds: 300));
+    ErrorWidget.builder = originalErrorBuilder;
 
     expect(find.byType(MaterialApp), findsOneWidget);
   });

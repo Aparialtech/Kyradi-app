@@ -1,7 +1,13 @@
-import { BadRequestException, ConflictException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  ConflictException,
+  Injectable,
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { createHash } from 'crypto';
+import * as fs from 'fs';
+import * as path from 'path';
 import {
   IdentityVerification,
   IdentityVerificationStatus,
@@ -15,6 +21,19 @@ type IdentityDocType = 'id_front' | 'id_back' | 'selfie';
 
 @Injectable()
 export class IdentityVerificationService {
+  private ocrModuleUnavailable = false;
+  private readonly docKeywords = [
+    'T.C',
+    'TC',
+    'KIMLIK',
+    'KİMLİK',
+    'IDENTITY',
+    'DOGUM',
+    'DOĞUM',
+    'SOYADI',
+    'ADI',
+  ];
+
   constructor(
     @InjectModel(IdentityVerification.name)
     private readonly identityModel: Model<IdentityVerification>,
@@ -36,7 +55,9 @@ export class IdentityVerificationService {
   autoApproveInDev(): boolean {
     const isProd = (process.env.NODE_ENV ?? '').toLowerCase() === 'production';
     if (isProd) return false;
-    return (process.env.KYC_AUTO_APPROVE_IN_DEV ?? 'true').toLowerCase() === 'true';
+    return (
+      (process.env.KYC_AUTO_APPROVE_IN_DEV ?? 'true').toLowerCase() === 'true'
+    );
   }
 
   retentionDays(): number {
@@ -52,6 +73,222 @@ export class IdentityVerificationService {
   otpRateLimit(): number {
     const raw = Number(process.env.KYC_OTP_RATE_LIMIT ?? 3);
     return Number.isFinite(raw) && raw > 0 ? raw : 3;
+  }
+
+  private docVerifierEnabled(): boolean {
+    return (
+      (process.env.KYC_DOC_VERIFIER_ENABLED ?? 'false').toLowerCase() === 'true'
+    );
+  }
+
+  private localDocCheckEnabled(): boolean {
+    return (
+      (process.env.KYC_LOCAL_DOC_CHECK_ENABLED ?? 'true').toLowerCase() ===
+      'true'
+    );
+  }
+
+  private ocrRequired(): boolean {
+    return (
+      (process.env.KYC_DOC_OCR_REQUIRED ?? 'false').toLowerCase() === 'true'
+    );
+  }
+
+  private ocrLang(): string {
+    return (process.env.KYC_DOC_OCR_LANG ?? 'tur+eng').trim();
+  }
+
+  private normalizeText(value?: string | null): string {
+    const raw = (value ?? '')
+      .replace(/ı/g, 'i')
+      .replace(/İ/g, 'I')
+      .normalize('NFKD')
+      .replace(/[\u0300-\u036f]/g, '');
+    return raw.replace(/[^A-Za-z0-9]/g, '').toUpperCase();
+  }
+
+  private normalizeDate(value?: string | null): string {
+    const raw = (value ?? '').trim();
+    const m = raw.match(/^(\d{4})[-/. ]?(\d{2})[-/. ]?(\d{2})$/);
+    if (!m) return '';
+    return `${m[1]}-${m[2]}-${m[3]}`;
+  }
+
+  private normalizeDateFromFreeText(value?: string | null): string {
+    const raw = (value ?? '').trim();
+    const m = raw.match(
+      /\b(19|20\d{2})[-/. ](0[1-9]|1[0-2])[-/. ]([0-2]\d|3[01])\b/,
+    );
+    if (!m) return '';
+    return `${m[1]}-${m[2]}-${m[3]}`;
+  }
+
+  private toIdentityFilePath(url?: string): string | null {
+    const v = (url ?? '').trim();
+    if (!v) return null;
+    const marker = '/uploads/identity/';
+    const idx = v.indexOf(marker);
+    if (idx === -1) return null;
+    const relative = v.slice(idx + marker.length).replace(/^\/+/, '');
+    if (!relative) return null;
+    return path.join(process.cwd(), 'uploads', 'identity', relative);
+  }
+
+  private extractTcCandidates(text: string): string[] {
+    const set = new Set<string>();
+    const direct = text.match(/\b[1-9]\d{10}\b/g) ?? [];
+    for (const item of direct) {
+      if (this.validateTcNo(item)) set.add(item);
+    }
+    const compressed = text.replace(/\s+/g, '');
+    const maybe = compressed.match(/[1-9]\d{10}/g) ?? [];
+    for (const item of maybe) {
+      if (this.validateTcNo(item)) set.add(item);
+    }
+    return Array.from(set);
+  }
+
+  private async extractTextWithOcr(filePath: string): Promise<string | null> {
+    if (this.ocrModuleUnavailable) return null;
+    const modName = process.env.KYC_OCR_MODULE || 'tesseract.js';
+    try {
+      const stat = await fs.promises.stat(filePath);
+      if (!stat.isFile()) return null;
+    } catch {
+      return null;
+    }
+
+    try {
+      const mod = await import(modName);
+      const recognize =
+        (mod as any).recognize ??
+        (mod as any).default?.recognize ??
+        (mod as any).Tesseract?.recognize;
+      if (typeof recognize !== 'function') {
+        this.ocrModuleUnavailable = true;
+        return null;
+      }
+      const result = await recognize(filePath, this.ocrLang(), {
+        logger: () => undefined,
+      });
+      const text = result?.data?.text;
+      if (typeof text !== 'string') return null;
+      return text;
+    } catch {
+      this.ocrModuleUnavailable = true;
+      return null;
+    }
+  }
+
+  private async checkLocalIdentityConsistency(record: IdentityVerification) {
+    const docs = record.documents ?? ({} as any);
+    const frontPath = this.toIdentityFilePath(docs?.idFront?.url);
+    const backPath = this.toIdentityFilePath(docs?.idBack?.url);
+    if (!frontPath || !backPath) {
+      throw new BadRequestException('KYC_DOC_PATH_INVALID');
+    }
+
+    const [frontText, backText] = await Promise.all([
+      this.extractTextWithOcr(frontPath),
+      this.extractTextWithOcr(backPath),
+    ]);
+    const combined = `${frontText ?? ''}\n${backText ?? ''}`.trim();
+    if (!combined) {
+      if (this.ocrRequired()) {
+        throw new BadRequestException('KYC_OCR_UNAVAILABLE');
+      }
+      return;
+    }
+
+    const upper = combined.toUpperCase();
+    const keywordHits = this.docKeywords.filter((k) =>
+      upper.includes(k.toUpperCase()),
+    ).length;
+    if (keywordHits < 2) {
+      throw new BadRequestException('KYC_DOC_NOT_REAL_ID');
+    }
+
+    const expectedTc = this._normalizeNationalId(record.personal?.tcNo ?? '');
+    const tcCandidates = this.extractTcCandidates(combined);
+    if (!expectedTc || !tcCandidates.includes(expectedTc)) {
+      throw new BadRequestException('KYC_DOC_TC_MISMATCH');
+    }
+
+    const expectedBirth = this.normalizeDate(record.personal?.birthDate ?? '');
+    if (expectedBirth) {
+      const foundBirth = this.normalizeDateFromFreeText(combined);
+      if (!foundBirth || foundBirth !== expectedBirth) {
+        throw new BadRequestException('KYC_DOC_BIRTHDATE_MISMATCH');
+      }
+    }
+
+    const name = this.normalizeText(record.personal?.name ?? '');
+    const surname = this.normalizeText(record.personal?.surname ?? '');
+    const normalizedDoc = this.normalizeText(combined);
+    if (name && !normalizedDoc.includes(name)) {
+      throw new BadRequestException('KYC_DOC_NAME_MISMATCH');
+    }
+    if (surname && !normalizedDoc.includes(surname)) {
+      throw new BadRequestException('KYC_DOC_SURNAME_MISMATCH');
+    }
+  }
+
+  private async ensurePersonalMatchesUserProfile(record: IdentityVerification) {
+    const user = await this.userModel.findById(record.userId).lean().exec();
+    if (!user) {
+      throw new BadRequestException('USER_NOT_FOUND');
+    }
+    const personal = record.personal ?? ({} as any);
+    const tcNo = this._normalizeNationalId(personal.tcNo ?? '');
+    const birthDate = this.normalizeDate(personal.birthDate ?? '');
+    const name = this.normalizeText(personal.name ?? '');
+    const surname = this.normalizeText(personal.surname ?? '');
+
+    const userTc = this._normalizeNationalId((user as any).nationalId ?? '');
+    if (userTc && tcNo && userTc !== tcNo) {
+      throw new BadRequestException('KYC_PROFILE_MISMATCH');
+    }
+
+    const userBirth = this.normalizeDate(
+      (user as any).birthDate?.toString() ?? '',
+    );
+    if (userBirth && birthDate && userBirth !== birthDate) {
+      throw new BadRequestException('KYC_PROFILE_MISMATCH');
+    }
+
+    const userName = this.normalizeText((user as any).name ?? '');
+    if (userName && name && userName !== name) {
+      throw new BadRequestException('KYC_PROFILE_MISMATCH');
+    }
+
+    const userSurname = this.normalizeText((user as any).surname ?? '');
+    if (userSurname && surname && userSurname !== surname) {
+      throw new BadRequestException('KYC_PROFILE_MISMATCH');
+    }
+  }
+
+  private docVerifierStrict(): boolean {
+    return (
+      (process.env.KYC_DOC_VERIFIER_STRICT ?? 'false').toLowerCase() === 'true'
+    );
+  }
+
+  private docVerifierMinConfidence(): number {
+    const raw = Number(process.env.KYC_DOC_VERIFIER_MIN_CONFIDENCE ?? 0.75);
+    if (!Number.isFinite(raw)) return 0.75;
+    if (raw < 0) return 0;
+    if (raw > 1) return 1;
+    return raw;
+  }
+
+  private docVerifierTimeoutMs(): number {
+    const raw = Number(process.env.KYC_DOC_VERIFIER_TIMEOUT_MS ?? 7000);
+    return Number.isFinite(raw) && raw > 0 ? Math.floor(raw) : 7000;
+  }
+
+  private docMinBytes(): number {
+    const raw = Number(process.env.KYC_DOC_MIN_BYTES ?? 25 * 1024);
+    return Number.isFinite(raw) && raw > 0 ? Math.floor(raw) : 25 * 1024;
   }
 
   private _maskTc(tcNo: string): string {
@@ -99,7 +336,7 @@ export class IdentityVerificationService {
     const digits = v.split('').map((d) => Number(d));
     const oddSum = digits[0] + digits[2] + digits[4] + digits[6] + digits[8];
     const evenSum = digits[1] + digits[3] + digits[5] + digits[7];
-    const digit10 = ((oddSum * 7 - evenSum) % 10 + 10) % 10;
+    const digit10 = (((oddSum * 7 - evenSum) % 10) + 10) % 10;
     if (digit10 !== digits[9]) return false;
     const sum10 = digits.slice(0, 10).reduce((a, b) => a + b, 0);
     const digit11 = sum10 % 10;
@@ -120,7 +357,10 @@ export class IdentityVerificationService {
     if (!record.security) record.security = {};
   }
 
-  async ensureDraft(userId: string, meta?: { ip?: string; userAgent?: string }) {
+  async ensureDraft(
+    userId: string,
+    meta?: { ip?: string; userAgent?: string },
+  ) {
     this.ensureEnabled();
     const existing = await this.identityModel.findOne({ userId }).exec();
     if (existing) {
@@ -130,13 +370,17 @@ export class IdentityVerificationService {
         existing.security = {
           ...(existing.security ?? {}),
           ...(meta.ip ? { ip: meta.ip } : {}),
-          ...(meta.userAgent ? { userAgent: meta.userAgent.slice(0, 180) } : {}),
+          ...(meta.userAgent
+            ? { userAgent: meta.userAgent.slice(0, 180) }
+            : {}),
         };
         await existing.save();
       }
       return existing;
     }
-    const expiresAt = new Date(Date.now() + this.retentionDays() * 86400 * 1000);
+    const expiresAt = new Date(
+      Date.now() + this.retentionDays() * 86400 * 1000,
+    );
     return this.identityModel.create({
       userId,
       status: 'draft',
@@ -206,7 +450,12 @@ export class IdentityVerificationService {
     const record = await this.ensureDraft(userId, meta);
     const tcNo = this._normalizeNationalId(dto.tcNo);
     if (!this.validateTcNo(tcNo)) {
-      console.log('KYC', 'tc_invalid', `userId=${userId}`, `tc=${this._maskTc(tcNo)}`);
+      console.log(
+        'KYC',
+        'tc_invalid',
+        `userId=${userId}`,
+        `tc=${this._maskTc(tcNo)}`,
+      );
       throw new BadRequestException('TC_INVALID');
     }
     await this._ensureNationalIdAvailable(tcNo, userId);
@@ -266,7 +515,9 @@ export class IdentityVerificationService {
 
   private _hashOtp(code: string, userId: string): string {
     const secret = process.env.JWT_SECRET || 'super-secret-key';
-    return createHash('sha256').update(`${code}:${secret}:${userId}`).digest('hex');
+    return createHash('sha256')
+      .update(`${code}:${secret}:${userId}`)
+      .digest('hex');
   }
 
   private _generateOtp(): string {
@@ -340,6 +591,7 @@ export class IdentityVerificationService {
     if (missing.length > 0) {
       throw new BadRequestException('MISSING_KYC_FIELDS');
     }
+    await this.verifyRealIdentityDocuments(record);
     const user = await this.userModel.findById(userId).exec();
     if (!user) throw new BadRequestException('USER_NOT_FOUND');
     record.status = 'pending_otp';
@@ -362,6 +614,106 @@ export class IdentityVerificationService {
       delivered: otp.delivered,
       otpTtlMin: otp.ttlMin,
     };
+  }
+
+  private async verifyRealIdentityDocuments(record: IdentityVerification) {
+    const docs = record.documents ?? ({} as any);
+    const front = docs.idFront;
+    const back = docs.idBack;
+
+    if (!front?.url || !back?.url) {
+      throw new BadRequestException('MISSING_KYC_FIELDS');
+    }
+
+    const minBytes = this.docMinBytes();
+    if ((front.size ?? 0) < minBytes || (back.size ?? 0) < minBytes) {
+      throw new BadRequestException('KYC_DOC_IMAGE_TOO_SMALL');
+    }
+
+    if (front.sha256 && back.sha256 && front.sha256 === back.sha256) {
+      throw new BadRequestException('KYC_DOC_DUPLICATE_IMAGES');
+    }
+
+    await this.ensurePersonalMatchesUserProfile(record);
+
+    if (this.localDocCheckEnabled()) {
+      await this.checkLocalIdentityConsistency(record);
+    }
+
+    if (!this.docVerifierEnabled()) return;
+
+    const verifierUrl = (process.env.KYC_DOC_VERIFIER_URL ?? '').trim();
+    if (!verifierUrl) {
+      if (this.docVerifierStrict()) {
+        throw new BadRequestException('KYC_DOC_VERIFIER_NOT_CONFIGURED');
+      }
+      return;
+    }
+
+    const controller = new AbortController();
+    const timer = setTimeout(
+      () => controller.abort(),
+      this.docVerifierTimeoutMs(),
+    );
+    try {
+      const payload = {
+        userId: record.userId,
+        verificationId: record._id.toString(),
+        personal: {
+          name: record.personal?.name ?? '',
+          surname: record.personal?.surname ?? '',
+          birthDate: record.personal?.birthDate ?? '',
+        },
+        documents: {
+          idFrontUrl: front.url,
+          idBackUrl: back.url,
+          selfieUrl: docs.selfie?.url ?? '',
+        },
+      };
+
+      const response = await fetch(verifierUrl, {
+        method: 'POST',
+        headers: {
+          'content-type': 'application/json',
+          ...(process.env.KYC_DOC_VERIFIER_API_KEY
+            ? { 'x-api-key': process.env.KYC_DOC_VERIFIER_API_KEY }
+            : {}),
+        },
+        body: JSON.stringify(payload),
+        signal: controller.signal,
+      });
+
+      if (!response.ok) {
+        if (this.docVerifierStrict()) {
+          throw new BadRequestException('KYC_DOC_VERIFICATION_UNAVAILABLE');
+        }
+        return;
+      }
+
+      const raw = (await response.json()) as Record<string, any>;
+      const isIdDocument =
+        raw?.isIdDocument === true ||
+        raw?.isValidId === true ||
+        raw?.valid === true;
+      const confidence = Number(raw?.confidence ?? raw?.score ?? 0);
+      const minConfidence = this.docVerifierMinConfidence();
+
+      if (!isIdDocument) {
+        throw new BadRequestException('KYC_DOC_NOT_REAL_ID');
+      }
+      if (Number.isFinite(confidence) && confidence < minConfidence) {
+        throw new BadRequestException('KYC_DOC_LOW_CONFIDENCE');
+      }
+    } catch (error) {
+      if (error instanceof BadRequestException) {
+        throw error;
+      }
+      if (this.docVerifierStrict()) {
+        throw new BadRequestException('KYC_DOC_VERIFICATION_UNAVAILABLE');
+      }
+    } finally {
+      clearTimeout(timer);
+    }
   }
 
   async verifyOtp(userId: string, code: string) {
@@ -387,7 +739,8 @@ export class IdentityVerificationService {
       .limit(10)
       .exec();
     if (recentCodes.length === 0) throw new BadRequestException('OTP_INVALID');
-    const activeCode = recentCodes.find((item) => !item.usedAt) ?? recentCodes[0];
+    const activeCode =
+      recentCodes.find((item) => !item.usedAt) ?? recentCodes[0];
     if ((activeCode.verifyFailCount ?? 0) >= 5) {
       throw new BadRequestException('OTP_ATTEMPTS_EXCEEDED');
     }
