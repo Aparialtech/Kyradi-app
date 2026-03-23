@@ -7,6 +7,7 @@ import '../../core/app_currency_mode.dart';
 import '../../l10n/app_localizations.dart';
 import '../../features/wallet/models/reward_mission.dart';
 import '../../features/wallet/models/wallet_transaction.dart';
+import '../../services/local_notification_service.dart';
 import '../../features/wallet/widgets/balance_card.dart';
 import '../../features/wallet/widgets/cashback_rules_page.dart';
 import '../../features/wallet/widgets/coupons_page.dart';
@@ -296,10 +297,19 @@ class _WalletPageState extends State<WalletPage>
         );
       });
       await _storeBalance();
+      if (!mounted) return;
       AppNotification.show(
         context,
         message: loc.topUpSuccessMessage,
         type: AppNotificationType.success,
+      );
+      await LocalNotificationService.instance.showGeneric(
+        title: 'Cüzdan Güncellendi',
+        body:
+            '${_formatMoney(amount, digits: 0)} yükleme işlemi başarıyla tamamlandı.',
+        channelId: 'kyradi_wallet',
+        channelName: 'Cüzdan Bildirimleri',
+        channelDescription: 'Bakiye ve transfer bildirimleri',
       );
       appLog('wallet', 'TOPUP_OK amount=$amount', level: AppLogLevel.info);
     } catch (e) {
@@ -402,10 +412,19 @@ class _WalletPageState extends State<WalletPage>
         );
       });
       await _storeBalance();
+      if (!mounted) return;
       AppNotification.show(
         context,
         message: loc.transferSuccessMessage,
         type: AppNotificationType.success,
+      );
+      await LocalNotificationService.instance.showGeneric(
+        title: 'Transfer Tamamlandı',
+        body:
+            '$target hesabına ${_formatMoney(amount, digits: 0)} transfer edildi.',
+        channelId: 'kyradi_wallet',
+        channelName: 'Cüzdan Bildirimleri',
+        channelDescription: 'Bakiye ve transfer bildirimleri',
       );
       appLog(
         'wallet',

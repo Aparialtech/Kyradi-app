@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import '../widgets/app_notification.dart';
 import '../widgets/gradient_button.dart';
 import '../services/api_service.dart';
+import '../services/local_notification_service.dart';
 import '../l10n/app_localizations.dart';
 import '../widgets/app_mesh_background.dart';
 import '../widgets/section_card.dart';
@@ -22,7 +23,10 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
   final _pass2Ctrl = TextEditingController();
   bool _loading = false;
 
-  void _notify(String message, {AppNotificationType type = AppNotificationType.info}) {
+  void _notify(
+    String message, {
+    AppNotificationType type = AppNotificationType.info,
+  }) {
     if (!mounted) return;
     AppNotification.show(context, message: message, type: type);
   }
@@ -57,6 +61,13 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
     );
 
     if (ok) {
+      await LocalNotificationService.instance.showGeneric(
+        title: 'KYRADI Güvenlik',
+        body: 'Şifre sıfırlama işlemi tamamlandı.',
+        channelId: 'kyradi_auth',
+        channelName: 'Hesap Bildirimleri',
+        channelDescription: 'Giriş ve güvenlik bildirimleri',
+      );
       if (!mounted) return;
       context.go('/login');
     }
@@ -141,7 +152,9 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
                             obscureText: true,
                             decoration: InputDecoration(
                               labelText: l10n.resetConfirmPasswordLabel,
-                              prefixIcon: const Icon(Icons.verified_user_outlined),
+                              prefixIcon: const Icon(
+                                Icons.verified_user_outlined,
+                              ),
                             ),
                             validator: (v) {
                               if (v != _passCtrl.text) {

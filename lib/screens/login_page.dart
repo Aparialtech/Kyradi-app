@@ -9,6 +9,7 @@ import 'package:go_router/go_router.dart';
 import '../services/auth_service.dart';
 import '../widgets/gradient_button.dart';
 import '../services/api_service.dart';
+import '../services/local_notification_service.dart';
 import '../services/push_messaging_service.dart';
 import '../widgets/app_notification.dart';
 import '../l10n/app_localizations.dart';
@@ -225,6 +226,13 @@ class _LoginPageState extends State<LoginPage> {
           AppLocalizations.of(context)!.loginSuccess,
           type: AppNotificationType.success,
         );
+        await LocalNotificationService.instance.showGeneric(
+          title: 'KYRADI',
+          body: l10n.loginSuccess,
+          channelId: 'kyradi_auth',
+          channelName: 'Hesap Bildirimleri',
+          channelDescription: 'Giriş ve güvenlik bildirimleri',
+        );
         if (!mounted) return;
         context.go('/home');
       } else if (msg.toLowerCase().contains('popup_closed') ||
@@ -375,6 +383,13 @@ class _LoginPageState extends State<LoginPage> {
         await _persistRememberedEmail(email);
         await PushMessagingService.instance.syncTokenWithBackend();
         _notify(l10n.loginSuccess, type: AppNotificationType.success);
+        await LocalNotificationService.instance.showGeneric(
+          title: 'KYRADI',
+          body: l10n.loginSuccess,
+          channelId: 'kyradi_auth',
+          channelName: 'Hesap Bildirimleri',
+          channelDescription: 'Giriş ve güvenlik bildirimleri',
+        );
         if (!mounted) return;
         context.go('/home');
       } else if (status == 401) {

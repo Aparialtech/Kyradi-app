@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../l10n/app_localizations.dart';
 import '../services/api_service.dart';
+import '../services/local_notification_service.dart';
 import '../widgets/app_notification.dart';
 import '../widgets/gradient_button.dart';
 import '../widgets/app_mesh_background.dart';
@@ -21,7 +22,10 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
   final _new2Ctrl = TextEditingController();
   bool _loading = false;
 
-  void _notify(String message, {AppNotificationType type = AppNotificationType.info}) {
+  void _notify(
+    String message, {
+    AppNotificationType type = AppNotificationType.info,
+  }) {
     if (!mounted) return;
     AppNotification.show(context, message: message, type: type);
   }
@@ -60,8 +64,8 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
     setState(() => _loading = false);
 
     // ✅ Geri bildirim
-    final message =
-        (res['message'] ?? res['error'] ?? loc.unknownError).toString();
+    final message = (res['message'] ?? res['error'] ?? loc.unknownError)
+        .toString();
     _notify(
       message,
       type: res['ok'] == true
@@ -71,6 +75,13 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
 
     // ✅ Başarılıysa geri dön
     if (res['ok'] == true) {
+      await LocalNotificationService.instance.showGeneric(
+        title: 'KYRADI Güvenlik',
+        body: 'Şifren başarıyla değiştirildi.',
+        channelId: 'kyradi_auth',
+        channelName: 'Hesap Bildirimleri',
+        channelDescription: 'Giriş ve güvenlik bildirimleri',
+      );
       await Future.delayed(const Duration(milliseconds: 600));
       if (mounted) Navigator.pop(context);
     }
@@ -102,9 +113,8 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
                             loc.changePasswordIntro,
                             style: Theme.of(context).textTheme.bodyMedium
                                 ?.copyWith(
-                                  color: Theme.of(
-                                    context,
-                                  ).colorScheme.onSurface.withValues(alpha: 0.75),
+                                  color: Theme.of(context).colorScheme.onSurface
+                                      .withValues(alpha: 0.75),
                                 ),
                           ),
                           const SizedBox(height: 18),
@@ -149,10 +159,13 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
                             obscureText: true,
                             decoration: InputDecoration(
                               labelText: loc.confirmNewPassword,
-                              prefixIcon: const Icon(Icons.verified_user_outlined),
+                              prefixIcon: const Icon(
+                                Icons.verified_user_outlined,
+                              ),
                             ),
-                            validator: (v) =>
-                                (v != _newCtrl.text) ? loc.passwordMismatch : null,
+                            validator: (v) => (v != _newCtrl.text)
+                                ? loc.passwordMismatch
+                                : null,
                           ),
                           const SizedBox(height: 24),
                           GradientButton(

@@ -225,7 +225,7 @@ class _LuggageListPageState extends State<LuggageListPage> {
   Future<void> _openAddLuggageFlow() async {
     final loc = AppLocalizations.of(context)!;
     final result = await context.push('/luggage/add');
-    if (!context.mounted) return;
+    if (!mounted) return;
     if (result is LuggageModel) {
       setState(() {
         _items = [result, ..._items];
@@ -235,6 +235,9 @@ class _LuggageListPageState extends State<LuggageListPage> {
         context,
         message: loc.luggageCreated,
         type: AppNotificationType.success,
+      );
+      await LocalNotificationService.instance.showReservationCreated(
+        result.displayLabel,
       );
     }
   }

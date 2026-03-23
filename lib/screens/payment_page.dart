@@ -1210,6 +1210,15 @@ class _ReservationEditPageState extends State<ReservationEditPage> {
       if (!mounted) return;
       setState(() => _saving = false);
       if (result['ok'] == true) {
+        await LocalNotificationService.instance.showGeneric(
+          title: 'Rezervasyon Güncellendi',
+          body:
+              '${widget.reservationId} için tarih/boyut güncellemesi kaydedildi.',
+          channelId: 'kyradi_reservations',
+          channelName: 'Rezervasyon Bildirimleri',
+          channelDescription: 'Rezervasyon değişiklikleri',
+        );
+        if (!mounted) return;
         Navigator.of(
           context,
         ).pop({'size': _size, 'dropAt': _dropAt, 'pickupAt': _pickupAt});
