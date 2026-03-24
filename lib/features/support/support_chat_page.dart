@@ -27,9 +27,7 @@ class _SupportChatPageState extends State<SupportChatPage> {
     super.didChangeDependencies();
     if (_messages.isEmpty) {
       final loc = AppLocalizations.of(context)!;
-      _messages.add(
-        _ChatMessage.bot(text: loc.supportChatGreeting),
-      );
+      _messages.add(_ChatMessage.bot(text: loc.supportChatGreeting));
     }
     _loadHealth();
   }
@@ -154,9 +152,7 @@ class _SupportChatPageState extends State<SupportChatPage> {
     final theme = Theme.of(context);
     return Scaffold(
       backgroundColor: Colors.transparent,
-      appBar: AppBar(
-        title: Text(loc.supportChatTitle),
-      ),
+      appBar: AppBar(title: Text(loc.supportChatTitle)),
       body: Stack(
         children: [
           const AppMeshBackground(),
@@ -166,8 +162,10 @@ class _SupportChatPageState extends State<SupportChatPage> {
                 if (!_providerReady)
                   Container(
                     width: double.infinity,
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 10,
+                    ),
                     color: theme.colorScheme.errorContainer,
                     child: Text(
                       _providerMessage.isNotEmpty
@@ -182,13 +180,17 @@ class _SupportChatPageState extends State<SupportChatPage> {
                 Expanded(
                   child: ListView.builder(
                     controller: _scrollController,
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 20,
+                    ),
                     itemCount: _messages.length + (_isTyping ? 1 : 0),
                     itemBuilder: (context, index) {
                       if (_isTyping && index == _messages.length) {
                         return _ChatBubble(
-                          message: _ChatMessage.bot(text: loc.supportChatTyping),
+                          message: _ChatMessage.bot(
+                            text: loc.supportChatTyping,
+                          ),
                           isTyping: true,
                         );
                       }
@@ -202,7 +204,7 @@ class _SupportChatPageState extends State<SupportChatPage> {
                     color: theme.colorScheme.surface.withValues(alpha: 0.9),
                     boxShadow: [
                       BoxShadow(
-                        color: theme.colorScheme.shadow.withOpacity(0.08),
+                        color: theme.colorScheme.shadow.withValues(alpha: 0.08),
                         blurRadius: 12,
                         offset: const Offset(0, -6),
                       ),
@@ -222,8 +224,8 @@ class _SupportChatPageState extends State<SupportChatPage> {
                           decoration: InputDecoration(
                             hintText: loc.supportChatHint,
                             filled: true,
-                            fillColor:
-                                theme.colorScheme.surfaceVariant.withOpacity(0.45),
+                            fillColor: theme.colorScheme.surfaceContainerHighest
+                                .withValues(alpha: 0.45),
                             contentPadding: const EdgeInsets.symmetric(
                               horizontal: 16,
                               vertical: 14,
@@ -264,10 +266,7 @@ class _SupportChatPageState extends State<SupportChatPage> {
 }
 
 class _ChatMessage {
-  const _ChatMessage({
-    required this.text,
-    required this.isUser,
-  });
+  const _ChatMessage({required this.text, required this.isUser});
 
   final String text;
   final bool isUser;
@@ -280,10 +279,7 @@ class _ChatMessage {
 }
 
 class _ChatBubble extends StatelessWidget {
-  const _ChatBubble({
-    required this.message,
-    this.isTyping = false,
-  });
+  const _ChatBubble({required this.message, this.isTyping = false});
 
   final _ChatMessage message;
   final bool isTyping;
@@ -291,11 +287,12 @@ class _ChatBubble extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final alignment =
-        message.isUser ? Alignment.centerRight : Alignment.centerLeft;
+    final alignment = message.isUser
+        ? Alignment.centerRight
+        : Alignment.centerLeft;
     final bubbleColor = message.isUser
         ? theme.colorScheme.primary
-        : theme.colorScheme.surfaceVariant;
+        : theme.colorScheme.surfaceContainerHighest;
     final textColor = message.isUser
         ? theme.colorScheme.onPrimary
         : theme.colorScheme.onSurface;
@@ -315,7 +312,7 @@ class _ChatBubble extends StatelessWidget {
           ),
           boxShadow: [
             BoxShadow(
-              color: theme.colorScheme.shadow.withOpacity(0.08),
+              color: theme.colorScheme.shadow.withValues(alpha: 0.08),
               blurRadius: 10,
               offset: const Offset(0, 4),
             ),

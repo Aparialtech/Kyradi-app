@@ -277,7 +277,7 @@ class _LuggageListPageState extends State<LuggageListPage> {
               ),
               const SizedBox(height: 12),
               DropdownButtonFormField<LuggageStatus>(
-                value: status,
+                initialValue: status,
                 decoration: InputDecoration(labelText: loc.luggageFilterStatus),
                 items: [
                   DropdownMenuItem(value: null, child: Text(loc.allLabel)),
@@ -302,7 +302,7 @@ class _LuggageListPageState extends State<LuggageListPage> {
               ),
               const SizedBox(height: 12),
               DropdownButtonFormField<String>(
-                value: payment,
+                initialValue: payment,
                 decoration: InputDecoration(
                   labelText: loc.luggageFilterPayment,
                 ),
@@ -329,7 +329,7 @@ class _LuggageListPageState extends State<LuggageListPage> {
               ),
               const SizedBox(height: 12),
               DropdownButtonFormField<String>(
-                value: location,
+                initialValue: location,
                 decoration: InputDecoration(
                   labelText: loc.luggageFilterLocation,
                 ),
@@ -342,7 +342,7 @@ class _LuggageListPageState extends State<LuggageListPage> {
               ),
               const SizedBox(height: 12),
               DropdownButtonFormField<String>(
-                value: size,
+                initialValue: size,
                 decoration: InputDecoration(labelText: loc.luggageFilterSize),
                 items: [
                   DropdownMenuItem(value: null, child: Text(loc.allLabel)),
@@ -441,6 +441,7 @@ class _LuggageListPageState extends State<LuggageListPage> {
         await LocalNotificationService.instance.showReservationCancelled(
           updated.displayLabel,
         );
+        if (!mounted) return;
         AppNotification.show(
           context,
           message: loc.reservationCancelledMessage,

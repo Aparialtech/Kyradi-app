@@ -133,6 +133,7 @@ class _LuggageDetailPageState extends State<LuggageDetailPage> {
           reservationLabel: next.displayLabel,
           statusLabel: next.statusLabel,
         );
+        if (!mounted) return;
         AppNotification.show(
           context,
           message: status == 'dropped'
@@ -191,6 +192,7 @@ class _LuggageDetailPageState extends State<LuggageDetailPage> {
       ),
     );
     if (go != true) return;
+    if (!mounted) return;
     final luggage = _luggage!;
     final result = await Navigator.of(context).push<bool>(
       MaterialPageRoute(
@@ -208,6 +210,7 @@ class _LuggageDetailPageState extends State<LuggageDetailPage> {
     );
     if (result == true) {
       await _load();
+      if (!mounted) return;
       await _updateStatus('dropped');
     }
   }

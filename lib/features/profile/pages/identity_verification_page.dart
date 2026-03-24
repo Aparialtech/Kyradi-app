@@ -18,7 +18,8 @@ class IdentityVerificationPage extends StatefulWidget {
   const IdentityVerificationPage({super.key});
 
   @override
-  State<IdentityVerificationPage> createState() => _IdentityVerificationPageState();
+  State<IdentityVerificationPage> createState() =>
+      _IdentityVerificationPageState();
 }
 
 class _IdentityVerificationPageState extends State<IdentityVerificationPage> {
@@ -73,7 +74,8 @@ class _IdentityVerificationPageState extends State<IdentityVerificationPage> {
       final start = await ApiService.kycIdentityStart();
       if (!mounted) return;
       if (start['ok'] != true) {
-        final msg = (start['message'] ?? start['error'] ?? 'KYC başlatılamadı').toString();
+        final msg = (start['message'] ?? start['error'] ?? 'KYC başlatılamadı')
+            .toString();
         setState(() {
           _error = msg;
           _loading = false;
@@ -89,13 +91,16 @@ class _IdentityVerificationPageState extends State<IdentityVerificationPage> {
         _requireSelfie = statusRes['requireSelfie'] == true || _requireSelfie;
         final personal = statusRes['personal'] as Map<String, dynamic>? ?? {};
         final docs = statusRes['documents'] as Map<String, dynamic>? ?? {};
-        if (_nameCtrl.text.trim().isEmpty && (personal['name'] ?? '').toString().isNotEmpty) {
+        if (_nameCtrl.text.trim().isEmpty &&
+            (personal['name'] ?? '').toString().isNotEmpty) {
           _nameCtrl.text = personal['name'].toString();
         }
-        if (_surnameCtrl.text.trim().isEmpty && (personal['surname'] ?? '').toString().isNotEmpty) {
+        if (_surnameCtrl.text.trim().isEmpty &&
+            (personal['surname'] ?? '').toString().isNotEmpty) {
           _surnameCtrl.text = personal['surname'].toString();
         }
-        if (_tcCtrl.text.trim().isEmpty && (personal['tcNo'] ?? '').toString().isNotEmpty) {
+        if (_tcCtrl.text.trim().isEmpty &&
+            (personal['tcNo'] ?? '').toString().isNotEmpty) {
           _tcCtrl.text = personal['tcNo'].toString();
         }
         final birthRaw = (personal['birthDate'] ?? '').toString().trim();
@@ -106,11 +111,16 @@ class _IdentityVerificationPageState extends State<IdentityVerificationPage> {
         _frontUrl = (docs['idFrontUrl'] ?? '').toString();
         _backUrl = (docs['idBackUrl'] ?? '').toString();
         _selfieUrl = (docs['selfieUrl'] ?? '').toString();
-        final missing = (statusRes['missing'] as List?)?.map((e) => e.toString()).toList() ?? <String>[];
+        final missing =
+            (statusRes['missing'] as List?)
+                ?.map((e) => e.toString())
+                .toList() ??
+            <String>[];
         if (_status != 'verified' && _status != 'pending_otp') {
           if (missing.contains('personal')) {
             _step = 0;
-          } else if (missing.contains('id_front') || missing.contains('id_back')) {
+          } else if (missing.contains('id_front') ||
+              missing.contains('id_back')) {
             _step = 1;
           } else if (_requireSelfie && missing.contains('selfie')) {
             _step = 2;
@@ -129,7 +139,10 @@ class _IdentityVerificationPageState extends State<IdentityVerificationPage> {
     }
   }
 
-  void _notify(String message, {AppNotificationType type = AppNotificationType.info}) {
+  void _notify(
+    String message, {
+    AppNotificationType type = AppNotificationType.info,
+  }) {
     AppNotification.show(context, message: message, type: type);
   }
 
@@ -151,7 +164,10 @@ class _IdentityVerificationPageState extends State<IdentityVerificationPage> {
     final loc = AppLocalizations.of(context)!;
     final code = _otpCtrl.text.replaceAll(RegExp(r'[^0-9]'), '');
     if (code.length != 6) {
-      _notify(loc.verificationCodeInvalidMessage, type: AppNotificationType.warning);
+      _notify(
+        loc.verificationCodeInvalidMessage,
+        type: AppNotificationType.warning,
+      );
       return;
     }
     try {
@@ -162,12 +178,17 @@ class _IdentityVerificationPageState extends State<IdentityVerificationPage> {
         setState(() {});
         _notify(loc.identityVerifiedTitle, type: AppNotificationType.success);
       } else {
-        final msg = (res['message'] ?? res['error'] ?? loc.verificationErrorMessage).toString();
+        final msg =
+            (res['message'] ?? res['error'] ?? loc.verificationErrorMessage)
+                .toString();
         _notify(msg, type: AppNotificationType.error);
       }
     } catch (e) {
       if (!mounted) return;
-      _notify('${loc.verificationErrorMessage}: $e', type: AppNotificationType.error);
+      _notify(
+        '${loc.verificationErrorMessage}: $e',
+        type: AppNotificationType.error,
+      );
     }
   }
 
@@ -177,16 +198,26 @@ class _IdentityVerificationPageState extends State<IdentityVerificationPage> {
       final res = await ApiService.kycResendOtp();
       if (!mounted) return;
       if (res['ok'] == true) {
-        final ttl = (res['otpTtlMin'] is num) ? (res['otpTtlMin'] as num).toInt() : 10;
+        final ttl = (res['otpTtlMin'] is num)
+            ? (res['otpTtlMin'] as num).toInt()
+            : 10;
         _startOtpTimer(ttl);
-        _notify(loc.verificationResentMessage, type: AppNotificationType.success);
+        _notify(
+          loc.verificationResentMessage,
+          type: AppNotificationType.success,
+        );
       } else {
-        final msg = (res['message'] ?? res['error'] ?? loc.verificationSendErrorMessage).toString();
+        final msg =
+            (res['message'] ?? res['error'] ?? loc.verificationSendErrorMessage)
+                .toString();
         _notify(msg, type: AppNotificationType.error);
       }
     } catch (e) {
       if (!mounted) return;
-      _notify('${loc.verificationSendErrorMessage}: $e', type: AppNotificationType.error);
+      _notify(
+        '${loc.verificationSendErrorMessage}: $e',
+        type: AppNotificationType.error,
+      );
     }
   }
 
@@ -218,11 +249,8 @@ class _IdentityVerificationPageState extends State<IdentityVerificationPage> {
   }) async {
     final result = await Navigator.of(context).push<Uint8List>(
       MaterialPageRoute(
-        builder: (_) => _CropPage(
-          title: title,
-          bytes: bytes,
-          aspectRatio: aspectRatio,
-        ),
+        builder: (_) =>
+            _CropPage(title: title, bytes: bytes, aspectRatio: aspectRatio),
       ),
     );
     return result;
@@ -253,7 +281,10 @@ class _IdentityVerificationPageState extends State<IdentityVerificationPage> {
     }
     if (!mounted) return;
     if (file == null) {
-      _notify(loc.identityCameraRequiredMessage, type: AppNotificationType.warning);
+      _notify(
+        loc.identityCameraRequiredMessage,
+        type: AppNotificationType.warning,
+      );
       return;
     }
 
@@ -288,19 +319,21 @@ class _IdentityVerificationPageState extends State<IdentityVerificationPage> {
         });
         _notify(loc.uploadSuccessMessage, type: AppNotificationType.success);
       } else {
-        final msg = (res['message'] ?? res['error'] ?? 'Yükleme başarısız').toString();
+        final msg = (res['message'] ?? res['error'] ?? 'Yükleme başarısız')
+            .toString();
         _notify(msg, type: AppNotificationType.error);
       }
     } catch (e) {
       if (!mounted) return;
       _notify('Yükleme başarısız: $e', type: AppNotificationType.error);
     } finally {
-      if (!mounted) return;
-      setState(() {
-        if (type == 'id_front') _uploadingFront = false;
-        if (type == 'id_back') _uploadingBack = false;
-        if (type == 'selfie') _uploadingSelfie = false;
-      });
+      if (mounted) {
+        setState(() {
+          if (type == 'id_front') _uploadingFront = false;
+          if (type == 'id_back') _uploadingBack = false;
+          if (type == 'selfie') _uploadingSelfie = false;
+        });
+      }
     }
   }
 
@@ -324,7 +357,8 @@ class _IdentityVerificationPageState extends State<IdentityVerificationPage> {
     );
     if (!mounted) return;
     if (res['ok'] != true) {
-      final msg = (res['message'] ?? res['error'] ?? loc.saveProfileError).toString();
+      final msg = (res['message'] ?? res['error'] ?? loc.saveProfileError)
+          .toString();
       _notify(msg, type: AppNotificationType.error);
       return;
     }
@@ -334,7 +368,9 @@ class _IdentityVerificationPageState extends State<IdentityVerificationPage> {
   bool get _docsOk {
     if (_frontUrl == null || _frontUrl!.isEmpty) return false;
     if (_backUrl == null || _backUrl!.isEmpty) return false;
-    if (_requireSelfie && (_selfieUrl == null || _selfieUrl!.isEmpty)) return false;
+    if (_requireSelfie && (_selfieUrl == null || _selfieUrl!.isEmpty)) {
+      return false;
+    }
     return true;
   }
 
@@ -343,7 +379,10 @@ class _IdentityVerificationPageState extends State<IdentityVerificationPage> {
     if (_submitting) return;
     await _savePersonal();
     if (!_docsOk) {
-      _notify('Lütfen kimlik fotoğraflarını yükleyin.', type: AppNotificationType.warning);
+      _notify(
+        'Lütfen kimlik fotoğraflarını yükleyin.',
+        type: AppNotificationType.warning,
+      );
       return;
     }
     setState(() => _submitting = true);
@@ -353,21 +392,28 @@ class _IdentityVerificationPageState extends State<IdentityVerificationPage> {
       if (res['ok'] == true) {
         _status = (res['status'] ?? 'pending_otp').toString();
         if (_status == 'pending_otp') {
-          final ttl = (res['otpTtlMin'] is num) ? (res['otpTtlMin'] as num).toInt() : 10;
+          final ttl = (res['otpTtlMin'] is num)
+              ? (res['otpTtlMin'] as num).toInt()
+              : 10;
           _startOtpTimer(ttl);
         }
         setState(() {});
-        _notify(loc.verificationCodeSentMessage, type: AppNotificationType.success);
+        _notify(
+          loc.verificationCodeSentMessage,
+          type: AppNotificationType.success,
+        );
       } else {
-        final msg = (res['message'] ?? res['error'] ?? 'Gönderim başarısız').toString();
+        final msg = (res['message'] ?? res['error'] ?? 'Gönderim başarısız')
+            .toString();
         _notify(msg, type: AppNotificationType.error);
       }
     } catch (e) {
       if (!mounted) return;
       _notify('Gönderim başarısız: $e', type: AppNotificationType.error);
     } finally {
-      if (!mounted) return;
-      setState(() => _submitting = false);
+      if (mounted) {
+        setState(() => _submitting = false);
+      }
     }
   }
 
@@ -378,9 +424,7 @@ class _IdentityVerificationPageState extends State<IdentityVerificationPage> {
     final locked = _status == 'verified' || _status == 'pending_otp';
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(loc.accountVerificationTitle),
-      ),
+      appBar: AppBar(title: Text(loc.accountVerificationTitle)),
       body: Stack(
         children: [
           const AppMeshBackground(),
@@ -406,12 +450,17 @@ class _IdentityVerificationPageState extends State<IdentityVerificationPage> {
                     SectionCard(
                       child: Row(
                         children: [
-                          ThreeDIconBadge(icon: Icons.verified, accent: theme.colorScheme.primary),
+                          ThreeDIconBadge(
+                            icon: Icons.verified,
+                            accent: theme.colorScheme.primary,
+                          ),
                           const SizedBox(width: 12),
                           Expanded(
                             child: Text(
                               loc.identityVerifiedTitle,
-                              style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
+                              style: theme.textTheme.titleMedium?.copyWith(
+                                fontWeight: FontWeight.w800,
+                              ),
                             ),
                           ),
                         ],
@@ -421,12 +470,17 @@ class _IdentityVerificationPageState extends State<IdentityVerificationPage> {
                     SectionCard(
                       child: Row(
                         children: [
-                          ThreeDIconBadge(icon: Icons.pending_actions, accent: theme.colorScheme.tertiary),
+                          ThreeDIconBadge(
+                            icon: Icons.pending_actions,
+                            accent: theme.colorScheme.tertiary,
+                          ),
                           const SizedBox(width: 12),
                           Expanded(
                             child: Text(
                               loc.identityPendingReviewTitle,
-                              style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
+                              style: theme.textTheme.titleMedium?.copyWith(
+                                fontWeight: FontWeight.w800,
+                              ),
                             ),
                           ),
                         ],
@@ -439,18 +493,26 @@ class _IdentityVerificationPageState extends State<IdentityVerificationPage> {
                         children: [
                           Row(
                             children: [
-                              ThreeDIconBadge(icon: Icons.mark_email_read, accent: theme.colorScheme.primary),
+                              ThreeDIconBadge(
+                                icon: Icons.mark_email_read,
+                                accent: theme.colorScheme.primary,
+                              ),
                               const SizedBox(width: 12),
                               Expanded(
                                 child: Text(
                                   loc.verificationTitle,
-                                  style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
+                                  style: theme.textTheme.titleMedium?.copyWith(
+                                    fontWeight: FontWeight.w800,
+                                  ),
                                 ),
                               ),
                             ],
                           ),
                           const SizedBox(height: 8),
-                          Text(loc.kycOtpHint, style: theme.textTheme.bodySmall),
+                          Text(
+                            loc.kycOtpHint,
+                            style: theme.textTheme.bodySmall,
+                          ),
                           const SizedBox(height: 12),
                           TextField(
                             controller: _otpCtrl,
@@ -474,10 +536,14 @@ class _IdentityVerificationPageState extends State<IdentityVerificationPage> {
                               ),
                               const SizedBox(width: 12),
                               OutlinedButton(
-                                onPressed: _otpSecondsLeft > 0 ? null : _resendOtp,
+                                onPressed: _otpSecondsLeft > 0
+                                    ? null
+                                    : _resendOtp,
                                 child: Text(
                                   _otpSecondsLeft > 0
-                                      ? loc.verificationCountdownLabel(_otpSecondsLeft)
+                                      ? loc.verificationCountdownLabel(
+                                          _otpSecondsLeft,
+                                        )
                                       : loc.verificationResendButton,
                                 ),
                               ),
@@ -502,7 +568,10 @@ class _IdentityVerificationPageState extends State<IdentityVerificationPage> {
                             }
                             if (_step == 1) {
                               if (_frontUrl == null || _backUrl == null) {
-                                _notify('Kimlik ön/arka fotoğrafı gerekli.', type: AppNotificationType.warning);
+                                _notify(
+                                  'Kimlik ön/arka fotoğrafı gerekli.',
+                                  type: AppNotificationType.warning,
+                                );
                                 return;
                               }
                               if (_requireSelfie) {
@@ -513,8 +582,12 @@ class _IdentityVerificationPageState extends State<IdentityVerificationPage> {
                               return;
                             }
                             if (_step == 2) {
-                              if (_requireSelfie && (_selfieUrl == null || _selfieUrl!.isEmpty)) {
-                                _notify('Selfie gerekli.', type: AppNotificationType.warning);
+                              if (_requireSelfie &&
+                                  (_selfieUrl == null || _selfieUrl!.isEmpty)) {
+                                _notify(
+                                  'Selfie gerekli.',
+                                  type: AppNotificationType.warning,
+                                );
                                 return;
                               }
                               setState(() => _step = 3);
@@ -536,19 +609,29 @@ class _IdentityVerificationPageState extends State<IdentityVerificationPage> {
                             return Row(
                               children: [
                                 FilledButton(
-                                  onPressed: _submitting ? null : details.onStepContinue,
+                                  onPressed: _submitting
+                                      ? null
+                                      : details.onStepContinue,
                                   child: _submitting && isLast
                                       ? const SizedBox(
                                           width: 18,
                                           height: 18,
-                                          child: CircularProgressIndicator(strokeWidth: 2),
+                                          child: CircularProgressIndicator(
+                                            strokeWidth: 2,
+                                          ),
                                         )
-                                      : Text(isLast ? loc.submit : loc.nextAction),
+                                      : Text(
+                                          isLast ? loc.submit : loc.nextAction,
+                                        ),
                                 ),
                                 const SizedBox(width: 12),
                                 OutlinedButton(
                                   onPressed: details.onStepCancel,
-                                  child: Text(details.currentStep == 0 ? loc.cancel : loc.back),
+                                  child: Text(
+                                    details.currentStep == 0
+                                        ? loc.cancel
+                                        : loc.back,
+                                  ),
                                 ),
                               ],
                             );
@@ -557,7 +640,9 @@ class _IdentityVerificationPageState extends State<IdentityVerificationPage> {
                             Step(
                               title: Text(loc.personalInfoTitle),
                               isActive: _step >= 0,
-                              state: _step > 0 ? StepState.complete : StepState.indexed,
+                              state: _step > 0
+                                  ? StepState.complete
+                                  : StepState.indexed,
                               content: Form(
                                 key: _formKey,
                                 child: Column(
@@ -565,8 +650,11 @@ class _IdentityVerificationPageState extends State<IdentityVerificationPage> {
                                     TextFormField(
                                       controller: _nameCtrl,
                                       enabled: !locked,
-                                      decoration: InputDecoration(labelText: loc.firstName),
-                                      validator: (v) => (v == null || v.trim().length < 2)
+                                      decoration: InputDecoration(
+                                        labelText: loc.firstName,
+                                      ),
+                                      validator: (v) =>
+                                          (v == null || v.trim().length < 2)
                                           ? loc.requiredFieldLabel
                                           : null,
                                     ),
@@ -574,8 +662,11 @@ class _IdentityVerificationPageState extends State<IdentityVerificationPage> {
                                     TextFormField(
                                       controller: _surnameCtrl,
                                       enabled: !locked,
-                                      decoration: InputDecoration(labelText: loc.lastName),
-                                      validator: (v) => (v == null || v.trim().length < 2)
+                                      decoration: InputDecoration(
+                                        labelText: loc.lastName,
+                                      ),
+                                      validator: (v) =>
+                                          (v == null || v.trim().length < 2)
                                           ? loc.requiredFieldLabel
                                           : null,
                                     ),
@@ -584,11 +675,17 @@ class _IdentityVerificationPageState extends State<IdentityVerificationPage> {
                                       controller: _tcCtrl,
                                       keyboardType: TextInputType.number,
                                       enabled: !locked,
-                                      decoration: InputDecoration(labelText: loc.nationalIdLabel),
+                                      decoration: InputDecoration(
+                                        labelText: loc.nationalIdLabel,
+                                      ),
                                       validator: (v) {
                                         final raw = (v ?? '').trim();
-                                        if (raw.isEmpty) return loc.requiredFieldLabel;
-                                        if (!isValidTurkishId(raw)) return loc.nationalIdInvalidMessage;
+                                        if (raw.isEmpty) {
+                                          return loc.requiredFieldLabel;
+                                        }
+                                        if (!isValidTurkishId(raw)) {
+                                          return loc.nationalIdInvalidMessage;
+                                        }
                                         return null;
                                       },
                                     ),
@@ -600,7 +697,9 @@ class _IdentityVerificationPageState extends State<IdentityVerificationPage> {
                                             ? loc.birthDateSelectLabel
                                             : _birthDateYmd(_birthDate!),
                                       ),
-                                      trailing: const Icon(Icons.calendar_today_outlined),
+                                      trailing: const Icon(
+                                        Icons.calendar_today_outlined,
+                                      ),
                                       onTap: locked ? null : _pickBirthDate,
                                     ),
                                   ],
@@ -610,7 +709,9 @@ class _IdentityVerificationPageState extends State<IdentityVerificationPage> {
                             Step(
                               title: Text(loc.identityPhotosTitle),
                               isActive: _step >= 1,
-                              state: _docsOk && !_requireSelfie ? StepState.complete : StepState.indexed,
+                              state: _docsOk && !_requireSelfie
+                                  ? StepState.complete
+                                  : StepState.indexed,
                               content: Column(
                                 children: [
                                   _DocRow(
@@ -619,7 +720,10 @@ class _IdentityVerificationPageState extends State<IdentityVerificationPage> {
                                     loading: _uploadingFront,
                                     onPick: locked
                                         ? null
-                                        : () => _pickAndUpload(type: 'id_front', aspectRatio: 4 / 3),
+                                        : () => _pickAndUpload(
+                                            type: 'id_front',
+                                            aspectRatio: 4 / 3,
+                                          ),
                                   ),
                                   const SizedBox(height: 10),
                                   _DocRow(
@@ -628,7 +732,10 @@ class _IdentityVerificationPageState extends State<IdentityVerificationPage> {
                                     loading: _uploadingBack,
                                     onPick: locked
                                         ? null
-                                        : () => _pickAndUpload(type: 'id_back', aspectRatio: 4 / 3),
+                                        : () => _pickAndUpload(
+                                            type: 'id_back',
+                                            aspectRatio: 4 / 3,
+                                          ),
                                   ),
                                 ],
                               ),
@@ -637,7 +744,9 @@ class _IdentityVerificationPageState extends State<IdentityVerificationPage> {
                               title: Text(loc.selfieStepTitle),
                               isActive: _step >= 2,
                               state: _requireSelfie
-                                  ? (_selfieUrl?.isNotEmpty == true ? StepState.complete : StepState.indexed)
+                                  ? (_selfieUrl?.isNotEmpty == true
+                                        ? StepState.complete
+                                        : StepState.indexed)
                                   : StepState.disabled,
                               content: _requireSelfie
                                   ? _DocRow(
@@ -646,7 +755,10 @@ class _IdentityVerificationPageState extends State<IdentityVerificationPage> {
                                       loading: _uploadingSelfie,
                                       onPick: locked
                                           ? null
-                                          : () => _pickAndUpload(type: 'selfie', aspectRatio: 1),
+                                          : () => _pickAndUpload(
+                                              type: 'selfie',
+                                              aspectRatio: 1,
+                                            ),
                                     )
                                   : Text(loc.selfieNotRequiredMessage),
                             ),
@@ -657,22 +769,53 @@ class _IdentityVerificationPageState extends State<IdentityVerificationPage> {
                               content: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Text(loc.reviewHint, style: theme.textTheme.bodySmall),
+                                  Text(
+                                    loc.reviewHint,
+                                    style: theme.textTheme.bodySmall,
+                                  ),
                                   const SizedBox(height: 10),
-                                  _ReviewLine(label: loc.firstName, value: _nameCtrl.text.trim()),
-                                  _ReviewLine(label: loc.lastName, value: _surnameCtrl.text.trim()),
-                                  _ReviewLine(label: loc.nationalIdLabel, value: _tcCtrl.text.trim()),
+                                  _ReviewLine(
+                                    label: loc.firstName,
+                                    value: _nameCtrl.text.trim(),
+                                  ),
+                                  _ReviewLine(
+                                    label: loc.lastName,
+                                    value: _surnameCtrl.text.trim(),
+                                  ),
+                                  _ReviewLine(
+                                    label: loc.nationalIdLabel,
+                                    value: _tcCtrl.text.trim(),
+                                  ),
                                   _ReviewLine(
                                     label: loc.birthDateSelectLabel,
-                                    value: _birthDate == null ? '-' : _birthDateYmd(_birthDate!),
+                                    value: _birthDate == null
+                                        ? '-'
+                                        : _birthDateYmd(_birthDate!),
                                   ),
                                   const SizedBox(height: 6),
-                                  Divider(color: theme.colorScheme.outlineVariant),
+                                  Divider(
+                                    color: theme.colorScheme.outlineVariant,
+                                  ),
                                   const SizedBox(height: 6),
-                                  _ReviewLine(label: loc.identityFrontLabel, value: _frontUrl != null ? loc.uploadedLabel : loc.missingLabel),
-                                  _ReviewLine(label: loc.identityBackLabel, value: _backUrl != null ? loc.uploadedLabel : loc.missingLabel),
+                                  _ReviewLine(
+                                    label: loc.identityFrontLabel,
+                                    value: _frontUrl != null
+                                        ? loc.uploadedLabel
+                                        : loc.missingLabel,
+                                  ),
+                                  _ReviewLine(
+                                    label: loc.identityBackLabel,
+                                    value: _backUrl != null
+                                        ? loc.uploadedLabel
+                                        : loc.missingLabel,
+                                  ),
                                   if (_requireSelfie)
-                                    _ReviewLine(label: loc.selfieLabel, value: _selfieUrl != null ? loc.uploadedLabel : loc.missingLabel),
+                                    _ReviewLine(
+                                      label: loc.selfieLabel,
+                                      value: _selfieUrl != null
+                                          ? loc.uploadedLabel
+                                          : loc.missingLabel,
+                                    ),
                                 ],
                               ),
                             ),
@@ -711,13 +854,17 @@ class _DocRow extends StatelessWidget {
         children: [
           ThreeDIconBadge(
             icon: ok ? Icons.check_circle_rounded : Icons.photo_camera_outlined,
-            accent: ok ? theme.colorScheme.primary : theme.colorScheme.secondary,
+            accent: ok
+                ? theme.colorScheme.primary
+                : theme.colorScheme.secondary,
           ),
           const SizedBox(width: 12),
           Expanded(
             child: Text(
               title,
-              style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w700),
+              style: theme.textTheme.bodyMedium?.copyWith(
+                fontWeight: FontWeight.w700,
+              ),
             ),
           ),
           const SizedBox(width: 10),
@@ -760,7 +907,9 @@ class _ReviewLine extends StatelessWidget {
           ),
           Text(
             value.isEmpty ? '-' : value,
-            style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w700),
+            style: theme.textTheme.bodyMedium?.copyWith(
+              fontWeight: FontWeight.w700,
+            ),
           ),
         ],
       ),
@@ -791,7 +940,9 @@ class _CropPageState extends State<_CropPage> {
     if (_saving) return;
     setState(() => _saving = true);
     try {
-      final boundary = _boundaryKey.currentContext?.findRenderObject() as RenderRepaintBoundary?;
+      final boundary =
+          _boundaryKey.currentContext?.findRenderObject()
+              as RenderRepaintBoundary?;
       if (boundary == null) {
         if (!mounted) return;
         Navigator.of(context).pop<Uint8List>(null);
@@ -829,7 +980,7 @@ class _CropPageState extends State<_CropPage> {
                     )
                   : const Text('Kullan'),
             ),
-          )
+          ),
         ],
       ),
       body: Stack(
@@ -853,10 +1004,7 @@ class _CropPageState extends State<_CropPage> {
                     child: InteractiveViewer(
                       minScale: 1.0,
                       maxScale: 4.0,
-                      child: Image.memory(
-                        widget.bytes,
-                        fit: BoxFit.cover,
-                      ),
+                      child: Image.memory(widget.bytes, fit: BoxFit.cover),
                     ),
                   ),
                 ),

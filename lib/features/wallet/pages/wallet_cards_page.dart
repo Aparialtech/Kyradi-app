@@ -10,10 +10,7 @@ import '../widgets/saved_card_visual.dart';
 import '../widgets/expiry_date_formatter.dart';
 
 class WalletCardsPage extends StatefulWidget {
-  const WalletCardsPage({
-    super.key,
-    this.selectMode = false,
-  });
+  const WalletCardsPage({super.key, this.selectMode = false});
 
   final bool selectMode;
 
@@ -72,8 +69,7 @@ class _WalletCardsPageState extends State<WalletCardsPage> {
     await prefs.setString('saved_cards', raw);
   }
 
-  String _digitsOnly(String input) =>
-      input.replaceAll(RegExp(r'[^0-9]'), '');
+  String _digitsOnly(String input) => input.replaceAll(RegExp(r'[^0-9]'), '');
 
   bool _isValidExpiry(String value) {
     if (!RegExp(r'^\d{2}/\d{2}$').hasMatch(value)) return false;
@@ -122,8 +118,9 @@ class _WalletCardsPageState extends State<WalletCardsPage> {
   }
 
   void _notify(String message) {
-    ScaffoldMessenger.of(context)
-        .showSnackBar(SnackBar(content: Text(message)));
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
   }
 
   void _openType(String type) {
@@ -216,8 +213,9 @@ class _WalletCardsPageState extends State<WalletCardsPage> {
                               decoration: InputDecoration(
                                 labelText: loc.walletCardExpiryLabel,
                                 hintText: 'MM/YY',
-                                prefixIcon:
-                                    const Icon(Icons.calendar_today_outlined),
+                                prefixIcon: const Icon(
+                                  Icons.calendar_today_outlined,
+                                ),
                               ),
                             ),
                           ),
@@ -319,8 +317,9 @@ class _CardsListPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final loc = AppLocalizations.of(context)!;
-    final title =
-        type == 'credit' ? loc.walletCreditCardLabel : loc.walletDebitCardLabel;
+    final title = type == 'credit'
+        ? loc.walletCreditCardLabel
+        : loc.walletDebitCardLabel;
     return Scaffold(
       backgroundColor: Colors.transparent,
       appBar: AppBar(title: Text(title)),
@@ -340,18 +339,18 @@ class _CardsListPage extends StatelessWidget {
                     ),
                   ]
                 : cards
-                    .map(
-                      (card) => Padding(
-                        padding: const EdgeInsets.only(bottom: 12),
-                        child: SavedCardVisual(
-                          card: card,
-                          onTap: selectMode
-                              ? () => Navigator.of(context).pop(card)
-                              : null,
+                      .map(
+                        (card) => Padding(
+                          padding: const EdgeInsets.only(bottom: 12),
+                          child: SavedCardVisual(
+                            card: card,
+                            onTap: selectMode
+                                ? () => Navigator.of(context).pop(card)
+                                : null,
+                          ),
                         ),
-                      ),
-                    )
-                    .toList(),
+                      )
+                      .toList(),
           ),
         ],
       ),
@@ -383,8 +382,8 @@ class _TypeTile extends StatelessWidget {
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(18),
-          color: color.withOpacity(0.1),
-          border: Border.all(color: color.withOpacity(0.3)),
+          color: color.withValues(alpha: 0.1),
+          border: Border.all(color: color.withValues(alpha: 0.3)),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -393,16 +392,16 @@ class _TypeTile extends StatelessWidget {
             const SizedBox(height: 8),
             Text(
               title,
-              style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                    fontWeight: FontWeight.w700,
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w700),
             ),
             const SizedBox(height: 4),
             Text(
               subtitle,
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
             ),
           ],
         ),

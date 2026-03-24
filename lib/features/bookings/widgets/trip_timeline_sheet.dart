@@ -4,16 +4,12 @@ import '../../../models/luggage.dart';
 import '../../../l10n/app_localizations.dart';
 
 class TripTimelineSheet extends StatelessWidget {
-  const TripTimelineSheet({
-    super.key,
-    required this.luggage,
-  });
+  const TripTimelineSheet({super.key, required this.luggage});
 
   final LuggageModel luggage;
 
   @override
   Widget build(BuildContext context) {
-    final loc = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
     final fmt = DateFormat('dd MMM HH:mm');
     final items = _buildTimeline(context);
@@ -78,7 +74,9 @@ class TripTimelineSheet extends StatelessWidget {
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            item.time != null ? fmt.format(item.time!) : item.subtitle,
+                            item.time != null
+                                ? fmt.format(item.time!)
+                                : item.subtitle,
                             style: theme.textTheme.bodySmall?.copyWith(
                               color: theme.colorScheme.onSurfaceVariant,
                             ),

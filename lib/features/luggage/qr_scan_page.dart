@@ -10,10 +10,7 @@ import '../../widgets/app_notification.dart';
 import '../../widgets/app_mesh_background.dart';
 
 class QrScanPage extends StatefulWidget {
-  const QrScanPage({
-    super.key,
-    this.autoReturn = false,
-  });
+  const QrScanPage({super.key, this.autoReturn = false});
 
   final bool autoReturn;
 
@@ -140,6 +137,7 @@ class _QrScanPageState extends State<QrScanPage> {
         null,
         null,
       );
+      if (!mounted) return;
       if (res['ok'] == true) {
         AppNotification.show(
           context,
@@ -147,6 +145,7 @@ class _QrScanPageState extends State<QrScanPage> {
           type: AppNotificationType.success,
         );
         final refreshed = await LuggageService.getUserLuggages(userId);
+        if (!mounted) return;
         _cache = refreshed;
         final updated = refreshed.firstWhere(
           (item) => item.id == luggage.id,
@@ -156,8 +155,8 @@ class _QrScanPageState extends State<QrScanPage> {
       } else if (_isPaymentRequired(res)) {
         await _handlePaymentRequired(userId, luggage);
       } else {
-        final msg =
-            (res['error'] ?? res['message'] ?? loc.qrDropFailed).toString();
+        final msg = (res['error'] ?? res['message'] ?? loc.qrDropFailed)
+            .toString();
         AppNotification.show(
           context,
           message: msg.isNotEmpty ? msg : loc.qrDropFailed,
@@ -165,6 +164,7 @@ class _QrScanPageState extends State<QrScanPage> {
         );
       }
     } catch (_) {
+      if (!mounted) return;
       AppNotification.show(
         context,
         message: loc.qrDropFailed,
@@ -176,12 +176,15 @@ class _QrScanPageState extends State<QrScanPage> {
   }
 
   bool _isPaymentRequired(Map<String, dynamic> result) {
-    final msg =
-        (result['message'] ?? result['error'] ?? result['code'] ?? '').toString();
+    final msg = (result['message'] ?? result['error'] ?? result['code'] ?? '')
+        .toString();
     return msg.trim() == 'PAYMENT_REQUIRED_BEFORE_DROP';
   }
 
-  Future<void> _handlePaymentRequired(String userId, LuggageModel luggage) async {
+  Future<void> _handlePaymentRequired(
+    String userId,
+    LuggageModel luggage,
+  ) async {
     final loc = AppLocalizations.of(context)!;
     final go = await showDialog<bool>(
       context: context,
@@ -201,6 +204,7 @@ class _QrScanPageState extends State<QrScanPage> {
       ),
     );
     if (go != true) return;
+    if (!mounted) return;
     final result = await Navigator.of(context).push<bool>(
       MaterialPageRoute(
         builder: (_) => PaymentPage(
@@ -215,8 +219,10 @@ class _QrScanPageState extends State<QrScanPage> {
         ),
       ),
     );
+    if (!mounted) return;
     if (result == true) {
       final refreshed = await LuggageService.getUserLuggages(userId);
+      if (!mounted) return;
       _cache = refreshed;
       final updated = refreshed.firstWhere(
         (item) => item.id == luggage.id,
@@ -254,9 +260,7 @@ class _QrScanPageState extends State<QrScanPage> {
     final theme = Theme.of(context);
     return Scaffold(
       backgroundColor: Colors.transparent,
-      appBar: AppBar(
-        title: Text(loc.qrScanTitle),
-      ),
+      appBar: AppBar(title: Text(loc.qrScanTitle)),
       body: Stack(
         children: [
           const AppMeshBackground(),
@@ -332,10 +336,7 @@ class _QrScanPageState extends State<QrScanPage> {
     if (_lastCode == null) {
       return Padding(
         padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-        child: Text(
-          loc.qrAwaitingScan,
-          textAlign: TextAlign.center,
-        ),
+        child: Text(loc.qrAwaitingScan, textAlign: TextAlign.center),
       );
     }
     if (_error != null) {
@@ -370,13 +371,16 @@ class _QrScanPageState extends State<QrScanPage> {
             children: [
               Text(
                 loc.qrReservationInfoTitle,
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w700,
-                    ),
+                style: Theme.of(
+                  context,
+                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
               ),
               const SizedBox(height: 12),
               _InfoRow(label: loc.qrCode, value: luggage.qrCode),
-              _InfoRow(label: loc.statusLabel, value: _statusLabel(loc, luggage.status)),
+              _InfoRow(
+                label: loc.statusLabel,
+                value: _statusLabel(loc, luggage.status),
+              ),
               _InfoRow(
                 label: loc.locationLabel,
                 value: luggage.dropLocationName.isNotEmpty
@@ -396,7 +400,10 @@ class _QrScanPageState extends State<QrScanPage> {
               if ((luggage.ownerName ?? '').isNotEmpty)
                 _InfoRow(label: loc.ownerNameLabel, value: luggage.ownerName!),
               if ((luggage.ownerPhone ?? '').isNotEmpty)
-                _InfoRow(label: loc.ownerPhoneLabel, value: luggage.ownerPhone!),
+                _InfoRow(
+                  label: loc.ownerPhoneLabel,
+                  value: luggage.ownerPhone!,
+                ),
               if ((luggage.paymentStatus ?? '').isNotEmpty)
                 _InfoRow(
                   label: loc.paymentStatusLabel,
@@ -494,10 +501,7 @@ String _formatDateTime(BuildContext context, DateTime date) {
 }
 
 class _InfoRow extends StatelessWidget {
-  const _InfoRow({
-    required this.label,
-    required this.value,
-  });
+  const _InfoRow({required this.label, required this.value});
 
   final String label;
   final String value;

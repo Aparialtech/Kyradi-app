@@ -40,8 +40,7 @@ class TripCard extends StatelessWidget {
     final totalLabel = luggage.totalPrice != null
         ? '${loc.total}: ${luggage.totalPrice} ₺'
         : null;
-    final paymentStatusLabel =
-        _paymentStatusLabel(loc, luggage.paymentStatus);
+    final paymentStatusLabel = _paymentStatusLabel(loc, luggage.paymentStatus);
     return SectionCard(
       margin: const EdgeInsets.symmetric(vertical: 8),
       child: Padding(
@@ -60,7 +59,10 @@ class TripCard extends StatelessWidget {
                   ),
                 ),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
                     color: statusColor.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(999),
@@ -176,8 +178,9 @@ class TripCard extends StatelessWidget {
                 _OverflowMenu(
                   onScanQr: onScanQr,
                   onSupport: onSupport,
-                  onCancel:
-                      onCancel != null && luggage.isAwaitingDrop ? onCancel : null,
+                  onCancel: onCancel != null && luggage.isAwaitingDrop
+                      ? onCancel
+                      : null,
                 ),
               ],
             ),
@@ -236,49 +239,6 @@ class _MetaChip extends StatelessWidget {
                 fontWeight: FontWeight.w600,
                 color: theme.colorScheme.onSurface,
               ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _InfoChip extends StatelessWidget {
-  const _InfoChip({required this.icon, required this.label});
-
-  final IconData icon;
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            theme.colorScheme.surfaceContainerHighest,
-            theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.7),
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: theme.colorScheme.outlineVariant.withValues(alpha: 0.6),
-        ),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 14, color: theme.colorScheme.primary),
-          const SizedBox(width: 6),
-          Text(
-            label,
-            style: theme.textTheme.labelSmall?.copyWith(
-              fontWeight: FontWeight.w600,
-              color: theme.colorScheme.onSurface,
             ),
           ),
         ],

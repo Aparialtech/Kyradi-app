@@ -196,7 +196,7 @@ class _StepScheduleLocationState extends State<StepScheduleLocation> {
           ),
         const SizedBox(height: 12),
         DropdownButtonFormField<DropLocation>(
-          value: filtered.contains(widget.draft.location)
+          initialValue: filtered.contains(widget.draft.location)
               ? widget.draft.location
               : null,
           decoration: InputDecoration(

@@ -96,7 +96,7 @@ class _StepBagInfoState extends State<StepBagInfo> {
         ),
         const SizedBox(height: 12),
         DropdownButtonFormField<String>(
-          value: widget.draft.size,
+          initialValue: widget.draft.size,
           decoration: InputDecoration(
             labelText: loc.luggageInfoLabelSize,
             prefixIcon: const Icon(Icons.straighten_outlined),
@@ -122,7 +122,7 @@ class _StepBagInfoState extends State<StepBagInfo> {
         ),
         const SizedBox(height: 12),
         DropdownButtonFormField<String>(
-          value: widget.draft.color,
+          initialValue: widget.draft.color,
           decoration: InputDecoration(
             labelText: loc.luggageInfoLabelColor,
             prefixIcon: const Icon(Icons.palette_outlined),

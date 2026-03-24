@@ -19,7 +19,8 @@ class AppNotification {
     Widget? leading,
   }) {
     if (NotificationPrefs.criticalOnly.value &&
-        (type == AppNotificationType.info || type == AppNotificationType.success)) {
+        (type == AppNotificationType.info ||
+            type == AppNotificationType.success)) {
       return;
     }
     _currentEntry?.remove();
@@ -64,9 +65,11 @@ class NotificationCenter {
   static final ValueNotifier<List<AppNotificationEntry>> _notifier =
       ValueNotifier<List<AppNotificationEntry>>(<AppNotificationEntry>[]);
 
-  static ValueListenable<List<AppNotificationEntry>> get listenable => _notifier;
+  static ValueListenable<List<AppNotificationEntry>> get listenable =>
+      _notifier;
 
-  static List<AppNotificationEntry> get entries => List.unmodifiable(_notifier.value);
+  static List<AppNotificationEntry> get entries =>
+      List.unmodifiable(_notifier.value);
 
   static void clear() {
     _notifier.value = <AppNotificationEntry>[];
@@ -124,9 +127,7 @@ class _NotificationOverlayState extends State<_NotificationOverlay>
     _offset = Tween<Offset>(
       begin: const Offset(0, -1),
       end: Offset.zero,
-    ).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic),
-    );
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic));
 
     _controller.forward();
     _timer = Timer(widget.duration, () {
@@ -191,47 +192,46 @@ class _NotificationOverlayState extends State<_NotificationOverlay>
                 position: _offset,
                 child: Material(
                   color: Colors.transparent,
-                  child: Container(
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(18),
-                      child: BackdropFilter(
-                        filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
-                        child: Container(
-                          decoration: BoxDecoration(
-                            color: Colors.black.withValues(alpha: 0.55),
-                            borderRadius: BorderRadius.circular(18),
-                            border: Border.all(
-                              color: _accent.withValues(alpha: 0.4),
-                              width: 1,
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(18),
+                    child: BackdropFilter(
+                      filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: Colors.black.withValues(alpha: 0.55),
+                          borderRadius: BorderRadius.circular(18),
+                          border: Border.all(
+                            color: _accent.withValues(alpha: 0.4),
+                            width: 1,
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.18),
+                              blurRadius: 24,
+                              offset: const Offset(0, 14),
                             ),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withValues(alpha: 0.18),
-                                blurRadius: 24,
-                                offset: const Offset(0, 14),
-                              ),
-                            ],
-                          ),
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 12,
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              widget.leading ?? _ThreeDIconBadge(icon: _icon, accent: _accent),
-                              const SizedBox(width: 10),
-                              Flexible(
-                                child: Text(
-                                  widget.message,
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.w600,
-                                  ),
+                          ],
+                        ),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 12,
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            widget.leading ??
+                                _ThreeDIconBadge(icon: _icon, accent: _accent),
+                            const SizedBox(width: 10),
+                            Flexible(
+                              child: Text(
+                                widget.message,
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w600,
                                 ),
                               ),
-                            ],
-                          ),
+                            ),
+                          ],
                         ),
                       ),
                     ),
@@ -247,10 +247,7 @@ class _NotificationOverlayState extends State<_NotificationOverlay>
 }
 
 class _ThreeDIconBadge extends StatelessWidget {
-  const _ThreeDIconBadge({
-    required this.icon,
-    required this.accent,
-  });
+  const _ThreeDIconBadge({required this.icon, required this.accent});
 
   final IconData icon;
   final Color accent;

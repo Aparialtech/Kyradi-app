@@ -133,47 +133,44 @@ class _StepPaymentState extends State<StepPayment> {
                 ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
               ),
               const SizedBox(height: 8),
-              RadioListTile<String>(
-                value: 'wallet',
+              RadioGroup<String>(
                 groupValue: widget.draft.paymentMethod,
                 onChanged: (value) {
-                  _updateDraft(
-                    (draft) => draft.paymentMethod = value ?? 'wallet',
-                  );
-                  _loadBalance();
+                  final selected = (value ?? '').trim();
+                  if (selected.isEmpty) return;
+                  if (selected == 'card' && !cardMethodsEnabled) return;
+                  if (selected == 'pay_at_hotel' && !hotelEnabled) return;
+                  _updateDraft((draft) => draft.paymentMethod = selected);
+                  if (selected == 'wallet') {
+                    _loadBalance();
+                  }
                 },
-                title: Text(
-                  loc.paymentMethodWallet(_walletBalance.toStringAsFixed(2)),
+                child: Column(
+                  children: [
+                    RadioListTile<String>(
+                      value: 'wallet',
+                      title: Text(
+                        loc.paymentMethodWallet(
+                          _walletBalance.toStringAsFixed(2),
+                        ),
+                      ),
+                    ),
+                    RadioListTile<String>(
+                      value: 'card',
+                      enabled: cardMethodsEnabled,
+                      title: Text(loc.paymentMethodCard),
+                    ),
+                    RadioListTile<String>(
+                      value: 'transfer',
+                      title: Text(loc.paymentMethodTransfer),
+                    ),
+                    RadioListTile<String>(
+                      value: 'pay_at_hotel',
+                      enabled: hotelEnabled,
+                      title: Text(loc.paymentMethodPayAtHotel),
+                    ),
+                  ],
                 ),
-              ),
-              RadioListTile<String>(
-                value: 'card',
-                groupValue: widget.draft.paymentMethod,
-                onChanged: cardMethodsEnabled
-                    ? (value) => _updateDraft(
-                        (draft) => draft.paymentMethod = value ?? 'card',
-                      )
-                    : null,
-                title: Text(loc.paymentMethodCard),
-              ),
-              RadioListTile<String>(
-                value: 'transfer',
-                groupValue: widget.draft.paymentMethod,
-                onChanged: (value) => _updateDraft(
-                  (draft) => draft.paymentMethod = value ?? 'transfer',
-                ),
-                title: Text(loc.paymentMethodTransfer),
-              ),
-              RadioListTile<String>(
-                value: 'pay_at_hotel',
-                groupValue: widget.draft.paymentMethod,
-                onChanged: hotelEnabled
-                    ? (value) => _updateDraft(
-                        (draft) =>
-                            draft.paymentMethod = value ?? 'pay_at_hotel',
-                      )
-                    : null,
-                title: Text(loc.paymentMethodPayAtHotel),
               ),
               if (!cardMethodsEnabled || !hotelEnabled)
                 Padding(
@@ -428,14 +425,14 @@ class _CardBack extends StatelessWidget {
     return _CardShell(
       child: Column(
         children: [
-          Container(height: 28, color: Colors.black.withOpacity(0.5)),
+          Container(height: 28, color: Colors.black.withValues(alpha: 0.5)),
           const SizedBox(height: 12),
           Align(
             alignment: Alignment.centerRight,
             child: Container(
               width: 120,
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              color: Colors.white.withOpacity(0.9),
+              color: Colors.white.withValues(alpha: 0.9),
               child: Text(
                 cvv,
                 textAlign: TextAlign.right,
@@ -472,7 +469,7 @@ class _CardShell extends StatelessWidget {
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.12),
+            color: Colors.black.withValues(alpha: 0.12),
             blurRadius: 20,
             offset: const Offset(0, 10),
           ),

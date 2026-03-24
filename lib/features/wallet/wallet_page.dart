@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -8,19 +7,10 @@ import '../../l10n/app_localizations.dart';
 import '../../features/wallet/models/reward_mission.dart';
 import '../../features/wallet/models/wallet_transaction.dart';
 import '../../services/local_notification_service.dart';
-import '../../features/wallet/widgets/balance_card.dart';
 import '../../features/wallet/widgets/cashback_rules_page.dart';
-import '../../features/wallet/widgets/coupons_page.dart';
-import '../../features/wallet/widgets/invite_friends_page.dart';
 import '../../features/wallet/widgets/mission_carousel.dart';
-import '../../features/wallet/widgets/transactions_list.dart';
-import '../../features/wallet/widgets/wallet_header.dart';
-import '../../features/wallet/widgets/wallet_quick_actions.dart';
 import 'pages/wallet_transactions_page.dart';
-import 'pages/wallet_cashback_page.dart';
 import 'pages/wallet_cards_page.dart';
-import 'pages/wallet_topup_saved_card_page.dart';
-import 'pages/wallet_topup_new_card_page.dart';
 import '../../ui/components/app_empty_state.dart';
 import '../../ui/components/app_skeleton.dart';
 import '../../widgets/app_mesh_background.dart';
@@ -35,7 +25,7 @@ class WalletPage extends StatefulWidget {
   State<WalletPage> createState() => _WalletPageState();
 }
 
-enum _WalletPanel { none, coupon, topup, transfer }
+enum _WalletPanel { none, coupon, transfer }
 
 enum _WalletTxFilter { all, incoming, outgoing }
 
@@ -43,7 +33,6 @@ class _WalletPageState extends State<WalletPage>
     with SingleTickerProviderStateMixin {
   bool _loading = true;
   double _balance = 0;
-  double _monthlyEarned = 0;
   bool _obscureBalance = false;
   List<WalletTransaction> _transactions = [];
   List<RewardMission> _missions = [];
@@ -53,9 +42,6 @@ class _WalletPageState extends State<WalletPage>
 
   final _couponCtrl = TextEditingController();
   bool _couponLoading = false;
-  String? _couponStatus;
-
-  bool _topUpLoading = false;
 
   final _transferTargetCtrl = TextEditingController();
   final _transferAmountCtrl = TextEditingController();
@@ -92,7 +78,6 @@ class _WalletPageState extends State<WalletPage>
     setState(() {
       // TODO: Replace with API integration.
       _balance = stored ?? 124.5;
-      _monthlyEarned = 42.75;
       _transactions = [
         WalletTransaction(
           type: WalletTransactionType.earn,
@@ -183,30 +168,10 @@ class _WalletPageState extends State<WalletPage>
     ).push(MaterialPageRoute(builder: (_) => const CashbackRulesPage()));
   }
 
-  void _openCoupons() {
-    Navigator.of(
-      context,
-    ).push(MaterialPageRoute(builder: (_) => const CouponsPage()));
-  }
-
-  void _openInvite() {
-    Navigator.of(
-      context,
-    ).push(MaterialPageRoute(builder: (_) => const InviteFriendsPage()));
-  }
-
   void _openTransactions() {
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (_) => WalletTransactionsPage(transactions: _transactions),
-      ),
-    );
-  }
-
-  void _openCashback() {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => WalletCashbackPage(transactions: _transactions),
       ),
     );
   }
@@ -230,13 +195,11 @@ class _WalletPageState extends State<WalletPage>
     appLog('wallet', 'COUPON_APPLY_TAP code=$code', level: AppLogLevel.info);
     setState(() {
       _couponLoading = true;
-      _couponStatus = null;
     });
     try {
       await Future<void>.delayed(const Duration(milliseconds: 900));
       if (!mounted) return;
       if (code == 'KYRADI10') {
-        _couponStatus = loc.couponAppliedMessage;
         AppNotification.show(
           context,
           message: loc.couponAppliedMessage,
@@ -244,7 +207,6 @@ class _WalletPageState extends State<WalletPage>
         );
         appLog('wallet', 'COUPON_APPLY_OK code=$code', level: AppLogLevel.info);
       } else {
-        _couponStatus = loc.couponInvalidMessage;
         AppNotification.show(
           context,
           message: loc.couponInvalidMessage,
@@ -258,7 +220,6 @@ class _WalletPageState extends State<WalletPage>
       }
     } catch (e) {
       if (!mounted) return;
-      _couponStatus = loc.couponFailedMessage;
       AppNotification.show(
         context,
         message: loc.couponFailedMessage,
@@ -279,7 +240,6 @@ class _WalletPageState extends State<WalletPage>
     required String label,
   }) async {
     final loc = AppLocalizations.of(context)!;
-    setState(() => _topUpLoading = true);
     appLog('wallet', 'TOPUP_START amount=$amount', level: AppLogLevel.info);
     try {
       setState(() {
@@ -320,31 +280,6 @@ class _WalletPageState extends State<WalletPage>
         type: AppNotificationType.error,
       );
       appLog('wallet', 'TOPUP_ERR err=$e', level: AppLogLevel.error);
-    } finally {
-      if (mounted) setState(() => _topUpLoading = false);
-    }
-  }
-
-  Future<void> _openTopUpSaved() async {
-    final result = await Navigator.of(context).push<Map<String, dynamic>>(
-      MaterialPageRoute(builder: (_) => const WalletTopUpSavedCardPage()),
-    );
-    await _handleTopUpResult(result);
-  }
-
-  Future<void> _openTopUpNew() async {
-    final result = await Navigator.of(context).push<Map<String, dynamic>>(
-      MaterialPageRoute(builder: (_) => const WalletTopUpNewCardPage()),
-    );
-    await _handleTopUpResult(result);
-  }
-
-  Future<void> _handleTopUpResult(Map<String, dynamic>? result) async {
-    if (!mounted || result == null) return;
-    final rawAmount = result['amount'];
-    final label = result['label']?.toString() ?? '';
-    if (rawAmount is num) {
-      await _applyTopUpResult(amount: rawAmount.toDouble(), label: label);
     }
   }
 
@@ -514,37 +449,6 @@ class _WalletPageState extends State<WalletPage>
       case _WalletTxFilter.all:
         return _transactions;
     }
-  }
-
-  List<_DailyFlow> get _weeklyFlows {
-    final now = DateTime.now();
-    final start = DateTime(
-      now.year,
-      now.month,
-      now.day,
-    ).subtract(const Duration(days: 6));
-    final labels = ['Pzt', 'Sal', 'Car', 'Per', 'Cum', 'Cmt', 'Paz'];
-    final buckets = List<_DailyFlow>.generate(7, (index) {
-      final date = start.add(Duration(days: index));
-      final dayLabel = labels[(date.weekday - 1) % 7];
-      return _DailyFlow(label: dayLabel, incoming: 0, outgoing: 0);
-    });
-    for (final tx in _transactions) {
-      final normalized = DateTime(tx.date.year, tx.date.month, tx.date.day);
-      final diff = normalized.difference(start).inDays;
-      if (diff < 0 || diff > 6) continue;
-      final current = buckets[diff];
-      if (tx.type == WalletTransactionType.earn) {
-        buckets[diff] = current.copyWith(
-          incoming: current.incoming + tx.amount,
-        );
-      } else if (tx.type == WalletTransactionType.spend) {
-        buckets[diff] = current.copyWith(
-          outgoing: current.outgoing + tx.amount,
-        );
-      }
-    }
-    return buckets;
   }
 
   @override
@@ -1062,245 +966,6 @@ class _WalletPreviewTile extends StatelessWidget {
   }
 }
 
-class _DailyFlow {
-  const _DailyFlow({
-    required this.label,
-    required this.incoming,
-    required this.outgoing,
-  });
-
-  final String label;
-  final double incoming;
-  final double outgoing;
-
-  _DailyFlow copyWith({String? label, double? incoming, double? outgoing}) {
-    return _DailyFlow(
-      label: label ?? this.label,
-      incoming: incoming ?? this.incoming,
-      outgoing: outgoing ?? this.outgoing,
-    );
-  }
-}
-
-class _WalletStartCard extends StatelessWidget {
-  const _WalletStartCard({
-    required this.onTopUp,
-    required this.onTransactions,
-    required this.onCards,
-  });
-
-  final VoidCallback onTopUp;
-  final VoidCallback onTransactions;
-  final VoidCallback onCards;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return SectionCard(
-      padding: const EdgeInsets.all(14),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Hızlı Başlangıç',
-            style: theme.textTheme.titleSmall?.copyWith(
-              fontWeight: FontWeight.w800,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            'En sık kullanılan işlemler tek dokunuşla.',
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
-            ),
-          ),
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              Expanded(
-                child: FilledButton.icon(
-                  onPressed: onTopUp,
-                  icon: const Icon(Icons.add_circle_outline_rounded, size: 18),
-                  label: const Text('Para Yükle'),
-                ),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: OutlinedButton.icon(
-                  onPressed: onTransactions,
-                  icon: const Icon(Icons.receipt_long_outlined, size: 18),
-                  label: const Text('İşlemler'),
-                ),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: OutlinedButton.icon(
-                  onPressed: onCards,
-                  icon: const Icon(Icons.credit_card_outlined, size: 18),
-                  label: const Text('Kartlar'),
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _WeeklyFlowCard extends StatelessWidget {
-  const _WeeklyFlowCard({required this.items});
-
-  final List<_DailyFlow> items;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final peak = items.fold<double>(
-      1,
-      (maxVal, item) =>
-          math.max(maxVal, math.max(item.incoming, item.outgoing)),
-    );
-    return SectionCard(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Haftalık Akış',
-            style: theme.textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            'Son 7 gun gelir ve gider dagilimi',
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
-            ),
-          ),
-          const SizedBox(height: 14),
-          SizedBox(
-            height: 132,
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: items
-                  .map(
-                    (item) => Expanded(
-                      child: _DayFlowBar(item: item, maxValue: peak),
-                    ),
-                  )
-                  .toList(),
-            ),
-          ),
-          const SizedBox(height: 10),
-          Wrap(
-            spacing: 10,
-            runSpacing: 10,
-            children: const [
-              _FlowLegendDot(color: Color(0xFF0EA5E9), label: 'Gelen'),
-              _FlowLegendDot(color: Color(0xFFF97316), label: 'Giden'),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _DayFlowBar extends StatelessWidget {
-  const _DayFlowBar({required this.item, required this.maxValue});
-
-  final _DailyFlow item;
-  final double maxValue;
-
-  @override
-  Widget build(BuildContext context) {
-    final inHeight = item.incoming <= 0
-        ? 3.0
-        : (item.incoming / maxValue * 70).clamp(3.0, 70.0);
-    final outHeight = item.outgoing <= 0
-        ? 3.0
-        : (item.outgoing / maxValue * 70).clamp(3.0, 70.0);
-    final textTheme = Theme.of(context).textTheme;
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 2),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.end,
-        children: [
-          Expanded(
-            child: Align(
-              alignment: Alignment.bottomCenter,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  AnimatedContainer(
-                    duration: const Duration(milliseconds: 260),
-                    curve: Curves.easeOutCubic,
-                    width: 7,
-                    height: inHeight,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF0EA5E9),
-                      borderRadius: BorderRadius.circular(999),
-                    ),
-                  ),
-                  const SizedBox(width: 4),
-                  AnimatedContainer(
-                    duration: const Duration(milliseconds: 260),
-                    curve: Curves.easeOutCubic,
-                    width: 7,
-                    height: outHeight,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFF97316),
-                      borderRadius: BorderRadius.circular(999),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            item.label,
-            style: textTheme.labelSmall?.copyWith(
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _FlowLegendDot extends StatelessWidget {
-  const _FlowLegendDot({required this.color, required this.label});
-
-  final Color color;
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Container(
-          width: 9,
-          height: 9,
-          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
-        ),
-        const SizedBox(width: 6),
-        Text(
-          label,
-          style: Theme.of(
-            context,
-          ).textTheme.labelSmall?.copyWith(fontWeight: FontWeight.w600),
-        ),
-      ],
-    );
-  }
-}
-
 class _WalletMetricStrip extends StatelessWidget {
   const _WalletMetricStrip({
     required this.earnedAmount,
@@ -1628,73 +1293,6 @@ class _PanelIcon extends StatelessWidget {
           ],
         ),
       ],
-    );
-  }
-}
-
-class _TopUpMethodTile extends StatelessWidget {
-  const _TopUpMethodTile({
-    required this.title,
-    required this.subtitle,
-    required this.icon,
-    required this.accent,
-    required this.onTap,
-  });
-
-  final String title;
-  final String subtitle;
-  final IconData icon;
-  final Color accent;
-  final VoidCallback? onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(16),
-      child: Ink(
-        padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(16),
-          color: theme.colorScheme.surface,
-          border: Border.all(color: accent.withValues(alpha: 0.25)),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.06),
-              blurRadius: 10,
-              offset: const Offset(0, 6),
-            ),
-          ],
-        ),
-        child: Row(
-          children: [
-            _PanelIcon(accent: accent, icon: icon),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: theme.textTheme.titleSmall?.copyWith(
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    subtitle,
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const Icon(Icons.chevron_right_rounded),
-          ],
-        ),
-      ),
     );
   }
 }

@@ -196,6 +196,7 @@ class _LuggageAddPageState extends State<LuggageAddPage> {
           airline: _airlineCtrl.text.trim(),
           flightAt: _flightTime!,
         );
+        if (!mounted) return;
       }
       context.pop<LuggageModel>(luggage);
     } catch (e) {
@@ -242,7 +243,7 @@ class _LuggageAddPageState extends State<LuggageAddPage> {
                     children: [
                       if (_locationsReady)
                         DropdownButtonFormField<DropLocation>(
-                          value: _selectedLocation,
+                          initialValue: _selectedLocation,
                           items: _locations
                               .map(
                                 (location) => DropdownMenuItem(
@@ -287,7 +288,7 @@ class _LuggageAddPageState extends State<LuggageAddPage> {
                       ),
                       const SizedBox(height: 12),
                       DropdownButtonFormField<String>(
-                        value: _size,
+                        initialValue: _size,
                         items: [
                           DropdownMenuItem(
                             value: 'small',
@@ -311,7 +312,7 @@ class _LuggageAddPageState extends State<LuggageAddPage> {
                       ),
                       const SizedBox(height: 12),
                       DropdownButtonFormField<String>(
-                        value: _color,
+                        initialValue: _color,
                         items: [
                           DropdownMenuItem(
                             value: 'black',

@@ -283,6 +283,7 @@ class _PaymentPageState extends State<PaymentPage> {
         reservationLabel: widget.reservationId,
         amountTry: amount,
       );
+      if (!mounted) return;
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(
           builder: (_) => PaymentResultPage(

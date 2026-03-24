@@ -33,7 +33,6 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
 
   bool _saving = false;
   String? _avatarPath;
-  String? _avatarUploadUrl;
 
   AppLocalizations get loc => AppLocalizations.of(context)!;
 
@@ -77,7 +76,6 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
     if (!mounted) return;
     setState(() {
       _avatarPath = storedPath;
-      _avatarUploadUrl = null;
     });
   }
 
@@ -116,9 +114,9 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
             bytes: bytes,
             filename: filename,
           );
+          if (!mounted) return;
           if (uploadRes['ok'] == true && uploadRes['fileUrl'] != null) {
             avatarUrl = uploadRes['fileUrl'].toString();
-            _avatarUploadUrl = avatarUrl;
           } else {
             final err =
                 (uploadRes['error'] ??
@@ -155,6 +153,7 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
             ? _resolveAvatarUrl(cacheValue)
             : null;
         await ProfileAvatarCache.set(widget.user.id, resolvedCache);
+        if (!mounted) return;
         AppNotification.show(
           context,
           message: loc.profileSavedMessage,
