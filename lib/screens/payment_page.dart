@@ -104,7 +104,17 @@ class _PaymentPageState extends State<PaymentPage> {
 
   Future<void> _loadWalletBalance() async {
     final prefs = await SharedPreferences.getInstance();
-    final balance = prefs.getDouble('wallet_balance') ?? 0;
+    double balance = prefs.getDouble('wallet_balance') ?? 0;
+    try {
+      final remote = await ApiService.walletOverview();
+      final remoteBalance = (remote['balance'] as num?)?.toDouble();
+      if (remoteBalance != null && remoteBalance >= 0) {
+        balance = remoteBalance;
+        await prefs.setDouble('wallet_balance', remoteBalance);
+      }
+    } catch (_) {
+      // Keep local fallback balance when wallet API is unavailable.
+    }
     if (!mounted) return;
     setState(() => _walletBalance = balance);
   }
@@ -259,21 +269,22 @@ class _PaymentPageState extends State<PaymentPage> {
     }
     setState(() => _loading = true);
     try {
-      final result = await ApiService.mockPayment(
-        amount: amount,
-        currency: 'TRY',
-        protectionLevel: _protectionLevel,
-        bookingId: widget.reservationId,
-      );
+      final result = await _submitPaymentByMethod(amount);
       if (!mounted) return;
       setState(() => _loading = false);
-      final ok = result['ok'] == true || result['status'] == 'success';
+      final ok = _isPaymentSuccessful(result);
       if (!ok) {
         final msg = (result['error'] ?? result['message'] ?? '')
             .toString()
             .trim();
         _showError(msg.isNotEmpty ? msg : loc.paymentFailedMessage);
         return;
+      }
+      if (_paymentMethod == 'wallet') {
+        await _persistWalletBalanceAfterPayment(
+          amount,
+          (result['balance'] as num?)?.toDouble(),
+        );
       }
       _cardNumberCtrl.clear();
       _nameCtrl.clear();
@@ -296,8 +307,64 @@ class _PaymentPageState extends State<PaymentPage> {
     } catch (e) {
       if (!mounted) return;
       setState(() => _loading = false);
+      final raw = e.toString().toUpperCase();
+      if (raw.contains('WALLET_INSUFFICIENT')) {
+        _showWalletInsufficient(loc, amount);
+        return;
+      }
+      if (raw.contains('FORBIDDEN') || raw.contains('PAYMENTS_DEMO_DISABLED')) {
+        _showError('Ödeme servisi şu an kullanılamıyor. Lütfen tekrar dene.');
+        return;
+      }
       _showError('Bağlantı hatası');
     }
+  }
+
+  Future<Map<String, dynamic>> _submitPaymentByMethod(int amount) async {
+    if (_paymentMethod == 'wallet') {
+      return ApiService.walletPay(
+        reservationId: widget.reservationId,
+        amount: amount,
+      );
+    }
+    if (_paymentMethod == 'pay_at_hotel') {
+      return ApiService.startPaymentCheckout(
+        reservationId: widget.reservationId,
+        paymentMethod: 'pay_at_hotel',
+      );
+    }
+    return ApiService.mockPayment(
+      amount: amount,
+      currency: 'TRY',
+      protectionLevel: _protectionLevel,
+      bookingId: widget.reservationId,
+    );
+  }
+
+  bool _isPaymentSuccessful(Map<String, dynamic> result) {
+    final status = (result['status'] ?? result['paymentStatus'] ?? '')
+        .toString()
+        .toLowerCase();
+    if (_paymentMethod == 'wallet') {
+      return status == 'paid' || result['ok'] == true;
+    }
+    if (_paymentMethod == 'pay_at_hotel') {
+      return result['ok'] == true;
+    }
+    return result['ok'] == true || status == 'success' || status == 'paid';
+  }
+
+  Future<void> _persistWalletBalanceAfterPayment(
+    int amount,
+    double? backendBalance,
+  ) async {
+    final next = (backendBalance ?? (_walletBalance - amount))
+        .clamp(0, double.infinity)
+        .toDouble();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setDouble('wallet_balance', next);
+    if (!mounted) return;
+    setState(() => _walletBalance = next);
   }
 
   Future<void> _openEditReservation() async {
@@ -386,6 +453,29 @@ class _PaymentPageState extends State<PaymentPage> {
                               ),
                               const SizedBox(height: 8),
                               Text(loc.paymentPayAtHotelBody),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                      ] else if (_paymentMethod == 'wallet') ...[
+                        SectionCard(
+                          backgroundColor: theme.colorScheme.surface.withValues(
+                            alpha: 0.92,
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                loc.paymentMethodWallet(
+                                  _walletBalance.toStringAsFixed(2),
+                                ),
+                                style: theme.textTheme.titleMedium,
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                'Ödeme, KYRADI cüzdan bakiyenden otomatik olarak tahsil edilir.',
+                                style: theme.textTheme.bodyMedium,
+                              ),
                             ],
                           ),
                         ),

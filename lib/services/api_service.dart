@@ -1254,6 +1254,39 @@ class ApiService {
     return result;
   }
 
+  static Future<Map<String, dynamic>> walletOverview() async {
+    if (_usingMockBackend) {
+      final tx = await MockServer.walletTransactions();
+      return {
+        'balance': (tx['balance'] as num?)?.toDouble() ?? 0,
+        'transactions': tx['transactions'] ?? const [],
+      };
+    }
+    final result = await _get('/wallet');
+    result['statusCode'] ??= result['_httpStatus'];
+    return result;
+  }
+
+  static Future<Map<String, dynamic>> walletPay({
+    required String reservationId,
+    required int amount,
+  }) async {
+    if (_usingMockBackend) {
+      return MockServer.checkoutPayment(
+        amount: amount,
+        paymentMethod: 'wallet',
+        reservationId: reservationId,
+      );
+    }
+    final body = <String, dynamic>{
+      'reservationId': reservationId,
+      'amount': amount,
+    };
+    final result = await _post('/wallet/pay', body);
+    result['statusCode'] ??= result['_httpStatus'];
+    return result;
+  }
+
   static Future<Map<String, dynamic>> walletTransactions() async {
     if (_usingMockBackend) {
       return MockServer.walletTransactions();
@@ -1401,11 +1434,16 @@ class ApiService {
     String code,
   ) async {
     if (_usingMockBackend) {
-      return {'ok': true, 'verified': true, 'message': 'Rezervasyon güncellendi'};
+      return {
+        'ok': true,
+        'verified': true,
+        'message': 'Rezervasyon güncellendi',
+      };
     }
-    final result = await _post('/users/$userId/luggages/$luggageId/change-confirm', {
-      'code': code.trim(),
-    });
+    final result = await _post(
+      '/users/$userId/luggages/$luggageId/change-confirm',
+      {'code': code.trim()},
+    );
     result['statusCode'] ??= result['_httpStatus'];
     if (result['ok'] == true && result['luggage'] is! Map) {
       final doc = _stripMeta(result);

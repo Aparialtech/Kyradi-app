@@ -11,6 +11,7 @@ import { createHash } from 'crypto';
 import {
   Luggage,
   LuggageStatus,
+  PaymentMethod,
   PaymentStatus,
 } from './schemas/luggage.schema';
 import { CreateLuggageDto } from './dto/create-luggage.dto';
@@ -519,7 +520,9 @@ export class LuggagesService {
           luggage.paymentStatus === PaymentStatus.PAID ||
           !!luggage.paidAt ||
           (!!luggage.transactionId && luggage.transactionId.trim().length > 0);
-        if (!paid) {
+        const payAtHotelFlow =
+          luggage.paymentMethod === PaymentMethod.PAY_AT_HOTEL;
+        if (!paid && !payAtHotelFlow) {
           throw new BadRequestException({
             message: 'PAYMENT_REQUIRED_BEFORE_DROP',
             code: 'PAYMENT_REQUIRED_BEFORE_DROP',

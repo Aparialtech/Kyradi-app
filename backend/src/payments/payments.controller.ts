@@ -1,6 +1,7 @@
 import { BadRequestException, Body, Controller, Get, Post, Query, ForbiddenException } from '@nestjs/common';
 import { calculatePricingQuote } from '../common/utils/pricing-quote.util';
 import { MockPaymentDto } from './dto/mock-payment.dto';
+import { PaymentCheckoutDto } from './dto/payment-checkout.dto';
 import { PaymentsService } from './payments.service';
 
 @Controller('payments')
@@ -8,12 +9,14 @@ export class PaymentsController {
   constructor(private readonly paymentsService: PaymentsService) {}
 
   @Post('checkout')
-  checkout(@Body() body: Record<string, unknown>) {
+  async checkout(@Body() body: Record<string, unknown>) {
     const sizeClass = body['sizeClass']?.toString();
     const startAt = body['startAt']?.toString();
     const endAt = body['endAt']?.toString();
     const protectionLevel = body['protectionLevel']?.toString();
-    if (sizeClass && startAt && endAt) {
+    const reservationId = body['reservationId']?.toString().trim();
+    const paymentMethod = body['paymentMethod']?.toString().trim();
+    if (sizeClass && startAt && endAt && !reservationId) {
       const quote = calculatePricingQuote(
         sizeClass,
         new Date(startAt),
@@ -26,6 +29,23 @@ export class PaymentsController {
         tier: quote.tier,
       };
     }
+
+    if (reservationId && paymentMethod) {
+      if (!['card', 'installment', 'pay_at_hotel'].includes(paymentMethod)) {
+        throw new BadRequestException('INVALID_PAYMENT_METHOD');
+      }
+      const dto: PaymentCheckoutDto = {
+        reservationId,
+        paymentMethod: paymentMethod as PaymentCheckoutDto['paymentMethod'],
+      };
+      const checkout = await this.paymentsService.createCheckout(
+        dto,
+        process.env.MAGICPAY_CHECKOUT_BASE_URL ?? null,
+      );
+      return { ok: true, ...checkout };
+    }
+
+    // Backward-compatible fallback for legacy clients that only expect {ok:true}.
     return { ok: true };
   }
 
