@@ -1,4 +1,4 @@
-package com.dilan.kyradi_app
+package com.kyradi.kyradi_app
 
 import io.flutter.embedding.android.FlutterActivity
 

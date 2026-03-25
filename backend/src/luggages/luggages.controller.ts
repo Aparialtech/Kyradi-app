@@ -34,11 +34,6 @@ export class LuggagesController {
     if (req?.user?.id !== userId) {
       throw new ForbiddenException('FORBIDDEN');
     }
-    console.log('[PIN_MAIL] endpoint hit', {
-      path: '/users/:userId/luggages',
-      user: userId,
-      body: dto,
-    });
     return this.luggagesService.create(userId, dto);
   }
 

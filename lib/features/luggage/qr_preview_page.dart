@@ -33,9 +33,7 @@ class QrPreviewPage extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: Colors.transparent,
-      appBar: AppBar(
-        title: Text(luggage.displayLabel),
-      ),
+      appBar: AppBar(title: Text(luggage.displayLabel)),
       body: Stack(
         children: [
           const AppMeshBackground(),
@@ -78,16 +76,21 @@ class QrPreviewPage extends StatelessWidget {
                   ),
                   if (infoItems.isNotEmpty) ...[
                     const SizedBox(height: 12),
-                    Text(infoItems.join(' · '), style: theme.textTheme.bodyMedium),
+                    Text(
+                      infoItems.join(' · '),
+                      style: theme.textTheme.bodyMedium,
+                    ),
                   ],
                   if ((luggage.note ?? '').isNotEmpty) ...[
                     const SizedBox(height: 8),
-                    Text(loc.noteLabel(luggage.note ?? ''),
-                        style: theme.textTheme.bodySmall),
+                    Text(
+                      loc.noteLabel(luggage.note ?? ''),
+                      style: theme.textTheme.bodySmall,
+                    ),
                   ],
                   const SizedBox(height: 20),
                   Text(
-                    loc.pickupPinSentMessage,
+                    loc.qrShareInstructions,
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: theme.colorScheme.onSurfaceVariant,
                     ),
@@ -129,24 +132,27 @@ class QrPreviewPage extends StatelessWidget {
                   const SizedBox(height: 8),
                   Text(
                     loc.createdAtLabel(
-                      DateFormat('dd.MM.yyyy HH:mm')
-                          .format(luggage.createdAt.toLocal()),
+                      DateFormat(
+                        'dd.MM.yyyy HH:mm',
+                      ).format(luggage.createdAt.toLocal()),
                     ),
                     style: theme.textTheme.bodySmall,
                   ),
                   if (luggage.dropConfirmedAt != null)
                     Text(
                       loc.dropConfirmedAtLabel(
-                        DateFormat('dd.MM.yyyy HH:mm')
-                            .format(luggage.dropConfirmedAt!.toLocal()),
+                        DateFormat(
+                          'dd.MM.yyyy HH:mm',
+                        ).format(luggage.dropConfirmedAt!.toLocal()),
                       ),
                       style: theme.textTheme.bodySmall,
                     ),
                   if (luggage.pickupConfirmedAt != null)
                     Text(
                       loc.pickupConfirmedAtLabel(
-                        DateFormat('dd.MM.yyyy HH:mm')
-                            .format(luggage.pickupConfirmedAt!.toLocal()),
+                        DateFormat(
+                          'dd.MM.yyyy HH:mm',
+                        ).format(luggage.pickupConfirmedAt!.toLocal()),
                       ),
                       style: theme.textTheme.bodySmall,
                     ),
@@ -200,10 +206,7 @@ class _InfoRow extends StatelessWidget {
                     fontWeight: FontWeight.w600,
                   ),
                 ),
-                Text(
-                  value,
-                  style: theme.textTheme.bodyMedium,
-                ),
+                Text(value, style: theme.textTheme.bodyMedium),
               ],
             ),
           ),

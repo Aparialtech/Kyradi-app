@@ -144,24 +144,53 @@ class _LuggageDetailPageState extends State<LuggageDetailPage> {
       } else if (_isPaymentRequired(result)) {
         await _handlePaymentRequired();
       } else {
-        final msg = (result['error'] ?? result['message'] ?? '').toString();
+        final msg = _resolveStatusError(
+          result['error'] ?? result['message'] ?? result['code'],
+          loc,
+        );
         AppNotification.show(
           context,
-          message: msg.isNotEmpty ? msg : loc.statusUpdateFailed,
+          message: msg,
           type: AppNotificationType.error,
         );
       }
     } catch (e) {
       appLog('luggage', 'status update failed $e', level: AppLogLevel.error);
       if (!mounted) return;
+      final message = _resolveStatusError(e, loc);
       AppNotification.show(
         context,
-        message: loc.genericErrorWithDetails('$e'),
+        message: message,
         type: AppNotificationType.error,
       );
     } finally {
       if (mounted) setState(() => _updating = false);
     }
+  }
+
+  String _resolveStatusError(Object? rawError, AppLocalizations loc) {
+    final raw = (rawError ?? '').toString().toUpperCase();
+    if (raw.contains('PICKUP_PIN_REQUIRED')) {
+      return loc.pickupPinRequiredMessage;
+    }
+    if (raw.contains('PICKUP_PIN_INVALID')) {
+      return loc.pickupPinInvalidMessage;
+    }
+    if (raw.contains('DELEGATE_CODE_REQUIRED')) {
+      return loc.pickupPinRequiredMessage;
+    }
+    if (raw.contains('DELEGATE_CODE_INVALID')) {
+      return loc.pickupPinInvalidMessage;
+    }
+    if (raw.contains('PAYMENT_REQUIRED_BEFORE_DROP')) {
+      return loc.paymentRequiredBeforeDropMessage;
+    }
+    final text = (rawError ?? '').toString().trim();
+    if (text.isEmpty) return loc.statusUpdateFailed;
+    if (text.length <= 120 && !text.contains('{') && !text.contains('[')) {
+      return text;
+    }
+    return loc.statusUpdateFailed;
   }
 
   bool _isPaymentRequired(Map<String, dynamic> result) {

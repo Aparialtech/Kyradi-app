@@ -22,7 +22,6 @@ import { User } from '../users/schemas/user.schema';
 import { MailService } from '../common/mail/mail.service';
 import {
   hashPasswordAsync,
-  verifyPasswordAsync,
 } from '../common/utils/password.util';
 import { LuggagePushService } from './luggage-push.service';
 import { ReservationChangeCode } from './schemas/reservation-change-code.schema';
@@ -30,11 +29,6 @@ import { ReservationChangeCode } from './schemas/reservation-change-code.schema'
 @Injectable()
 export class LuggagesService {
   private readonly logger = new Logger(LuggagesService.name);
-
-  private pickupPinEmailEnabled(): boolean {
-    const raw = (process.env.PICKUP_PIN_EMAIL_ENABLED ?? 'false').toString().trim().toLowerCase();
-    return raw === '1' || raw === 'true' || raw === 'yes' || raw === 'on';
-  }
 
   constructor(
     @InjectModel(Luggage.name)
@@ -361,8 +355,6 @@ export class LuggagesService {
     }
 
     const qrCode = await this.ensureUniqueQrCode(dto.qrCode);
-    const pickupPin = this.generatePickupPin();
-    const pickupPinHash = await hashPasswordAsync(pickupPin);
     const created = await this.luggageModel.create({
       userId,
       ...dto,
@@ -370,7 +362,7 @@ export class LuggagesService {
         (location as any)._id?.toString?.() ?? requestedLocationId,
       dropLocationName: (location as any).name ?? requestedLocationName,
       qrCode,
-      pickupPinHash,
+      pickupPinHash: '',
       scheduledDropTime: dto.scheduledDropTime
         ? new Date(dto.scheduledDropTime)
         : undefined,
@@ -379,33 +371,6 @@ export class LuggagesService {
         : undefined,
     });
     await this.refreshLocationOccupancy(created.dropLocationId);
-    let pinSent = false;
-    let pinSentTo = '';
-    const user = await this.userModel.findById(userId).lean().exec();
-    if (this.pickupPinEmailEnabled() && user?.email) {
-      pinSentTo = user.email;
-      try {
-        console.log('[PIN_MAIL] about to send', {
-          to: user.email,
-          from: process.env.MAIL_FROM ? 'set' : 'missing',
-          resendKey: process.env.RESEND_API_KEY ? 'set' : 'missing',
-          luggageId: created._id?.toString(),
-        });
-        pinSent = await this.mailService.sendPickupPin({
-          to: user.email,
-          pin: pickupPin,
-          luggageId: created._id?.toString(),
-        });
-        if (pinSent) {
-          console.log('[PIN_MAIL] sent ok', {
-            to: user.email,
-            luggageId: created._id?.toString(),
-          });
-        }
-      } catch (err) {
-        console.log('[PIN_MAIL] send failed', (err as Error)?.message || err);
-      }
-    }
     await this.pushService.notifyLuggageEvent(userId, 'created', {
       luggageId: created._id?.toString() ?? '',
       luggageLabel: created.label || 'Rezervasyon',
@@ -414,8 +379,8 @@ export class LuggagesService {
     });
     return {
       luggage: this._decorateLuggage(created.toObject()),
-      pinSent,
-      pinSentTo,
+      pinSent: false,
+      pinSentTo: '',
     };
   }
 
@@ -534,39 +499,7 @@ export class LuggagesService {
         }
       }
       if (status === LuggageStatus.PICKED) {
-        const validPin =
-          !!pickupPin &&
-          !!luggage.pickupPinHash &&
-          (await verifyPasswordAsync(pickupPin, luggage.pickupPinHash));
-        const hasDelegate = !!luggage.delegateCodeHash;
-        const validDelegate =
-          !!delegateCode &&
-          !!luggage.delegateCodeHash &&
-          (await verifyPasswordAsync(delegateCode, luggage.delegateCodeHash));
-        if (!pickupPin && !delegateCode) {
-          throw new BadRequestException(
-            hasDelegate ? 'DELEGATE_CODE_REQUIRED' : 'PICKUP_PIN_REQUIRED',
-          );
-        }
-        if (delegateCode) {
-          if (!luggage.delegateCodeHash) {
-            throw new BadRequestException('DELEGATE_CODE_INVALID');
-          }
-          if (luggage.delegateUsedAt) {
-            throw new BadRequestException('DELEGATE_ALREADY_USED');
-          }
-          if (!this._isDelegateActive(luggage)) {
-            throw new BadRequestException('DELEGATE_CODE_EXPIRED');
-          }
-          if (!validDelegate) {
-            throw new BadRequestException('DELEGATE_CODE_INVALID');
-          }
-        } else if (pickupPin && !validPin) {
-          throw new BadRequestException('PICKUP_PIN_INVALID');
-        }
-        if (validDelegate) {
-          luggage.delegateUsedAt = now;
-        }
+        // Pickup PIN/delegate validation disabled by product decision.
       }
       luggage.status = status;
       if (status === LuggageStatus.DROPPED) {
@@ -629,10 +562,6 @@ export class LuggagesService {
     const stamp = Date.now().toString(36).toUpperCase();
     const random = Math.floor(1000 + Math.random() * 9000);
     return `BGO-${stamp}-${random}`;
-  }
-
-  private generatePickupPin(): string {
-    return Math.floor(1000 + Math.random() * 9000).toString();
   }
 
   private generateDelegateCode(): string {

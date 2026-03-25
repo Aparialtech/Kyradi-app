@@ -46,7 +46,7 @@ export class Luggage extends Document {
   @Prop({ required: true, unique: true })
   qrCode: string;
 
-  @Prop({ required: true })
+  @Prop({ default: '' })
   pickupPinHash: string;
 
   @Prop({ type: PickupDelegateSchema })

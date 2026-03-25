@@ -15,7 +15,7 @@ OAuth client configuration and Info.plist URL schemes.
 
 ## Bundle ID Check
 Ensure Firebase Console iOS App Bundle ID matches:
-`com.dilan.bavulgooappp`
+`com.kyradi.kyradi`
 
 ## Invalid Credential Troubleshooting
 If you see `firebase_auth/invalid-credential`:
