@@ -21,10 +21,14 @@ export class PaymentsService {
     if (!luggage) throw new NotFoundException('RESERVATION_NOT_FOUND');
 
     const paymentMethod = dto.paymentMethod as PaymentMethod;
-    if (paymentMethod === PaymentMethod.PAY_AT_HOTEL) {
+    if (
+      paymentMethod === PaymentMethod.PAY_AT_HOTEL ||
+      paymentMethod === PaymentMethod.TRANSFER
+    ) {
       luggage.paymentMethod = paymentMethod;
       luggage.paymentStatus = PaymentStatus.UNPAID;
       luggage.checkoutUrl = undefined;
+      luggage.providerPaymentId = undefined;
       await luggage.save();
       return {
         checkoutUrl: null,

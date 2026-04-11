@@ -15,8 +15,13 @@ export class PricingEstimateDto {
   protectionLevel?: 'standard' | 'premium';
 
   @IsOptional()
-  @IsIn(['card', 'installment', 'pay_at_hotel', 'transfer'])
-  paymentMethod?: 'card' | 'installment' | 'pay_at_hotel' | 'transfer';
+  @IsIn(['card', 'installment', 'pay_at_hotel', 'transfer', 'wallet'])
+  paymentMethod?:
+    | 'card'
+    | 'installment'
+    | 'pay_at_hotel'
+    | 'transfer'
+    | 'wallet';
 
   @IsOptional()
   @IsInt()

@@ -1,11 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../l10n/app_localizations.dart';
 import '../../models/luggage.dart';
 import '../../models/reservation_draft.dart';
-import '../../payments/demo_payment_repository.dart';
-import '../../payments/wallet_payment_handler.dart';
 import '../../services/pricing_service.dart';
 import '../../services/local_notification_service.dart';
 import '../../core/repositories/luggage_repository.dart';
@@ -33,7 +30,6 @@ class _ReservationStepperShellState extends State<ReservationStepperShell> {
   final _controller = ReservationFlowController();
   final _pageController = PageController();
   final _repo = const LuggageRepository();
-  final _paymentRepo = DemoPaymentRepository();
   List<DropLocation> _locations = DropLocationsRepository.locations;
   bool _submitting = false;
   String? _userId;
@@ -171,56 +167,6 @@ class _ReservationStepperShellState extends State<ReservationStepperShell> {
             insurance: draft.insurance,
             paymentMethod: draft.paymentMethod,
           );
-      if (draft.paymentMethod == 'wallet') {
-        final balance = await WalletPaymentHandler.getBalance();
-        final canPay = balance >= pricing.total;
-        if (!canPay) {
-          if (!mounted) return;
-          _showWalletInsufficient(loc, pricing.total, balance);
-          setState(() => _submitting = false);
-          return;
-        }
-      }
-      var ok = true;
-      if (draft.paymentMethod != 'pay_at_hotel' &&
-          draft.paymentMethod != 'transfer') {
-        try {
-          final checkout = await ApiService.checkoutPayment(
-            amount: pricing.total,
-            paymentMethod: draft.paymentMethod,
-          );
-          ok =
-              checkout['ok'] == true ||
-              checkout['status'] == 'success' ||
-              checkout['paymentStatus'] == 'success';
-        } catch (_) {
-          ok = false;
-        }
-        if (!ok) {
-          final fallback = await _paymentRepo.pay(
-            amount: pricing.total,
-            currency: 'TRY',
-            method: draft.paymentMethod,
-          );
-          ok = fallback['ok'] == true || fallback['status'] == 'success';
-        }
-        if (!ok) {
-          if (!mounted) return;
-          AppNotification.show(
-            context,
-            message: loc.paymentFailedMessage,
-            type: AppNotificationType.error,
-          );
-          setState(() => _submitting = false);
-          return;
-        }
-      }
-      if (draft.paymentMethod == 'wallet') {
-        final balance = await WalletPaymentHandler.getBalance();
-        if (balance >= pricing.total) {
-          await WalletPaymentHandler.setBalance(balance - pricing.total);
-        }
-      }
       final userId = _userId;
       if (userId == null || userId.isEmpty) {
         if (!mounted) return;
@@ -233,7 +179,71 @@ class _ReservationStepperShellState extends State<ReservationStepperShell> {
         return;
       }
       final payload = _buildPayload(draft, pricing);
-      final luggage = await _repo.createLuggage(userId, payload);
+      var luggage = await _repo.createLuggage(userId, payload);
+      if (draft.paymentMethod == 'wallet') {
+        final payResult = await ApiService.walletPay(
+          reservationId: luggage.id,
+          amount: pricing.total,
+        );
+        final payStatus =
+            (payResult['paymentStatus'] ?? payResult['status'] ?? '')
+                .toString()
+                .toLowerCase();
+        final paid = payStatus == 'paid' || payResult['ok'] == true;
+        if (paid) {
+          final backendBalance = (payResult['balance'] as num?)?.toDouble();
+          if (backendBalance != null) {
+            final prefs = await SharedPreferences.getInstance();
+            await prefs.setDouble('wallet_balance', backendBalance);
+          }
+          luggage = luggage.copyWith(
+            paymentMethod: 'wallet',
+            paymentStatus: paymentStatusPaid,
+          );
+        } else if (mounted) {
+          final msg = (payResult['error'] ?? payResult['message'] ?? '')
+              .toString()
+              .trim();
+          AppNotification.show(
+            context,
+            message: msg.isNotEmpty
+                ? msg
+                : 'Rezervasyon oluşturuldu, cüzdan ödemesi tamamlanamadı.',
+            type: AppNotificationType.warning,
+          );
+        }
+      } else if (draft.paymentMethod == 'card' ||
+          draft.paymentMethod == 'installment') {
+        try {
+          final checkout = await ApiService.startPaymentCheckout(
+            reservationId: luggage.id,
+            paymentMethod: draft.paymentMethod,
+          );
+          final status = (checkout['paymentStatus'] ?? '')
+              .toString()
+              .toLowerCase();
+          luggage = luggage.copyWith(
+            paymentMethod: draft.paymentMethod,
+            paymentStatus: status.isNotEmpty ? status : paymentStatusPending,
+            checkoutUrl: checkout['checkoutUrl']?.toString(),
+            providerPaymentId: checkout['providerPaymentId']?.toString(),
+          );
+        } catch (e) {
+          appLog(
+            'reservation',
+            'checkout sync failed reservation=${luggage.id} err=$e',
+            level: AppLogLevel.warn,
+          );
+          if (mounted) {
+            AppNotification.show(
+              context,
+              message:
+                  'Rezervasyon oluşturuldu. Ödeme bağlantısı hazırlanamadı, detaydan tekrar deneyebilirsin.',
+              type: AppNotificationType.warning,
+            );
+          }
+        }
+      }
       _created = luggage;
       await LocalNotificationService.instance.showReservationCreated(
         luggage.displayLabel,
@@ -317,11 +327,6 @@ class _ReservationStepperShellState extends State<ReservationStepperShell> {
   }
 
   Map<String, dynamic> _buildPayload(ReservationDraft draft, dynamic pricing) {
-    final paid =
-        draft.paymentMethod == 'wallet' || draft.paymentMethod == 'card';
-    final backendMethod = draft.paymentMethod == 'wallet'
-        ? 'card'
-        : draft.paymentMethod;
     return {
       'qrCode': _generateQrCode(),
       'label': draft.label.trim().isEmpty ? 'Bavul' : draft.label.trim(),
@@ -333,11 +338,8 @@ class _ReservationStepperShellState extends State<ReservationStepperShell> {
       'dropLocationName': draft.location?.name ?? '',
       if (draft.dropAt != null) 'scheduledDropTime': draft.dropAt,
       if (draft.pickupAt != null) 'scheduledPickupTime': draft.pickupAt,
-      'paymentMethod': backendMethod,
-      'paymentStatus': paid ? 'paid' : 'unpaid',
-      if (draft.paymentMethod == 'wallet') 'walletPayment': true,
+      'paymentMethod': draft.paymentMethod,
       'totalPrice': pricing.total,
-      'pricing': pricing.toJson(),
     };
   }
 
@@ -346,72 +348,6 @@ class _ReservationStepperShellState extends State<ReservationStepperShell> {
         .toRadixString(36)
         .toUpperCase();
     return 'BGO-$stamp-${stamp.substring(0, 4)}';
-  }
-
-  void _showWalletInsufficient(
-    AppLocalizations loc,
-    int amount,
-    double balance,
-  ) {
-    showModalBottomSheet(
-      context: context,
-      useRootNavigator: true,
-      useSafeArea: true,
-      isScrollControlled: true,
-      showDragHandle: true,
-      builder: (context) {
-        return Padding(
-          padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                loc.paymentWalletInsufficientTitle,
-                style: Theme.of(
-                  context,
-                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                loc.paymentWalletInsufficientMessage(
-                  balance.toStringAsFixed(2),
-                  amount.toString(),
-                ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 16),
-              Row(
-                children: [
-                  Expanded(
-                    child: OutlinedButton(
-                      onPressed: () {
-                        Navigator.pop(context);
-                        final next = _controller.draft.copy()
-                          ..paymentMethod = 'card';
-                        _controller.updateDraft(next);
-                      },
-                      child: Text(loc.paymentWalletUseCardAction),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: FilledButton(
-                      onPressed: () {
-                        Navigator.pop(context);
-                        if (context.mounted) {
-                          context.go('/wallet');
-                        }
-                      },
-                      child: Text(loc.paymentWalletTopUpAction),
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        );
-      },
-    );
   }
 
   String _resolveSubmitErrorMessage({

@@ -4,8 +4,8 @@ export class PaymentCheckoutDto {
   @IsString()
   reservationId: string;
 
-  @IsIn(['card', 'installment', 'pay_at_hotel'])
-  paymentMethod: 'card' | 'installment' | 'pay_at_hotel';
+  @IsIn(['card', 'installment', 'pay_at_hotel', 'transfer'])
+  paymentMethod: 'card' | 'installment' | 'pay_at_hotel' | 'transfer';
 
   @IsOptional()
   @IsInt()

@@ -7,6 +7,7 @@ import '../../l10n/app_localizations.dart';
 import '../../features/wallet/models/reward_mission.dart';
 import '../../features/wallet/models/wallet_transaction.dart';
 import '../../services/local_notification_service.dart';
+import '../../services/api_service.dart';
 import '../../features/wallet/widgets/cashback_rules_page.dart';
 import '../../features/wallet/widgets/mission_carousel.dart';
 import 'pages/wallet_transactions_page.dart';
@@ -58,7 +59,7 @@ class _WalletPageState extends State<WalletPage>
     super.didChangeDependencies();
     if (_didSeed) return;
     _didSeed = true;
-    _loadMockData(AppLocalizations.of(context)!);
+    _loadWalletData(AppLocalizations.of(context)!);
   }
 
   @override
@@ -70,73 +71,145 @@ class _WalletPageState extends State<WalletPage>
     super.dispose();
   }
 
-  Future<void> _loadMockData(AppLocalizations loc) async {
+  Future<void> _loadWalletData(AppLocalizations loc) async {
     setState(() => _loading = true);
-    await Future<void>.delayed(const Duration(milliseconds: 400));
-    if (!mounted) return;
-    final stored = await _readStoredBalance();
-    setState(() {
-      // TODO: Replace with API integration.
-      _balance = stored ?? 124.5;
-      _transactions = [
+    await Future<void>.delayed(const Duration(milliseconds: 220));
+    try {
+      final response = await ApiService.walletOverview();
+      final remoteBalance = (response['balance'] as num?)?.toDouble();
+      final remoteItems = response['transactions'];
+      final mapped = _mapWalletTransactions(remoteItems, loc);
+      final nextBalance = remoteBalance ?? (await _readStoredBalance()) ?? 0;
+      await _persistWalletBalance(nextBalance);
+      if (!mounted) return;
+      setState(() {
+        _balance = nextBalance;
+        _transactions = mapped;
+        _missions = _buildMissions(loc);
+        _loading = false;
+      });
+    } catch (e) {
+      final fallbackBalance = await _readStoredBalance() ?? 124.5;
+      if (!mounted) return;
+      setState(() {
+        _balance = fallbackBalance;
+        _transactions = _buildFallbackTransactions(loc);
+        _missions = _buildMissions(loc);
+        _loading = false;
+      });
+      appLog('wallet', 'WALLET_LOAD_FALLBACK err=$e', level: AppLogLevel.warn);
+    }
+  }
+
+  List<WalletTransaction> _buildFallbackTransactions(AppLocalizations loc) {
+    return [
+      WalletTransaction(
+        type: WalletTransactionType.earn,
+        amount: 24.5,
+        title: loc.walletMockLocationTitle,
+        date: DateTime.now().subtract(const Duration(days: 2)),
+        refId: 'TX-102',
+        category: loc.walletTransactionCategoryCashback,
+      ),
+      WalletTransaction(
+        type: WalletTransactionType.spend,
+        amount: 15,
+        title: loc.walletMockPaymentTitle,
+        date: DateTime.now().subtract(const Duration(days: 6)),
+        refId: 'TX-093',
+        category: loc.walletTransactionCategoryUsage,
+      ),
+      WalletTransaction(
+        type: WalletTransactionType.earn,
+        amount: 18,
+        title: loc.walletMockCampaignTitle,
+        date: DateTime.now().subtract(const Duration(days: 18)),
+        refId: 'TX-081',
+        category: loc.walletTransactionCategoryCampaign,
+      ),
+    ];
+  }
+
+  List<RewardMission> _buildMissions(AppLocalizations loc) {
+    return [
+      RewardMission(
+        title: loc.walletMissionExploreTitle,
+        subtitle: loc.walletMissionExploreSubtitle,
+        progress: 2,
+        total: 3,
+        rewardAmount: 20,
+      ),
+      RewardMission(
+        title: loc.walletMissionWeekendTitle,
+        subtitle: loc.walletMissionWeekendSubtitle,
+        progress: 1,
+        total: 2,
+        rewardAmount: 15,
+      ),
+      RewardMission(
+        title: loc.walletMissionInviteTitle,
+        subtitle: loc.walletMissionInviteSubtitle,
+        progress: 0,
+        total: 3,
+        rewardAmount: 30,
+      ),
+    ];
+  }
+
+  List<WalletTransaction> _mapWalletTransactions(
+    dynamic rawItems,
+    AppLocalizations loc,
+  ) {
+    if (rawItems is! List) return _buildFallbackTransactions(loc);
+    final items = <WalletTransaction>[];
+    for (final raw in rawItems) {
+      if (raw is! Map) continue;
+      final map = Map<String, dynamic>.from(raw);
+      final rawType = (map['type'] ?? '').toString().toLowerCase();
+      final amount = (map['amount'] as num?)?.toDouble() ?? 0;
+      final createdAt = DateTime.tryParse((map['createdAt'] ?? '').toString());
+      final id = (map['_id'] ?? map['id'] ?? '').toString();
+      final reservationId = (map['reservationId'] ?? '').toString();
+      final note = (map['note'] ?? '').toString();
+
+      final type = switch (rawType) {
+        'topup' => WalletTransactionType.earn,
+        'refund' => WalletTransactionType.earn,
+        'pay' => WalletTransactionType.spend,
+        _ => WalletTransactionType.adjust,
+      };
+      final title = switch (rawType) {
+        'topup' => loc.topUpTransactionTitleWithMethod('Cüzdan'),
+        'refund' => 'İade',
+        'pay' =>
+          reservationId.isNotEmpty
+              ? 'Rezervasyon Ödemesi'
+              : loc.walletMockPaymentTitle,
+        _ => note.isNotEmpty ? note : loc.walletMockAdjustmentTitle,
+      };
+      final category = switch (rawType) {
+        'topup' => loc.topUpTransactionCategory,
+        'refund' => loc.walletTransactionCategoryAdjustment,
+        'pay' => loc.walletTransactionCategoryUsage,
+        _ => loc.walletTransactionCategoryAdjustment,
+      };
+
+      items.add(
         WalletTransaction(
-          type: WalletTransactionType.earn,
-          amount: 24.5,
-          title: loc.walletMockLocationTitle,
-          date: DateTime.now().subtract(const Duration(days: 2)),
-          refId: 'TX-102',
-          category: loc.walletTransactionCategoryCashback,
+          type: type,
+          amount: amount,
+          title: title,
+          date: createdAt ?? DateTime.now(),
+          refId: id.isNotEmpty
+              ? id
+              : 'TX-${DateTime.now().millisecondsSinceEpoch}',
+          category: category,
         ),
-        WalletTransaction(
-          type: WalletTransactionType.spend,
-          amount: 15,
-          title: loc.walletMockPaymentTitle,
-          date: DateTime.now().subtract(const Duration(days: 6)),
-          refId: 'TX-093',
-          category: loc.walletTransactionCategoryUsage,
-        ),
-        WalletTransaction(
-          type: WalletTransactionType.earn,
-          amount: 18,
-          title: loc.walletMockCampaignTitle,
-          date: DateTime.now().subtract(const Duration(days: 18)),
-          refId: 'TX-081',
-          category: loc.walletTransactionCategoryCampaign,
-        ),
-        WalletTransaction(
-          type: WalletTransactionType.adjust,
-          amount: 5,
-          title: loc.walletMockAdjustmentTitle,
-          date: DateTime.now().subtract(const Duration(days: 32)),
-          refId: 'TX-071',
-          category: loc.walletTransactionCategoryAdjustment,
-        ),
-      ];
-      _missions = [
-        RewardMission(
-          title: loc.walletMissionExploreTitle,
-          subtitle: loc.walletMissionExploreSubtitle,
-          progress: 2,
-          total: 3,
-          rewardAmount: 20,
-        ),
-        RewardMission(
-          title: loc.walletMissionWeekendTitle,
-          subtitle: loc.walletMissionWeekendSubtitle,
-          progress: 1,
-          total: 2,
-          rewardAmount: 15,
-        ),
-        RewardMission(
-          title: loc.walletMissionInviteTitle,
-          subtitle: loc.walletMissionInviteSubtitle,
-          progress: 0,
-          total: 3,
-          rewardAmount: 30,
-        ),
-      ];
-      _loading = false;
-    });
+      );
+    }
+    if (items.isEmpty) return _buildFallbackTransactions(loc);
+    items.sort((a, b) => b.date.compareTo(a.date));
+    return items;
   }
 
   String _formatMoney(
@@ -158,8 +231,12 @@ class _WalletPageState extends State<WalletPage>
   }
 
   Future<void> _storeBalance() async {
+    await _persistWalletBalance(_balance);
+  }
+
+  Future<void> _persistWalletBalance(double value) async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setDouble('wallet_balance', _balance);
+    await prefs.setDouble('wallet_balance', value);
   }
 
   void _openRules() {
@@ -242,8 +319,11 @@ class _WalletPageState extends State<WalletPage>
     final loc = AppLocalizations.of(context)!;
     appLog('wallet', 'TOPUP_START amount=$amount', level: AppLogLevel.info);
     try {
+      final result = await ApiService.walletTopup(amount: amount);
+      final backendBalance = (result['balance'] as num?)?.toDouble();
+      final nextBalance = backendBalance ?? (_balance + amount);
       setState(() {
-        _balance += amount;
+        _balance = nextBalance;
         _transactions.insert(
           0,
           WalletTransaction(
@@ -256,7 +336,7 @@ class _WalletPageState extends State<WalletPage>
           ),
         );
       });
-      await _storeBalance();
+      await _persistWalletBalance(nextBalance);
       if (!mounted) return;
       AppNotification.show(
         context,
@@ -276,7 +356,8 @@ class _WalletPageState extends State<WalletPage>
       if (!mounted) return;
       AppNotification.show(
         context,
-        message: loc.topUpFailedMessage,
+        message:
+            '${loc.topUpFailedMessage} (${e.toString().replaceFirst('Exception: ', '')})',
         type: AppNotificationType.error,
       );
       appLog('wallet', 'TOPUP_ERR err=$e', level: AppLogLevel.error);
@@ -492,7 +573,7 @@ class _WalletPageState extends State<WalletPage>
                     )
                   : RefreshIndicator(
                       onRefresh: () =>
-                          _loadMockData(AppLocalizations.of(context)!),
+                          _loadWalletData(AppLocalizations.of(context)!),
                       child: ListView(
                         padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
                         children: [
@@ -506,7 +587,14 @@ class _WalletPageState extends State<WalletPage>
                             ),
                             onCardsTap: _openCards,
                           ),
-                          const SizedBox(height: 14),
+                          const SizedBox(height: 12),
+                          _WalletMetricStrip(
+                            earnedAmount: _earnedTotal,
+                            spentAmount: _spentTotal,
+                            txCount: _transactions.length,
+                            currency: currency,
+                          ),
+                          const SizedBox(height: 12),
                           _WalletActionDock(
                             onPay: _openTransactions,
                             onTopUp: _openQuickTopUpSheet,
@@ -643,13 +731,6 @@ class _WalletPageState extends State<WalletPage>
                                   currency: currency,
                                 ),
                           const SizedBox(height: 18),
-                          _WalletMetricStrip(
-                            earnedAmount: _earnedTotal,
-                            spentAmount: _spentTotal,
-                            txCount: _transactions.length,
-                            currency: currency,
-                          ),
-                          const SizedBox(height: 12),
                           Text(
                             loc.walletMissionsTitle,
                             style: Theme.of(context).textTheme.titleMedium
@@ -689,20 +770,22 @@ class _WalletHeroBalance extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Container(
-      padding: const EdgeInsets.fromLTRB(18, 16, 18, 16),
+      padding: const EdgeInsets.fromLTRB(18, 18, 18, 18),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(22),
         gradient: const LinearGradient(
-          colors: [Color(0xFF0E5D58), Color(0xFF0F766E)],
+          colors: [Color(0xFF0E3A44), Color(0xFF0F766E)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF0F766E).withValues(alpha: 0.28),
-            blurRadius: 22,
-            offset: const Offset(0, 12),
+            color: const Color(0xFF0F766E).withValues(alpha: 0.24),
+            blurRadius: 24,
+            offset: const Offset(0, 10),
           ),
         ],
       ),
@@ -713,9 +796,10 @@ class _WalletHeroBalance extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Kullanılabilir Bakiye',
+                  'KYRADI Cüzdan',
                   style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                    color: Colors.white.withValues(alpha: 0.88),
+                    color: Colors.white.withValues(alpha: 0.85),
+                    letterSpacing: 0.3,
                   ),
                 ),
                 const SizedBox(height: 6),
@@ -727,20 +811,37 @@ class _WalletHeroBalance extends StatelessWidget {
                     letterSpacing: -0.6,
                   ),
                 ),
+                const SizedBox(height: 4),
+                Text(
+                  'Anlık bakiye ve ödeme yönetimi',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: Colors.white.withValues(alpha: 0.8),
+                  ),
+                ),
               ],
             ),
           ),
-          IconButton(
-            onPressed: onToggleVisibility,
-            icon: Icon(
-              obscureBalance ? Icons.visibility_off : Icons.visibility,
-              color: Colors.white,
+          Container(
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.14),
+              borderRadius: BorderRadius.circular(14),
             ),
-          ),
-          IconButton(
-            onPressed: onCardsTap,
-            icon: const Icon(Icons.account_balance_wallet_outlined),
-            color: Colors.white,
+            child: Column(
+              children: [
+                IconButton(
+                  onPressed: onToggleVisibility,
+                  icon: Icon(
+                    obscureBalance ? Icons.visibility_off : Icons.visibility,
+                    color: Colors.white,
+                  ),
+                ),
+                IconButton(
+                  onPressed: onCardsTap,
+                  icon: const Icon(Icons.account_balance_wallet_outlined),
+                  color: Colors.white,
+                ),
+              ],
+            ),
           ),
         ],
       ),
@@ -763,12 +864,22 @@ class _WalletActionDock extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
     return Container(
-      padding: const EdgeInsets.fromLTRB(12, 12, 12, 10),
+      padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(18),
-        color: const Color(0xFF121826),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+        color: scheme.surface.withValues(alpha: 0.92),
+        border: Border.all(
+          color: scheme.outlineVariant.withValues(alpha: 0.55),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 16,
+            offset: const Offset(0, 8),
+          ),
+        ],
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -812,6 +923,7 @@ class _WalletActionButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
     return InkWell(
       borderRadius: BorderRadius.circular(14),
       onTap: onTap,
@@ -825,16 +937,18 @@ class _WalletActionButton extends StatelessWidget {
               height: 42,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                border: Border.all(color: Colors.white.withValues(alpha: 0.24)),
-                color: Colors.white.withValues(alpha: 0.06),
+                border: Border.all(
+                  color: scheme.primary.withValues(alpha: 0.22),
+                ),
+                color: scheme.primary.withValues(alpha: 0.08),
               ),
-              child: Icon(icon, size: 20, color: Colors.white),
+              child: Icon(icon, size: 20, color: scheme.primary),
             ),
             const SizedBox(height: 6),
             Text(
               label,
               style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                color: Colors.white.withValues(alpha: 0.88),
+                color: scheme.onSurface,
                 fontWeight: FontWeight.w600,
               ),
             ),

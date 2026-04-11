@@ -31,7 +31,7 @@ export class PaymentsController {
     }
 
     if (reservationId && paymentMethod) {
-      if (!['card', 'installment', 'pay_at_hotel'].includes(paymentMethod)) {
+      if (!['card', 'installment', 'pay_at_hotel', 'transfer'].includes(paymentMethod)) {
         throw new BadRequestException('INVALID_PAYMENT_METHOD');
       }
       const dto: PaymentCheckoutDto = {
