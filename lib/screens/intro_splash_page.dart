@@ -16,7 +16,6 @@ class IntroSplashPage extends StatefulWidget {
 class _IntroSplashPageState extends State<IntroSplashPage>
     with TickerProviderStateMixin {
   late final AnimationController _introController;
-  late final AnimationController _neonController;
   late final Animation<double> _logoScale;
   late final Animation<Alignment> _logoAlign;
   late final Animation<double> _brandOpacity;
@@ -24,9 +23,6 @@ class _IntroSplashPageState extends State<IntroSplashPage>
   late final Animation<double> _sloganOpacity;
   late final Animation<Offset> _sloganSlide;
   late final Animation<double> _buttonOpacity;
-  late final Animation<double> _neonPulse;
-
-  bool _showAuthChoices = false;
 
   @override
   void initState() {
@@ -35,11 +31,6 @@ class _IntroSplashPageState extends State<IntroSplashPage>
       vsync: this,
       duration: const Duration(milliseconds: 2600),
     )..forward();
-
-    _neonController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 900),
-    )..repeat(reverse: true);
 
     _logoScale = Tween<double>(begin: 1, end: 0.44).animate(
       CurvedAnimation(
@@ -83,10 +74,6 @@ class _IntroSplashPageState extends State<IntroSplashPage>
       parent: _introController,
       curve: const Interval(0.82, 1, curve: Curves.easeOutCubic),
     );
-    _neonPulse = CurvedAnimation(
-      parent: _neonController,
-      curve: Curves.easeInOutSine,
-    );
 
     SystemChrome.setSystemUIOverlayStyle(
       const SystemUiOverlayStyle(
@@ -99,18 +86,11 @@ class _IntroSplashPageState extends State<IntroSplashPage>
   @override
   void dispose() {
     _introController.dispose();
-    _neonController.dispose();
     super.dispose();
   }
 
   void _goLogin() => context.push('/login');
   void _goRegister() => context.push('/register');
-
-  void _showAuthButtons() {
-    if (_showAuthChoices) return;
-    _neonController.stop();
-    setState(() => _showAuthChoices = true);
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -209,49 +189,35 @@ class _IntroSplashPageState extends State<IntroSplashPage>
                     ),
                     FadeTransition(
                       opacity: _buttonOpacity,
-                      child: AnimatedSwitcher(
-                        duration: const Duration(milliseconds: 260),
-                        child: _showAuthChoices
-                            ? Row(
-                                key: const ValueKey('auth_choices'),
-                                children: [
-                                  Expanded(
-                                    child: OutlinedButton(
-                                      onPressed: _goLogin,
-                                      style: OutlinedButton.styleFrom(
-                                        minimumSize: const Size.fromHeight(54),
-                                        backgroundColor: Colors.white
-                                            .withValues(alpha: 0.78),
-                                        side: BorderSide(
-                                          color: Colors.white.withValues(
-                                            alpha: 0.86,
-                                          ),
-                                        ),
-                                      ),
-                                      child: Text(l10n.loginButtonLabel),
-                                    ),
-                                  ),
-                                  const SizedBox(width: 10),
-                                  Expanded(
-                                    child: FilledButton(
-                                      onPressed: _goRegister,
-                                      style: FilledButton.styleFrom(
-                                        minimumSize: const Size.fromHeight(54),
-                                        backgroundColor: const Color(
-                                          0xFFE96A84,
-                                        ),
-                                      ),
-                                      child: Text(l10n.registerButtonLabel),
-                                    ),
-                                  ),
-                                ],
-                              )
-                            : _NeonTrackButton(
-                                key: const ValueKey('track_cta'),
-                                pulse: _neonPulse,
-                                label: l10n.introTrackButton,
-                                onTap: _showAuthButtons,
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: OutlinedButton(
+                              onPressed: _goLogin,
+                              style: OutlinedButton.styleFrom(
+                                minimumSize: const Size.fromHeight(54),
+                                backgroundColor: Colors.white.withValues(
+                                  alpha: 0.78,
+                                ),
+                                side: BorderSide(
+                                  color: Colors.white.withValues(alpha: 0.86),
+                                ),
                               ),
+                              child: Text(l10n.loginButtonLabel),
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: FilledButton(
+                              onPressed: _goRegister,
+                              style: FilledButton.styleFrom(
+                                minimumSize: const Size.fromHeight(54),
+                                backgroundColor: const Color(0xFFE96A84),
+                              ),
+                              child: Text(l10n.registerButtonLabel),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ],
@@ -293,137 +259,6 @@ class _IntroLogoOrb extends StatelessWidget {
       ),
       padding: const EdgeInsets.all(28),
       child: Image.asset('assets/images/kyradi_logo.png', fit: BoxFit.contain),
-    );
-  }
-}
-
-class _NeonTrackButton extends StatelessWidget {
-  const _NeonTrackButton({
-    super.key,
-    required this.pulse,
-    required this.label,
-    required this.onTap,
-  });
-
-  final Animation<double> pulse;
-  final String label;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: pulse,
-      builder: (context, _) {
-        final glow = 0.35 + (pulse.value * 0.65);
-        final ringScale = 0.98 + (pulse.value * 0.06);
-        return Stack(
-          alignment: Alignment.center,
-          children: [
-            IgnorePointer(
-              child: Transform.scale(
-                scale: ringScale,
-                child: Container(
-                  height: 62,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(999),
-                    gradient: LinearGradient(
-                      colors: [
-                        const Color(
-                          0xFFE96A84,
-                        ).withValues(alpha: 0.2 + glow * 0.35),
-                        const Color(
-                          0xFF7B4DFF,
-                        ).withValues(alpha: 0.18 + glow * 0.3),
-                        const Color(
-                          0xFF38BDF8,
-                        ).withValues(alpha: 0.16 + glow * 0.32),
-                      ],
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: const Color(
-                          0xFFE96A84,
-                        ).withValues(alpha: 0.2 + glow * 0.25),
-                        blurRadius: 14 + glow * 16,
-                        spreadRadius: 1.2 + glow,
-                      ),
-                      BoxShadow(
-                        color: const Color(
-                          0xFF7B4DFF,
-                        ).withValues(alpha: 0.14 + glow * 0.2),
-                        blurRadius: 12 + glow * 14,
-                        spreadRadius: 0.6 + glow * 0.8,
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-            GestureDetector(
-              onTap: onTap,
-              child: Container(
-                padding: const EdgeInsets.all(2),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(999),
-                  gradient: LinearGradient(
-                    colors: [
-                      const Color(
-                        0xFFE96A84,
-                      ).withValues(alpha: 0.74 + glow * 0.18),
-                      const Color(
-                        0xFF7B4DFF,
-                      ).withValues(alpha: 0.66 + glow * 0.16),
-                      const Color(
-                        0xFF38BDF8,
-                      ).withValues(alpha: 0.68 + glow * 0.16),
-                    ],
-                  ),
-                ),
-                child: Container(
-                  height: 56,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(999),
-                    color: Colors.white.withValues(alpha: 0.92),
-                  ),
-                  child: Row(
-                    children: [
-                      Container(
-                        width: 62,
-                        margin: const EdgeInsets.all(4),
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(999),
-                          gradient: const LinearGradient(
-                            colors: [Color(0xFFF7A5B5), Color(0xFFE96A84)],
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                          ),
-                        ),
-                        child: const Icon(
-                          Icons.arrow_forward_rounded,
-                          color: Color(0xFF1D2230),
-                          size: 22,
-                        ),
-                      ),
-                      Expanded(
-                        child: Text(
-                          label,
-                          textAlign: TextAlign.center,
-                          style: Theme.of(context).textTheme.titleMedium
-                              ?.copyWith(
-                                fontWeight: FontWeight.w600,
-                                color: const Color(0xFF1F2430),
-                              ),
-                        ),
-                      ),
-                      const SizedBox(width: 24),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ],
-        );
-      },
     );
   }
 }
