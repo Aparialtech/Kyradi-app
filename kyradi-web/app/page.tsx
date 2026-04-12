@@ -1,7 +1,8 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useMemo, useState } from 'react';
+import type { TouchEventHandler } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { getToken } from '@/lib/auth';
 import { NeoIcon } from '@/components/neo-icon';
 
@@ -41,6 +42,11 @@ const slides = [
 export default function HomePage() {
   const [active, setActive] = useState(0);
   const [hasSession, setHasSession] = useState(false);
+  const touchStartX = useRef<number | null>(null);
+  const touchDeltaX = useRef(0);
+
+  const appStoreUrl = process.env.NEXT_PUBLIC_APP_STORE_URL ?? 'https://www.apple.com/app-store/';
+  const playStoreUrl = process.env.NEXT_PUBLIC_PLAY_STORE_URL ?? 'https://play.google.com/store/apps';
 
   useEffect(() => {
     setHasSession(Boolean(getToken()));
@@ -54,6 +60,30 @@ export default function HomePage() {
   }, []);
 
   const activeSlide = useMemo(() => slides[active], [active]);
+  const goNext = () => setActive((prev) => (prev + 1) % slides.length);
+  const goPrev = () => setActive((prev) => (prev - 1 + slides.length) % slides.length);
+
+  const handleTouchStart: TouchEventHandler<HTMLDivElement> = (event) => {
+    touchStartX.current = event.changedTouches[0]?.clientX ?? null;
+    touchDeltaX.current = 0;
+  };
+
+  const handleTouchMove: TouchEventHandler<HTMLDivElement> = (event) => {
+    if (touchStartX.current === null) return;
+    const currentX = event.changedTouches[0]?.clientX ?? touchStartX.current;
+    touchDeltaX.current = currentX - touchStartX.current;
+  };
+
+  const handleTouchEnd: TouchEventHandler<HTMLDivElement> = () => {
+    const threshold = 44;
+    if (touchDeltaX.current <= -threshold) {
+      goNext();
+    } else if (touchDeltaX.current >= threshold) {
+      goPrev();
+    }
+    touchStartX.current = null;
+    touchDeltaX.current = 0;
+  };
 
   return (
     <main className="landing-page">
@@ -71,11 +101,11 @@ export default function HomePage() {
         </div>
         <nav className="landing-top-actions">
           {hasSession ? (
-            <Link href="/dashboard" className="button primary">Panele Git</Link>
+            <Link href="/dashboard" className="button primary landing-top-btn">Panele Git</Link>
           ) : (
             <>
-              <Link href="/login" className="button secondary">Giriş Yap</Link>
-              <Link href="/register" className="button primary">Kayıt Ol</Link>
+              <Link href="/login" className="button secondary landing-top-btn">Giriş Yap</Link>
+              <Link href="/register" className="button primary landing-top-btn">Kayıt Ol</Link>
             </>
           )}
         </nav>
@@ -91,7 +121,7 @@ export default function HomePage() {
           <p>{activeSlide.subtitle}</p>
 
           <div className="landing-store-row">
-            <a className="store-btn apple" href="#" aria-label="App Store">
+            <a className="store-btn apple" href={appStoreUrl} target="_blank" rel="noreferrer" aria-label="App Store">
               <span className="store-logo-wrap">
                 <AppleStoreIcon />
               </span>
@@ -100,7 +130,7 @@ export default function HomePage() {
                 <strong>App Store</strong>
               </span>
             </a>
-            <a className="store-btn google" href="#" aria-label="Google Play">
+            <a className="store-btn google" href={playStoreUrl} target="_blank" rel="noreferrer" aria-label="Google Play">
               <span className="store-logo-wrap">
                 <PlayStoreIcon />
               </span>
@@ -128,7 +158,12 @@ export default function HomePage() {
         </article>
 
         <article className="landing-right card">
-          <div className={`landing-slider tone-${activeSlide.tone}`}>
+          <div
+            className={`landing-slider tone-${activeSlide.tone}`}
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleTouchEnd}
+          >
             <div className="landing-progress" key={`progress-${activeSlide.id}`}>
               <span className="landing-progress-fill" />
             </div>

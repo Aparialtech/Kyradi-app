@@ -538,6 +538,30 @@ textarea {
   align-items: center;
 }
 
+.landing-top-actions .landing-top-btn {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.landing-top-actions .landing-top-btn::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(110deg, transparent 0%, rgba(255, 255, 255, 0.36) 38%, transparent 62%);
+  transform: translateX(-120%);
+  transition: transform 0.55s ease;
+  pointer-events: none;
+}
+
+.landing-top-actions .landing-top-btn:hover::after {
+  transform: translateX(120%);
+}
+
+.landing-top-actions .landing-top-btn:hover {
+  box-shadow: 0 12px 24px rgba(59, 130, 246, 0.22);
+}
+
 .landing-hero {
   margin-top: 18px;
   display: grid;
@@ -689,6 +713,7 @@ textarea {
   position: relative;
   border-radius: 18px;
   padding: 12px;
+  touch-action: pan-y;
   background: linear-gradient(140deg, rgba(255, 255, 255, 0.7), rgba(255, 255, 255, 0.45));
   border: 1px solid rgba(255, 255, 255, 0.8);
 }
