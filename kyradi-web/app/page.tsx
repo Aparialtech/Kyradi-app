@@ -91,15 +91,19 @@ export default function HomePage() {
           <p>{activeSlide.subtitle}</p>
 
           <div className="landing-store-row">
-            <a className="store-btn" href="#" aria-label="App Store">
-              <span className="store-logo">A</span>
+            <a className="store-btn apple" href="#" aria-label="App Store">
+              <span className="store-logo-wrap">
+                <AppleStoreIcon />
+              </span>
               <span>
                 <small>Download on the</small>
                 <strong>App Store</strong>
               </span>
             </a>
-            <a className="store-btn" href="#" aria-label="Google Play">
-              <span className="store-logo">▶</span>
+            <a className="store-btn google" href="#" aria-label="Google Play">
+              <span className="store-logo-wrap">
+                <PlayStoreIcon />
+              </span>
               <span>
                 <small>GET IT ON</small>
                 <strong>Google Play</strong>
@@ -125,7 +129,11 @@ export default function HomePage() {
 
         <article className="landing-right card">
           <div className={`landing-slider tone-${activeSlide.tone}`}>
-            <div className="landing-scene">
+            <div className="landing-progress" key={`progress-${activeSlide.id}`}>
+              <span className="landing-progress-fill" />
+            </div>
+
+            <div className="landing-scene" key={`scene-${activeSlide.id}`}>
               <div className="desktop-frame">
                 <div className="desktop-head">
                   <span className="desktop-dot" />
@@ -189,7 +197,7 @@ export default function HomePage() {
               </div>
             </div>
 
-            <div className="landing-slider-caption">
+            <div className="landing-slider-caption" key={`caption-${activeSlide.id}`}>
               <h3>{activeSlide.title}</h3>
               <p>{activeSlide.subtitle}</p>
             </div>
@@ -213,4 +221,30 @@ export default function HomePage() {
 
 function StatusPill({ text }: { text: string }) {
   return <span className="status-pill">{text}</span>;
+}
+
+function AppleStoreIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true" className="store-icon">
+      <path
+        d="M15.3 4.1c-.9.1-1.9.7-2.6 1.5-.7.8-1.3 1.9-1.1 3 .9.1 1.9-.4 2.7-1.2.8-.8 1.3-1.9 1-3.3z"
+        fill="currentColor"
+      />
+      <path
+        d="M19.9 14.8c-.5 1.2-.8 1.8-1.4 2.8-.9 1.4-2.1 3.1-3.7 3.1-1.4 0-1.8-.9-3.5-.9s-2.1.9-3.5.9c-1.6 0-2.7-1.5-3.6-2.9-2.5-3.8-2.8-8.1-1.2-10.6 1.1-1.8 2.8-2.9 4.4-2.9 1.7 0 2.8.9 4.2.9 1.4 0 2.2-.9 4.2-.9 1.4 0 2.8.8 3.8 2.2-3.3 1.8-2.7 6.5.3 8.3z"
+        fill="currentColor"
+      />
+    </svg>
+  );
+}
+
+function PlayStoreIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true" className="store-icon">
+      <path d="M3.4 2.8l10.6 9.3L3.4 22V2.8z" fill="#31C5F4" />
+      <path d="M14 12.1l2.9-2.6 3.8 2.1-3.8 2.1-2.9-1.6z" fill="#FFD54F" />
+      <path d="M3.4 2.8l12.8 7.1-2.2 2.2L3.4 2.8z" fill="#66BB6A" />
+      <path d="M3.4 22l10.6-9.9 2.2 2.2L3.4 22z" fill="#EF5350" />
+    </svg>
+  );
 }
