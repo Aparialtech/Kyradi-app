@@ -6,41 +6,74 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { getToken } from '@/lib/auth';
 import { NeoIcon } from '@/components/neo-icon';
 
-const slides = [
+const heroSlides = [
   {
     id: 1,
-    tone: 'mint',
     title: 'Bavulunu bırak, şehri keşfet',
-    subtitle: 'KYRADI ile güvenli depolama, hızlı teslim ve canlı takip tek ekranda.',
+    subtitle: 'KYRADI ile konumu seç, bagajını güvenli bırak, QR ile anlık takip et.',
     city: 'İstanbul',
     eta: '11 dk',
-    metricA: '420+ Nokta',
-    metricB: '%99.9 Güvenli',
+    metricA: '420+ nokta',
+    metricB: '%99.9 güvenli teslim',
+    tone: 'mint',
   },
   {
     id: 2,
-    tone: 'sunset',
-    title: 'Tek uygulama, tam kontrol',
-    subtitle: 'Rezervasyon, cüzdan, QR ve lokasyon yönetimi mobil ile birebir senkron.',
+    title: 'Seyahatte ekstra yük taşıma',
+    subtitle: 'Mobil ve web senkron: rezervasyon, ödeme, cüzdan ve bildirimler tek akışta.',
     city: 'Paris',
     eta: '8 dk',
-    metricA: '65K+ İşlem',
-    metricB: 'Anlık Takip',
+    metricA: '65K+ rezervasyon',
+    metricB: '7/24 canlı destek',
+    tone: 'sunset',
   },
   {
     id: 3,
-    tone: 'violet',
-    title: 'Seyahatte ekstra yük yok',
-    subtitle: 'Terminale gitmeden önce bagajını bırak, günün keyfini çıkar.',
+    title: 'Dakikalar içinde rezervasyon',
+    subtitle: 'Yakındaki noktayı bul, teslim saatini seç, bilet gibi kartla tüm süreci yönet.',
     city: 'Londra',
     eta: '14 dk',
-    metricA: '24/7 Destek',
-    metricB: '7/24 Açık Noktalar',
+    metricA: '180+ partner',
+    metricB: 'Anlık durum güncelleme',
+    tone: 'violet',
   },
 ];
 
+const serviceCards = [
+  {
+    title: 'Hızlı Rezervasyon',
+    text: '3 adımda rezervasyon aç, lokasyon ve teslim saatini saniyeler içinde belirle.',
+    icon: '⚡',
+    tone: 'cyan' as const,
+  },
+  {
+    title: 'Canlı Takip ve QR',
+    text: 'Bırakma, depolama ve teslim alma adımlarını QR kod ile hatasız tamamla.',
+    icon: '◉',
+    tone: 'violet' as const,
+  },
+  {
+    title: 'Cüzdan ve Ödeme',
+    text: 'TL / EUR / USD desteğiyle cüzdanından öde, hareket geçmişini anında takip et.',
+    icon: '₺',
+    tone: 'green' as const,
+  },
+];
+
+const flowSteps = [
+  { no: '01', title: 'Nokta Seç', text: 'Haritadan sana en yakın KYRADI noktasını seç.' },
+  { no: '02', title: 'Bavulu Bırak', text: 'QR ile teslim işlemini güvenli şekilde tamamla.' },
+  { no: '03', title: 'Şehri Keşfet', text: 'Yük taşımadan gez, teslim saatinde geri al.' },
+];
+
+const reviews = [
+  { name: 'Elif K.', role: 'Sık seyahat eden kullanıcı', text: 'Check-in öncesi valizi bırakıp tüm günü çok rahat geçirdim.' },
+  { name: 'Mert A.', role: 'Dijital göçebe', text: 'Web ve mobil aynı veriyi gösteriyor. Akış çok temiz ve hızlı.' },
+  { name: 'Naz Y.', role: 'Turist', text: 'QR ve lokasyon akışı net. İlk kullanımda bile kafa karıştırmıyor.' },
+];
+
 export default function HomePage() {
-  const [active, setActive] = useState(0);
+  const [activeSlideIndex, setActiveSlideIndex] = useState(0);
   const [hasSession, setHasSession] = useState(false);
   const touchStartX = useRef<number | null>(null);
   const touchDeltaX = useRef(0);
@@ -54,14 +87,15 @@ export default function HomePage() {
 
   useEffect(() => {
     const interval = setInterval(() => {
-      setActive((prev) => (prev + 1) % slides.length);
-    }, 4200);
+      setActiveSlideIndex((prev) => (prev + 1) % heroSlides.length);
+    }, 4600);
     return () => clearInterval(interval);
   }, []);
 
-  const activeSlide = useMemo(() => slides[active], [active]);
-  const goNext = () => setActive((prev) => (prev + 1) % slides.length);
-  const goPrev = () => setActive((prev) => (prev - 1 + slides.length) % slides.length);
+  const activeSlide = useMemo(() => heroSlides[activeSlideIndex], [activeSlideIndex]);
+
+  const goNext = () => setActiveSlideIndex((prev) => (prev + 1) % heroSlides.length);
+  const goPrev = () => setActiveSlideIndex((prev) => (prev - 1 + heroSlides.length) % heroSlides.length);
 
   const handleTouchStart: TouchEventHandler<HTMLDivElement> = (event) => {
     touchStartX.current = event.changedTouches[0]?.clientX ?? null;
@@ -76,179 +110,198 @@ export default function HomePage() {
 
   const handleTouchEnd: TouchEventHandler<HTMLDivElement> = () => {
     const threshold = 44;
-    if (touchDeltaX.current <= -threshold) {
-      goNext();
-    } else if (touchDeltaX.current >= threshold) {
-      goPrev();
-    }
+    if (touchDeltaX.current <= -threshold) goNext();
+    if (touchDeltaX.current >= threshold) goPrev();
     touchStartX.current = null;
     touchDeltaX.current = 0;
   };
 
   return (
-    <main className="landing-page">
-      <div className="landing-bg-orb landing-bg-orb-a" />
-      <div className="landing-bg-orb landing-bg-orb-b" />
-      <div className="landing-bg-orb landing-bg-orb-c" />
+    <main className="lp-page">
+      <div className="lp-orb lp-orb-a" />
+      <div className="lp-orb lp-orb-b" />
+      <div className="lp-orb lp-orb-c" />
 
-      <header className="landing-topbar card">
-        <div className="landing-brand">
-          <span className="brand-orb" />
+      <header className="lp-header card">
+        <div className="lp-brand">
+          <span className="lp-brand-core">K</span>
           <div>
-            <p className="brand-name">KYRADI</p>
-            <p className="brand-sub">Bavulunu bırak, şehri keşfet</p>
+            <p>KYRADI</p>
+            <small>Global Bagaj SuperApp</small>
           </div>
         </div>
-        <nav className="landing-top-actions">
+
+        <nav className="lp-nav">
+          <a href="#ozellikler">Özellikler</a>
+          <a href="#nasil">Nasıl Çalışır</a>
+          <a href="#yorumlar">Yorumlar</a>
+        </nav>
+
+        <div className="lp-actions">
           {hasSession ? (
-            <Link href="/dashboard" className="button primary landing-top-btn">Panele Git</Link>
+            <Link href="/dashboard" className="button primary lp-action-btn">Panele Git</Link>
           ) : (
             <>
-              <Link href="/login" className="button secondary landing-top-btn">Giriş Yap</Link>
-              <Link href="/register" className="button primary landing-top-btn">Kayıt Ol</Link>
+              <Link href="/login" className="button secondary lp-action-btn">Giriş Yap</Link>
+              <Link href="/register" className="button primary lp-action-btn">Kayıt Ol</Link>
             </>
           )}
-        </nav>
+        </div>
       </header>
 
-      <section className="landing-hero">
-        <article className="landing-left card">
-          <div className="landing-kicker">
-            <NeoIcon symbol="✦" tone="pink" size="sm" />
-            <span>Yeni nesil KYRADI SuperApp</span>
-          </div>
+      <section className="lp-hero">
+        <article className="lp-copy card">
+          <span className="lp-chip">Yeni nesil seyahat deneyimi</span>
           <h1>{activeSlide.title}</h1>
           <p>{activeSlide.subtitle}</p>
 
-          <div className="landing-store-row">
+          <div className="lp-cta-row">
+            <Link href={hasSession ? '/dashboard' : '/register'} className="button primary lp-main-btn">
+              Hemen Başla
+            </Link>
+            <a href="#nasil" className="button secondary lp-secondary-btn">Nasıl çalışır?</a>
+          </div>
+
+          <div className="lp-store-row">
             <a className="store-btn apple" href={appStoreUrl} target="_blank" rel="noreferrer" aria-label="App Store">
-              <span className="store-logo-wrap">
-                <AppleStoreIcon />
-              </span>
-              <span>
-                <small>Download on the</small>
-                <strong>App Store</strong>
-              </span>
+              <span className="store-logo-wrap"><AppleStoreIcon /></span>
+              <span><small>Download on the</small><strong>App Store</strong></span>
             </a>
             <a className="store-btn google" href={playStoreUrl} target="_blank" rel="noreferrer" aria-label="Google Play">
-              <span className="store-logo-wrap">
-                <PlayStoreIcon />
-              </span>
-              <span>
-                <small>GET IT ON</small>
-                <strong>Google Play</strong>
-              </span>
+              <span className="store-logo-wrap"><PlayStoreIcon /></span>
+              <span><small>GET IT ON</small><strong>Google Play</strong></span>
             </a>
           </div>
 
-          <div className="landing-feature-grid">
-            <div className="feature-chip">
-              <NeoIcon symbol="◈" tone="violet" size="sm" />
-              <span>QR ile Takip</span>
-            </div>
-            <div className="feature-chip">
-              <NeoIcon symbol="₺" tone="green" size="sm" />
-              <span>Hızlı Ödeme</span>
-            </div>
-            <div className="feature-chip">
-              <NeoIcon symbol="⌖" tone="cyan" size="sm" />
-              <span>Yakındaki Lokasyon</span>
-            </div>
+          <div className="lp-trust-row">
+            <div><strong>120K+</strong><span>Kullanıcı</span></div>
+            <div><strong>420+</strong><span>Lokasyon</span></div>
+            <div><strong>4.9/5</strong><span>Memnuniyet</span></div>
           </div>
         </article>
 
-        <article className="landing-right card">
-          <div
-            className={`landing-slider tone-${activeSlide.tone}`}
-            onTouchStart={handleTouchStart}
-            onTouchMove={handleTouchMove}
-            onTouchEnd={handleTouchEnd}
-          >
-            <div className="landing-progress" key={`progress-${activeSlide.id}`}>
-              <span className="landing-progress-fill" />
-            </div>
+        <article
+          className={`lp-visual card tone-${activeSlide.tone}`}
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
+        >
+          <div className="lp-progress" key={`prog-${activeSlide.id}`}>
+            <span className="lp-progress-fill" />
+          </div>
 
-            <div className="landing-scene" key={`scene-${activeSlide.id}`}>
-              <div className="desktop-frame">
-                <div className="desktop-head">
-                  <span className="desktop-dot" />
-                  <span className="desktop-dot" />
-                  <span className="desktop-dot" />
-                </div>
-                <div className="desktop-body">
-                  <div className="hero-ticket card">
-                    <div>
-                      <p>{activeSlide.city} • Merkez Nokta</p>
-                      <h4>{activeSlide.eta} uzaklıkta teslim</h4>
-                    </div>
-                    <StatusPill text="Müsait" />
-                  </div>
-                  <div className="hero-metrics">
-                    <div className="hero-mini-card">
-                      <NeoIcon symbol="◈" tone="violet" size="sm" />
-                      <strong>{activeSlide.metricA}</strong>
-                    </div>
-                    <div className="hero-mini-card">
-                      <NeoIcon symbol="⌖" tone="cyan" size="sm" />
-                      <strong>{activeSlide.metricB}</strong>
-                    </div>
-                  </div>
-                </div>
+          <div className="lp-scene" key={`scene-${activeSlide.id}`}>
+            <div className="lp-desktop">
+              <div className="lp-desktop-top">
+                <span />
+                <span />
+                <span />
               </div>
-
-              <div className="phone-mock">
-                <div className="phone-notch" />
-                <div className="phone-inner">
-                  <div className="phone-balance">{activeSlide.city}</div>
-                  <div className="phone-row">
-                    <span className="pulse-dot" />
-                    <span>QR ile teslim hazır</span>
-                  </div>
-                  <div className="phone-row">
-                    <span className="pulse-dot" />
-                    <span>Ödeme tamamlandı</span>
-                  </div>
-                  <div className="phone-row">
-                    <span className="pulse-dot" />
-                    <span>Konum doğrulandı</span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="floating-card floating-a">
-                <NeoIcon symbol="₺" tone="green" size="sm" />
+              <div className="lp-ticket card">
                 <div>
-                  <small>Cüzdan</small>
-                  <strong>Hızlı Öde</strong>
+                  <p>{activeSlide.city} merkez nokta</p>
+                  <h4>{activeSlide.eta} uzaklıkta teslim</h4>
                 </div>
+                <StatusPill text="Müsait" />
               </div>
-
-              <div className="floating-card floating-b">
-                <NeoIcon symbol="✦" tone="pink" size="sm" />
-                <div>
-                  <small>Canlı Durum</small>
-                  <strong>Aktif Rezervasyon</strong>
-                </div>
+              <div className="lp-mini-grid">
+                <div className="lp-mini-card"><NeoIcon symbol="✦" tone="violet" size="sm" /><strong>{activeSlide.metricA}</strong></div>
+                <div className="lp-mini-card"><NeoIcon symbol="⌖" tone="cyan" size="sm" /><strong>{activeSlide.metricB}</strong></div>
               </div>
             </div>
 
-            <div className="landing-slider-caption" key={`caption-${activeSlide.id}`}>
-              <h3>{activeSlide.title}</h3>
-              <p>{activeSlide.subtitle}</p>
+            <div className="lp-phone">
+              <div className="lp-phone-notch" />
+              <div className="lp-phone-inner">
+                <p className="lp-phone-city">{activeSlide.city}</p>
+                <div className="lp-phone-row"><span className="lp-dot" />QR ile teslim hazır</div>
+                <div className="lp-phone-row"><span className="lp-dot" />Ödeme tamamlandı</div>
+                <div className="lp-phone-row"><span className="lp-dot" />Konum eşleşti</div>
+              </div>
             </div>
-            <div className="landing-dots">
-              {slides.map((slide, index) => (
-                <button
-                  key={slide.id}
-                  type="button"
-                  className={`dot ${index === active ? 'active' : ''}`}
-                  onClick={() => setActive(index)}
-                  aria-label={`Slide ${index + 1}`}
-                />
-              ))}
-            </div>
+
+            <div className="lp-float lp-float-a"><NeoIcon symbol="₺" tone="green" size="sm" /><div><small>Cüzdan</small><strong>Hızlı Öde</strong></div></div>
+            <div className="lp-float lp-float-b"><NeoIcon symbol="◉" tone="pink" size="sm" /><div><small>Canlı Durum</small><strong>Aktif Rezervasyon</strong></div></div>
+          </div>
+
+          <div className="lp-caption" key={`cap-${activeSlide.id}`}>
+            <h3>{activeSlide.title}</h3>
+            <p>{activeSlide.subtitle}</p>
+          </div>
+
+          <div className="lp-dots">
+            {heroSlides.map((slide, index) => (
+              <button
+                key={slide.id}
+                type="button"
+                className={`dot ${index === activeSlideIndex ? 'active' : ''}`}
+                onClick={() => setActiveSlideIndex(index)}
+                aria-label={`Slide ${index + 1}`}
+              />
+            ))}
           </div>
         </article>
+      </section>
+
+      <section id="ozellikler" className="lp-section">
+        <div className="lp-section-head">
+          <p>Özellikler</p>
+          <h2>Mobil ve webde aynı güçlü akış</h2>
+        </div>
+        <div className="lp-service-grid">
+          {serviceCards.map((card) => (
+            <article key={card.title} className="lp-service-card card">
+              <NeoIcon symbol={card.icon} tone={card.tone} size="md" />
+              <h3>{card.title}</h3>
+              <p>{card.text}</p>
+            </article>
+          ))}
+        </div>
+      </section>
+
+      <section id="nasil" className="lp-section lp-how">
+        <div className="lp-section-head">
+          <p>Nasıl çalışır?</p>
+          <h2>3 adımda tamamla</h2>
+        </div>
+        <div className="lp-flow-grid">
+          {flowSteps.map((step) => (
+            <article key={step.no} className="lp-step card">
+              <span className="lp-step-no">{step.no}</span>
+              <h3>{step.title}</h3>
+              <p>{step.text}</p>
+            </article>
+          ))}
+        </div>
+      </section>
+
+      <section id="yorumlar" className="lp-section">
+        <div className="lp-section-head">
+          <p>Kullanıcı Yorumları</p>
+          <h2>İlk kullanımda anlaşılır, her gün güvenilir</h2>
+        </div>
+        <div className="lp-review-grid">
+          {reviews.map((review) => (
+            <article key={review.name} className="lp-review card">
+              <p>{review.text}</p>
+              <div>
+                <strong>{review.name}</strong>
+                <small>{review.role}</small>
+              </div>
+            </article>
+          ))}
+        </div>
+      </section>
+
+      <section className="lp-bottom-cta card">
+        <div>
+          <p>KYRADI SuperApp</p>
+          <h2>Bavulunu bırak, şehri keşfet.</h2>
+        </div>
+        <div className="lp-cta-row">
+          <Link href={hasSession ? '/dashboard' : '/register'} className="button primary">Hemen Başla</Link>
+          <Link href="/login" className="button secondary">Giriş Yap</Link>
+        </div>
       </section>
     </main>
   );
