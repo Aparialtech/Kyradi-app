@@ -526,6 +526,16 @@ class _RegisterPageState extends State<RegisterPage> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context)!;
+    final isDark = theme.brightness == Brightness.dark;
+    const cardTextColor = Color(0xFF1F2431);
+    const cardSubTextColor = Color(0xFF596074);
+    final panelOuter = Colors.white.withValues(alpha: isDark ? 0.9 : 0.92);
+    final panelInner = isDark
+        ? const Color(0xFFF5F7FC)
+        : const Color(0xFFF0F2F9);
+    final outsideTextColor = isDark
+        ? Colors.white.withValues(alpha: 0.92)
+        : theme.colorScheme.onSurface.withValues(alpha: 0.82);
     final stepTitles = [
       l10n.registerPersonalSectionTitle,
       l10n.registerContactSectionTitle,
@@ -544,9 +554,22 @@ class _RegisterPageState extends State<RegisterPage> {
               padding: const EdgeInsets.fromLTRB(16, 10, 16, 24),
               child: Theme(
                 data: theme.copyWith(
+                  textTheme: theme.textTheme.apply(
+                    bodyColor: cardTextColor,
+                    displayColor: cardTextColor,
+                  ),
+                  colorScheme: theme.colorScheme.copyWith(
+                    onSurface: cardTextColor,
+                    onSurfaceVariant: cardSubTextColor,
+                  ),
                   inputDecorationTheme: InputDecorationTheme(
                     filled: true,
                     fillColor: Colors.white.withValues(alpha: 0.95),
+                    hintStyle: const TextStyle(color: Color(0xFF7A8396)),
+                    labelStyle: const TextStyle(color: Color(0xFF7A8396)),
+                    floatingLabelStyle: const TextStyle(
+                      color: Color(0xFFE96A84),
+                    ),
                     contentPadding: const EdgeInsets.symmetric(
                       horizontal: 12,
                       vertical: 14,
@@ -598,7 +621,7 @@ class _RegisterPageState extends State<RegisterPage> {
                           padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
                           decoration: BoxDecoration(
                             borderRadius: BorderRadius.circular(34),
-                            color: Colors.white.withValues(alpha: 0.92),
+                            color: panelOuter,
                             border: Border.all(
                               color: Colors.white.withValues(alpha: 0.95),
                             ),
@@ -613,7 +636,7 @@ class _RegisterPageState extends State<RegisterPage> {
                           child: Container(
                             decoration: BoxDecoration(
                               borderRadius: BorderRadius.circular(28),
-                              color: const Color(0xFFF0F2F9),
+                              color: panelInner,
                             ),
                             padding: const EdgeInsets.fromLTRB(16, 18, 16, 16),
                             child: Column(
@@ -623,14 +646,17 @@ class _RegisterPageState extends State<RegisterPage> {
                                   l10n.registerTitle,
                                   textAlign: TextAlign.center,
                                   style: theme.textTheme.headlineMedium
-                                      ?.copyWith(fontWeight: FontWeight.w800),
+                                      ?.copyWith(
+                                        fontWeight: FontWeight.w800,
+                                        color: cardTextColor,
+                                      ),
                                 ),
                                 const SizedBox(height: 8),
                                 Text(
                                   l10n.registerPersonalSectionSubtitle,
                                   textAlign: TextAlign.center,
                                   style: theme.textTheme.bodyMedium?.copyWith(
-                                    color: const Color(0xFF4D5361),
+                                    color: cardSubTextColor,
                                     height: 1.4,
                                   ),
                                 ),
@@ -1081,8 +1107,10 @@ class _RegisterPageState extends State<RegisterPage> {
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Text(
-                            'Zaten hesabin var mi?',
-                            style: theme.textTheme.bodyMedium,
+                            'Zaten hesabın var mı?',
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              color: outsideTextColor,
+                            ),
                           ),
                           const SizedBox(width: 8),
                           TextButton(

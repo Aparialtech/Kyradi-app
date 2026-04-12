@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../features/home/controllers/home_controller.dart';
-import '../../core/drop_locations.dart';
 import '../../l10n/app_localizations.dart';
 import '../../models/luggage.dart';
 import '../../services/reminder_service.dart';
@@ -10,14 +9,8 @@ import '../../widgets/section_card.dart';
 import '../../widgets/app_mesh_background.dart';
 import '../../ui/components/app_error_state.dart';
 import '../../core/profile_avatar_cache.dart';
-import '../../core/ios/ios_config_service.dart';
-import 'package:flutter/foundation.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
-import '../dashboard/widgets/active_trip_card.dart';
-import '../dashboard/widgets/dashboard_search_bar.dart';
 import '../dashboard/widgets/dashboard_top_bar.dart';
-import '../dashboard/widgets/nearby_locations_carousel.dart';
 import '../dashboard/widgets/quick_actions_grid.dart';
 import '../support/support_chat_page.dart';
 import '../wallet/wallet_page.dart';
@@ -31,18 +24,10 @@ class DashboardPage extends StatefulWidget {
 }
 
 class _DashboardPageState extends State<DashboardPage> {
-  GoogleMapController? _homeMapController;
   late final HomeController _controller;
 
   String? _profileError;
-  String? _luggageError;
-  String? _locationError;
   bool _profileLoading = false;
-  bool _homeMapReady = false;
-  DropLocation? _homeMapSelected;
-  bool _expandMap = false;
-  bool _expandLuggage = false;
-  bool _expandNearby = false;
   double _walletBalance = 0;
 
   @override
@@ -50,11 +35,6 @@ class _DashboardPageState extends State<DashboardPage> {
     super.initState();
     _controller = HomeController();
     _controller.addListener(_onControllerChanged);
-    if (defaultTargetPlatform != TargetPlatform.iOS) {
-      _homeMapReady = true;
-    } else {
-      _checkHomeMapKey();
-    }
     _loadLocations();
     _loadWalletBalance();
     _restoreUserIdThenLoad();
@@ -73,14 +53,9 @@ class _DashboardPageState extends State<DashboardPage> {
   }
 
   Future<void> _loadLocations() async {
-    if (!mounted) return;
-    setState(() => _locationError = null);
     try {
       await _controller.loadLocations();
-    } catch (e) {
-      if (!mounted) return;
-      setState(() => _locationError = e.toString());
-    }
+    } catch (_) {}
   }
 
   Future<void> _restoreUserIdThenLoad() async {
@@ -123,12 +98,10 @@ class _DashboardPageState extends State<DashboardPage> {
 
   Future<void> _loadLuggages(String userId) async {
     if (!mounted) return;
-    setState(() => _luggageError = null);
     try {
       await _controller.loadUserLuggages(userId);
     } catch (e) {
-      if (!mounted) return;
-      setState(() => _luggageError = e.toString());
+      // Home page should stay resilient; luggages are optional here.
     }
   }
 
@@ -136,18 +109,6 @@ class _DashboardPageState extends State<DashboardPage> {
     final prefs = await SharedPreferences.getInstance();
     if (!mounted) return;
     setState(() => _walletBalance = prefs.getDouble('wallet_balance') ?? 0);
-  }
-
-  Future<void> _zoomInHomeMap() async {
-    final controller = _homeMapController;
-    if (controller == null) return;
-    await controller.animateCamera(CameraUpdate.zoomIn());
-  }
-
-  Future<void> _zoomOutHomeMap() async {
-    final controller = _homeMapController;
-    if (controller == null) return;
-    await controller.animateCamera(CameraUpdate.zoomOut());
   }
 
   void _snack(
@@ -186,27 +147,6 @@ class _DashboardPageState extends State<DashboardPage> {
 
   void _openQrPreview(LuggageModel luggage) {
     context.push('/luggage/${luggage.id}/qr', extra: luggage);
-  }
-
-  void _openLocationDetails(DropLocation location) {
-    context.push('/home/location/${location.id}');
-  }
-
-  Future<void> _checkHomeMapKey() async {
-    if (defaultTargetPlatform != TargetPlatform.iOS) return;
-    final hasKey = await IosConfigService.hasGmsApiKey();
-    if (!mounted) return;
-    setState(() => _homeMapReady = hasKey);
-    if (!hasKey) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (!mounted) return;
-        AppNotification.show(
-          context,
-          message: AppLocalizations.of(context)!.mapsMissingApiKey,
-          type: AppNotificationType.warning,
-        );
-      });
-    }
   }
 
   List<QuickActionItem> _buildQuickActions(AppLocalizations loc) {
@@ -263,9 +203,6 @@ class _DashboardPageState extends State<DashboardPage> {
         ? loc.travelerPlaceholder
         : '${_controller.currentUser!.name} ${_controller.currentUser!.surname}'
               .trim();
-    final latestLuggage = _controller.luggages.isNotEmpty
-        ? _controller.luggages.first
-        : null;
     LuggageModel? activeLuggage;
     for (final item in _controller.luggages) {
       if (item.status == LuggageStatus.awaitingDrop ||
@@ -274,7 +211,6 @@ class _DashboardPageState extends State<DashboardPage> {
         break;
       }
     }
-    final nearbyLocations = _controller.locations.take(6).toList();
     final activeCount = _controller.luggages
         .where(
           (item) =>
@@ -328,98 +264,9 @@ class _DashboardPageState extends State<DashboardPage> {
                     onPrimaryTap: _openAddLuggage,
                     onSecondaryTap: () => context.go('/explore'),
                   ),
-                  const SizedBox(height: 14),
-                  DashboardSearchBar(
-                    hintText: loc.findLocation,
-                    onTap: () => context.go('/explore'),
-                  ),
-                  const SizedBox(height: 14),
+                  const SizedBox(height: 16),
                   QuickActionsGrid(actions: _buildQuickActions(loc)),
-                  const SizedBox(height: 12),
-                  _DashboardFoldSection(
-                    title: loc.map,
-                    subtitle: 'Harita ve rota paneli',
-                    icon: Icons.map_outlined,
-                    expanded: _expandMap,
-                    onToggle: () => setState(() => _expandMap = !_expandMap),
-                    actionLabel: loc.seeAllAction,
-                    onAction: () => context.go('/explore'),
-                    child: _homeMapReady
-                        ? _HomeMapCard(
-                            title: loc.map,
-                            subtitle: loc.mapIntro,
-                            locations: _controller.locations,
-                            selected: _homeMapSelected,
-                            onSelect: (location) =>
-                                setState(() => _homeMapSelected = location),
-                            onOpenDetails: _openLocationDetails,
-                            onOpenExplore: () => context.go('/explore'),
-                            onMapCreated: (controller) =>
-                                _homeMapController = controller,
-                            onZoomIn: _zoomInHomeMap,
-                            onZoomOut: _zoomOutHomeMap,
-                            showHeader: false,
-                          )
-                        : SectionCard(
-                            child: ListTile(
-                              leading: const Icon(Icons.map_outlined),
-                              title: Text(loc.map),
-                              subtitle: Text(loc.mapsMissingApiKey),
-                              trailing: const Icon(Icons.chevron_right),
-                              onTap: () => context.go('/explore'),
-                            ),
-                          ),
-                  ),
-                  const SizedBox(height: 12),
-                  _DashboardFoldSection(
-                    title: loc.activeTripTitle,
-                    subtitle: 'Aktif bavul ve QR işlemleri',
-                    icon: Icons.luggage_outlined,
-                    expanded: _expandLuggage,
-                    onToggle: () =>
-                        setState(() => _expandLuggage = !_expandLuggage),
-                    actionLabel: loc.seeAllAction,
-                    onAction: () => context.push('/luggage'),
-                    child: ActiveTripCard(
-                      title: loc.myLuggages,
-                      subtitle: loc.luggagesSectionSubtitle,
-                      loading: _controller.luggageLoading,
-                      errorMessage: _luggageError,
-                      onRetry: () {
-                        final userId = _controller.userId;
-                        if (userId != null) _loadLuggages(userId);
-                      },
-                      luggage: latestLuggage,
-                      onShowQr: () {
-                        if (latestLuggage != null) {
-                          _openQrPreview(latestLuggage);
-                        }
-                      },
-                      onDetails: _openLuggageCenter,
-                      emptyLabel: loc.luggageEmptyStateNoItems,
-                      emptyActionLabel: loc.quickAddLuggage,
-                      onEmptyAction: _openAddLuggage,
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  _DashboardFoldSection(
-                    title: loc.nearbyLocationsTitle,
-                    subtitle: 'Yakındaki noktalar ve uygunluk',
-                    icon: Icons.place_outlined,
-                    expanded: _expandNearby,
-                    onToggle: () =>
-                        setState(() => _expandNearby = !_expandNearby),
-                    actionLabel: loc.seeAllAction,
-                    onAction: () => context.go('/explore'),
-                    child: NearbyLocationsCarousel(
-                      loading: _controller.locationsLoading,
-                      errorMessage: _locationError,
-                      locations: nearbyLocations,
-                      onRetry: _loadLocations,
-                      onLocationTap: _openLocationDetails,
-                      emptyLabel: loc.mapNoLocations,
-                    ),
-                  ),
+                  const SizedBox(height: 14),
                   const SizedBox(height: 12),
                   SectionCard(
                     child: ListTile(
@@ -940,313 +787,6 @@ class _TicketMeta extends StatelessWidget {
             ),
           ),
         ],
-      ),
-    );
-  }
-}
-
-class _DashboardFoldSection extends StatelessWidget {
-  const _DashboardFoldSection({
-    required this.title,
-    required this.subtitle,
-    required this.icon,
-    required this.expanded,
-    required this.onToggle,
-    required this.child,
-    this.actionLabel,
-    this.onAction,
-  });
-
-  final String title;
-  final String subtitle;
-  final IconData icon;
-  final bool expanded;
-  final VoidCallback onToggle;
-  final Widget child;
-  final String? actionLabel;
-  final VoidCallback? onAction;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 220),
-      curve: Curves.easeOutCubic,
-      padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(20),
-        gradient: LinearGradient(
-          colors: [
-            theme.colorScheme.surface.withValues(alpha: 0.94),
-            theme.colorScheme.surface.withValues(alpha: 0.86),
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.72)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.06),
-            blurRadius: 18,
-            offset: const Offset(0, 10),
-          ),
-        ],
-      ),
-      child: Column(
-        children: [
-          InkWell(
-            borderRadius: BorderRadius.circular(14),
-            onTap: onToggle,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
-              child: Row(
-                children: [
-                  Container(
-                    width: 34,
-                    height: 34,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(10),
-                      gradient: LinearGradient(
-                        colors: [
-                          theme.colorScheme.primary.withValues(alpha: 0.2),
-                          theme.colorScheme.primary.withValues(alpha: 0.06),
-                        ],
-                      ),
-                    ),
-                    child: Icon(
-                      icon,
-                      size: 18,
-                      color: theme.colorScheme.primary,
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          title,
-                          style: theme.textTheme.titleSmall?.copyWith(
-                            fontWeight: FontWeight.w800,
-                          ),
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          subtitle,
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: theme.colorScheme.onSurfaceVariant,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  if (actionLabel != null && onAction != null)
-                    TextButton(onPressed: onAction, child: Text(actionLabel!)),
-                  Icon(
-                    expanded
-                        ? Icons.keyboard_arrow_up_rounded
-                        : Icons.keyboard_arrow_down_rounded,
-                    color: theme.colorScheme.onSurfaceVariant,
-                  ),
-                ],
-              ),
-            ),
-          ),
-          AnimatedCrossFade(
-            firstChild: const SizedBox.shrink(),
-            secondChild: Padding(
-              padding: const EdgeInsets.only(top: 10),
-              child: child,
-            ),
-            crossFadeState: expanded
-                ? CrossFadeState.showSecond
-                : CrossFadeState.showFirst,
-            duration: const Duration(milliseconds: 220),
-            sizeCurve: Curves.easeOutCubic,
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _HomeMapCard extends StatelessWidget {
-  const _HomeMapCard({
-    required this.title,
-    required this.subtitle,
-    required this.locations,
-    required this.selected,
-    required this.onSelect,
-    required this.onOpenDetails,
-    required this.onOpenExplore,
-    required this.onMapCreated,
-    required this.onZoomIn,
-    required this.onZoomOut,
-    this.showHeader = true,
-  });
-
-  final String title;
-  final String subtitle;
-  final List<DropLocation> locations;
-  final DropLocation? selected;
-  final ValueChanged<DropLocation> onSelect;
-  final ValueChanged<DropLocation> onOpenDetails;
-  final VoidCallback onOpenExplore;
-  final ValueChanged<GoogleMapController> onMapCreated;
-  final VoidCallback onZoomIn;
-  final VoidCallback onZoomOut;
-  final bool showHeader;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    if (locations.isEmpty) {
-      return SectionCard(
-        child: ListTile(
-          leading: const Icon(Icons.map_outlined),
-          title: Text(title),
-          subtitle: Text(AppLocalizations.of(context)!.mapNoLocations),
-          trailing: const Icon(Icons.chevron_right),
-          onTap: onOpenExplore,
-        ),
-      );
-    }
-    final initial = selected?.position ?? locations.first.position;
-    final markers = locations.map((location) {
-      return Marker(
-        markerId: MarkerId(location.id),
-        position: location.position,
-        infoWindow: InfoWindow(
-          title: location.name,
-          snippet: location.address,
-          onTap: () => onOpenDetails(location),
-        ),
-        onTap: () => onSelect(location),
-      );
-    }).toSet();
-
-    return SectionCard(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          if (showHeader) ...[
-            SectionHeader(
-              title: title,
-              subtitle: subtitle,
-              icon: Icons.map_outlined,
-              action: TextButton(
-                onPressed: onOpenExplore,
-                child: Text(AppLocalizations.of(context)!.seeAllAction),
-              ),
-            ),
-            const SizedBox(height: 12),
-          ],
-          SizedBox(
-            height: 220,
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(20),
-              child: Stack(
-                children: [
-                  GoogleMap(
-                    initialCameraPosition: CameraPosition(
-                      target: initial,
-                      zoom: 12.2,
-                    ),
-                    markers: markers,
-                    zoomControlsEnabled: false,
-                    myLocationButtonEnabled: false,
-                    onTap: (_) => onSelect(locations.first),
-                    onLongPress: (_) => onOpenExplore(),
-                    mapToolbarEnabled: false,
-                    zoomGesturesEnabled: true,
-                    scrollGesturesEnabled: true,
-                    onMapCreated: onMapCreated,
-                  ),
-                  Positioned(
-                    top: 12,
-                    right: 12,
-                    child: Column(
-                      children: [
-                        _ZoomButton(icon: Icons.add, onTap: onZoomIn),
-                        const SizedBox(height: 8),
-                        _ZoomButton(icon: Icons.remove, onTap: onZoomOut),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          if (selected != null) ...[
-            const SizedBox(height: 12),
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: theme.colorScheme.surfaceContainerHighest,
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(
-                  color: theme.colorScheme.outlineVariant.withValues(
-                    alpha: 0.6,
-                  ),
-                ),
-              ),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          selected!.name,
-                          style: theme.textTheme.titleSmall?.copyWith(
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          selected!.address,
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: theme.colorScheme.onSurfaceVariant,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  IconButton(
-                    onPressed: () => onOpenDetails(selected!),
-                    icon: const Icon(Icons.chevron_right),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-}
-
-class _ZoomButton extends StatelessWidget {
-  const _ZoomButton({required this.icon, required this.onTap});
-
-  final IconData icon;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Material(
-      color: theme.colorScheme.surface.withValues(alpha: 0.9),
-      shape: const CircleBorder(),
-      elevation: 3,
-      child: InkWell(
-        customBorder: const CircleBorder(),
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.all(8),
-          child: Icon(icon, size: 18),
-        ),
       ),
     );
   }

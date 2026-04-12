@@ -455,6 +455,26 @@ class _LoginPageState extends State<LoginPage> {
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context)!;
     final rememberLabel = l10n.rememberMeLabel;
+    final isDark = theme.brightness == Brightness.dark;
+    const cardTextColor = Color(0xFF1F2431);
+    const cardSubTextColor = Color(0xFF596074);
+    final panelOuter = Colors.white.withValues(alpha: isDark ? 0.9 : 0.92);
+    final panelInner = isDark
+        ? const Color(0xFFF5F7FC)
+        : const Color(0xFFF0F2F9);
+    final outsideTextColor = isDark
+        ? Colors.white.withValues(alpha: 0.92)
+        : theme.colorScheme.onSurface.withValues(alpha: 0.82);
+    final formTheme = theme.copyWith(
+      textTheme: theme.textTheme.apply(
+        bodyColor: cardTextColor,
+        displayColor: cardTextColor,
+      ),
+      colorScheme: theme.colorScheme.copyWith(
+        onSurface: cardTextColor,
+        onSurfaceVariant: cardSubTextColor,
+      ),
+    );
     return Scaffold(
       extendBodyBehindAppBar: true,
       backgroundColor: Colors.transparent,
@@ -481,7 +501,7 @@ class _LoginPageState extends State<LoginPage> {
                             padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
                             decoration: BoxDecoration(
                               borderRadius: BorderRadius.circular(34),
-                              color: Colors.white.withValues(alpha: 0.92),
+                              color: panelOuter,
                               border: Border.all(
                                 color: Colors.white.withValues(alpha: 0.95),
                               ),
@@ -496,7 +516,7 @@ class _LoginPageState extends State<LoginPage> {
                             child: Container(
                               decoration: BoxDecoration(
                                 borderRadius: BorderRadius.circular(28),
-                                color: const Color(0xFFF0F2F9),
+                                color: panelInner,
                               ),
                               padding: const EdgeInsets.fromLTRB(
                                 18,
@@ -504,242 +524,260 @@ class _LoginPageState extends State<LoginPage> {
                                 18,
                                 18,
                               ),
-                              child: Form(
-                                key: _formKey,
-                                child: Column(
-                                  crossAxisAlignment:
-                                      CrossAxisAlignment.stretch,
-                                  children: [
-                                    Text(
-                                      l10n.loginFormTitle,
-                                      textAlign: TextAlign.center,
-                                      style: theme.textTheme.headlineMedium
-                                          ?.copyWith(
-                                            fontWeight: FontWeight.w800,
-                                          ),
-                                    ),
-                                    const SizedBox(height: 10),
-                                    Text(
-                                      l10n.loginFormSubtitle,
-                                      textAlign: TextAlign.center,
-                                      style: theme.textTheme.bodyMedium
-                                          ?.copyWith(
-                                            color: const Color(0xFF4D5361),
-                                            height: 1.4,
-                                          ),
-                                    ),
-                                    const SizedBox(height: 16),
-                                    Text(
-                                      l10n.email,
-                                      style: theme.textTheme.labelLarge
-                                          ?.copyWith(
-                                            color: const Color(0xFF626878),
-                                          ),
-                                    ),
-                                    const SizedBox(height: 6),
-                                    _SoftTextField(
-                                      child: TextFormField(
-                                        controller: _emailCtrl,
-                                        keyboardType:
-                                            TextInputType.emailAddress,
-                                        decoration: InputDecoration(
-                                          hintText: l10n.emailHint,
-                                          prefixIcon: const _FieldIcon(
-                                            icon: Icons.alternate_email,
-                                          ),
-                                        ),
-                                        validator: (v) {
-                                          if (v == null || v.trim().isEmpty) {
-                                            return l10n.validationEmailRequired;
-                                          }
-                                          final ok = RegExp(
-                                            r'^\S+@\S+\.\S+$',
-                                          ).hasMatch(v.trim());
-                                          if (!ok) {
-                                            return l10n.validationEmailInvalid;
-                                          }
-                                          return null;
-                                        },
-                                      ),
-                                    ),
-                                    const SizedBox(height: 12),
-                                    Text(
-                                      l10n.passwordLabel,
-                                      style: theme.textTheme.labelLarge
-                                          ?.copyWith(
-                                            color: const Color(0xFF626878),
-                                          ),
-                                    ),
-                                    const SizedBox(height: 6),
-                                    _SoftTextField(
-                                      child: TextFormField(
-                                        controller: _passCtrl,
-                                        obscureText: _obscure,
-                                        enableSuggestions: false,
-                                        autocorrect: false,
-                                        inputFormatters: [
-                                          FilteringTextInputFormatter.deny(
-                                            RegExp(r'\s'),
-                                          ),
-                                        ],
-                                        decoration: InputDecoration(
-                                          hintText: l10n.passwordHint,
-                                          prefixIcon: const _FieldIcon(
-                                            icon: Icons.lock_outline,
-                                          ),
-                                          suffixIcon: IconButton(
-                                            onPressed: () => setState(
-                                              () => _obscure = !_obscure,
+                              child: Theme(
+                                data: formTheme,
+                                child: Form(
+                                  key: _formKey,
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.stretch,
+                                    children: [
+                                      Text(
+                                        l10n.loginFormTitle,
+                                        textAlign: TextAlign.center,
+                                        style: theme.textTheme.headlineMedium
+                                            ?.copyWith(
+                                              fontWeight: FontWeight.w800,
+                                              color: cardTextColor,
                                             ),
-                                            icon: Icon(
-                                              _obscure
-                                                  ? Icons.visibility
-                                                  : Icons.visibility_off,
-                                            ),
-                                          ),
-                                        ),
-                                        validator: (v) {
-                                          if (v == null || v.isEmpty) {
-                                            return l10n
-                                                .validationPasswordRequired;
-                                          }
-                                          if (v.length < 6) {
-                                            return l10n.validationMinChars('6');
-                                          }
-                                          return null;
-                                        },
                                       ),
-                                    ),
-                                    const SizedBox(height: 10),
-                                    Row(
-                                      children: [
-                                        Checkbox(
-                                          value: _rememberMe,
-                                          onChanged: (value) {
-                                            setState(
-                                              () =>
-                                                  _rememberMe = value ?? false,
-                                            );
-                                            if (!(value ?? false)) {
-                                              _secureStorage.delete(
-                                                key: _rememberEmailKey,
-                                              );
-                                            }
-                                          },
-                                        ),
-                                        Text(rememberLabel),
-                                        const Spacer(),
-                                        TextButton(
-                                          onPressed: () =>
-                                              context.push('/forgot'),
-                                          child: Text(l10n.loginForgotPassword),
-                                        ),
-                                      ],
-                                    ),
-                                    const SizedBox(height: 4),
-                                    GradientButton(
-                                      text: l10n.loginButtonLabel,
-                                      onPressed: _loading ? null : _submit,
-                                      loading: _loading,
-                                      gradient: const LinearGradient(
-                                        colors: [
-                                          Color(0xFFF48FA9),
-                                          Color(0xFFE66783),
-                                        ],
-                                        begin: Alignment.topLeft,
-                                        end: Alignment.bottomRight,
-                                      ),
-                                      leading: const Icon(Icons.arrow_forward),
-                                      radius: 18,
-                                      padding: const EdgeInsets.symmetric(
-                                        vertical: 15,
-                                      ),
-                                      glass: false,
-                                    ),
-                                    const SizedBox(height: 14),
-                                    Row(
-                                      children: [
-                                        const Expanded(child: Divider()),
-                                        Padding(
-                                          padding: const EdgeInsets.symmetric(
-                                            horizontal: 12,
-                                          ),
-                                          child: Text(
-                                            l10n.loginSocialDivider,
-                                            style: theme.textTheme.bodySmall
-                                                ?.copyWith(
-                                                  color: theme
-                                                      .colorScheme
-                                                      .onSurface
-                                                      .withValues(alpha: 0.6),
-                                                ),
-                                          ),
-                                        ),
-                                        const Expanded(child: Divider()),
-                                      ],
-                                    ),
-                                    const SizedBox(height: 12),
-                                    Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.center,
-                                      children: [
-                                        _SocialCircleButton(
-                                          icon: Icons.mail_outline_rounded,
-                                          borderColor: const Color(0xFF22242E),
-                                          onTap: () =>
-                                              context.push('/register'),
-                                        ),
-                                        const SizedBox(width: 14),
-                                        _SocialCircleButton(
-                                          icon: Icons.apple_rounded,
-                                          filled: true,
-                                          onTap:
-                                              _loading ||
-                                                  !_appleConfigOk ||
-                                                  !_firebaseReady
-                                              ? null
-                                              : () => _handleSocialAuth(
-                                                  _signInWithApple,
-                                                  provider: 'apple',
-                                                ),
-                                        ),
-                                        const SizedBox(width: 14),
-                                        _SocialCircleButton(
-                                          icon: Icons.g_mobiledata_rounded,
-                                          borderColor: const Color(0xFFE96A84),
-                                          foregroundColor: const Color(
-                                            0xFFE84A68,
-                                          ),
-                                          onTap:
-                                              _loading ||
-                                                  !_googleConfigOk ||
-                                                  !_firebaseReady
-                                              ? null
-                                              : () => _handleSocialAuth(
-                                                  _signInWithGoogle,
-                                                  provider: 'google',
-                                                ),
-                                        ),
-                                      ],
-                                    ),
-                                    if (!_firebaseReady ||
-                                        !_googleConfigOk ||
-                                        !_appleConfigOk) ...[
                                       const SizedBox(height: 10),
                                       Text(
-                                        !_firebaseReady
-                                            ? l10n.firebaseConfigMissing
-                                            : (!_googleConfigOk
-                                                  ? l10n.googleConfigMissingIosScheme
-                                                  : l10n.appleConfigMissing),
-                                        style: theme.textTheme.bodySmall
-                                            ?.copyWith(
-                                              color: theme.colorScheme.error,
-                                            ),
+                                        l10n.loginFormSubtitle,
                                         textAlign: TextAlign.center,
+                                        style: theme.textTheme.bodyMedium
+                                            ?.copyWith(
+                                              color: cardSubTextColor,
+                                              height: 1.4,
+                                            ),
                                       ),
+                                      const SizedBox(height: 16),
+                                      Text(
+                                        l10n.email,
+                                        style: theme.textTheme.labelLarge
+                                            ?.copyWith(color: cardSubTextColor),
+                                      ),
+                                      const SizedBox(height: 6),
+                                      _SoftTextField(
+                                        child: TextFormField(
+                                          controller: _emailCtrl,
+                                          keyboardType:
+                                              TextInputType.emailAddress,
+                                          decoration: InputDecoration(
+                                            hintText: l10n.emailHint,
+                                            prefixIcon: const _FieldIcon(
+                                              icon: Icons.alternate_email,
+                                            ),
+                                          ),
+                                          validator: (v) {
+                                            if (v == null || v.trim().isEmpty) {
+                                              return l10n
+                                                  .validationEmailRequired;
+                                            }
+                                            final ok = RegExp(
+                                              r'^\S+@\S+\.\S+$',
+                                            ).hasMatch(v.trim());
+                                            if (!ok) {
+                                              return l10n
+                                                  .validationEmailInvalid;
+                                            }
+                                            return null;
+                                          },
+                                        ),
+                                      ),
+                                      const SizedBox(height: 12),
+                                      Text(
+                                        l10n.passwordLabel,
+                                        style: theme.textTheme.labelLarge
+                                            ?.copyWith(color: cardSubTextColor),
+                                      ),
+                                      const SizedBox(height: 6),
+                                      _SoftTextField(
+                                        child: TextFormField(
+                                          controller: _passCtrl,
+                                          obscureText: _obscure,
+                                          enableSuggestions: false,
+                                          autocorrect: false,
+                                          inputFormatters: [
+                                            FilteringTextInputFormatter.deny(
+                                              RegExp(r'\s'),
+                                            ),
+                                          ],
+                                          decoration: InputDecoration(
+                                            hintText: l10n.passwordHint,
+                                            prefixIcon: const _FieldIcon(
+                                              icon: Icons.lock_outline,
+                                            ),
+                                            suffixIcon: IconButton(
+                                              onPressed: () => setState(
+                                                () => _obscure = !_obscure,
+                                              ),
+                                              icon: Icon(
+                                                _obscure
+                                                    ? Icons.visibility
+                                                    : Icons.visibility_off,
+                                              ),
+                                            ),
+                                          ),
+                                          validator: (v) {
+                                            if (v == null || v.isEmpty) {
+                                              return l10n
+                                                  .validationPasswordRequired;
+                                            }
+                                            if (v.length < 6) {
+                                              return l10n.validationMinChars(
+                                                '6',
+                                              );
+                                            }
+                                            return null;
+                                          },
+                                        ),
+                                      ),
+                                      const SizedBox(height: 10),
+                                      Row(
+                                        children: [
+                                          Checkbox(
+                                            value: _rememberMe,
+                                            onChanged: (value) {
+                                              setState(
+                                                () => _rememberMe =
+                                                    value ?? false,
+                                              );
+                                              if (!(value ?? false)) {
+                                                _secureStorage.delete(
+                                                  key: _rememberEmailKey,
+                                                );
+                                              }
+                                            },
+                                          ),
+                                          Text(
+                                            rememberLabel,
+                                            style: theme.textTheme.bodyMedium
+                                                ?.copyWith(
+                                                  color: cardSubTextColor,
+                                                ),
+                                          ),
+                                          const Spacer(),
+                                          TextButton(
+                                            onPressed: () =>
+                                                context.push('/forgot'),
+                                            child: Text(
+                                              l10n.loginForgotPassword,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      const SizedBox(height: 4),
+                                      GradientButton(
+                                        text: l10n.loginButtonLabel,
+                                        onPressed: _loading ? null : _submit,
+                                        loading: _loading,
+                                        gradient: const LinearGradient(
+                                          colors: [
+                                            Color(0xFFF48FA9),
+                                            Color(0xFFE66783),
+                                          ],
+                                          begin: Alignment.topLeft,
+                                          end: Alignment.bottomRight,
+                                        ),
+                                        leading: const Icon(
+                                          Icons.arrow_forward,
+                                        ),
+                                        radius: 18,
+                                        padding: const EdgeInsets.symmetric(
+                                          vertical: 15,
+                                        ),
+                                        glass: false,
+                                      ),
+                                      const SizedBox(height: 14),
+                                      Row(
+                                        children: [
+                                          const Expanded(child: Divider()),
+                                          Padding(
+                                            padding: const EdgeInsets.symmetric(
+                                              horizontal: 12,
+                                            ),
+                                            child: Text(
+                                              l10n.loginSocialDivider,
+                                              style: theme.textTheme.bodySmall
+                                                  ?.copyWith(
+                                                    color: theme
+                                                        .colorScheme
+                                                        .onSurface
+                                                        .withValues(alpha: 0.6),
+                                                  ),
+                                            ),
+                                          ),
+                                          const Expanded(child: Divider()),
+                                        ],
+                                      ),
+                                      const SizedBox(height: 12),
+                                      Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
+                                        children: [
+                                          _SocialCircleButton(
+                                            icon: Icons.mail_outline_rounded,
+                                            borderColor: const Color(
+                                              0xFF22242E,
+                                            ),
+                                            onTap: () =>
+                                                context.push('/register'),
+                                          ),
+                                          const SizedBox(width: 14),
+                                          _SocialCircleButton(
+                                            icon: Icons.apple_rounded,
+                                            filled: true,
+                                            onTap:
+                                                _loading ||
+                                                    !_appleConfigOk ||
+                                                    !_firebaseReady
+                                                ? null
+                                                : () => _handleSocialAuth(
+                                                    _signInWithApple,
+                                                    provider: 'apple',
+                                                  ),
+                                          ),
+                                          const SizedBox(width: 14),
+                                          _SocialCircleButton(
+                                            icon: Icons.g_mobiledata_rounded,
+                                            borderColor: const Color(
+                                              0xFFE96A84,
+                                            ),
+                                            foregroundColor: const Color(
+                                              0xFFE84A68,
+                                            ),
+                                            onTap:
+                                                _loading ||
+                                                    !_googleConfigOk ||
+                                                    !_firebaseReady
+                                                ? null
+                                                : () => _handleSocialAuth(
+                                                    _signInWithGoogle,
+                                                    provider: 'google',
+                                                  ),
+                                          ),
+                                        ],
+                                      ),
+                                      if (!_firebaseReady ||
+                                          !_googleConfigOk ||
+                                          !_appleConfigOk) ...[
+                                        const SizedBox(height: 10),
+                                        Text(
+                                          !_firebaseReady
+                                              ? l10n.firebaseConfigMissing
+                                              : (!_googleConfigOk
+                                                    ? l10n.googleConfigMissingIosScheme
+                                                    : l10n.appleConfigMissing),
+                                          style: theme.textTheme.bodySmall
+                                              ?.copyWith(
+                                                color: theme.colorScheme.error,
+                                              ),
+                                          textAlign: TextAlign.center,
+                                        ),
+                                      ],
                                     ],
-                                  ],
+                                  ),
                                 ),
                               ),
                             ),
@@ -751,7 +789,9 @@ class _LoginPageState extends State<LoginPage> {
                           children: [
                             Text(
                               l10n.loginNoAccount,
-                              style: theme.textTheme.bodyMedium,
+                              style: theme.textTheme.bodyMedium?.copyWith(
+                                color: outsideTextColor,
+                              ),
                             ),
                             const SizedBox(width: 8),
                             TextButton(
@@ -769,9 +809,7 @@ class _LoginPageState extends State<LoginPage> {
                           l10n.copyrightNotice,
                           textAlign: TextAlign.center,
                           style: theme.textTheme.bodySmall?.copyWith(
-                            color: theme.colorScheme.onSurface.withValues(
-                              alpha: 0.55,
-                            ),
+                            color: outsideTextColor.withValues(alpha: 0.78),
                           ),
                         ),
                       ],
@@ -794,11 +832,23 @@ class _SoftTextField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    const inputTextColor = Color(0xFF1F2431);
+    const inputHintColor = Color(0xFF7A8396);
     return Theme(
       data: Theme.of(context).copyWith(
+        textTheme: Theme.of(context).textTheme.apply(
+          bodyColor: inputTextColor,
+          displayColor: inputTextColor,
+        ),
+        colorScheme: Theme.of(
+          context,
+        ).colorScheme.copyWith(onSurface: inputTextColor),
         inputDecorationTheme: InputDecorationTheme(
           filled: true,
           fillColor: Colors.white.withValues(alpha: 0.95),
+          hintStyle: const TextStyle(color: inputHintColor),
+          labelStyle: const TextStyle(color: inputHintColor),
+          floatingLabelStyle: const TextStyle(color: Color(0xFFE96A84)),
           contentPadding: const EdgeInsets.symmetric(
             horizontal: 12,
             vertical: 14,
