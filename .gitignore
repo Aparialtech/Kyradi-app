@@ -61,3 +61,7 @@ android/app/google-services.json
 .env.local
 .env.local
 ios/Runner/Secrets.xcconfig
+
+# Web (Next.js)
+**/node_modules/
+**/.next/
