@@ -1,338 +1,335 @@
 'use client';
 
 import Link from 'next/link';
-import type { TouchEventHandler } from 'react';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { motion, useScroll, useTransform } from 'framer-motion';
 import { getToken } from '@/lib/auth';
-import { NeoIcon } from '@/components/neo-icon';
 
-const heroSlides = [
+const story = [
   {
-    id: 1,
-    title: 'Bavulunu bırak, şehri keşfet',
-    subtitle: 'KYRADI ile konumu seç, bagajını güvenli bırak, QR ile anlık takip et.',
-    city: 'İstanbul',
-    eta: '11 dk',
-    metricA: '420+ nokta',
-    metricB: '%99.9 güvenli teslim',
-    tone: 'mint',
+    title: 'Sabah',
+    text: 'Otele erken geldin, check-in henüz başlamadı.',
+    icon: '☀️',
+    glow: 'from-amber-300/50 to-orange-500/10',
   },
   {
-    id: 2,
-    title: 'Seyahatte ekstra yük taşıma',
-    subtitle: 'Mobil ve web senkron: rezervasyon, ödeme, cüzdan ve bildirimler tek akışta.',
-    city: 'Paris',
-    eta: '8 dk',
-    metricA: '65K+ rezervasyon',
-    metricB: '7/24 canlı destek',
-    tone: 'sunset',
+    title: 'Öğlen',
+    text: 'Bavulunla gezmek istemiyorsun, hızın düşüyor.',
+    icon: '🧳',
+    glow: 'from-indigo-300/50 to-indigo-600/10',
   },
   {
-    id: 3,
-    title: 'Dakikalar içinde rezervasyon',
-    subtitle: 'Yakındaki noktayı bul, teslim saatini seç, bilet gibi kartla tüm süreci yönet.',
-    city: 'Londra',
-    eta: '14 dk',
-    metricA: '180+ partner',
-    metricB: 'Anlık durum güncelleme',
-    tone: 'violet',
+    title: 'Kyradi',
+    text: 'Yakındaki noktaya bırakıyorsun, işlem saniyeler sürüyor.',
+    icon: '📍',
+    glow: 'from-cyan-300/50 to-cyan-700/10',
+  },
+  {
+    title: 'Sonuç',
+    text: 'Ellerin boş. Şehir senin.',
+    icon: '✨',
+    glow: 'from-violet-300/50 to-violet-700/10',
   },
 ];
 
-const serviceCards = [
+const steps = [
+  { no: '01', title: 'Konumunu seç', icon: '📍' },
+  { no: '02', title: 'Bavulunu bırak', icon: '🧳' },
+  { no: '03', title: 'Özgürce keşfet', icon: '🌍' },
+];
+
+const benefits = [
+  { title: 'Güvenli teslim', icon: '🧳', text: 'Doğrulanmış noktalarda güvenli emanet.' },
+  { title: 'Hızlı rezervasyon', icon: '⚡', text: 'Dakikalar içinde yer ayır, QR ile bırak.' },
+  { title: 'Her yerde erişim', icon: '📍', text: 'Şehrin merkezinde, turistik noktalara yakın.' },
+  { title: 'Kolay ödeme', icon: '💳', text: 'Uygulama içi hızlı ödeme, sade akış.' },
+];
+
+const testimonials = [
   {
-    title: 'Hızlı Rezervasyon',
-    text: '3 adımda rezervasyon aç, lokasyon ve teslim saatini saniyeler içinde belirle.',
-    icon: '⚡',
-    tone: 'cyan' as const,
+    name: 'Zeynep',
+    text: 'Check-in saatini beklerken tüm günü valizsiz gezdim. Harika rahatlık.',
   },
   {
-    title: 'Canlı Takip ve QR',
-    text: 'Bırakma, depolama ve teslim alma adımlarını QR kod ile hatasız tamamla.',
-    icon: '◉',
-    tone: 'violet' as const,
+    name: 'Can',
+    text: 'İlk kullanımda bile çok net. Rezervasyon ve teslim akışı çok hızlı.',
   },
   {
-    title: 'Cüzdan ve Ödeme',
-    text: 'TL / EUR / USD desteğiyle cüzdanından öde, hareket geçmişini anında takip et.',
-    icon: '₺',
-    tone: 'green' as const,
+    name: 'Mina',
+    text: 'Uçuş öncesi yük taşımadan gezmek artık standartım oldu.',
   },
 ];
 
-const flowSteps = [
-  { no: '01', title: 'Nokta Seç', text: 'Haritadan sana en yakın KYRADI noktasını seç.' },
-  { no: '02', title: 'Bavulu Bırak', text: 'QR ile teslim işlemini güvenli şekilde tamamla.' },
-  { no: '03', title: 'Şehri Keşfet', text: 'Yük taşımadan gez, teslim saatinde geri al.' },
-];
-
-const reviews = [
-  { name: 'Elif K.', role: 'Sık seyahat eden kullanıcı', text: 'Check-in öncesi valizi bırakıp tüm günü çok rahat geçirdim.' },
-  { name: 'Mert A.', role: 'Dijital göçebe', text: 'Web ve mobil aynı veriyi gösteriyor. Akış çok temiz ve hızlı.' },
-  { name: 'Naz Y.', role: 'Turist', text: 'QR ve lokasyon akışı net. İlk kullanımda bile kafa karıştırmıyor.' },
-];
+function FadeIn({
+  children,
+  delay = 0,
+  y = 24,
+}: {
+  children: React.ReactNode;
+  delay?: number;
+  y?: number;
+}) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, amount: 0.2 }}
+      transition={{ duration: 0.7, delay, ease: 'easeOut' }}
+    >
+      {children}
+    </motion.div>
+  );
+}
 
 export default function HomePage() {
-  const [activeSlideIndex, setActiveSlideIndex] = useState(0);
   const [hasSession, setHasSession] = useState(false);
-  const touchStartX = useRef<number | null>(null);
-  const touchDeltaX = useRef(0);
-
-  const appStoreUrl = process.env.NEXT_PUBLIC_APP_STORE_URL ?? 'https://www.apple.com/app-store/';
-  const playStoreUrl = process.env.NEXT_PUBLIC_PLAY_STORE_URL ?? 'https://play.google.com/store/apps';
+  const heroRef = useRef<HTMLDivElement | null>(null);
+  const { scrollYProgress } = useScroll({
+    target: heroRef,
+    offset: ['start start', 'end start'],
+  });
+  const parallaxY = useTransform(scrollYProgress, [0, 1], [0, 90]);
+  const phoneRotate = useTransform(scrollYProgress, [0, 1], [-6, 6]);
 
   useEffect(() => {
     setHasSession(Boolean(getToken()));
   }, []);
 
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setActiveSlideIndex((prev) => (prev + 1) % heroSlides.length);
-    }, 4600);
-    return () => clearInterval(interval);
-  }, []);
-
-  const activeSlide = useMemo(() => heroSlides[activeSlideIndex], [activeSlideIndex]);
-
-  const goNext = () => setActiveSlideIndex((prev) => (prev + 1) % heroSlides.length);
-  const goPrev = () => setActiveSlideIndex((prev) => (prev - 1 + heroSlides.length) % heroSlides.length);
-
-  const handleTouchStart: TouchEventHandler<HTMLDivElement> = (event) => {
-    touchStartX.current = event.changedTouches[0]?.clientX ?? null;
-    touchDeltaX.current = 0;
-  };
-
-  const handleTouchMove: TouchEventHandler<HTMLDivElement> = (event) => {
-    if (touchStartX.current === null) return;
-    const currentX = event.changedTouches[0]?.clientX ?? touchStartX.current;
-    touchDeltaX.current = currentX - touchStartX.current;
-  };
-
-  const handleTouchEnd: TouchEventHandler<HTMLDivElement> = () => {
-    const threshold = 44;
-    if (touchDeltaX.current <= -threshold) goNext();
-    if (touchDeltaX.current >= threshold) goPrev();
-    touchStartX.current = null;
-    touchDeltaX.current = 0;
-  };
-
   return (
-    <main className="lp-page">
-      <div className="lp-orb lp-orb-a" />
-      <div className="lp-orb lp-orb-b" />
-      <div className="lp-orb lp-orb-c" />
+    <main className="relative min-h-screen overflow-x-hidden bg-[#0B0F1A] text-white">
+      <motion.div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 opacity-90"
+        animate={{
+          background: [
+            'radial-gradient(50rem 50rem at 10% 20%, rgba(99,102,241,0.30), transparent 60%), radial-gradient(42rem 42rem at 90% 12%, rgba(34,211,238,0.22), transparent 62%)',
+            'radial-gradient(56rem 56rem at 20% 30%, rgba(99,102,241,0.24), transparent 62%), radial-gradient(46rem 46rem at 80% 18%, rgba(34,211,238,0.24), transparent 65%)',
+            'radial-gradient(50rem 50rem at 10% 20%, rgba(99,102,241,0.30), transparent 60%), radial-gradient(42rem 42rem at 90% 12%, rgba(34,211,238,0.22), transparent 62%)',
+          ],
+        }}
+        transition={{ duration: 18, repeat: Infinity, ease: 'linear' }}
+      />
+      <div className="pointer-events-none absolute inset-0 bg-[url('/landing/map-grid.svg')] bg-center bg-no-repeat opacity-10" />
 
-      <header className="lp-header card">
-        <div className="lp-brand">
-          <span className="lp-brand-core">K</span>
+      <header className="relative z-20 mx-auto flex w-full max-w-7xl items-center justify-between px-5 py-5 md:px-8">
+        <div className="flex items-center gap-3">
+          <motion.div
+            className="h-10 w-10 rounded-2xl bg-gradient-to-br from-[#22D3EE] via-[#6366F1] to-fuchsia-500 shadow-[0_0_30px_rgba(99,102,241,.45)]"
+            animate={{ y: [0, -5, 0] }}
+            transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
+          />
           <div>
-            <p>KYRADI</p>
-            <small>Global Bagaj SuperApp</small>
+            <p className="text-sm font-semibold tracking-[0.2em] text-white/90">KYRADI</p>
+            <p className="text-xs text-white/50">SuperApp</p>
           </div>
         </div>
 
-        <nav className="lp-nav">
-          <a href="#ozellikler">Özellikler</a>
-          <a href="#nasil">Nasıl Çalışır</a>
-          <a href="#yorumlar">Yorumlar</a>
+        <nav className="hidden items-center gap-7 text-sm text-white/70 md:flex">
+          <a href="#story" className="hover:text-white">Deneyim</a>
+          <a href="#works" className="hover:text-white">Nasıl Çalışır</a>
+          <a href="#benefits" className="hover:text-white">Avantajlar</a>
         </nav>
 
-        <div className="lp-actions">
+        <div className="flex items-center gap-2">
           {hasSession ? (
-            <Link href="/dashboard" className="button primary lp-action-btn">Panele Git</Link>
+            <Link href="/dashboard" className="rounded-xl border border-white/20 bg-white/10 px-4 py-2 text-sm font-medium backdrop-blur">
+              Panele Git
+            </Link>
           ) : (
             <>
-              <Link href="/login" className="button secondary lp-action-btn">Giriş Yap</Link>
-              <Link href="/register" className="button primary lp-action-btn">Kayıt Ol</Link>
+              <Link href="/login" className="rounded-xl border border-white/20 bg-white/10 px-4 py-2 text-sm font-medium backdrop-blur">
+                Giriş Yap
+              </Link>
+              <Link href="/register" className="rounded-xl bg-gradient-to-r from-[#6366F1] to-[#22D3EE] px-4 py-2 text-sm font-semibold text-[#07131e] shadow-[0_0_30px_rgba(34,211,238,.35)]">
+                Kayıt Ol
+              </Link>
             </>
           )}
         </div>
       </header>
 
-      <section className="lp-hero">
-        <article className="lp-copy card">
-          <span className="lp-chip">Yeni nesil seyahat deneyimi</span>
-          <h1>{activeSlide.title}</h1>
-          <p>{activeSlide.subtitle}</p>
+      <section ref={heroRef} className="relative z-10 mx-auto flex min-h-[88vh] w-full max-w-7xl flex-col justify-center px-5 pb-14 pt-6 md:px-8">
+        <div className="grid items-center gap-10 lg:grid-cols-2">
+          <motion.div style={{ y: parallaxY }}>
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8 }}
+              className="mb-5 inline-flex rounded-full border border-white/20 bg-white/10 px-4 py-2 text-xs font-semibold text-white/80 backdrop-blur"
+            >
+              Seyahatin en hafif hali
+            </motion.div>
+            <motion.h1
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.9, delay: 0.1 }}
+              className="max-w-2xl text-5xl font-semibold leading-tight tracking-[-0.03em] md:text-7xl"
+            >
+              Bavulunu bırak.
+              <br />
+              <span className="bg-gradient-to-r from-white via-cyan-200 to-indigo-300 bg-clip-text text-transparent">Şehri keşfet.</span>
+            </motion.h1>
+            <motion.p
+              initial={{ opacity: 0, y: 24 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 0.2 }}
+              className="mt-6 max-w-xl text-lg text-white/70"
+            >
+              Ağır yüklerden kurtul, anın tadını çıkar. Yakındaki noktayı bul, bavulunu bırak, şehri özgürce yaşa.
+            </motion.p>
+            <motion.div
+              initial={{ opacity: 0, y: 24 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 0.3 }}
+              className="mt-8 flex flex-wrap gap-3"
+            >
+              <a href="#works" className="group rounded-2xl bg-gradient-to-r from-[#6366F1] to-[#22D3EE] px-6 py-3 font-semibold text-[#07131e] shadow-[0_0_30px_rgba(34,211,238,.35)] transition hover:scale-[1.02]">
+                Uygulamayı Keşfet
+              </a>
+              <a href="#story" className="rounded-2xl border border-white/20 bg-white/10 px-6 py-3 font-semibold text-white backdrop-blur transition hover:bg-white/15">
+                Nasıl Çalışır?
+              </a>
+            </motion.div>
+          </motion.div>
 
-          <div className="lp-cta-row">
-            <Link href={hasSession ? '/dashboard' : '/register'} className="button primary lp-main-btn">
-              Hemen Başla
-            </Link>
-            <a href="#nasil" className="button secondary lp-secondary-btn">Nasıl çalışır?</a>
-          </div>
-
-          <div className="lp-store-row">
-            <a className="store-btn apple" href={appStoreUrl} target="_blank" rel="noreferrer" aria-label="App Store">
-              <span className="store-logo-wrap"><AppleStoreIcon /></span>
-              <span><small>Download on the</small><strong>App Store</strong></span>
-            </a>
-            <a className="store-btn google" href={playStoreUrl} target="_blank" rel="noreferrer" aria-label="Google Play">
-              <span className="store-logo-wrap"><PlayStoreIcon /></span>
-              <span><small>GET IT ON</small><strong>Google Play</strong></span>
-            </a>
-          </div>
-
-          <div className="lp-trust-row">
-            <div><strong>120K+</strong><span>Kullanıcı</span></div>
-            <div><strong>420+</strong><span>Lokasyon</span></div>
-            <div><strong>4.9/5</strong><span>Memnuniyet</span></div>
-          </div>
-        </article>
-
-        <article
-          className={`lp-visual card tone-${activeSlide.tone}`}
-          onTouchStart={handleTouchStart}
-          onTouchMove={handleTouchMove}
-          onTouchEnd={handleTouchEnd}
-        >
-          <div className="lp-progress" key={`prog-${activeSlide.id}`}>
-            <span className="lp-progress-fill" />
-          </div>
-
-          <div className="lp-scene" key={`scene-${activeSlide.id}`}>
-            <div className="lp-desktop">
-              <div className="lp-desktop-top">
-                <span />
-                <span />
-                <span />
-              </div>
-              <div className="lp-ticket card">
-                <div>
-                  <p>{activeSlide.city} merkez nokta</p>
-                  <h4>{activeSlide.eta} uzaklıkta teslim</h4>
+          <motion.div style={{ rotate: phoneRotate }} className="relative mx-auto w-full max-w-[420px]">
+            <motion.div
+              className="absolute -left-10 top-14 h-32 w-32 rounded-full bg-cyan-400/30 blur-3xl"
+              animate={{ y: [0, -20, 0] }}
+              transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut' }}
+            />
+            <motion.div
+              className="absolute -right-8 -top-5 h-28 w-28 rounded-full bg-indigo-400/35 blur-3xl"
+              animate={{ y: [0, 24, 0] }}
+              transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' }}
+            />
+            <div className="relative overflow-hidden rounded-[2.4rem] border border-white/20 bg-white/5 p-3 shadow-[0_25px_70px_rgba(0,0,0,.45)] backdrop-blur-xl">
+              <div className="rounded-[2rem] border border-white/10 bg-[#0f1728] p-4">
+                <div className="mb-4 h-8 w-28 rounded-full bg-white/10" />
+                <div className="space-y-3">
+                  <div className="rounded-2xl border border-cyan-300/20 bg-gradient-to-r from-cyan-400/20 to-indigo-500/20 p-4">
+                    <p className="text-xs text-cyan-100/80">Aktif rezervasyon</p>
+                    <p className="mt-1 text-lg font-semibold">Beşiktaş KYRADI</p>
+                    <p className="text-sm text-white/60">Teslime: 2s 14dk</p>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="rounded-xl border border-white/10 bg-white/5 p-3">
+                      <p className="text-xs text-white/50">QR</p>
+                      <p className="mt-1 text-sm font-medium">Hazır</p>
+                    </div>
+                    <div className="rounded-xl border border-white/10 bg-white/5 p-3">
+                      <p className="text-xs text-white/50">Durum</p>
+                      <p className="mt-1 text-sm font-medium">Müsait</p>
+                    </div>
+                  </div>
                 </div>
-                <StatusPill text="Müsait" />
-              </div>
-              <div className="lp-mini-grid">
-                <div className="lp-mini-card"><NeoIcon symbol="✦" tone="violet" size="sm" /><strong>{activeSlide.metricA}</strong></div>
-                <div className="lp-mini-card"><NeoIcon symbol="⌖" tone="cyan" size="sm" /><strong>{activeSlide.metricB}</strong></div>
               </div>
             </div>
+          </motion.div>
+        </div>
+      </section>
 
-            <div className="lp-phone">
-              <div className="lp-phone-notch" />
-              <div className="lp-phone-inner">
-                <p className="lp-phone-city">{activeSlide.city}</p>
-                <div className="lp-phone-row"><span className="lp-dot" />QR ile teslim hazır</div>
-                <div className="lp-phone-row"><span className="lp-dot" />Ödeme tamamlandı</div>
-                <div className="lp-phone-row"><span className="lp-dot" />Konum eşleşti</div>
-              </div>
+      <section id="story" className="relative z-10 mx-auto w-full max-w-7xl px-5 py-16 md:px-8">
+        <FadeIn>
+          <h2 className="text-4xl font-semibold tracking-[-0.02em] md:text-5xl">Bir gününü hayal et</h2>
+          <p className="mt-3 max-w-2xl text-white/60">Kyradi, seyahat gününü yük taşımaktan deneyim yaşamaya çevirir.</p>
+        </FadeIn>
+        <div className="mt-10 grid gap-4 md:grid-cols-2">
+          {story.map((item, index) => (
+            <FadeIn key={item.title} delay={index * 0.08}>
+              <motion.article
+                whileHover={{ y: -4 }}
+                className={`rounded-3xl border border-white/10 bg-gradient-to-br ${item.glow} bg-[#111a2d]/80 p-6 backdrop-blur`}
+              >
+                <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-white/10 text-2xl">
+                  {item.icon}
+                </div>
+                <h3 className="text-2xl font-semibold">{item.title}</h3>
+                <p className="mt-2 text-white/65">{item.text}</p>
+              </motion.article>
+            </FadeIn>
+          ))}
+        </div>
+      </section>
+
+      <section id="works" className="relative z-10 mx-auto w-full max-w-7xl px-5 py-16 md:px-8">
+        <FadeIn>
+          <h2 className="text-4xl font-semibold tracking-[-0.02em] md:text-5xl">Nasıl çalışır?</h2>
+        </FadeIn>
+        <div className="mt-10 grid gap-4 md:grid-cols-3">
+          {steps.map((step, i) => (
+            <FadeIn key={step.no} delay={i * 0.08}>
+              <motion.div whileHover={{ scale: 1.02 }} className="rounded-3xl border border-white/10 bg-white/[0.06] p-6 backdrop-blur">
+                <div className="flex items-center justify-between">
+                  <span className="text-2xl">{step.icon}</span>
+                  <span className="text-sm font-semibold text-cyan-300">{step.no}</span>
+                </div>
+                <p className="mt-4 text-2xl font-semibold">{step.title}</p>
+              </motion.div>
+            </FadeIn>
+          ))}
+        </div>
+      </section>
+
+      <section id="benefits" className="relative z-10 mx-auto w-full max-w-7xl px-5 py-16 md:px-8">
+        <FadeIn>
+          <h2 className="text-4xl font-semibold tracking-[-0.02em] md:text-5xl">Sana ne kazandırır?</h2>
+        </FadeIn>
+        <div className="mt-10 grid gap-4 md:grid-cols-2">
+          {benefits.map((item, i) => (
+            <FadeIn key={item.title} delay={i * 0.07}>
+              <motion.article
+                whileHover={{ y: -4 }}
+                className="group rounded-3xl border border-white/10 bg-white/[0.05] p-6 backdrop-blur transition"
+              >
+                <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-[#6366F1]/60 to-[#22D3EE]/50 text-2xl shadow-[0_0_24px_rgba(34,211,238,.25)]">
+                  {item.icon}
+                </div>
+                <h3 className="mt-4 text-2xl font-semibold">{item.title}</h3>
+                <p className="mt-2 text-white/65">{item.text}</p>
+              </motion.article>
+            </FadeIn>
+          ))}
+        </div>
+      </section>
+
+      <section className="relative z-10 mx-auto w-full max-w-7xl px-5 py-16 md:px-8">
+        <FadeIn>
+          <div className="rounded-[2rem] border border-white/10 bg-gradient-to-br from-white/[0.08] to-white/[0.03] p-8 backdrop-blur">
+            <p className="text-sm font-semibold text-cyan-300">1000+ gezgin kullanıyor</p>
+            <h2 className="mt-3 text-4xl font-semibold tracking-[-0.02em] md:text-5xl">Seyahat gününü hafifletiyor.</h2>
+            <div className="mt-8 grid gap-4 md:grid-cols-3">
+              {testimonials.map((item, i) => (
+                <FadeIn key={item.name} delay={0.08 + i * 0.08}>
+                  <article className="rounded-2xl border border-white/10 bg-[#111a2b]/70 p-5">
+                    <p className="text-white/70">{item.text}</p>
+                    <p className="mt-4 text-sm font-semibold text-white/90">{item.name}</p>
+                  </article>
+                </FadeIn>
+              ))}
             </div>
-
-            <div className="lp-float lp-float-a"><NeoIcon symbol="₺" tone="green" size="sm" /><div><small>Cüzdan</small><strong>Hızlı Öde</strong></div></div>
-            <div className="lp-float lp-float-b"><NeoIcon symbol="◉" tone="pink" size="sm" /><div><small>Canlı Durum</small><strong>Aktif Rezervasyon</strong></div></div>
           </div>
+        </FadeIn>
+      </section>
 
-          <div className="lp-caption" key={`cap-${activeSlide.id}`}>
-            <h3>{activeSlide.title}</h3>
-            <p>{activeSlide.subtitle}</p>
+      <section className="relative z-10 mx-auto w-full max-w-7xl px-5 pb-24 pt-8 md:px-8">
+        <FadeIn>
+          <div className="rounded-[2rem] border border-cyan-300/20 bg-gradient-to-r from-[#111a2d] via-[#131f38] to-[#0f1b2f] p-8 text-center shadow-[0_0_70px_rgba(99,102,241,.18)]">
+            <h2 className="text-4xl font-semibold tracking-[-0.02em] md:text-6xl">Hazır mısın özgür gezmeye?</h2>
+            <p className="mx-auto mt-4 max-w-2xl text-white/65">
+              Bavulunu bırak, zamanını geri kazan. Şehri gerçekten yaşa.
+            </p>
+            <div className="mt-8">
+              <Link
+                href={hasSession ? '/dashboard' : '/register'}
+                className="inline-flex rounded-2xl bg-gradient-to-r from-[#6366F1] to-[#22D3EE] px-8 py-4 text-lg font-semibold text-[#06111c] shadow-[0_0_30px_rgba(34,211,238,.35)] transition hover:scale-[1.02]"
+              >
+                Şimdi Başla
+              </Link>
+            </div>
           </div>
-
-          <div className="lp-dots">
-            {heroSlides.map((slide, index) => (
-              <button
-                key={slide.id}
-                type="button"
-                className={`dot ${index === activeSlideIndex ? 'active' : ''}`}
-                onClick={() => setActiveSlideIndex(index)}
-                aria-label={`Slide ${index + 1}`}
-              />
-            ))}
-          </div>
-        </article>
-      </section>
-
-      <section id="ozellikler" className="lp-section">
-        <div className="lp-section-head">
-          <p>Özellikler</p>
-          <h2>Mobil ve webde aynı güçlü akış</h2>
-        </div>
-        <div className="lp-service-grid">
-          {serviceCards.map((card) => (
-            <article key={card.title} className="lp-service-card card">
-              <NeoIcon symbol={card.icon} tone={card.tone} size="md" />
-              <h3>{card.title}</h3>
-              <p>{card.text}</p>
-            </article>
-          ))}
-        </div>
-      </section>
-
-      <section id="nasil" className="lp-section lp-how">
-        <div className="lp-section-head">
-          <p>Nasıl çalışır?</p>
-          <h2>3 adımda tamamla</h2>
-        </div>
-        <div className="lp-flow-grid">
-          {flowSteps.map((step) => (
-            <article key={step.no} className="lp-step card">
-              <span className="lp-step-no">{step.no}</span>
-              <h3>{step.title}</h3>
-              <p>{step.text}</p>
-            </article>
-          ))}
-        </div>
-      </section>
-
-      <section id="yorumlar" className="lp-section">
-        <div className="lp-section-head">
-          <p>Kullanıcı Yorumları</p>
-          <h2>İlk kullanımda anlaşılır, her gün güvenilir</h2>
-        </div>
-        <div className="lp-review-grid">
-          {reviews.map((review) => (
-            <article key={review.name} className="lp-review card">
-              <p>{review.text}</p>
-              <div>
-                <strong>{review.name}</strong>
-                <small>{review.role}</small>
-              </div>
-            </article>
-          ))}
-        </div>
-      </section>
-
-      <section className="lp-bottom-cta card">
-        <div>
-          <p>KYRADI SuperApp</p>
-          <h2>Bavulunu bırak, şehri keşfet.</h2>
-        </div>
-        <div className="lp-cta-row">
-          <Link href={hasSession ? '/dashboard' : '/register'} className="button primary">Hemen Başla</Link>
-          <Link href="/login" className="button secondary">Giriş Yap</Link>
-        </div>
+        </FadeIn>
       </section>
     </main>
-  );
-}
-
-function StatusPill({ text }: { text: string }) {
-  return <span className="status-pill">{text}</span>;
-}
-
-function AppleStoreIcon() {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true" className="store-icon">
-      <path
-        d="M15.3 4.1c-.9.1-1.9.7-2.6 1.5-.7.8-1.3 1.9-1.1 3 .9.1 1.9-.4 2.7-1.2.8-.8 1.3-1.9 1-3.3z"
-        fill="currentColor"
-      />
-      <path
-        d="M19.9 14.8c-.5 1.2-.8 1.8-1.4 2.8-.9 1.4-2.1 3.1-3.7 3.1-1.4 0-1.8-.9-3.5-.9s-2.1.9-3.5.9c-1.6 0-2.7-1.5-3.6-2.9-2.5-3.8-2.8-8.1-1.2-10.6 1.1-1.8 2.8-2.9 4.4-2.9 1.7 0 2.8.9 4.2.9 1.4 0 2.2-.9 4.2-.9 1.4 0 2.8.8 3.8 2.2-3.3 1.8-2.7 6.5.3 8.3z"
-        fill="currentColor"
-      />
-    </svg>
-  );
-}
-
-function PlayStoreIcon() {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true" className="store-icon">
-      <path d="M3.4 2.8l10.6 9.3L3.4 22V2.8z" fill="#31C5F4" />
-      <path d="M14 12.1l2.9-2.6 3.8 2.1-3.8 2.1-2.9-1.6z" fill="#FFD54F" />
-      <path d="M3.4 2.8l12.8 7.1-2.2 2.2L3.4 2.8z" fill="#66BB6A" />
-      <path d="M3.4 22l10.6-9.9 2.2 2.2L3.4 22z" fill="#EF5350" />
-    </svg>
   );
 }
