@@ -152,13 +152,13 @@ export default function HomePage() {
                     </div>
                   </motion.div>
 
-                  <div className="absolute -left-20 top-10 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 shadow-md">
+                  <div className="absolute -left-20 top-10 hidden rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 shadow-md lg:block">
                     Rezervasyon onaylandı
                   </div>
-                  <div className="absolute -right-20 top-24 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 shadow-md">
+                  <div className="absolute -right-20 top-24 hidden rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 shadow-md lg:block">
                     Yakındaki nokta: 3 dk
                   </div>
-                  <div className="absolute -bottom-4 left-10 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 shadow-md">
+                  <div className="absolute -bottom-4 left-10 hidden rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 shadow-md lg:block">
                     Güvenli teslim
                   </div>
                 </div>
