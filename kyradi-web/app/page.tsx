@@ -707,7 +707,7 @@ export default function HomePage() {
                       <Star key={j} className="h-4 w-4 fill-amber-400 text-amber-400" />
                     ))}
                   </div>
-                  <p className="text-[15px] leading-relaxed text-slate-600">"{t.text}"</p>
+                  <p className="text-[15px] leading-relaxed text-slate-600">&ldquo;{t.text}&rdquo;</p>
                   <div className="mt-5 flex items-center gap-3 pt-5 border-t border-slate-100">
                     <div className={`flex h-10 w-10 items-center justify-center rounded-full font-bold text-white ${['bg-gradient-to-br from-rose-400 to-orange-400', 'bg-gradient-to-br from-indigo-500 to-violet-500', 'bg-gradient-to-br from-emerald-400 to-teal-500'][i]}`}>
                       {t.avatar}
