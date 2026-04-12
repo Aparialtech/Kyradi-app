@@ -1,0 +1,17 @@
+<svg viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- App icon rounded background — dark navy matching image 2 -->
+  <rect width="120" height="120" rx="26" fill="#1e2d3d"/>
+  <!-- Handle -->
+  <path d="M43,42 L43,34 Q43,27 50,27 L70,27 Q77,27 77,34 L77,42 Z" fill="#f0e9d8"/>
+  <!-- Body -->
+  <rect x="18" y="40" width="84" height="68" rx="9" fill="#f0e9d8"/>
+  <!-- Signal arcs — dark color on cream body -->
+  <clipPath id="ci">
+    <rect x="18" y="40" width="84" height="68" rx="9"/>
+  </clipPath>
+  <g clip-path="url(#ci)" stroke="#1e2d3d" stroke-width="10" fill="none" stroke-linecap="round">
+    <path d="M18,84 A24,24 0 0 1 42,108"/>
+    <path d="M18,66 A42,42 0 0 1 60,108"/>
+    <path d="M18,48 A60,60 0 0 1 78,108"/>
+  </g>
+</svg>

@@ -179,8 +179,7 @@ export default function RegisterPage() {
 
         {/* Logo */}
         <motion.div {...fadeUp(0.1)} className="relative z-10 flex items-center gap-3">
-          <div className="h-10 w-10 rounded-xl shadow-[0_8px_24px_rgba(99,102,241,0.5)]"
-            style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6, #06b6d4)' }} />
+          <img src="/logo-white.svg" alt="Kyradi" className="h-10 w-10 flex-shrink-0" />
           <div>
             <p className="text-[14px] font-black tracking-[0.22em] text-white">KYRADI</p>
             <p className="text-[11px] font-medium tracking-wide" style={{ color: 'rgba(255,255,255,0.45)' }}>SuperApp</p>
@@ -245,8 +244,7 @@ export default function RegisterPage() {
 
           {/* Mobile logo */}
           <motion.div {...fadeUp(0)} className="lg:hidden flex items-center gap-3 mb-10">
-            <div className="h-9 w-9 rounded-xl shadow-[0_8px_20px_rgba(99,102,241,0.4)]"
-              style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6)' }} />
+            <img src="/app-icon.svg" alt="Kyradi" className="h-9 w-9 flex-shrink-0" style={{ borderRadius: 9 }} />
             <p className="text-[13px] font-black tracking-[0.22em] text-slate-900">KYRADI</p>
           </motion.div>
 

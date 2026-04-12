@@ -328,10 +328,7 @@ export default function HomePage() {
           <div className="flex items-center justify-between h-16">
             {/* Logo */}
             <div className="flex items-center gap-3">
-              <div className="relative h-9 w-9 flex-shrink-0">
-                <div className="h-9 w-9 rounded-xl shadow-[0_8px_24px_rgba(99,102,241,0.4)]" style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6, #06b6d4)' }} />
-                <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-white/30 to-transparent" />
-              </div>
+              <img src="/app-icon.svg" alt="Kyradi" className="h-9 w-9 flex-shrink-0" style={{ borderRadius: 10 }} />
               <div>
                 <p className="text-[13px] font-black tracking-[0.22em] text-slate-900">KYRADI</p>
                 <p className="text-[10px] font-medium text-slate-400 -mt-0.5 tracking-wider">SuperApp</p>
@@ -919,7 +916,7 @@ export default function HomePage() {
         <div className="max-w-[1200px] mx-auto px-6">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-6">
             <div className="flex items-center gap-3">
-              <div className="h-9 w-9 rounded-xl shadow-[0_6px_16px_rgba(99,102,241,0.35)]" style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6)' }} />
+              <img src="/app-icon.svg" alt="Kyradi" className="h-9 w-9 flex-shrink-0" style={{ borderRadius: 10 }} />
               <div>
                 <p className="text-[12px] font-black tracking-[0.22em] text-slate-900">KYRADI</p>
                 <p className="text-[10px] text-slate-400">SuperApp</p>
